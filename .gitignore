@@ -38,3 +38,29 @@
 !/app/assets/builds/.keep
 
 /node_modules
+
+# 环境变量（绝对不能提交）
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+# Rails 缓存、日志
+log/
+tmp/
+coverage/
+
+# 依赖包
+vendor/bundle/
+node_modules/
+
+# 编辑器/系统文件
+.DS_Store
+.vscode/
+.trae/
+*.swp
+*.swo
+
+# 编译资源
+public/assets/

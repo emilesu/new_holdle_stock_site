@@ -1,0 +1,15 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  financial_report: one
+  operating_cash_flow: 9.99
+  investing_cash_flow: 9.99
+  financing_cash_flow: 9.99
+  net_cash_flow: 9.99
+
+two:
+  financial_report: two
+  operating_cash_flow: 9.99
+  investing_cash_flow: 9.99
+  financing_cash_flow: 9.99
+  net_cash_flow: 9.99

@@ -1,0 +1,21 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  financial_report: one
+  revenue: 9.99
+  cost_of_revenue: 9.99
+  gross_profit: 9.99
+  operating_expenses: 9.99
+  operating_income: 9.99
+  net_income: 9.99
+  eps: 9.99
+
+two:
+  financial_report: two
+  revenue: 9.99
+  cost_of_revenue: 9.99
+  gross_profit: 9.99
+  operating_expenses: 9.99
+  operating_income: 9.99
+  net_income: 9.99
+  eps: 9.99

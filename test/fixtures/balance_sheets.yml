@@ -1,0 +1,21 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  financial_report: one
+  total_assets: 9.99
+  current_assets: 9.99
+  non_current_assets: 9.99
+  total_liabilities: 9.99
+  current_liabilities: 9.99
+  non_current_liabilities: 9.99
+  total_equity: 9.99
+
+two:
+  financial_report: two
+  total_assets: 9.99
+  current_assets: 9.99
+  non_current_assets: 9.99
+  total_liabilities: 9.99
+  current_liabilities: 9.99
+  non_current_liabilities: 9.99
+  total_equity: 9.99
