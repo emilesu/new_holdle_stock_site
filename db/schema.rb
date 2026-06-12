@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_06_12_160000) do
+ActiveRecord::Schema[7.1].define(version: 2026_06_12_170000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -184,6 +184,8 @@ ActiveRecord::Schema[7.1].define(version: 2026_06_12_160000) do
     t.string "status"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "sector", comment: "行业板块（中文）"
+    t.index ["sector"], name: "index_stocks_on_sector"
     t.index ["symbol", "market"], name: "index_stocks_on_symbol_and_market", unique: true
   end
 
