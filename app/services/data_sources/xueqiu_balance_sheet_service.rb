@@ -196,41 +196,63 @@ module DataSources
 
         financial_report.market = market
         financial_report.save!
+        puts "  主表匹配/创建：报告ID=#{financial_report.id}"
 
-        balance_sheet = BalanceSheet.find_or_initialize_by(
-          stock_id: stock.id,
-          report_date: report_date,
-          market: market
-        )
-
-        if balance_sheet.persisted?
-          puts "  ⏭️ 资产负债表数据已存在，跳过"
-          return :skipped
-        end
-
-        balance_sheet.financial_report_id = financial_report.id
-        balance_sheet.report_type = report_type
-        
         total_assets = parse_financial_value(item["total_assets"])
         total_liabilities = parse_financial_value(item["total_liab"])
-        
-        balance_sheet.total_assets = total_assets
-        balance_sheet.total_liabilities = total_liabilities
-        
-        if total_assets && total_liabilities
-          balance_sheet.total_equity = total_assets - total_liabilities
+        total_equity = total_assets && total_liabilities ? total_assets - total_liabilities : nil
+
+        if BalanceSheet.exists?(financial_report_id: financial_report.id)
+          balance_sheet = BalanceSheet.find_by(financial_report_id: financial_report.id)
+          new_data = {
+            report_type: report_type,
+            total_assets: total_assets,
+            total_liabilities: total_liabilities,
+            total_equity: total_equity
+          }
+
+          if data_changed?(balance_sheet, new_data)
+            update_balance_sheet(balance_sheet, new_data)
+            financial_report.last_crawled_at = Time.current
+            financial_report.save!
+            puts "  ✅ 数据存在变更，已覆盖更新：报告ID=#{financial_report.id}"
+          else
+            puts "  ⏭️ 数据无变化，跳过更新：报告ID=#{financial_report.id}"
+            return :skipped
+          end
+        else
+          balance_sheet = BalanceSheet.new(
+            financial_report_id: financial_report.id,
+            stock_id: stock.id,
+            report_date: report_date,
+            market: market,
+            report_type: report_type,
+            total_assets: total_assets,
+            total_liabilities: total_liabilities,
+            total_equity: total_equity
+          )
+          balance_sheet.save!
+          financial_report.last_crawled_at = Time.current
+          financial_report.save!
+          puts "  ✅ 新数据写入成功：报告ID=#{financial_report.id}"
         end
-
-        balance_sheet.save!
-
-        financial_report.status = "success"
-        financial_report.last_crawled_at = Time.current
-        financial_report.save!
-
-        puts "  ✅ 已写入/更新：报告ID=#{financial_report.id}"
       rescue => e
-        financial_report&.update(status: "failed", retry_count: (financial_report.retry_count || 0) + 1)
+        financial_report&.update(retry_count: (financial_report.retry_count || 0) + 1)
         raise e
+      end
+
+      def data_changed?(record, new_data)
+        new_data.each do |key, value|
+          return true if record.send(key) != value
+        end
+        false
+      end
+
+      def update_balance_sheet(record, new_data)
+        new_data.each do |key, value|
+          record.send("#{key}=", value)
+        end
+        record.save!
       end
 
       def parse_date(timestamp)

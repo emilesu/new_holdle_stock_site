@@ -198,35 +198,61 @@ module DataSources
 
         financial_report.market = market
         financial_report.save!
+        puts "  主表匹配/创建：报告ID=#{financial_report.id}"
 
-        income_statement = IncomeStatement.find_or_initialize_by(
-          stock_id: stock.id,
-          report_date: report_date,
-          market: market
-        )
+        if IncomeStatement.exists?(financial_report_id: financial_report.id)
+          income_statement = IncomeStatement.find_by(financial_report_id: financial_report.id)
+          new_data = {
+            report_type: report_type,
+            total_revenue: parse_financial_value(item["total_revenue"]),
+            operating_income: parse_financial_value(item["operating_income"]),
+            income_before_tax: parse_financial_value(item["income_from_co_before_it"]),
+            net_income_to_shareholders: parse_financial_value(item["net_income_atcss"])
+          }
 
-        if income_statement.persisted?
-          puts "  ⏭️ 利润表数据已存在，跳过"
-          return :skipped
+          if data_changed?(income_statement, new_data)
+            update_income_statement(income_statement, new_data)
+            financial_report.last_crawled_at = Time.current
+            financial_report.save!
+            puts "  ✅ 数据存在变更，已覆盖更新：报告ID=#{financial_report.id}"
+          else
+            puts "  ⏭️ 数据无变化，跳过更新：报告ID=#{financial_report.id}"
+            return :skipped
+          end
+        else
+          income_statement = IncomeStatement.new(
+            financial_report_id: financial_report.id,
+            stock_id: stock.id,
+            report_date: report_date,
+            market: market,
+            report_type: report_type,
+            total_revenue: parse_financial_value(item["total_revenue"]),
+            operating_income: parse_financial_value(item["operating_income"]),
+            income_before_tax: parse_financial_value(item["income_from_co_before_it"]),
+            net_income_to_shareholders: parse_financial_value(item["net_income_atcss"])
+          )
+          income_statement.save!
+          financial_report.last_crawled_at = Time.current
+          financial_report.save!
+          puts "  ✅ 新数据写入成功：报告ID=#{financial_report.id}"
         end
-
-        income_statement.financial_report_id = financial_report.id
-        income_statement.report_type = report_type
-        income_statement.total_revenue = parse_financial_value(item["total_revenue"])
-        income_statement.operating_income = parse_financial_value(item["operating_income"])
-        income_statement.income_before_tax = parse_financial_value(item["income_from_co_before_it"])
-        income_statement.net_income_to_shareholders = parse_financial_value(item["net_income_atcss"])
-
-        income_statement.save!
-
-        financial_report.status = "success"
-        financial_report.last_crawled_at = Time.current
-        financial_report.save!
-
-        puts "  ✅ 已写入/更新：报告ID=#{financial_report.id}"
       rescue => e
-        financial_report&.update(status: "failed", retry_count: (financial_report.retry_count || 0) + 1)
+        financial_report&.update(retry_count: (financial_report.retry_count || 0) + 1)
         raise e
+      end
+
+      def data_changed?(record, new_data)
+        new_data.each do |key, value|
+          return true if record.send(key) != value
+        end
+        false
+      end
+
+      def update_income_statement(record, new_data)
+        new_data.each do |key, value|
+          record.send("#{key}=", value)
+        end
+        record.save!
       end
 
       def parse_date(timestamp)

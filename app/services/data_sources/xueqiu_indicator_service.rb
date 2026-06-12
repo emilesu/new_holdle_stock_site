@@ -196,38 +196,64 @@ module DataSources
 
         financial_report.market = market
         financial_report.save!
+        puts "  主表匹配/创建：报告ID=#{financial_report.id}"
 
-        indicator = FinancialIndicator.find_or_initialize_by(
-          stock_id: stock.id,
-          report_date: report_date,
-          market: market
-        )
+        new_data = {
+          report_type: report_type,
+          basic_eps: parse_financial_value(item["basic_eps"]),
+          nav_ps: parse_financial_value(item["nav_ps"]),
+          ncf_from_oa_ps: parse_financial_value(item["ncf_from_oa_ps"]),
+          capital_reserve: parse_financial_value(item["capital_reserve"]),
+          roe_avg: parse_financial_value(item["roe_avg"]),
+          net_interest_of_ta: parse_financial_value(item["net_interest_of_ta"]),
+          net_sales_rate: parse_financial_value(item["net_sales_rate"]),
+          asset_liab_ratio: parse_financial_value(item["asset_liab_ratio"])
+        }
 
-        if indicator.persisted?
-          puts "  ⏭️ 财务指标数据已存在，跳过"
-          return :skipped
+        if FinancialIndicator.exists?(financial_report_id: financial_report.id)
+          indicator = FinancialIndicator.find_by(financial_report_id: financial_report.id)
+
+          if data_changed?(indicator, new_data)
+            update_indicator(indicator, new_data)
+            financial_report.last_crawled_at = Time.current
+            financial_report.save!
+            puts "  ✅ 数据存在变更，已覆盖更新：报告ID=#{financial_report.id}"
+          else
+            puts "  ⏭️ 数据无变化，跳过更新：报告ID=#{financial_report.id}"
+            return :skipped
+          end
+        else
+          indicator = FinancialIndicator.new(
+            financial_report_id: financial_report.id,
+            stock_id: stock.id,
+            report_date: report_date,
+            market: market
+          )
+          new_data.each do |key, value|
+            indicator.send("#{key}=", value)
+          end
+          indicator.save!
+          financial_report.last_crawled_at = Time.current
+          financial_report.save!
+          puts "  ✅ 新数据写入成功：报告ID=#{financial_report.id}"
         end
-
-        indicator.financial_report_id = financial_report.id
-        indicator.report_type = report_type
-        indicator.basic_eps = parse_financial_value(item["basic_eps"])
-        indicator.nav_ps = parse_financial_value(item["nav_ps"])
-        indicator.ncf_from_oa_ps = parse_financial_value(item["ncf_from_oa_ps"])
-        indicator.capital_reserve = parse_financial_value(item["capital_reserve"])
-        indicator.roe_avg = parse_financial_value(item["roe_avg"])
-        indicator.net_interest_of_ta = parse_financial_value(item["net_interest_of_ta"])
-        indicator.net_sales_rate = parse_financial_value(item["net_sales_rate"])
-        indicator.asset_liab_ratio = parse_financial_value(item["asset_liab_ratio"])
-
-        indicator.save!
-
-        financial_report.last_crawled_at = Time.current
-        financial_report.save!
-
-        puts "  ✅ 已写入/更新：报告ID=#{financial_report.id}"
       rescue => e
         financial_report&.update(retry_count: (financial_report.retry_count || 0) + 1)
         raise e
+      end
+
+      def data_changed?(record, new_data)
+        new_data.each do |key, value|
+          return true if record.send(key) != value
+        end
+        false
+      end
+
+      def update_indicator(record, new_data)
+        new_data.each do |key, value|
+          record.send("#{key}=", value)
+        end
+        record.save!
       end
 
       def parse_date(timestamp)

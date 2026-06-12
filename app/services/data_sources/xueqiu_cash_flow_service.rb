@@ -196,35 +196,63 @@ module DataSources
 
         financial_report.market = market
         financial_report.save!
+        puts "  主表匹配/创建：报告ID=#{financial_report.id}"
 
-        cash_flow = CashFlow.find_or_initialize_by(
-          stock_id: stock.id,
-          report_date: report_date,
-          market: market
-        )
+        operating_cash_flow = parse_financial_value(item["net_cash_provided_by_oa"])
+        investing_cash_flow = parse_financial_value(item["net_cash_used_in_ia"])
+        financing_cash_flow = parse_financial_value(item["net_cash_used_in_fa"])
 
-        if cash_flow.persisted?
-          puts "  ⏭️ 现金流量表数据已存在，跳过"
-          return :skipped
+        if CashFlow.exists?(financial_report_id: financial_report.id)
+          cash_flow = CashFlow.find_by(financial_report_id: financial_report.id)
+          new_data = {
+            report_type: report_type,
+            operating_cash_flow: operating_cash_flow,
+            investing_cash_flow: investing_cash_flow,
+            financing_cash_flow: financing_cash_flow
+          }
+
+          if data_changed?(cash_flow, new_data)
+            update_cash_flow(cash_flow, new_data)
+            financial_report.last_crawled_at = Time.current
+            financial_report.save!
+            puts "  ✅ 数据存在变更，已覆盖更新：报告ID=#{financial_report.id}"
+          else
+            puts "  ⏭️ 数据无变化，跳过更新：报告ID=#{financial_report.id}"
+            return :skipped
+          end
+        else
+          cash_flow = CashFlow.new(
+            financial_report_id: financial_report.id,
+            stock_id: stock.id,
+            report_date: report_date,
+            market: market,
+            report_type: report_type,
+            operating_cash_flow: operating_cash_flow,
+            investing_cash_flow: investing_cash_flow,
+            financing_cash_flow: financing_cash_flow
+          )
+          cash_flow.save!
+          financial_report.last_crawled_at = Time.current
+          financial_report.save!
+          puts "  ✅ 新数据写入成功：报告ID=#{financial_report.id}"
         end
-
-        cash_flow.financial_report_id = financial_report.id
-
-        cash_flow.report_type = report_type
-        cash_flow.operating_cash_flow = parse_financial_value(item["net_cash_provided_by_oa"])
-        cash_flow.investing_cash_flow = parse_financial_value(item["net_cash_used_in_ia"])
-        cash_flow.financing_cash_flow = parse_financial_value(item["net_cash_used_in_fa"])
-
-        cash_flow.save!
-
-        financial_report.status = "success"
-        financial_report.last_crawled_at = Time.current
-        financial_report.save!
-
-        puts "  ✅ 已写入/更新：报告ID=#{financial_report.id}"
       rescue => e
-        financial_report&.update(status: "failed", retry_count: (financial_report.retry_count || 0) + 1)
+        financial_report&.update(retry_count: (financial_report.retry_count || 0) + 1)
         raise e
+      end
+
+      def data_changed?(record, new_data)
+        new_data.each do |key, value|
+          return true if record.send(key) != value
+        end
+        false
+      end
+
+      def update_cash_flow(record, new_data)
+        new_data.each do |key, value|
+          record.send("#{key}=", value)
+        end
+        record.save!
       end
 
       def parse_date(timestamp)
