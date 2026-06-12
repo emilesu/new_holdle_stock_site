@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_06_12_000003) do
+ActiveRecord::Schema[7.1].define(version: 2026_06_12_153000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -49,6 +49,25 @@ ActiveRecord::Schema[7.1].define(version: 2026_06_12_000003) do
     t.index ["financial_report_id"], name: "index_balance_sheets_on_financial_report_id"
     t.index ["stock_id", "report_date", "market"], name: "index_balance_sheets_on_stock_id_and_report_date_and_market", unique: true
     t.index ["stock_id"], name: "index_balance_sheets_on_stock_id"
+  end
+
+  create_table "cash_flows", force: :cascade do |t|
+    t.bigint "financial_report_id", null: false, comment: "关联财务报告主表ID"
+    t.bigint "stock_id", null: false, comment: "股票ID，关联stocks表"
+    t.date "report_date", null: false, comment: "财报日期"
+    t.string "market", default: "US", null: false, comment: "市场类型（US/A股等）"
+    t.string "report_type", comment: "报告类型（年度/季度）"
+    t.decimal "operating_cash_flow", precision: 15, scale: 2, comment: "经营活动现金流量净额"
+    t.decimal "investing_cash_flow", precision: 15, scale: 2, comment: "投资活动现金流量净额"
+    t.decimal "financing_cash_flow", precision: 15, scale: 2, comment: "筹资活动现金流量净额"
+    t.decimal "net_cash_change", precision: 15, scale: 2, comment: "现金及等价物净增加额"
+    t.decimal "beginning_cash", precision: 15, scale: 2, comment: "期初现金及等价物"
+    t.decimal "ending_cash", precision: 15, scale: 2, comment: "期末现金及等价物"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["financial_report_id"], name: "index_cash_flows_on_financial_report_id"
+    t.index ["stock_id", "report_date", "market"], name: "index_cash_flows_on_stock_id_and_report_date_and_market", unique: true
+    t.index ["stock_id"], name: "index_cash_flows_on_stock_id"
   end
 
   create_table "chapters", force: :cascade do |t|
@@ -149,6 +168,8 @@ ActiveRecord::Schema[7.1].define(version: 2026_06_12_000003) do
 
   add_foreign_key "balance_sheets", "financial_reports"
   add_foreign_key "balance_sheets", "stocks"
+  add_foreign_key "cash_flows", "financial_reports"
+  add_foreign_key "cash_flows", "stocks"
   add_foreign_key "financial_reports", "stocks"
   add_foreign_key "income_statements", "financial_reports"
   add_foreign_key "income_statements", "stocks"

@@ -196,22 +196,21 @@ module DataSources
           market: market
         )
 
-        if financial_report.status == "success"
-          puts "  ⏭️ 财报已爬取成功，跳过"
-          return :skipped
-        end
-
         financial_report.market = market
-        financial_report.status = "pending"
         financial_report.save!
 
         income_statement = IncomeStatement.find_or_initialize_by(
-          financial_report_id: financial_report.id,
           stock_id: stock.id,
           report_date: report_date,
           market: market
         )
 
+        if income_statement.persisted?
+          puts "  ⏭️ 利润表数据已存在，跳过"
+          return :skipped
+        end
+
+        income_statement.financial_report_id = financial_report.id
         income_statement.report_type = report_type
         income_statement.total_revenue = parse_financial_value(item["total_revenue"])
         income_statement.operating_income = parse_financial_value(item["operating_income"])

@@ -1,6 +1,6 @@
 module DataSources
-  class XueqiuBalanceSheetService
-    BASE_URL = "https://stock.xueqiu.com/v5/stock/finance/us/balance.json".freeze
+  class XueqiuCashFlowService
+    BASE_URL = "https://stock.xueqiu.com/v5/stock/finance/us/cash_flow.json".freeze
 
     USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36".freeze
     REFERER = "https://xueqiu.com/".freeze
@@ -15,7 +15,7 @@ module DataSources
     class << self
       def call(symbol, market: "US")
         puts "=" * 70
-        puts "开始爬取雪球美股资产负债表数据"
+        puts "开始爬取雪球美股现金流量表数据"
         puts "股票代码: #{symbol}, 市场: #{market}"
         puts "=" * 70
 
@@ -32,7 +32,7 @@ module DataSources
 
         parse_and_save(stock, response, market)
 
-        puts "\n✅ 资产负债表数据爬取完成"
+        puts "\n✅ 现金流量表数据爬取完成"
       rescue => e
         puts "❌ 爬取过程异常: #{e.message}"
         puts e.backtrace.take(5).join("\n")
@@ -41,7 +41,7 @@ module DataSources
       private
 
       def fetch_data(symbol)
-        puts "\n正在请求雪球资产负债表接口..."
+        puts "\n正在请求雪球现金流量表接口..."
 
         connection = Faraday.new(
           url: BASE_URL,
@@ -118,7 +118,7 @@ module DataSources
 
         filtered_items.each do |item|
           begin
-            result = save_balance_sheet(stock, item, market)
+            result = save_cash_flow(stock, item, market)
             if result == :skipped
               skip_count += 1
             else
@@ -174,7 +174,7 @@ module DataSources
         report_type_code == '596001'
       end
 
-      def save_balance_sheet(stock, item, market)
+      def save_cash_flow(stock, item, market)
         timestamp = item["report_date"]
         report_date = parse_date(timestamp)
         report_type = item["report_type_code"]
@@ -197,31 +197,25 @@ module DataSources
         financial_report.market = market
         financial_report.save!
 
-        balance_sheet = BalanceSheet.find_or_initialize_by(
+        cash_flow = CashFlow.find_or_initialize_by(
           stock_id: stock.id,
           report_date: report_date,
           market: market
         )
 
-        if balance_sheet.persisted?
-          puts "  ⏭️ 资产负债表数据已存在，跳过"
+        if cash_flow.persisted?
+          puts "  ⏭️ 现金流量表数据已存在，跳过"
           return :skipped
         end
 
-        balance_sheet.financial_report_id = financial_report.id
-        balance_sheet.report_type = report_type
-        
-        total_assets = parse_financial_value(item["total_assets"])
-        total_liabilities = parse_financial_value(item["total_liab"])
-        
-        balance_sheet.total_assets = total_assets
-        balance_sheet.total_liabilities = total_liabilities
-        
-        if total_assets && total_liabilities
-          balance_sheet.total_equity = total_assets - total_liabilities
-        end
+        cash_flow.financial_report_id = financial_report.id
 
-        balance_sheet.save!
+        cash_flow.report_type = report_type
+        cash_flow.operating_cash_flow = parse_financial_value(item["net_cash_provided_by_oa"])
+        cash_flow.investing_cash_flow = parse_financial_value(item["net_cash_used_in_ia"])
+        cash_flow.financing_cash_flow = parse_financial_value(item["net_cash_used_in_fa"])
+
+        cash_flow.save!
 
         financial_report.status = "success"
         financial_report.last_crawled_at = Time.current
@@ -244,14 +238,6 @@ module DataSources
         end
       rescue => e
         puts "❌ 时间戳转换失败：#{timestamp}，错误: #{e.message}"
-        nil
-      end
-
-      def parse_decimal(value)
-        return nil if value.blank? || value.to_s.downcase == "null"
-
-        BigDecimal(value.to_s)
-      rescue
         nil
       end
 
