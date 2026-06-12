@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_06_12_153000) do
+ActiveRecord::Schema[7.1].define(version: 2026_06_12_160000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -77,6 +77,39 @@ ActiveRecord::Schema[7.1].define(version: 2026_06_12_153000) do
     t.boolean "is_published", default: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+  end
+
+  create_table "financial_indicators", force: :cascade do |t|
+    t.bigint "financial_report_id", null: false, comment: "关联财务报告主表ID"
+    t.bigint "stock_id", null: false, comment: "股票ID，关联stocks表"
+    t.date "report_date", null: false, comment: "财报日期"
+    t.string "market", default: "US", null: false, comment: "市场类型（US/A股等）"
+    t.string "report_type", comment: "报告类型（年度/季度）"
+    t.decimal "basic_eps", precision: 15, scale: 2, comment: "基本每股收益"
+    t.decimal "diluted_eps", precision: 15, scale: 2, comment: "稀释每股收益"
+    t.decimal "nav_ps", precision: 15, scale: 2, comment: "每股净资产"
+    t.decimal "ncf_from_oa_ps", precision: 15, scale: 2, comment: "每股经营现金流"
+    t.decimal "capital_reserve", precision: 15, scale: 2, comment: "资本公积"
+    t.decimal "roe_avg", precision: 15, scale: 2, comment: "平均净资产收益率"
+    t.decimal "roe_ttm", precision: 15, scale: 2, comment: "TTM净资产收益率"
+    t.decimal "net_interest_of_ta", precision: 15, scale: 2, comment: "总资产净利率"
+    t.decimal "net_sales_rate", precision: 15, scale: 2, comment: "销售净利率"
+    t.decimal "asset_liab_ratio", precision: 15, scale: 2, comment: "资产负债率"
+    t.decimal "current_ratio", precision: 15, scale: 2, comment: "流动比率"
+    t.decimal "quick_ratio", precision: 15, scale: 2, comment: "速动比率"
+    t.decimal "gross_margin", precision: 15, scale: 2, comment: "毛利率"
+    t.decimal "operating_margin", precision: 15, scale: 2, comment: "营业利润率"
+    t.decimal "ebitda_margin", precision: 15, scale: 2, comment: "EBITDA利润率"
+    t.decimal "pe_ratio", precision: 15, scale: 2, comment: "市盈率"
+    t.decimal "pb_ratio", precision: 15, scale: 2, comment: "市净率"
+    t.decimal "ps_ratio", precision: 15, scale: 2, comment: "市销率"
+    t.decimal "dividend_yield", precision: 15, scale: 2, comment: "股息率"
+    t.decimal "payout_ratio", precision: 15, scale: 2, comment: "派息率"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["financial_report_id"], name: "index_financial_indicators_on_financial_report_id"
+    t.index ["stock_id", "report_date", "market"], name: "idx_on_stock_id_report_date_market_cbb7ad04c1", unique: true
+    t.index ["stock_id"], name: "index_financial_indicators_on_stock_id"
   end
 
   create_table "financial_reports", force: :cascade do |t|
@@ -170,6 +203,8 @@ ActiveRecord::Schema[7.1].define(version: 2026_06_12_153000) do
   add_foreign_key "balance_sheets", "stocks"
   add_foreign_key "cash_flows", "financial_reports"
   add_foreign_key "cash_flows", "stocks"
+  add_foreign_key "financial_indicators", "financial_reports"
+  add_foreign_key "financial_indicators", "stocks"
   add_foreign_key "financial_reports", "stocks"
   add_foreign_key "income_statements", "financial_reports"
   add_foreign_key "income_statements", "stocks"
