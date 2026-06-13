@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "requirements-analyst": {
+      "source": "nahisaho/musubi",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/requirements-analyst/SKILL.md",
+      "computedHash": "fb854bfecbab8a9cc97b99cfcbfa62abe715d3df564c30d12c08390699f4fb00"
+    }
+  }
+}

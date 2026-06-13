@@ -181,15 +181,67 @@ module DataSources
     }.freeze
 
     class << self
-      def call(ticker)
+      def call(ticker = nil)
         puts "=" * 70
-        puts "开始爬取美股基础信息 | 股票代码: #{ticker}"
-        puts "=" * 70
+        if ticker.present?
+          puts "开始爬取美股基础信息 | 股票代码: #{ticker}"
+          puts "=" * 70
+          process_single_stock(ticker)
+        else
+          puts "开始批量爬取所有美股基础信息"
+          puts "=" * 70
+          process_all_us_stocks
+        end
+      end
 
+      private
+
+      def process_all_us_stocks
+        stats = { total: 0, success: 0, failed: 0, skipped: 0 }
+        
+        stocks = Stock.where(market: "US")
+        stats[:total] = stocks.size
+        
+        puts "\n共找到 #{stats[:total]} 只美股股票"
+        puts "\n开始处理数据..."
+        puts "┌─────────────┬─────────────┬─────────────┬─────────────┐"
+        puts "│    代码     │    名称     │  行业板块   │  处理状态   │"
+        puts "├─────────────┼─────────────┼─────────────┼─────────────┤"
+
+        stocks.each do |stock|
+          begin
+            result = process_single_stock(stock.symbol)
+            stats[result] += 1
+            
+            status = case result
+                     when :success then "成功"
+                     when :skipped then "跳过"
+                     else "失败"
+                     end
+            
+            puts "│ #{stock.symbol&.rjust(9)} │ #{stock.name.to_s[0..8]&.rjust(9)} │ #{stock.sector.to_s[0..8]&.rjust(9)} │ #{status&.rjust(9)} │"
+          rescue => e
+            stats[:failed] += 1
+            puts "❌ 处理股票 #{stock.symbol} 失败: #{e.message}"
+          end
+        end
+
+        puts "└─────────────┴─────────────┴─────────────┴─────────────┘"
+        
+        puts "\n📊 统计结果："
+        puts "  - 总条数: #{stats[:total]}"
+        puts "  - 成功: #{stats[:success]} 条"
+        puts "  - 跳过: #{stats[:skipped]} 条"
+        puts "  - 失败: #{stats[:failed]} 条"
+
+        puts "\n✅ 美股基础信息批量爬取完成"
+      end
+
+      def process_single_stock(ticker)
         stock = Stock.find_by(symbol: ticker, market: "US")
         unless stock
           puts "❌ 未找到股票记录: #{ticker} (US)"
-          return
+          return :failed
         end
 
         puts "找到股票 ID: #{stock.id}, 当前名称: #{stock.name}"
@@ -202,18 +254,18 @@ module DataSources
 
         if chinese_name.blank? && industry_info.blank?
           puts "❌ 未能获取任何有效数据"
-          return
+          return :skipped
         end
 
-        update_stock(stock, chinese_name, industry_info)
-
+        update_result = update_stock(stock, chinese_name, industry_info)
+        
         puts "\n✅ 股票基础信息爬取完成"
+        update_result
       rescue => e
         puts "❌ 爬取过程异常: #{e.message}"
         puts e.backtrace.take(5).join("\n")
+        :failed
       end
-
-      private
 
       def fetch_chinese_name(ticker)
         puts "\n[1/2] 正在从雪球获取中文名..."
@@ -346,6 +398,7 @@ module DataSources
 
         if new_name == old_name && new_sector == old_sector && new_industry == old_industry
           puts "⏭️ 名称/板块/行业无变化，跳过更新"
+          return :skipped
         else
           stock.name = new_name
           stock.sector = new_sector if new_sector.present?
@@ -355,6 +408,7 @@ module DataSources
           puts "  - 名称: #{old_name} → #{new_name}" unless new_name == old_name
           puts "  - 板块: #{old_sector || '（无）'} → #{new_sector || '（无）'}" unless new_sector == old_sector
           puts "  - 行业: #{old_industry || '（无）'} → #{new_industry || '（无）'}" unless new_industry == old_industry
+          return :success
         end
       end
     end

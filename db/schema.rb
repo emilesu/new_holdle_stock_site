@@ -79,6 +79,17 @@ ActiveRecord::Schema[7.1].define(version: 2026_06_12_170000) do
     t.datetime "updated_at", null: false
   end
 
+  create_table "crawler_executions", force: :cascade do |t|
+    t.string "task_name", null: false
+    t.string "status", default: "success", null: false
+    t.string "message"
+    t.decimal "duration", precision: 10, scale: 2
+    t.datetime "executed_at", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["executed_at"], name: "index_crawler_executions_on_executed_at"
+  end
+
   create_table "financial_indicators", force: :cascade do |t|
     t.bigint "financial_report_id", null: false, comment: "关联财务报告主表ID"
     t.bigint "stock_id", null: false, comment: "股票ID，关联stocks表"

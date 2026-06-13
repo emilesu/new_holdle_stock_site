@@ -7,4 +7,14 @@ Rails.application.routes.draw do
 
   # Defines the root path route ("/")
   # root "posts#index"
+
+  # 爬虫管理后台
+  namespace :admin do
+    get "stock_crawlers", to: "stock_crawlers#index"
+    get "stock_crawlers/us_stock_list", to: "stock_crawlers#us_stock_list"
+    get "stock_crawlers/us_stock_basic", to: "stock_crawlers#us_stock_basic"
+    get "stock_crawlers/us_finance", to: "stock_crawlers#us_finance"
+    get "stock_crawlers/a_stock_list", to: "stock_crawlers#a_stock_list"
+    get "stock_crawlers/a_finance", to: "stock_crawlers#a_finance"
+  end
 end
