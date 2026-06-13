@@ -18,7 +18,7 @@ module DataSources
           puts "-" * 70
 
           begin
-            XueqiuIncomeStatementService.call(stock.symbol, market: "US")
+            call_single(stock.symbol)
             success_count += 1
           rescue => e
             fail_count += 1
@@ -34,10 +34,46 @@ module DataSources
 
       def call_single(symbol)
         puts "\n" + "-" * 70
-        puts "单只股票财务数据爬取"
+        puts "单只美股股票财务数据爬取"
+        puts "股票代码: #{symbol}"
         puts "-" * 70
 
-        XueqiuIncomeStatementService.call(symbol, market: "US")
+        results = []
+        
+        results << { name: "利润表", result: execute_service("利润表") { XueqiuIncomeStatementService.call(symbol, market: "US") } }
+        results << { name: "资产负债表", result: execute_service("资产负债表") { XueqiuBalanceSheetService.call(symbol, market: "US") } }
+        results << { name: "现金流量表", result: execute_service("现金流量表") { XueqiuCashFlowService.call(symbol, market: "US") } }
+        results << { name: "财务指标", result: execute_service("财务指标") { XueqiuIndicatorService.call(symbol, market: "US") } }
+
+        puts "\n" + "=" * 70
+        puts "#{symbol} 财务数据爬取汇总"
+        puts "=" * 70
+        
+        success_count = results.count { |r| r[:result] == :success }
+        fail_count = results.count { |r| r[:result] == :failed }
+        
+        results.each do |r|
+          status = r[:result] == :success ? "✅" : "❌"
+          puts "#{status} #{r[:name]}: #{r[:result] == :success ? '成功' : '失败'}"
+        end
+        
+        puts "\n📊 单只股票统计: 成功 #{success_count} 表, 失败 #{fail_count} 表"
+        puts "=" * 70
+
+        fail_count == 0
+      end
+
+      private
+
+      def execute_service(name, &block)
+        puts "\n🔄 开始爬取 #{name}..."
+        begin
+          block.call
+          :success
+        rescue => e
+          puts "❌ #{name}爬取失败: #{e.message}"
+          :failed
+        end
       end
     end
   end
