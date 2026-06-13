@@ -1,6 +1,7 @@
 module DataSources
   class XueqiuBalanceSheetService
-    BASE_URL = "https://stock.xueqiu.com/v5/stock/finance/us/balance.json".freeze
+    US_BASE_URL = "https://stock.xueqiu.com/v5/stock/finance/us/balance.json".freeze
+    CN_BASE_URL = "https://stock.xueqiu.com/v5/stock/finance/cn/balance.json".freeze
 
     USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36".freeze
     REFERER = "https://xueqiu.com/".freeze
@@ -15,7 +16,7 @@ module DataSources
     class << self
       def call(symbol, market: "US")
         puts "=" * 70
-        puts "开始爬取雪球美股资产负债表数据"
+        puts "开始爬取雪球#{market == 'CN' ? 'A股' : '美股'}资产负债表数据"
         puts "股票代码: #{symbol}, 市场: #{market}"
         puts "=" * 70
 
@@ -27,7 +28,7 @@ module DataSources
 
         puts "找到股票 ID: #{stock.id}, 名称: #{stock.name}"
 
-        response = fetch_data(symbol)
+        response = fetch_data(symbol, market)
         return unless response
 
         parse_and_save(stock, response, market)
@@ -40,11 +41,13 @@ module DataSources
 
       private
 
-      def fetch_data(symbol)
+      def fetch_data(symbol, market)
         puts "\n正在请求雪球资产负债表接口..."
 
+        base_url = market == 'CN' ? CN_BASE_URL : US_BASE_URL
+        
         connection = Faraday.new(
-          url: BASE_URL,
+          url: base_url,
           headers: default_headers,
           request: {
             timeout: TIMEOUT,
@@ -171,7 +174,9 @@ module DataSources
 
       def is_annual_report?(report_type_code, report_name)
         report_type_code = report_type_code.to_s
-        report_type_code == '596001'
+        report_name = report_name.to_s
+
+        report_type_code == '596001' || report_name.include?('年报')
       end
 
       def save_balance_sheet(stock, item, market)
@@ -198,8 +203,9 @@ module DataSources
         financial_report.save!
         puts "  主表匹配/创建：报告ID=#{financial_report.id}"
 
-        total_assets = parse_financial_value(item["total_assets"])
-        total_liabilities = parse_financial_value(item["total_liab"])
+        financial_data = parse_financial_fields(item, market)
+        total_assets = financial_data[:total_assets]
+        total_liabilities = financial_data[:total_liabilities]
         total_equity = total_assets && total_liabilities ? total_assets - total_liabilities : nil
 
         if BalanceSheet.exists?(financial_report_id: financial_report.id)
@@ -239,6 +245,20 @@ module DataSources
       rescue => e
         financial_report&.update(retry_count: (financial_report.retry_count || 0) + 1)
         raise e
+      end
+
+      def parse_financial_fields(item, market)
+        if market == 'CN'
+          {
+            total_assets: parse_financial_value(item["total_assets"]),
+            total_liabilities: parse_financial_value(item["total_liab"])
+          }
+        else
+          {
+            total_assets: parse_financial_value(item["total_assets"]),
+            total_liabilities: parse_financial_value(item["total_liab"])
+          }
+        end
       end
 
       def data_changed?(record, new_data)

@@ -1,6 +1,7 @@
 module DataSources
   class XueqiuCashFlowService
-    BASE_URL = "https://stock.xueqiu.com/v5/stock/finance/us/cash_flow.json".freeze
+    US_BASE_URL = "https://stock.xueqiu.com/v5/stock/finance/us/cash_flow.json".freeze
+    CN_BASE_URL = "https://stock.xueqiu.com/v5/stock/finance/cn/cash_flow.json".freeze
 
     USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36".freeze
     REFERER = "https://xueqiu.com/".freeze
@@ -15,7 +16,7 @@ module DataSources
     class << self
       def call(symbol, market: "US")
         puts "=" * 70
-        puts "开始爬取雪球美股现金流量表数据"
+        puts "开始爬取雪球#{market == 'CN' ? 'A股' : '美股'}现金流量表数据"
         puts "股票代码: #{symbol}, 市场: #{market}"
         puts "=" * 70
 
@@ -27,7 +28,7 @@ module DataSources
 
         puts "找到股票 ID: #{stock.id}, 名称: #{stock.name}"
 
-        response = fetch_data(symbol)
+        response = fetch_data(symbol, market)
         return unless response
 
         parse_and_save(stock, response, market)
@@ -40,11 +41,13 @@ module DataSources
 
       private
 
-      def fetch_data(symbol)
+      def fetch_data(symbol, market)
         puts "\n正在请求雪球现金流量表接口..."
 
+        base_url = market == 'CN' ? CN_BASE_URL : US_BASE_URL
+        
         connection = Faraday.new(
-          url: BASE_URL,
+          url: base_url,
           headers: default_headers,
           request: {
             timeout: TIMEOUT,
@@ -171,7 +174,9 @@ module DataSources
 
       def is_annual_report?(report_type_code, report_name)
         report_type_code = report_type_code.to_s
-        report_type_code == '596001'
+        report_name = report_name.to_s
+
+        report_type_code == '596001' || report_name.include?('年报')
       end
 
       def save_cash_flow(stock, item, market)
@@ -198,9 +203,16 @@ module DataSources
         financial_report.save!
         puts "  主表匹配/创建：报告ID=#{financial_report.id}"
 
-        operating_cash_flow = parse_financial_value(item["net_cash_provided_by_oa"])
-        investing_cash_flow = parse_financial_value(item["net_cash_used_in_ia"])
-        financing_cash_flow = parse_financial_value(item["net_cash_used_in_fa"])
+        financial_data = parse_financial_fields(item, market)
+        operating_cash_flow = financial_data[:operating_cash_flow]
+        investing_cash_flow = financial_data[:investing_cash_flow]
+        financing_cash_flow = financial_data[:financing_cash_flow]
+        
+        net_cash_change = financial_data[:net_cash_change]
+        if net_cash_change.nil?
+          net_cash_change = calculate_net_cash_change(operating_cash_flow, investing_cash_flow, financing_cash_flow)
+          puts "  ⚠️  API未返回净现金变动，已计算得出: #{net_cash_change}"
+        end
 
         if CashFlow.exists?(financial_report_id: financial_report.id)
           cash_flow = CashFlow.find_by(financial_report_id: financial_report.id)
@@ -208,7 +220,8 @@ module DataSources
             report_type: report_type,
             operating_cash_flow: operating_cash_flow,
             investing_cash_flow: investing_cash_flow,
-            financing_cash_flow: financing_cash_flow
+            financing_cash_flow: financing_cash_flow,
+            net_cash_change: net_cash_change
           }
 
           if data_changed?(cash_flow, new_data)
@@ -229,7 +242,8 @@ module DataSources
             report_type: report_type,
             operating_cash_flow: operating_cash_flow,
             investing_cash_flow: investing_cash_flow,
-            financing_cash_flow: financing_cash_flow
+            financing_cash_flow: financing_cash_flow,
+            net_cash_change: net_cash_change
           )
           cash_flow.save!
           financial_report.last_crawled_at = Time.current
@@ -239,6 +253,32 @@ module DataSources
       rescue => e
         financial_report&.update(retry_count: (financial_report.retry_count || 0) + 1)
         raise e
+      end
+
+      def parse_financial_fields(item, market)
+        if market == 'CN'
+          {
+            operating_cash_flow: parse_financial_value(item["ncf_from_oa"]),
+            investing_cash_flow: parse_financial_value(item["ncf_from_ia"]),
+            financing_cash_flow: parse_financial_value(item["ncf_from_fa"]),
+            net_cash_change: nil,
+          }
+        else
+          {
+            operating_cash_flow: parse_financial_value(item["net_cash_provided_by_oa"]),
+            investing_cash_flow: parse_financial_value(item["net_cash_used_in_ia"]),
+            financing_cash_flow: parse_financial_value(item["net_cash_used_in_fa"]),
+            net_cash_change: parse_financial_value(item["net_cash_change"])
+          }
+        end
+      end
+
+      def calculate_net_cash_change(operating, investing, financing)
+        result = 0
+        result += operating.to_d if operating
+        result += investing.to_d if investing
+        result += financing.to_d if financing
+        result == 0 ? nil : result
       end
 
       def data_changed?(record, new_data)

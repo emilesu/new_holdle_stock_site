@@ -1,6 +1,7 @@
 module DataSources
   class XueqiuIndicatorService
-    BASE_URL = "https://stock.xueqiu.com/v5/stock/finance/us/indicator.json".freeze
+    US_BASE_URL = "https://stock.xueqiu.com/v5/stock/finance/us/indicator.json".freeze
+    CN_BASE_URL = "https://stock.xueqiu.com/v5/stock/finance/cn/indicator.json".freeze
 
     USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36".freeze
     REFERER = "https://xueqiu.com/".freeze
@@ -15,7 +16,7 @@ module DataSources
     class << self
       def call(symbol, market: "US")
         puts "=" * 70
-        puts "开始爬取雪球美股财务指标数据"
+        puts "开始爬取雪球#{market == 'CN' ? 'A股' : '美股'}财务指标数据"
         puts "股票代码: #{symbol}, 市场: #{market}"
         puts "=" * 70
 
@@ -27,7 +28,7 @@ module DataSources
 
         puts "找到股票 ID: #{stock.id}, 名称: #{stock.name}"
 
-        response = fetch_data(symbol)
+        response = fetch_data(symbol, market)
         return unless response
 
         parse_and_save(stock, response, market)
@@ -40,11 +41,13 @@ module DataSources
 
       private
 
-      def fetch_data(symbol)
+      def fetch_data(symbol, market)
         puts "\n正在请求雪球财务指标接口..."
 
+        base_url = market == 'CN' ? CN_BASE_URL : US_BASE_URL
+        
         connection = Faraday.new(
-          url: BASE_URL,
+          url: base_url,
           headers: default_headers,
           request: {
             timeout: TIMEOUT,
@@ -171,7 +174,9 @@ module DataSources
 
       def is_annual_report?(report_type_code, report_name)
         report_type_code = report_type_code.to_s
-        report_type_code == '596001'
+        report_name = report_name.to_s
+
+        report_type_code == '596001' || report_name.include?('年报')
       end
 
       def save_indicator(stock, item, market)
@@ -198,17 +203,8 @@ module DataSources
         financial_report.save!
         puts "  主表匹配/创建：报告ID=#{financial_report.id}"
 
-        new_data = {
-          report_type: report_type,
-          basic_eps: parse_financial_value(item["basic_eps"]),
-          nav_ps: parse_financial_value(item["nav_ps"]),
-          ncf_from_oa_ps: parse_financial_value(item["ncf_from_oa_ps"]),
-          capital_reserve: parse_financial_value(item["capital_reserve"]),
-          roe_avg: parse_financial_value(item["roe_avg"]),
-          net_interest_of_ta: parse_financial_value(item["net_interest_of_ta"]),
-          net_sales_rate: parse_financial_value(item["net_sales_rate"]),
-          asset_liab_ratio: parse_financial_value(item["asset_liab_ratio"])
-        }
+        new_data = parse_financial_fields(item, market)
+        new_data[:report_type] = report_type
 
         if FinancialIndicator.exists?(financial_report_id: financial_report.id)
           indicator = FinancialIndicator.find_by(financial_report_id: financial_report.id)
@@ -240,6 +236,32 @@ module DataSources
       rescue => e
         financial_report&.update(retry_count: (financial_report.retry_count || 0) + 1)
         raise e
+      end
+
+      def parse_financial_fields(item, market)
+        if market == 'CN'
+          {
+            basic_eps: parse_financial_value(item["basic_eps"]),
+            nav_ps: parse_financial_value(item["np_per_share"]),
+            ncf_from_oa_ps: parse_financial_value(item["operate_cash_flow_ps"]),
+            capital_reserve: parse_financial_value(item["capital_reserve"]),
+            roe_avg: parse_financial_value(item["avg_roe"]),
+            net_interest_of_ta: parse_financial_value(item["net_interest_of_total_assets"]),
+            net_sales_rate: parse_financial_value(item["gross_selling_rate"]),
+            asset_liab_ratio: nil
+          }
+        else
+          {
+            basic_eps: parse_financial_value(item["basic_eps"]),
+            nav_ps: parse_financial_value(item["nav_ps"]),
+            ncf_from_oa_ps: parse_financial_value(item["ncf_from_oa_ps"]),
+            capital_reserve: parse_financial_value(item["capital_reserve"]),
+            roe_avg: parse_financial_value(item["roe_avg"]),
+            net_interest_of_ta: parse_financial_value(item["net_interest_of_ta"]),
+            net_sales_rate: parse_financial_value(item["net_sales_rate"]),
+            asset_liab_ratio: parse_financial_value(item["asset_liab_ratio"])
+          }
+        end
       end
 
       def data_changed?(record, new_data)
