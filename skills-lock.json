@@ -1,6 +1,12 @@
 {
   "version": 1,
   "skills": {
+    "mobile-responsiveness": {
+      "source": "hoodini/ai-agents-skills",
+      "sourceType": "github",
+      "skillPath": "skills/mobile-responsiveness/SKILL.md",
+      "computedHash": "d40ffbede786927da70723ebd4bfd332505d04f495e7e75ab4b6651a13006a62"
+    },
     "requirements-analyst": {
       "source": "nahisaho/musubi",
       "sourceType": "github",
