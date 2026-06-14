@@ -1,0 +1,95 @@
+<div class="min-h-screen bg-gray-50">
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="mb-8">
+      <h1 class="text-3xl font-bold text-gray-900">用户详情</h1>
+      <p class="mt-2 text-gray-600">查看用户 <%= @user.nickname %> 的详细信息</p>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 mb-6">
+      <div class="px-6 py-4 border-b border-gray-100">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-4">
+            <div class="w-14 h-14 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-2xl font-bold shadow-lg">
+              <%= @user.avatar_char %>
+            </div>
+            <div>
+              <h2 class="text-xl font-bold text-gray-900"><%= @user.nickname %></h2>
+              <p class="text-gray-600">#<%= @user.id %></p>
+            </div>
+          </div>
+          <span class="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-semibold
+            <%= case @user.role
+                 when 'super_admin' then 'bg-red-100 text-red-800'
+                 when 'admin' then 'bg-purple-100 text-purple-800'
+                 when 'member' then 'bg-blue-100 text-blue-800'
+                 else 'bg-gray-100 text-gray-800'
+               end %>">
+            <%= @user.role.humanize %>
+          </span>
+        </div>
+      </div>
+
+      <div class="px-6 py-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="bg-gray-50 rounded-xl p-5">
+            <h3 class="text-sm font-medium text-gray-500 mb-4">基本信息</h3>
+            <div class="space-y-3">
+              <div class="flex justify-between">
+                <span class="text-gray-500">邮箱</span>
+                <span class="font-medium text-gray-900 text-right"><%= @user.email %></span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-gray-500">昵称</span>
+                <span class="font-medium text-gray-900 text-right"><%= @user.nickname %></span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-gray-500">角色</span>
+                <span class="font-medium text-gray-900 text-right"><%= @user.role.humanize %></span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-gray-500">会员到期</span>
+                <span class="font-medium text-gray-900 text-right">
+                  <%= @user.member_expire_at.present? ? l(@user.member_expire_at, format: :long) : '未开通会员' %>
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-gray-50 rounded-xl p-5">
+            <h3 class="text-sm font-medium text-gray-500 mb-4">时间信息</h3>
+            <div class="space-y-3">
+              <div class="flex justify-between">
+                <span class="text-gray-500">注册时间</span>
+                <span class="font-medium text-gray-900 text-right"><%= l(@user.created_at, format: :long) %></span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-gray-500">最后登录</span>
+                <span class="font-medium text-gray-900 text-right">
+                  <%= @user.last_login_at.present? ? l(@user.last_login_at, format: :long) : '暂无记录' %>
+                </span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-gray-500">信息更新</span>
+                <span class="font-medium text-gray-900 text-right"><%= l(@user.updated_at, format: :long) %></span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-6 bg-gray-50 rounded-xl p-5">
+          <h3 class="text-sm font-medium text-gray-500 mb-3">个人简介</h3>
+          <p class="text-gray-900 leading-relaxed min-h-[60px]">
+            <%= @user.bio.presence || '<span class="text-gray-400">暂无简介</span>'.html_safe %>
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex space-x-4">
+      <%= link_to "编辑", edit_admin_user_path(@user),
+        class: "px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium" %>
+      <%= link_to "返回列表", admin_users_path,
+        class: "px-6 py-2.5 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium" %>
+    </div>
+  </div>
+</div>

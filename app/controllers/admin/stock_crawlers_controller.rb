@@ -1,5 +1,5 @@
 module Admin
-  class StockCrawlersController < ApplicationController
+  class StockCrawlersController < BaseController
     def index
       @results = CrawlerExecution.recent.to_a
     end

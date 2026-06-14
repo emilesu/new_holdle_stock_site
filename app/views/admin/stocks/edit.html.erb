@@ -1,0 +1,75 @@
+<div class="min-h-screen bg-gray-50">
+  <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="mb-8">
+      <h1 class="text-3xl font-bold text-gray-900">编辑股票</h1>
+      <p class="mt-2 text-gray-600">修改股票 <%= @stock.symbol %> 的信息</p>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100">
+      <div class="px-6 py-4 border-b border-gray-100">
+        <h2 class="text-lg font-semibold text-gray-900">股票信息</h2>
+      </div>
+      <div class="px-6 py-6">
+        <%= form_with model: @stock, url: admin_stock_path(@stock), method: :patch, class: "space-y-6" do |f| %>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <%= f.label :symbol, class: "block text-sm font-medium text-gray-700 mb-2" %>
+              <%= f.text_field :symbol, required: true,
+                class: "w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" %>
+            </div>
+            <div>
+              <%= f.label :name, class: "block text-sm font-medium text-gray-700 mb-2" %>
+              <%= f.text_field :name, required: true,
+                class: "w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" %>
+            </div>
+            <div>
+              <%= f.label :market, class: "block text-sm font-medium text-gray-700 mb-2" %>
+              <%= f.select :market, [['A股', 'A股'], ['美股', '美股']], required: true,
+                class: "w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" %>
+            </div>
+            <div>
+              <%= f.label :exchange, class: "block text-sm font-medium text-gray-700 mb-2" %>
+              <%= f.text_field :exchange,
+                class: "w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" %>
+            </div>
+            <div>
+              <%= f.label :sector, class: "block text-sm font-medium text-gray-700 mb-2" %>
+              <%= f.text_field :sector,
+                class: "w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" %>
+            </div>
+            <div>
+              <%= f.label :industry, class: "block text-sm font-medium text-gray-700 mb-2" %>
+              <%= f.text_field :industry,
+                class: "w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" %>
+            </div>
+          </div>
+
+          <div>
+            <%= f.label :website, class: "block text-sm font-medium text-gray-700 mb-2" %>
+            <%= f.url_field :website,
+              class: "w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" %>
+          </div>
+
+          <div>
+            <%= f.label :description, class: "block text-sm font-medium text-gray-700 mb-2" %>
+            <%= f.text_area :description, rows: 4,
+              class: "w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none" %>
+          </div>
+
+          <div>
+            <%= f.label :status, class: "block text-sm font-medium text-gray-700 mb-2" %>
+            <%= f.select :status, [['活跃', 'active'], ['暂停', 'inactive']], required: true,
+              class: "w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" %>
+          </div>
+
+          <div class="flex space-x-4 pt-4">
+            <%= f.submit "保存修改",
+              class: "px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium" %>
+            <%= link_to "取消", admin_stocks_path,
+              class: "px-6 py-2.5 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium" %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>

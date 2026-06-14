@@ -1,0 +1,87 @@
+<div class="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
+      <div class="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 px-6 py-10">
+        <div class="flex items-center space-x-6">
+          <div class="relative">
+            <div class="w-28 h-28 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-white text-5xl font-bold shadow-2xl">
+              <%= @user.avatar_char %>
+            </div>
+          </div>
+          <div class="text-white">
+            <h1 class="text-3xl font-bold tracking-tight">我的收藏</h1>
+            <p class="text-blue-100 mt-2 text-lg"><%= @user.nickname %> 的收藏股票</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="px-6 py-6">
+        <div class="flex border-b border-gray-200 mb-6">
+          <nav class="flex space-x-8">
+            <a href="<%= users_profile_path %>" class="pb-3 text-gray-500 hover:text-gray-700 transition-colors">基本信息</a>
+            <a href="<%= users_profile_favorites_path %>" class="pb-3 border-b-2 border-blue-600 text-blue-600 font-semibold">我的收藏</a>
+          </nav>
+        </div>
+
+        <div class="overflow-hidden rounded-xl shadow-sm border border-gray-200">
+          <table class="w-full">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">股票代码</th>
+                <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">名称</th>
+                <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">市场</th>
+                <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">行业</th>
+                <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">收藏时间</th>
+                <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">操作</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200">
+              <% if @favorite_stocks.empty? %>
+                <tr>
+                  <td colspan="6" class="px-6 py-12 text-center">
+                    <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                      </svg>
+                    </div>
+                    <p class="text-gray-500 font-medium">暂无收藏的股票</p>
+                    <p class="text-sm text-gray-400 mt-1">去股票列表页面添加收藏吧</p>
+                  </td>
+                </tr>
+              <% else %>
+                <% @favorite_stocks.each do |favorite| %>
+                  <tr class="hover:bg-gray-50 transition-colors">
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-blue-100 text-blue-800">
+                        <%= favorite.stock.symbol %>
+                      </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <span class="text-gray-900 font-medium"><%= favorite.stock.name %></span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">
+                        <%= favorite.stock.market %>
+                      </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <span class="text-gray-600"><%= favorite.stock.sector.presence || favorite.stock.industry.presence || '-' %></span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <span class="text-sm text-gray-500"><%= l(favorite.created_at, format: :short) %></span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <%= button_to "取消收藏", favorite_stock_path(favorite), method: :delete, 
+                        class: "text-red-600 hover:text-red-700 text-sm font-medium",
+                        data: { confirm: "确定取消收藏 #{favorite.stock.symbol} 吗？" } %>
+                    </td>
+                  </tr>
+                <% end %>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
