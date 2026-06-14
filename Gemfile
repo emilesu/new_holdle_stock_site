@@ -32,6 +32,11 @@ gem "jbuilder"
 gem 'dotenv-rails'
 gem 'faraday'
 
+# 用户认证
+gem 'devise'
+# 细粒度权限控制
+gem 'pundit'
+
 # Use Redis adapter to run Action Cable in production
 # gem "redis", ">= 4.0.1"
 
