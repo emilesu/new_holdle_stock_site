@@ -5,6 +5,8 @@ Rails.application.routes.draw do
 
   root "home#index"
 
+  resources :stocks, only: [:show]
+
   namespace :users do
     get "profile", to: "profiles#show", as: :profile
     get "profile/edit", to: "profiles#edit", as: :edit_profile

@@ -1,0 +1,297 @@
+<!-- 股票详情页 -->
+<div class="min-h-screen bg-gray-50 pt-20">
+  <style>
+    @media (min-width: 1024px) {
+      .stock-main-container {
+        grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+      }
+      .stock-left-section {
+        grid-column: span 4 / span 4 !important;
+      }
+      .stock-right-section {
+        grid-column: span 1 / span 1 !important;
+      }
+      .top-row {
+        display: flex;
+        gap: 1rem;
+      }
+      .company-info {
+        flex: 1;
+      }
+      .radar-wrapper {
+        flex: 1;
+      }
+    }
+  </style>
+  
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    
+    <!-- 返回按钮 -->
+    <div class="mb-6">
+      <a href="/" class="inline-flex items-center space-x-2 text-gray-600 hover:text-blue-600 transition-colors">
+
+      </a>
+    </div>
+
+    <!-- 左右两列布局 -->
+    <div class="grid grid-cols-1 stock-main-container gap-6">
+      <!-- 左列：80% -->
+      <div class="stock-left-section space-y-6">
+        
+        <!-- 上半部分：股票基础信息 + 雷达图 -->
+        <div class="bg-white rounded-lg overflow-hidden">
+          <div class="p-6">
+            <div class="top-row">
+              <!-- 公司信息 -->
+              <div class="company-info">
+                <h1 class="text-2xl font-bold text-gray-900"><%= @stock.name.presence || '未命名股票' %></h1>
+                <div class="flex items-center space-x-2 mt-2">
+                  <span class="text-gray-600 text-sm font-mono"><%= @stock.symbol.presence || 'N/A' %></span>
+                  <span class="px-2 py-1 text-xs font-semibold rounded <%= @stock.market == 'CN' ? 'bg-green-100 text-green-800' : @stock.market == 'US' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800' %>">
+                    <%= @stock.market == 'CN' ? 'A股' : @stock.market == 'US' ? '美股' : '其他' %>
+                  </span>
+                </div>
+                <div class="border-t border-gray-100 pt-4 mt-4 space-y-3">
+                  <div class="flex justify-between py-2">
+                    <span class="text-gray-500 text-sm">所属板块</span>
+                    <span class="text-gray-900 font-medium"><%= @stock.sector.presence || '-' %></span>
+                  </div>
+                  <div class="flex justify-between py-2">
+                    <span class="text-gray-500 text-sm">所属行业</span>
+                    <span class="text-gray-900 font-medium"><%= @stock.industry.presence || '-' %></span>
+                  </div>
+                  <div class="flex justify-between py-2">
+                    <span class="text-gray-500 text-sm">交易所</span>
+                    <span class="text-gray-900 font-medium"><%= @stock.exchange.presence || '-' %></span>
+                  </div>
+                  <div class="flex justify-between py-2">
+                    <span class="text-gray-500 text-sm">市值</span>
+                    <span class="text-gray-900 font-medium"><%= @stock.respond_to?(:market_cap) && @stock.market_cap.present? ? "#{(@stock.market_cap / 100000000).round(2)} 亿" : '-' %></span>
+                  </div>
+                </div>
+                <button id="follow-btn" class="w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors mt-4">
+                  关注股票
+                </button>
+              </div>
+              
+              <!-- 雷达图 -->
+              <div class="radar-wrapper bg-white p-6">
+                <div class="w-full h-full flex items-center justify-center">
+                  <canvas id="radarChart"></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 获利能力表 -->
+        <div class="bg-white rounded-lg overflow-hidden border border-gray-200">
+          <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+            <h2 class="text-lg font-semibold text-gray-800">获利能力</h2>
+            <p class="text-sm text-gray-500 mt-1">最近8期财务指标</p>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th class="px-6 py-3 text-left text-sm font-semibold text-gray-500 w-32">指标</th>
+                  <% if @financial_indicators.any? %>
+                    <% @financial_indicators.order(report_date: :desc).limit(8).each do |indicator| %>
+                      <th class="px-4 py-3 text-center text-sm font-semibold text-gray-500 whitespace-nowrap"><%= indicator.report_date&.strftime('%Y') %></th>
+                    <% end %>
+                  <% else %>
+                    <th class="px-6 py-3 text-center text-sm text-gray-400">暂无数据</th>
+                  <% end %>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-100">
+                <% [[{ label: '净资产收益率（ROE）', key: 'roe_avg' },
+                    { label: '总资产收益率（ROA）', key: 'net_interest_of_ta' },
+                    { label: '毛利率', key: 'gross_margin' },
+                    { label: '净利率', key: 'operating_margin' },
+                    { label: '每股收益（EPS）', key: 'basic_eps' },
+                    { label: '每股现金流量', key: 'ncf_from_oa_ps' }]].each do |rows| %>
+                  <% rows.each do |row| %>
+                    <tr class="hover:bg-gray-50 transition-colors">
+                      <td class="px-6 py-3 text-sm text-gray-700 font-medium"><%= row[:label] %></td>
+                      <% if @financial_indicators.any? %>
+                        <% @financial_indicators.order(report_date: :desc).limit(8).each do |indicator| %>
+                          <td class="px-4 py-3 text-center text-sm text-gray-600">
+                            <%= indicator.send(row[:key]).present? ? "%.2f" % indicator.send(row[:key]) : '-' %>
+                          </td>
+                        <% end %>
+                      <% else %>
+                        <td class="px-6 py-3 text-center text-sm text-gray-400">-</td>
+                      <% end %>
+                    </tr>
+                  <% end %>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        
+        <!-- 财务结构 & 现金流量表 -->
+        <div class="bg-white rounded-lg overflow-hidden border border-gray-200">
+          <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+            <h2 class="text-lg font-semibold text-gray-800">财务结构 & 现金流量</h2>
+            <p class="text-sm text-gray-500 mt-1">最近8期财务指标（单位：亿元）</p>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th class="px-6 py-3 text-left text-sm font-semibold text-gray-500 w-36">指标</th>
+                  <% years = (@income_statements.map { |i| i.report_date&.strftime('%Y') } + @cash_flows.map { |c| c.report_date&.strftime('%Y') }).uniq.compact.sort.reverse.first(8) %>
+                  <% if years.any? %>
+                    <% years.each do |year| %>
+                      <th class="px-4 py-3 text-center text-sm font-semibold text-gray-500 whitespace-nowrap"><%= year %></th>
+                    <% end %>
+                  <% else %>
+                    <th class="px-6 py-3 text-center text-sm text-gray-400">暂无数据</th>
+                  <% end %>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-100">
+                <% cash_flow_rows = [
+                  { label: '负债占资产比率', key: 'debt_to_asset_ratio', source: 'income' },
+                  { label: '总资产周转率', key: 'net_turnover_ratio', source: 'income' },
+                  { label: '净利润', key: 'net_income', source: 'income' },
+                  { label: '经营活动现金流量', key: 'operating_cash_flow', source: 'cash_flow' },
+                  { label: '投资活动现金流量', key: 'investing_cash_flow', source: 'cash_flow' },
+                  { label: '筹资活动现金流量', key: 'financing_cash_flow', source: 'cash_flow' },
+                  { label: '净现金流量', key: 'net_cash_change', source: 'cash_flow' }
+                ] %>
+                <% cash_flow_rows.each do |row| %>
+                  <tr class="hover:bg-gray-50 transition-colors">
+                    <td class="px-6 py-3 text-sm text-gray-700 font-medium"><%= row[:label] %></td>
+                    <% if years.any? %>
+                      <% years.each do |year| %>
+                        <td class="px-4 py-3 text-center text-sm">
+                          <% if row[:source] == 'income' %>
+                            <% item = @income_statements.find { |i| i.report_date&.strftime('%Y') == year } %>
+                            <% value = item&.send(row[:key]) %>
+                          <% else %>
+                            <% item = @cash_flows.find { |c| c.report_date&.strftime('%Y') == year } %>
+                            <% value = item&.send(row[:key]) %>
+                          <% end %>
+                          <%= value.present? ? "%.2f" % (value / 100000000.0) : '-' %>
+                        </td>
+                      <% end %>
+                    <% else %>
+                      <td class="px-6 py-3 text-center text-sm text-gray-400">-</td>
+                    <% end %>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 右列：20% -->
+      <div class="stock-right-section">
+        <div class="sticky top-24 bg-white rounded-lg overflow-hidden border border-gray-200">
+          <div class="px-4 py-4 border-b border-gray-200 bg-gray-50">
+            <h3 class="text-base font-semibold text-gray-800">行业对比</h3>
+          </div>
+          <div class="p-4">
+            <div class="flex items-center justify-between text-sm mb-4">
+              <span class="text-gray-500">对比标的</span>
+              <span class="text-blue-600 font-medium"><%= @stock.sector.presence || '-' %></span>
+            </div>
+            <div class="border-t border-gray-100">
+              <% if @industry_comparison.any? %>
+                <div class="divide-y divide-gray-100">
+                  <% @industry_comparison.first(10).each_with_index do |stock, index| %>
+                    <a href="<%= stock_path(stock) %>" class="block py-3 hover:bg-gray-50 transition-colors">
+                      <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-2">
+                          <span class="w-5 h-5 rounded-full flex items-center justify-center text-xs font-medium <%= index == 0 ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600' %>">
+                            <%= index + 1 %>
+                          </span>
+                          <span class="text-sm font-medium text-gray-900"><%= stock.name.presence || stock.symbol %></span>
+                        </div>
+                        <span class="text-xs text-green-600 font-medium">+<%= (rand * 5).round(2) %>%</span>
+                      </div>
+                    </a>
+                  <% end %>
+                </div>
+              <% else %>
+                <div class="text-center py-8">
+                  <p class="text-sm text-gray-500">暂无同行业股票</p>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 快速操作 -->
+        <div class="mt-6 bg-white rounded-lg border border-gray-200 p-4">
+          <h3 class="text-sm font-semibold text-gray-800 mb-4">快速操作</h3>
+          <div class="space-y-2">
+            <button class="w-full py-2 text-left text-sm text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">添加到自选</button>
+            <button class="w-full py-2 text-left text-sm text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">查看历史走势</button>
+            <button class="w-full py-2 text-left text-sm text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">生成分析报告</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('turbo:load', function() {
+  const ctx = document.getElementById('radarChart');
+  if (ctx) {
+    const data = JSON.parse('<%= @radar_data.to_json.html_safe %>');
+    new Chart(ctx, {
+      type: 'radar',
+      data: {
+        labels: data.labels,
+        datasets: [{
+          label: data.datasets[0].label,
+          data: data.datasets[0].data,
+          backgroundColor: 'rgba(59, 130, 246, 0.1)',
+          borderColor: 'rgb(59, 130, 246)',
+          borderWidth: 2,
+          pointBackgroundColor: 'rgb(59, 130, 246)',
+          pointBorderColor: '#fff',
+          pointBorderWidth: 2,
+          pointRadius: 4
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        scales: {
+          r: {
+            beginAtZero: true,
+            max: 50,
+            ticks: { stepSize: 10, font: { size: 10 }, backdropColor: 'transparent', color: '#6B7280' },
+            pointLabels: { font: { size: 11 }, color: '#374151' },
+            grid: { color: '#E5E7EB' },
+            angleLines: { color: '#E5E7EB' }
+          }
+        },
+        plugins: { legend: { display: false } }
+      }
+    });
+  }
+  
+  const followBtn = document.getElementById('follow-btn');
+  if (followBtn) {
+    followBtn.addEventListener('click', function() {
+      if (followBtn.textContent.trim() === '关注股票') {
+        followBtn.textContent = '已关注';
+        followBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+        followBtn.classList.add('bg-gray-200', 'text-gray-700');
+      } else {
+        followBtn.textContent = '关注股票';
+        followBtn.classList.remove('bg-gray-200', 'text-gray-700');
+        followBtn.classList.add('bg-blue-600', 'hover:bg-blue-700');
+      }
+    });
+  }
+});
+</script>
