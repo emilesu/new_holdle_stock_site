@@ -1,15 +1,15 @@
 module DataSources
-  class XueqiuUsFinanceService
+  class XueqiuAcnFinanceService
     LISTED_STATUS = "listed".freeze
     PENDING_STATUS = "pending".freeze
 
     class << self
       def call
         puts "=" * 70
-        puts "开始执行美股财务数据爬取任务"
+        puts "开始执行A股财务数据爬取任务"
         puts "=" * 70
 
-        pending_stocks = Stock.where(market: "US")
+        pending_stocks = Stock.where(market: "CN")
         puts "\n待爬取股票数量: #{pending_stocks.count}"
 
         success_count = 0
@@ -36,23 +36,23 @@ module DataSources
         end
 
         puts "\n" + "=" * 70
-        puts "美股财务数据爬取任务完成"
+        puts "A股财务数据爬取任务完成"
         puts "📊 统计结果: 成功 #{success_count} 只, 失败 #{fail_count} 只"
         puts "=" * 70
       end
 
       def call_single(symbol)
         puts "\n" + "-" * 70
-        puts "单只美股股票财务数据爬取"
+        puts "单只A股股票财务数据爬取"
         puts "股票代码: #{symbol}"
         puts "-" * 70
 
         results = []
         
-        results << { name: "利润表", result: execute_service("利润表") { XueqiuIncomeStatementService.call(symbol, market: "US") } }
-        results << { name: "资产负债表", result: execute_service("资产负债表") { XueqiuBalanceSheetService.call(symbol, market: "US") } }
-        results << { name: "现金流量表", result: execute_service("现金流量表") { XueqiuCashFlowService.call(symbol, market: "US") } }
-        results << { name: "财务指标", result: execute_service("财务指标") { XueqiuIndicatorService.call(symbol, market: "US") } }
+        results << { name: "利润表", result: execute_service("利润表") { XueqiuIncomeStatementService.call(symbol, market: "CN") } }
+        results << { name: "资产负债表", result: execute_service("资产负债表") { XueqiuBalanceSheetService.call(symbol, market: "CN") } }
+        results << { name: "现金流量表", result: execute_service("现金流量表") { XueqiuCashFlowService.call(symbol, market: "CN") } }
+        results << { name: "财务指标", result: execute_service("财务指标") { XueqiuIndicatorService.call(symbol, market: "CN") } }
 
         puts "\n" + "=" * 70
         puts "#{symbol} 财务数据爬取汇总"

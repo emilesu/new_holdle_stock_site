@@ -1,6 +1,12 @@
 {
   "version": 1,
   "skills": {
+    "gstack": {
+      "source": "garrytan/gstack",
+      "sourceType": "github",
+      "skillPath": "SKILL.md",
+      "computedHash": "dd74f226f4de03b7cb85493d6ffad0621d5ee0140c6aab10eb0696e160c64f0d"
+    },
     "mobile-responsiveness": {
       "source": "hoodini/ai-agents-skills",
       "sourceType": "github",

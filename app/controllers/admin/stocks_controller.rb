@@ -71,7 +71,23 @@ module Admin
     private
 
     def set_stock
-      @stock = Stock.find(params[:id])
+      param_id = params[:id]
+      
+      if param_id.to_i.to_s == param_id
+        @stock = Stock.find(param_id)
+      else
+        if param_id.include?('-')
+          symbol = param_id.split('-').last
+          @stock = Stock.find_by(symbol: symbol)
+        else
+          @stock = Stock.find_by(symbol: param_id)
+        end
+      end
+      
+      unless @stock
+        redirect_to admin_stocks_path, alert: '股票不存在'
+        return false
+      end
     rescue ActiveRecord::RecordNotFound
       redirect_to admin_stocks_path, alert: '股票不存在'
     end

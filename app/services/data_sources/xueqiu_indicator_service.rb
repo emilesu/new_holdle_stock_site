@@ -247,7 +247,7 @@ module DataSources
             capital_reserve: parse_financial_value(item["capital_reserve"]),
             roe_avg: parse_financial_value(item["avg_roe"]),
             net_interest_of_ta: parse_financial_value(item["net_interest_of_total_assets"]),
-            net_sales_rate: parse_financial_value(item["gross_selling_rate"]),
+            gross_margin: parse_financial_value(item["gross_selling_rate"]),
             asset_liab_ratio: nil
           }
         else

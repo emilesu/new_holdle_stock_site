@@ -44,7 +44,14 @@
             <div class="top-row">
               <!-- 公司信息 -->
               <div class="company-info">
-                <h1 class="text-2xl font-bold text-gray-900"><%= @stock.name.presence || '未命名股票' %></h1>
+                <h1 class="text-2xl font-bold text-gray-900">
+                  <% if @stock.market == 'US' && @stock.name.present? && @stock.name.include?('|') %>
+                    <% parts = @stock.name.split('|', 2) %>
+                    <%= parts.first %><span class="text-sm font-medium text-gray-600"> - <%= parts.last %></span>
+                  <% else %>
+                    <%= @stock.name.presence || '未命名股票' %>
+                  <% end %>
+                </h1>
                 <div class="flex items-center space-x-2 mt-2">
                   <span class="text-gray-600 text-sm font-mono"><%= @stock.symbol.presence || 'N/A' %></span>
                   <span class="px-2 py-1 text-xs font-semibold rounded <%= @stock.market == 'CN' ? 'bg-green-100 text-green-800' : @stock.market == 'US' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800' %>">
@@ -54,15 +61,21 @@
                 <div class="border-t border-gray-100 pt-4 mt-4 space-y-3">
                   <div class="flex justify-between py-2">
                     <span class="text-gray-500 text-sm">所属板块</span>
-                    <span class="text-gray-900 font-medium"><%= @stock.sector.presence || '-' %></span>
+                    <span class="px-2 py-1 text-xs font-semibold rounded <%= @stock.market == 'CN' ? 'bg-green-100 text-green-800' : @stock.market == 'US' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800' %>">
+                      <%= @stock.sector.presence || '-' %>
+                    </span>
                   </div>
                   <div class="flex justify-between py-2">
                     <span class="text-gray-500 text-sm">所属行业</span>
-                    <span class="text-gray-900 font-medium"><%= @stock.industry.presence || '-' %></span>
+                    <span class="px-2 py-1 text-xs font-semibold rounded <%= @stock.market == 'CN' ? 'bg-green-100 text-green-800' : @stock.market == 'US' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800' %>">
+                      <%= @stock.industry.presence || '-' %>
+                    </span>
                   </div>
                   <div class="flex justify-between py-2">
                     <span class="text-gray-500 text-sm">交易所</span>
-                    <span class="text-gray-900 font-medium"><%= @stock.exchange.presence || '-' %></span>
+                    <span class="px-2 py-1 text-xs font-semibold rounded <%= @stock.market == 'CN' ? 'bg-green-100 text-green-800' : @stock.market == 'US' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800' %>">
+                      <%= @stock.exchange.presence || '-' %>
+                    </span>
                   </div>
                   <div class="flex justify-between py-2">
                     <span class="text-gray-500 text-sm">市值</span>
@@ -88,16 +101,16 @@
         <div class="bg-white rounded-lg overflow-hidden border border-gray-200">
           <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
             <h2 class="text-lg font-semibold text-gray-800">获利能力</h2>
-            <p class="text-sm text-gray-500 mt-1">最近8期财务指标</p>
           </div>
           <div class="overflow-x-auto">
             <table class="w-full">
               <thead class="bg-gray-50">
                 <tr>
-                  <th class="px-6 py-3 text-left text-sm font-semibold text-gray-500 w-32">指标</th>
-                  <% if @financial_indicators.any? %>
-                    <% @financial_indicators.order(report_date: :desc).limit(8).each do |indicator| %>
-                      <th class="px-4 py-3 text-center text-sm font-semibold text-gray-500 whitespace-nowrap"><%= indicator.report_date&.strftime('%Y') %></th>
+                  <th class="px-6 py-3 text-left text-sm font-medium text-gray-500 w-32">指标</th>
+                  <% years = @financial_indicators.map { |i| i.report_date&.strftime('%Y') }.uniq.compact.sort.first(8) %>
+                  <% if years.any? %>
+                    <% years.each do |year| %>
+                      <th class="px-4 py-3 text-right text-xs font-semibold text-gray-800 whitespace-nowrap"><%= year %></th>
                     <% end %>
                   <% else %>
                     <th class="px-6 py-3 text-center text-sm text-gray-400">暂无数据</th>
@@ -105,27 +118,94 @@
                 </tr>
               </thead>
               <tbody class="divide-y divide-gray-100">
-                <% [[{ label: '净资产收益率（ROE）', key: 'roe_avg' },
-                    { label: '总资产收益率（ROA）', key: 'net_interest_of_ta' },
-                    { label: '毛利率', key: 'gross_margin' },
-                    { label: '净利率', key: 'operating_margin' },
-                    { label: '每股收益（EPS）', key: 'basic_eps' },
-                    { label: '每股现金流量', key: 'ncf_from_oa_ps' }]].each do |rows| %>
-                  <% rows.each do |row| %>
-                    <tr class="hover:bg-gray-50 transition-colors">
-                      <td class="px-6 py-3 text-sm text-gray-700 font-medium"><%= row[:label] %></td>
-                      <% if @financial_indicators.any? %>
-                        <% @financial_indicators.order(report_date: :desc).limit(8).each do |indicator| %>
-                          <td class="px-4 py-3 text-center text-sm text-gray-600">
-                            <%= indicator.send(row[:key]).present? ? "%.2f" % indicator.send(row[:key]) : '-' %>
-                          </td>
-                        <% end %>
-                      <% else %>
-                        <td class="px-6 py-3 text-center text-sm text-gray-400">-</td>
-                      <% end %>
-                    </tr>
+                <tr class="hover:bg-gray-50 transition-colors">
+                  <td class="px-6 py-3 text-sm text-gray-700 font-medium">净资产收益率（ROE）</td>
+                  <% if years.any? %>
+                    <% years.each do |year| %>
+                      <td class="px-4 py-3 text-right text-sm text-gray-600">
+                        <% indicator = @financial_indicators.to_a.detect { |i| i.report_date&.strftime('%Y') == year } %>
+                        <%= indicator&.roe_avg.present? ? "%.2f%%" % indicator.roe_avg : '-' %>
+                      </td>
+                    <% end %>
+                  <% else %>
+                    <td class="px-6 py-3 text-center text-sm text-gray-400">-</td>
                   <% end %>
-                <% end %>
+                </tr>
+                <tr class="hover:bg-gray-50 transition-colors">
+                  <td class="px-6 py-3 text-sm text-gray-700 font-medium">总资产收益率（ROA）</td>
+                  <% if years.any? %>
+                    <% years.each do |year| %>
+                      <td class="px-4 py-3 text-right text-sm text-gray-600">
+                        <% indicator = @financial_indicators.to_a.detect { |i| i.report_date&.strftime('%Y') == year } %>
+                        <%= indicator&.net_interest_of_ta.present? ? "%.2f%%" % indicator.net_interest_of_ta : '-' %>
+                      </td>
+                    <% end %>
+                  <% else %>
+                    <td class="px-6 py-3 text-center text-sm text-gray-400">-</td>
+                  <% end %>
+                </tr>
+                <tr class="hover:bg-gray-50 transition-colors">
+                  <td class="px-6 py-3 text-sm text-gray-700 font-medium">毛利率</td>
+                  <% if years.any? %>
+                    <% years.each do |year| %>
+                      <td class="px-4 py-3 text-right text-sm text-gray-600">
+                        <% if @stock.market == 'CN' %>
+                          <% indicator = @financial_indicators.to_a.detect { |i| i.report_date&.strftime('%Y') == year } %>
+                          <%= indicator&.gross_margin.present? ? "%.2f%%" % indicator.gross_margin : '-' %>
+                        <% else %>
+                          <% income = @income_statements.to_a.detect { |i| i.report_date&.strftime('%Y') == year } %>
+                          <%= income&.operating_income.present? && income&.total_revenue.present? && income.total_revenue != 0 ? "%.2f%%" % (income.operating_income / income.total_revenue * 100) : '-' %>
+                        <% end %>
+                      </td>
+                    <% end %>
+                  <% else %>
+                    <td class="px-6 py-3 text-center text-sm text-gray-400">-</td>
+                  <% end %>
+                </tr>
+                <tr class="hover:bg-gray-50 transition-colors">
+                  <td class="px-6 py-3 text-sm text-gray-700 font-medium">净利率</td>
+                  <% if years.any? %>
+                    <% years.each do |year| %>
+                      <td class="px-4 py-3 text-right text-sm text-gray-600">
+                        <% if @stock.market == 'CN' %>
+                          <% income = @income_statements.to_a.detect { |i| i.report_date&.strftime('%Y') == year } %>
+                          <%= income&.net_income_to_shareholders.present? && income&.total_revenue.present? && income.total_revenue != 0 ? "%.2f%%" % (income.net_income_to_shareholders / income.total_revenue * 100) : '-' %>
+                        <% else %>
+                          <% indicator = @financial_indicators.to_a.detect { |i| i.report_date&.strftime('%Y') == year } %>
+                          <%= indicator&.net_sales_rate.present? ? "%.2f%%" % indicator.net_sales_rate : '-' %>
+                        <% end %>
+                      </td>
+                    <% end %>
+                  <% else %>
+                    <td class="px-6 py-3 text-center text-sm text-gray-400">-</td>
+                  <% end %>
+                </tr>
+                <tr class="hover:bg-gray-50 transition-colors">
+                  <td class="px-6 py-3 text-sm text-gray-700 font-medium">每股收益（EPS）</td>
+                  <% if years.any? %>
+                    <% years.each do |year| %>
+                      <td class="px-4 py-3 text-right text-sm text-gray-600">
+                        <% indicator = @financial_indicators.to_a.detect { |i| i.report_date&.strftime('%Y') == year } %>
+                        <%= indicator&.basic_eps.present? ? "%.2f" % indicator.basic_eps : '-' %>
+                      </td>
+                    <% end %>
+                  <% else %>
+                    <td class="px-6 py-3 text-center text-sm text-gray-400">-</td>
+                  <% end %>
+                </tr>
+                <tr class="hover:bg-gray-50 transition-colors">
+                  <td class="px-6 py-3 text-sm text-gray-700 font-medium">每股现金流量</td>
+                  <% if years.any? %>
+                    <% years.each do |year| %>
+                      <td class="px-4 py-3 text-right text-sm text-gray-600">
+                        <% indicator = @financial_indicators.to_a.detect { |i| i.report_date&.strftime('%Y') == year } %>
+                        <%= indicator&.ncf_from_oa_ps.present? ? "%.2f" % indicator.ncf_from_oa_ps : '-' %>
+                      </td>
+                    <% end %>
+                  <% else %>
+                    <td class="px-6 py-3 text-center text-sm text-gray-400">-</td>
+                  <% end %>
+                </tr>
               </tbody>
             </table>
           </div>
@@ -135,17 +215,16 @@
         <div class="bg-white rounded-lg overflow-hidden border border-gray-200">
           <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
             <h2 class="text-lg font-semibold text-gray-800">财务结构 & 现金流量</h2>
-            <p class="text-sm text-gray-500 mt-1">最近8期财务指标（单位：亿元）</p>
           </div>
           <div class="overflow-x-auto">
             <table class="w-full">
               <thead class="bg-gray-50">
                 <tr>
-                  <th class="px-6 py-3 text-left text-sm font-semibold text-gray-500 w-36">指标</th>
-                  <% years = (@income_statements.map { |i| i.report_date&.strftime('%Y') } + @cash_flows.map { |c| c.report_date&.strftime('%Y') }).uniq.compact.sort.reverse.first(8) %>
+                  <th class="px-6 py-3 text-left text-sm font-medium text-gray-500 w-36">指标</th>
+                  <% years = (@income_statements.map { |i| i.report_date&.strftime('%Y') } + @cash_flows.map { |c| c.report_date&.strftime('%Y') }).uniq.compact.sort.first(8) %>
                   <% if years.any? %>
                     <% years.each do |year| %>
-                      <th class="px-4 py-3 text-center text-sm font-semibold text-gray-500 whitespace-nowrap"><%= year %></th>
+                      <th class="px-4 py-3 text-right text-xs font-semibold text-gray-800 whitespace-nowrap"><%= year %></th>
                     <% end %>
                   <% else %>
                     <th class="px-6 py-3 text-center text-sm text-gray-400">暂无数据</th>
@@ -153,36 +232,105 @@
                 </tr>
               </thead>
               <tbody class="divide-y divide-gray-100">
-                <% cash_flow_rows = [
-                  { label: '负债占资产比率', key: 'debt_to_asset_ratio', source: 'income' },
-                  { label: '总资产周转率', key: 'net_turnover_ratio', source: 'income' },
-                  { label: '净利润', key: 'net_income', source: 'income' },
-                  { label: '经营活动现金流量', key: 'operating_cash_flow', source: 'cash_flow' },
-                  { label: '投资活动现金流量', key: 'investing_cash_flow', source: 'cash_flow' },
-                  { label: '筹资活动现金流量', key: 'financing_cash_flow', source: 'cash_flow' },
-                  { label: '净现金流量', key: 'net_cash_change', source: 'cash_flow' }
-                ] %>
-                <% cash_flow_rows.each do |row| %>
-                  <tr class="hover:bg-gray-50 transition-colors">
-                    <td class="px-6 py-3 text-sm text-gray-700 font-medium"><%= row[:label] %></td>
-                    <% if years.any? %>
-                      <% years.each do |year| %>
-                        <td class="px-4 py-3 text-center text-sm">
-                          <% if row[:source] == 'income' %>
-                            <% item = @income_statements.find { |i| i.report_date&.strftime('%Y') == year } %>
-                            <% value = item&.send(row[:key]) %>
-                          <% else %>
-                            <% item = @cash_flows.find { |c| c.report_date&.strftime('%Y') == year } %>
-                            <% value = item&.send(row[:key]) %>
-                          <% end %>
-                          <%= value.present? ? "%.2f" % (value / 100000000.0) : '-' %>
-                        </td>
-                      <% end %>
-                    <% else %>
-                      <td class="px-6 py-3 text-center text-sm text-gray-400">-</td>
+                <tr class="hover:bg-gray-50 transition-colors">
+                  <td class="px-6 py-3 text-sm text-gray-700 font-medium">负债占资产比率</td>
+                  <% if years.any? %>
+                    <% years.each do |year| %>
+                      <td class="px-4 py-3 text-right text-sm">
+                        <% balance = @balance_sheets.to_a.detect { |b| b.report_date&.strftime('%Y') == year } %>
+                        <% value = balance&.total_liabilities.present? && balance&.total_assets.present? && balance.total_assets != 0 ? (balance.total_liabilities / balance.total_assets * 100) : nil %>
+                        <%= value.present? ? "%.2f%%" % value : '-' %>
+                      </td>
                     <% end %>
-                  </tr>
-                <% end %>
+                  <% else %>
+                    <td class="px-6 py-3 text-center text-sm text-gray-400">-</td>
+                  <% end %>
+                </tr>
+                <tr class="hover:bg-gray-50 transition-colors">
+                  <td class="px-6 py-3 text-sm text-gray-700 font-medium">总资产周转率</td>
+                  <% if years.any? %>
+                    <% years.each do |year| %>
+                      <td class="px-4 py-3 text-right text-sm">
+                        <% income = @income_statements.to_a.detect { |i| i.report_date&.strftime('%Y') == year } %>
+                        <% balance = @balance_sheets.to_a.detect { |b| b.report_date&.strftime('%Y') == year } %>
+                        <% value = income&.total_revenue.present? && balance&.total_assets.present? && balance.total_assets != 0 ? (income.total_revenue / balance.total_assets * 100) : nil %>
+                        <%= value.present? ? "%.2f%%" % value : '-' %>
+                      </td>
+                    <% end %>
+                  <% else %>
+                    <td class="px-6 py-3 text-center text-sm text-gray-400">-</td>
+                  <% end %>
+                </tr>
+                <tr class="hover:bg-gray-50 transition-colors">
+                  <td class="px-6 py-3 text-sm text-gray-700 font-medium">净利润</td>
+                  <% if years.any? %>
+                    <% years.each do |year| %>
+                      <td class="px-4 py-3 text-right text-sm">
+                        <% item = @income_statements.to_a.detect { |i| i.report_date&.strftime('%Y') == year } %>
+                        <% value = item&.net_income_to_shareholders %>
+                        <%= value.present? ? "%.2f" % (value / 100000000.0) : '-' %>
+                      </td>
+                    <% end %>
+                  <% else %>
+                    <td class="px-6 py-3 text-center text-sm text-gray-400">-</td>
+                  <% end %>
+                </tr>
+                <tr class="hover:bg-gray-50 transition-colors">
+                  <td class="px-6 py-3 text-sm text-gray-700 font-medium">经营活动现金流量</td>
+                  <% if years.any? %>
+                    <% years.each do |year| %>
+                      <td class="px-4 py-3 text-right text-sm">
+                        <% item = @cash_flows.to_a.detect { |c| c.report_date&.strftime('%Y') == year } %>
+                        <% value = item&.operating_cash_flow %>
+                        <%= value.present? ? "%.2f" % (value / 100000000.0) : '-' %>
+                      </td>
+                    <% end %>
+                  <% else %>
+                    <td class="px-6 py-3 text-center text-sm text-gray-400">-</td>
+                  <% end %>
+                </tr>
+                <tr class="hover:bg-gray-50 transition-colors">
+                  <td class="px-6 py-3 text-sm text-gray-700 font-medium">投资活动现金流量</td>
+                  <% if years.any? %>
+                    <% years.each do |year| %>
+                      <td class="px-4 py-3 text-right text-sm">
+                        <% item = @cash_flows.to_a.detect { |c| c.report_date&.strftime('%Y') == year } %>
+                        <% value = item&.investing_cash_flow %>
+                        <%= value.present? ? "%.2f" % (value / 100000000.0) : '-' %>
+                      </td>
+                    <% end %>
+                  <% else %>
+                    <td class="px-6 py-3 text-center text-sm text-gray-400">-</td>
+                  <% end %>
+                </tr>
+                <tr class="hover:bg-gray-50 transition-colors">
+                  <td class="px-6 py-3 text-sm text-gray-700 font-medium">筹资活动现金流量</td>
+                  <% if years.any? %>
+                    <% years.each do |year| %>
+                      <td class="px-4 py-3 text-right text-sm">
+                        <% item = @cash_flows.to_a.detect { |c| c.report_date&.strftime('%Y') == year } %>
+                        <% value = item&.financing_cash_flow %>
+                        <%= value.present? ? "%.2f" % (value / 100000000.0) : '-' %>
+                      </td>
+                    <% end %>
+                  <% else %>
+                    <td class="px-6 py-3 text-center text-sm text-gray-400">-</td>
+                  <% end %>
+                </tr>
+                <tr class="hover:bg-gray-50 transition-colors">
+                  <td class="px-6 py-3 text-sm text-gray-700 font-medium">净现金流量</td>
+                  <% if years.any? %>
+                    <% years.each do |year| %>
+                      <td class="px-4 py-3 text-right text-sm">
+                        <% item = @cash_flows.to_a.detect { |c| c.report_date&.strftime('%Y') == year } %>
+                        <% value = item&.net_cash_change %>
+                        <%= value.present? ? "%.2f" % (value / 100000000.0) : '-' %>
+                      </td>
+                    <% end %>
+                  <% else %>
+                    <td class="px-6 py-3 text-center text-sm text-gray-400">-</td>
+                  <% end %>
+                </tr>
               </tbody>
             </table>
           </div>
