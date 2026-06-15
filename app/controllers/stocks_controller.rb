@@ -29,28 +29,30 @@ class StocksController < ApplicationController
   end
 
   def show
-    @financial_indicators = @stock.financial_indicators.order(report_date: :desc).limit(8)
-    @income_statements = @stock.income_statements.order(report_date: :desc).limit(8)
-    @cash_flows = @stock.cash_flows.order(report_date: :desc).limit(8)
-    @balance_sheets = @stock.balance_sheets.order(report_date: :desc).limit(8)
+    @financial_years = @stock.financial_years
+    
+    @financial_data_by_year = {}
+    @financial_years.each do |year|
+      @financial_data_by_year[year] = @stock.get_financial_data_by_year(year)
+    end
     
     @industry_comparison = Stock.where.not(id: @stock.id)
       .where(sector: @stock.sector)
       .order(:id)
       .limit(10)
     
-    latest_indicator = @financial_indicators.first
+    latest_data = @financial_data_by_year[@financial_years.last]
     @radar_data = {
       labels: ['ROE', 'ROA', '毛利率', '净利率', 'EPS', '现金流'],
       datasets: [{
         label: @stock.symbol,
         data: [
-          latest_indicator&.roe_avg.present? ? latest_indicator.roe_avg : 0,
-          latest_indicator&.net_interest_of_ta.present? ? latest_indicator.net_interest_of_ta : 0,
-          latest_indicator&.gross_margin.present? ? latest_indicator.gross_margin : 0,
-          latest_indicator&.operating_margin.present? ? latest_indicator.operating_margin : 0,
-          latest_indicator&.basic_eps.present? ? latest_indicator.basic_eps : 0,
-          latest_indicator&.ncf_from_oa_ps.present? ? latest_indicator.ncf_from_oa_ps : 0
+          latest_data&.dig(:roe) || 0,
+          latest_data&.dig(:roa) || 0,
+          latest_data&.dig(:gross_margin) || 0,
+          latest_data&.dig(:net_profit_margin) || 0,
+          latest_data&.dig(:eps) || 0,
+          latest_data&.dig(:cash_flow_ps) || 0
         ],
         backgroundColor: 'rgba(59, 130, 246, 0.2)',
         borderColor: 'rgb(59, 130, 246)',
