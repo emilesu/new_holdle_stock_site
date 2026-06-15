@@ -23,12 +23,21 @@
           <!-- 桌面端导航 -->
           <div class="hidden md:flex items-center space-x-8">
             <!-- 搜索栏 -->
-            <div class="relative">
+            <div class="relative" id="search-container">
               <input 
                 type="text" 
+                id="stock-search-input"
                 placeholder="搜索股票代码或名称..." 
-                class="w-64 px-4 py-2 bg-white border border-gray-200 rounded-full text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 placeholder-gray-400"
+                autocomplete="off"
+                class="w-72 px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-full text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 placeholder-gray-400"
               >
+              <!-- 下拉建议框 -->
+              <div id="search-suggestions" class="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden hidden z-50">
+                <div id="suggestions-list"></div>
+                <div id="no-results" class="px-4 py-6 text-center text-gray-400 hidden">
+                  <p class="text-sm">未找到匹配的股票</p>
+                </div>
+              </div>
             </div>
             
             <!-- 导航链接 -->
@@ -124,7 +133,152 @@
             mobileMenu.classList.toggle('hidden');
           });
         }
+
+        // 股票搜索自动补齐功能
+        initStockSearch();
       });
+
+      function initStockSearch() {
+        const searchInput = document.getElementById('stock-search-input');
+        const suggestionsBox = document.getElementById('search-suggestions');
+        const suggestionsList = document.getElementById('suggestions-list');
+        const noResults = document.getElementById('no-results');
+        
+        if (!searchInput) return;
+
+        let debounceTimer = null;
+        let selectedIndex = -1;
+        let currentResults = [];
+
+        // 防抖函数
+        function debounce(func, delay) {
+          return function(...args) {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => func.apply(this, args), delay);
+          };
+        }
+
+        // 搜索函数
+        async function searchStocks(query) {
+          if (query.length < 1) {
+            hideSuggestions();
+            return;
+          }
+
+          try {
+            const response = await fetch(`/stocks/autocomplete?q=${encodeURIComponent(query)}`);
+            const data = await response.json();
+            currentResults = data;
+            renderSuggestions(data);
+          } catch (error) {
+            console.error('搜索失败:', error);
+          }
+        }
+
+        // 渲染建议列表
+        function renderSuggestions(results) {
+          selectedIndex = -1;
+          
+          if (results.length === 0) {
+            suggestionsList.innerHTML = '';
+            suggestionsBox.classList.remove('hidden');
+            noResults.classList.remove('hidden');
+            return;
+          }
+
+          noResults.classList.add('hidden');
+          suggestionsBox.classList.remove('hidden');
+
+          suggestionsList.innerHTML = results.map((stock, index) => {
+            const marketClass = stock.market === 'CN' 
+              ? 'bg-green-100 text-green-700' 
+              : 'bg-blue-100 text-blue-700';
+            
+            return `
+              <div class="suggestion-item px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors" 
+                   data-index="${index}"
+                   data-url="${stock.url}">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center space-x-3">
+                    <span class="px-2 py-0.5 text-xs font-medium rounded ${marketClass}">${stock.market_label}</span>
+                    <span class="font-mono text-sm font-medium text-gray-800">${stock.symbol}</span>
+                  </div>
+                  <span class="text-sm text-gray-600 truncate max-w-[200px]" title="${stock.name}">${stock.name}</span>
+                </div>
+              </div>
+            `;
+          }).join('');
+
+          // 绑定点击事件
+          document.querySelectorAll('.suggestion-item').forEach(item => {
+            item.addEventListener('click', function() {
+              const url = this.dataset.url;
+              window.location.href = url;
+            });
+          });
+        }
+
+        // 隐藏建议框
+        function hideSuggestions() {
+          suggestionsBox.classList.add('hidden');
+          selectedIndex = -1;
+        }
+
+        // 更新选中状态
+        function updateSelection() {
+          const items = document.querySelectorAll('.suggestion-item');
+          items.forEach((item, index) => {
+            if (index === selectedIndex) {
+              item.classList.add('bg-blue-50', 'border-l-2', 'border-blue-500');
+            } else {
+              item.classList.remove('bg-blue-50', 'border-l-2', 'border-blue-500');
+            }
+          });
+        }
+
+        // 输入事件
+        searchInput.addEventListener('input', debounce(function(e) {
+          const query = e.target.value.trim();
+          searchStocks(query);
+        }, 300));
+
+        // 键盘导航
+        searchInput.addEventListener('keydown', function(e) {
+          const items = document.querySelectorAll('.suggestion-item');
+          
+          if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            selectedIndex = Math.min(selectedIndex + 1, items.length - 1);
+            updateSelection();
+          } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            selectedIndex = Math.max(selectedIndex - 1, -1);
+            updateSelection();
+          } else if (e.key === 'Enter') {
+            e.preventDefault();
+            if (selectedIndex >= 0 && items[selectedIndex]) {
+              window.location.href = items[selectedIndex].dataset.url;
+            }
+          } else if (e.key === 'Escape') {
+            hideSuggestions();
+          }
+        });
+
+        // 聚焦时显示已有结果
+        searchInput.addEventListener('focus', function() {
+          if (currentResults.length > 0) {
+            suggestionsBox.classList.remove('hidden');
+          }
+        });
+
+        // 点击外部关闭
+        document.addEventListener('click', function(e) {
+          const container = document.getElementById('search-container');
+          if (container && !container.contains(e.target)) {
+            hideSuggestions();
+          }
+        });
+      }
     </script>
   </body>
 </html>

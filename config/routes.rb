@@ -5,7 +5,11 @@ Rails.application.routes.draw do
 
   root "home#index"
 
-  resources :stocks, only: [:show]
+  resources :stocks, only: [:show] do
+    collection do
+      get :autocomplete
+    end
+  end
 
   namespace :users do
     get "profile", to: "profiles#show", as: :profile

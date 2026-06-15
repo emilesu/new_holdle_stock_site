@@ -1,6 +1,33 @@
 class StocksController < ApplicationController
   before_action :set_stock, only: [:show]
 
+  def autocomplete
+    query = params[:q].to_s.strip
+    
+    if query.length < 1
+      render json: []
+      return
+    end
+
+    stocks = Stock.where("symbol ILIKE ? OR name ILIKE ?", "%#{query}%", "%#{query}%")
+      .limit(10)
+      .select(:id, :symbol, :name, :market, :exchange)
+
+    results = stocks.map do |stock|
+      market_label = stock.market == 'CN' ? 'A股' : '美股'
+      {
+        id: stock.id,
+        symbol: stock.symbol,
+        name: stock.name,
+        market: stock.market,
+        market_label: market_label,
+        url: stock_path(stock)
+      }
+    end
+
+    render json: results
+  end
+
   def show
     @financial_indicators = @stock.financial_indicators.order(report_date: :desc).limit(8)
     @income_statements = @stock.income_statements.order(report_date: :desc).limit(8)
