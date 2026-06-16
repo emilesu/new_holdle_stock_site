@@ -8,6 +8,7 @@ Rails.application.routes.draw do
   resources :stocks, only: [:show] do
     member do
       get :radar_comparison
+      get :indicator_detail
     end
     collection do
       get :autocomplete

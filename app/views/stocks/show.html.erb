@@ -1,6 +1,53 @@
 <!-- 股票详情页 -->
 <div class="min-h-screen bg-gray-50 pt-20">
   <style>
+    /* 可交互元素光标样式 */
+    a, button, [role="button"],
+    .indicator-row, .comparison-item,
+    #modal-backdrop, #modal-close {
+      cursor: pointer;
+    }
+    
+    /* 按钮和链接悬停效果增强 */
+    button:hover, [role="button"]:hover {
+      cursor: pointer;
+    }
+    
+    /* 确保表格行可点击区域完整 */
+    .indicator-row td {
+      cursor: pointer;
+    }
+    
+    /* 财务列表数据栏悬停效果 */
+    .indicator-row {
+      transition: background-color 0.2s ease-in-out, box-shadow 0.15s ease-in-out;
+    }
+    
+    .indicator-row:hover {
+      background-color: #eff6ff !important;
+      box-shadow: inset 0 0 0 1px rgba(59, 130, 246, 0.2);
+    }
+    
+    .indicator-row:active {
+      background-color: #dbeafe !important;
+    }
+    
+    /* 快速操作按钮悬停效果增强 */
+    .quick-action-btn {
+      transition: all 0.2s ease-in-out;
+    }
+    
+    .quick-action-btn:hover {
+      background-color: #eff6ff;
+      color: #2563eb;
+      transform: translateX(4px);
+    }
+    
+    /* 对比项悬停效果 */
+    .comparison-item {
+      transition: background-color 0.2s ease-in-out;
+    }
+    
     @media (min-width: 1024px) {
       .stock-main-container {
         grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
@@ -126,7 +173,7 @@
                 </tr>
               </thead>
               <tbody class="divide-y divide-gray-100">
-                <tr class="hover:bg-gray-50 transition-colors">
+                <tr class="hover:bg-blue-50 cursor-pointer indicator-row transition-colors" data-indicator="roe">
                   <td class="px-6 py-3 text-sm text-gray-700 font-medium">净资产收益率（ROE）</td>
                   <% if @financial_years.any? %>
                     <% @financial_years.each do |year| %>
@@ -138,7 +185,7 @@
                     <td class="px-6 py-3 text-center text-sm text-gray-400">-</td>
                   <% end %>
                 </tr>
-                <tr class="hover:bg-gray-50 transition-colors">
+                <tr class="hover:bg-blue-50 cursor-pointer indicator-row transition-colors" data-indicator="roa">
                   <td class="px-6 py-3 text-sm text-gray-700 font-medium">总资产收益率（ROA）</td>
                   <% if @financial_years.any? %>
                     <% @financial_years.each do |year| %>
@@ -150,7 +197,7 @@
                     <td class="px-6 py-3 text-center text-sm text-gray-400">-</td>
                   <% end %>
                 </tr>
-                <tr class="hover:bg-gray-50 transition-colors">
+                <tr class="hover:bg-blue-50 cursor-pointer indicator-row transition-colors" data-indicator="gross_margin">
                   <td class="px-6 py-3 text-sm text-gray-700 font-medium">毛利率</td>
                   <% if @financial_years.any? %>
                     <% @financial_years.each do |year| %>
@@ -162,7 +209,7 @@
                     <td class="px-6 py-3 text-center text-sm text-gray-400">-</td>
                   <% end %>
                 </tr>
-                <tr class="hover:bg-gray-50 transition-colors">
+                <tr class="hover:bg-blue-50 cursor-pointer indicator-row transition-colors" data-indicator="net_profit_margin">
                   <td class="px-6 py-3 text-sm text-gray-700 font-medium">净利率</td>
                   <% if @financial_years.any? %>
                     <% @financial_years.each do |year| %>
@@ -174,7 +221,7 @@
                     <td class="px-6 py-3 text-center text-sm text-gray-400">-</td>
                   <% end %>
                 </tr>
-                <tr class="hover:bg-gray-50 transition-colors">
+                <tr class="hover:bg-blue-50 cursor-pointer indicator-row transition-colors" data-indicator="eps">
                   <td class="px-6 py-3 text-sm text-gray-700 font-medium">每股收益（EPS）</td>
                   <% if @financial_years.any? %>
                     <% @financial_years.each do |year| %>
@@ -186,7 +233,7 @@
                     <td class="px-6 py-3 text-center text-sm text-gray-400">-</td>
                   <% end %>
                 </tr>
-                <tr class="hover:bg-gray-50 transition-colors">
+                <tr class="hover:bg-blue-50 cursor-pointer indicator-row transition-colors" data-indicator="cash_flow_ps">
                   <td class="px-6 py-3 text-sm text-gray-700 font-medium">每股现金流量</td>
                   <% if @financial_years.any? %>
                     <% @financial_years.each do |year| %>
@@ -223,7 +270,7 @@
                 </tr>
               </thead>
               <tbody class="divide-y divide-gray-100">
-                <tr class="hover:bg-gray-50 transition-colors">
+                <tr class="hover:bg-blue-50 cursor-pointer indicator-row transition-colors" data-indicator="asset_liab_ratio">
                   <td class="px-6 py-3 text-sm text-gray-700 font-medium">负债占资产比率</td>
                   <% if @financial_years.any? %>
                     <% @financial_years.each do |year| %>
@@ -235,7 +282,7 @@
                     <td class="px-6 py-3 text-center text-sm text-gray-400">-</td>
                   <% end %>
                 </tr>
-                <tr class="hover:bg-gray-50 transition-colors">
+                <tr class="hover:bg-blue-50 cursor-pointer indicator-row transition-colors" data-indicator="asset_turnover_ratio">
                   <td class="px-6 py-3 text-sm text-gray-700 font-medium">总资产周转率</td>
                   <% if @financial_years.any? %>
                     <% @financial_years.each do |year| %>
@@ -247,7 +294,7 @@
                     <td class="px-6 py-3 text-center text-sm text-gray-400">-</td>
                   <% end %>
                 </tr>
-                <tr class="hover:bg-gray-50 transition-colors">
+                <tr class="hover:bg-blue-50 cursor-pointer indicator-row transition-colors" data-indicator="net_income">
                   <td class="px-6 py-3 text-sm text-gray-700 font-medium">净利润</td>
                   <% if @financial_years.any? %>
                     <% @financial_years.each do |year| %>
@@ -259,7 +306,7 @@
                     <td class="px-6 py-3 text-center text-sm text-gray-400">-</td>
                   <% end %>
                 </tr>
-                <tr class="hover:bg-gray-50 transition-colors">
+                <tr class="hover:bg-blue-50 cursor-pointer indicator-row transition-colors" data-indicator="operating_cash_flow">
                   <td class="px-6 py-3 text-sm text-gray-700 font-medium">经营活动现金流量</td>
                   <% if @financial_years.any? %>
                     <% @financial_years.each do |year| %>
@@ -271,7 +318,7 @@
                     <td class="px-6 py-3 text-center text-sm text-gray-400">-</td>
                   <% end %>
                 </tr>
-                <tr class="hover:bg-gray-50 transition-colors">
+                <tr class="hover:bg-blue-50 cursor-pointer indicator-row transition-colors" data-indicator="investing_cash_flow">
                   <td class="px-6 py-3 text-sm text-gray-700 font-medium">投资活动现金流量</td>
                   <% if @financial_years.any? %>
                     <% @financial_years.each do |year| %>
@@ -283,7 +330,7 @@
                     <td class="px-6 py-3 text-center text-sm text-gray-400">-</td>
                   <% end %>
                 </tr>
-                <tr class="hover:bg-gray-50 transition-colors">
+                <tr class="hover:bg-blue-50 cursor-pointer indicator-row transition-colors" data-indicator="financing_cash_flow">
                   <td class="px-6 py-3 text-sm text-gray-700 font-medium">筹资活动现金流量</td>
                   <% if @financial_years.any? %>
                     <% @financial_years.each do |year| %>
@@ -295,7 +342,7 @@
                     <td class="px-6 py-3 text-center text-sm text-gray-400">-</td>
                   <% end %>
                 </tr>
-                <tr class="hover:bg-gray-50 transition-colors">
+                <tr class="hover:bg-blue-50 cursor-pointer indicator-row transition-colors" data-indicator="net_cash_change">
                   <td class="px-6 py-3 text-sm text-gray-700 font-medium">净现金流量</td>
                   <% if @financial_years.any? %>
                     <% @financial_years.each do |year| %>
@@ -395,10 +442,10 @@ function getChartData(stockData) {
   return [
     typeof vals.roe === 'number' ? vals.roe : 0,
     typeof vals.gross_margin === 'number' ? vals.gross_margin : 0,
-    typeof vals.net_profit_margin === 'number' ? vals.net_profit_margin : 0,
+    typeof vals.asset_turnover_ratio === 'number' ? vals.asset_turnover_ratio : 0,
     typeof vals.eps === 'number' ? vals.eps : 0,
     typeof vals.asset_liab_ratio === 'number' ? vals.asset_liab_ratio : 0,
-    typeof vals.asset_turnover_ratio === 'number' ? vals.asset_turnover_ratio : 0
+    typeof vals.net_profit_margin === 'number' ? vals.net_profit_margin : 0
   ];
 }
 
@@ -406,7 +453,7 @@ function initChart() {
   var canvas = document.getElementById('radarChart');
   if (!canvas) return;
   
-  var labels = ['ROE', '毛利率', '净利率', 'EPS', '负债占资产比率', '总资产周转率'];
+  var labels = ['ROE', '毛利率', '总资产周转率', 'EPS', '负债占资产比率', '净利率'];
   
   var radarDataElement = document.getElementById('radar-data');
   var currentStockData = radarDataElement ? parseRadarData(radarDataElement.dataset.current) : null;
@@ -535,4 +582,365 @@ function clearComparisonChart() {
     chart.update();
   }
 }
+
+// 财务指标弹窗功能 - 封装在IIFE中避免全局变量污染
+(function() {
+  const STOCK_SYMBOL = '<%= @stock.symbol %>';
+  const CACHE_TTL = 300000; // 5分钟缓存
+  let chartInstance = null;
+
+  // 初始化事件监听（兼容Turbo）
+  function initEventListeners() {
+    document.querySelectorAll('.indicator-row').forEach(row => {
+      row.removeEventListener('click', handleRowClick);
+      row.addEventListener('click', handleRowClick);
+    });
+
+    const backdrop = document.getElementById('modal-backdrop');
+    const closeBtn = document.getElementById('modal-close');
+    if (backdrop) {
+      backdrop.removeEventListener('click', closeModal);
+      backdrop.addEventListener('click', closeModal);
+    }
+    if (closeBtn) {
+      closeBtn.removeEventListener('click', closeModal);
+      closeBtn.addEventListener('click', closeModal);
+    }
+  }
+
+  function handleRowClick() {
+    const indicatorKey = this.dataset.indicator;
+    openIndicatorModal(indicatorKey);
+  }
+
+  function openIndicatorModal(indicatorKey) {
+    const modal = document.getElementById('indicator-modal');
+    const chartContainer = document.getElementById('chart-container');
+    const contentContainer = document.getElementById('content-container');
+    const errorContainer = document.getElementById('error-container');
+
+    // 显示加载状态
+    chartContainer.innerHTML = '<div class="flex items-center justify-center h-56"><div class="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div></div>';
+    contentContainer.classList.add('hidden');
+    errorContainer.classList.add('hidden');
+
+    // 显示弹窗（带过渡动画）
+    modal.classList.remove('hidden');
+    modal.classList.add('opacity-100');
+    modal.querySelector('.relative').classList.add('scale-100');
+
+    // 从缓存获取或调用API
+    const cachedData = getCachedData(indicatorKey);
+    if (cachedData) {
+      renderIndicatorModal(cachedData);
+      return;
+    }
+
+    fetch(`/stocks/${STOCK_SYMBOL}/indicator_detail?indicator_key=${indicatorKey}`)
+      .then(res => {
+        if (!res.ok) throw new Error('网络请求失败');
+        return res.json();
+      })
+      .then(data => {
+        if (data.success) {
+          cacheData(indicatorKey, data.data);
+          renderIndicatorModal(data.data);
+        } else {
+          showError(data.error || '加载失败');
+        }
+      })
+      .catch(err => {
+        console.error('Load indicator error:', err);
+        showError('加载失败，请稍后重试');
+      });
+  }
+
+  function showError(message) {
+    const errorContainer = document.getElementById('error-container');
+    const contentContainer = document.getElementById('content-container');
+    errorContainer.innerHTML = `<div class="bg-gray-100 rounded-lg p-4"><p class="text-gray-600 text-center text-xs">${message}</p></div>`;
+    errorContainer.classList.remove('hidden');
+    contentContainer.classList.add('hidden');
+  }
+
+  function getCachedData(indicatorKey) {
+    try {
+      const cacheKey = `indicator_${STOCK_SYMBOL}_${indicatorKey}`;
+      const cached = localStorage.getItem(cacheKey);
+      if (cached) {
+        const data = JSON.parse(cached);
+        if (data.timestamp && Date.now() - data.timestamp < CACHE_TTL) {
+          return data.payload;
+        }
+      }
+    } catch (e) {
+      console.warn('Cache read error:', e);
+    }
+    return null;
+  }
+
+  function cacheData(indicatorKey, payload) {
+    try {
+      const cacheKey = `indicator_${STOCK_SYMBOL}_${indicatorKey}`;
+      localStorage.setItem(cacheKey, JSON.stringify({
+        timestamp: Date.now(),
+        payload: payload
+      }));
+    } catch (e) {
+      console.warn('Cache write error:', e);
+    }
+  }
+
+  function renderIndicatorModal(data) {
+    const chartContainer = document.getElementById('chart-container');
+    const contentContainer = document.getElementById('content-container');
+    const errorContainer = document.getElementById('error-container');
+
+    // 显示内容区域
+    chartContainer.innerHTML = '<div style="height: 256px; overflow: hidden;"><canvas id="indicator-chart"></canvas></div>';
+    contentContainer.classList.remove('hidden');
+    errorContainer.classList.add('hidden');
+
+    // 更新标题
+    document.getElementById('modal-title').textContent = data.indicator_name;
+    document.getElementById('indicator-description').textContent = data.description || '暂无说明';
+    document.getElementById('indicator-formula').textContent = data.formula || '暂无公式';
+
+    // 更新解读标准
+    const interpretation = document.getElementById('indicator-interpretation');
+    if (data.interpretation) {
+      const order = ['excellent', 'good', 'normal', 'poor'];
+      const labels = { excellent: '优秀', good: '良好', normal: '一般', poor: '较差' };
+
+      interpretation.innerHTML = order.map(key => {
+        if (data.interpretation[key]) {
+          return `
+            <div class="text-xs text-gray-600 py-1">
+              <span class="text-gray-500 font-medium">${labels[key]}：</span>
+              ${data.interpretation[key]}
+            </div>
+          `;
+        }
+        return '';
+      }).join('');
+    } else {
+      interpretation.innerHTML = '<p class="text-xs text-gray-500">暂无解读标准</p>';
+    }
+
+    // 渲染图表
+    renderIndicatorChart(data);
+  }
+
+  function renderIndicatorChart(data) {
+    if (chartInstance) {
+      chartInstance.destroy();
+      chartInstance = null;
+    }
+
+    const ctx = document.getElementById('indicator-chart');
+    if (!ctx) return;
+
+    const points = data.data_points || [];
+    const labels = points.map(p => p.year);
+    
+    const isCashFlowIndicator = ['net_income', 'operating_cash_flow', 'investing_cash_flow', 'financing_cash_flow', 'net_cash_change'].includes(data.indicator_key);
+    
+    const values = points.map(p => {
+      if (!p.value) return null;
+      const val = parseFloat(p.value);
+      if (isCashFlowIndicator && Math.abs(val) >= 100000000) {
+        return val / 100000000;
+      }
+      return val;
+    });
+    
+    const validValues = values.filter(v => v !== null && !isNaN(v));
+    const dataMin = validValues.length > 0 ? Math.min(...validValues) : 0;
+    const dataMax = validValues.length > 0 ? Math.max(...validValues) : 100;
+    const dataRange = dataMax - dataMin;
+    
+    let yMin, yMax;
+    if (dataRange > 0) {
+      const padding = dataRange * 0.15;
+      const absMax = Math.max(Math.abs(dataMin), Math.abs(dataMax));
+      if (dataRange / absMax < 0.05) {
+        yMin = dataMin - padding;
+        yMax = dataMax + padding;
+      } else {
+        yMin = dataMin - padding;
+        yMax = dataMax + padding;
+      }
+    } else {
+      yMin = dataMin - 1;
+      yMax = dataMax + 1;
+    }
+    
+    const formatted = points.map(p => p.formatted);
+    const unit = isCashFlowIndicator ? '亿' : (data.unit || '');
+
+    chartInstance = new Chart(ctx.getContext('2d'), {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: data.indicator_name,
+          data: values,
+          borderColor: 'rgb(59, 130, 246)',
+          backgroundColor: 'rgba(59, 130, 246, 0.08)',
+          fill: true,
+          tension: 0.3,
+          pointRadius: 4,
+          pointHoverRadius: 8,
+          pointBackgroundColor: 'rgb(59, 130, 246)',
+          pointBorderColor: '#fff',
+          pointBorderWidth: 2,
+          borderWidth: 2,
+          pointHoverBorderWidth: 3
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: {
+          mode: 'index',
+          intersect: false,
+          axis: 'x'
+        },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            enabled: true,
+            backgroundColor: 'rgba(30, 30, 30, 0.9)',
+            titleFont: { size: 11, weight: '600' },
+            bodyFont: { size: 10 },
+            padding: 10,
+            cornerRadius: 6,
+            displayColors: false,
+            usePointStyle: false,
+            intersect: false,
+            titleMarginBottom: 6,
+            callbacks: {
+              title: ctx => ctx[0].label + '年',
+              label: ctx => data.indicator_name + ': ' + (formatted[ctx.dataIndex] || '-')
+            }
+          }
+        },
+        scales: {
+          y: {
+            min: yMin,
+            max: yMax,
+            beginAtZero: false,
+            grid: {
+              color: 'rgba(0, 0, 0, 0.06)',
+              drawBorder: false,
+              lineWidth: 1
+            },
+            ticks: {
+              callback: v => (unit ? v.toFixed(2) + unit : v.toFixed(2)),
+              color: '#555555',
+              font: { size: 9 },
+              padding: 6
+            }
+          },
+          x: {
+            grid: { display: false },
+            ticks: {
+              color: '#555555',
+              font: { size: 9, weight: '500' },
+              padding: 4
+            }
+          }
+        },
+        animation: {
+          duration: 400,
+          easing: 'linear'
+        },
+        hover: {
+          mode: 'nearest',
+          intersect: false
+        },
+        responsiveAnimationDuration: 0
+      }
+    });
+  }
+
+  function closeModal() {
+    const modal = document.getElementById('indicator-modal');
+    const modalContent = document.getElementById('modal-content');
+
+    // 直接隐藏
+    modal.classList.add('hidden');
+
+    // 销毁图表实例
+    if (chartInstance) {
+      chartInstance.destroy();
+      chartInstance = null;
+    }
+  }
+
+  // ESC键关闭
+  function handleKeydown(e) {
+    const modal = document.getElementById('indicator-modal');
+    if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
+      closeModal();
+    }
+  }
+
+  // Turbo兼容：监听turbo:load事件
+  document.addEventListener('turbo:load', initEventListeners);
+  document.addEventListener('turbo:render', initEventListeners);
+  document.addEventListener('keydown', handleKeydown);
+
+  // 初始绑定
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initEventListeners);
+  } else {
+    initEventListeners();
+  }
+})();
 </script>
+
+<!-- 指标弹窗 -->
+<div id="indicator-modal" class="fixed inset-0 z-50 flex items-center justify-center p-6 hidden">
+  <div id="modal-backdrop" class="fixed inset-0 bg-black/40"></div>
+  <div id="modal-content" class="relative bg-white rounded-lg shadow-xl w-[896px] min-w-[896px] max-w-[896px] max-h-[85vh] overflow-hidden" style="width: 896px; min-width: 896px; max-width: 896px;">
+    <div class="px-6 border-b border-gray-100 flex justify-between items-center overflow-hidden" style="padding-top: 16px; padding-bottom: 16px; padding-left: 24px; padding-right: 24px;">
+      <h3 id="modal-title" class="text-base font-semibold text-gray-800 truncate" style="margin-right: 16px;"></h3>
+      <button id="modal-close" class="p-1.5 hover:bg-gray-100 rounded transition-colors" style="margin-left: 16px;">
+        <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+    <div class="p-5 overflow-y-auto max-h-[calc(85vh-70px)] overflow-x-hidden" style="overflow-x: hidden;">
+      <div id="error-container" class="hidden"></div>
+      
+      <div id="chart-container" class="mb-6 overflow-hidden" style="overflow: hidden;">
+        <div style="height: 256px; overflow: hidden;">
+          <canvas id="indicator-chart"></canvas>
+        </div>
+      </div>
+      
+      <div id="content-container" class="overflow-hidden" style="overflow: hidden;">
+        <div class="mb-6">
+          <h4 class="font-semibold text-gray-700 text-sm mb-3 truncate">指标定义</h4>
+          <p id="indicator-description" class="text-gray-600 text-xs leading-relaxed break-words" style="word-break: break-word; hyphens: auto;"></p>
+        </div>
+        
+        <div class="h-px bg-gray-100 mb-6"></div>
+        
+        <div class="mb-6">
+          <h4 class="font-semibold text-gray-700 text-sm mb-3 truncate">计算公式</h4>
+          <div id="indicator-formula" class="text-gray-600 text-xs font-mono p-3 rounded overflow-x-auto" style="word-break: break-all; overflow-x: auto; overflow-y: hidden;"></div>
+        </div>
+        
+        <div class="h-px bg-gray-100 mb-6"></div>
+        
+        <div>
+          <h4 class="font-semibold text-gray-700 text-sm mb-3 truncate">解读标准</h4>
+          <div id="indicator-interpretation" class="space-y-3 overflow-hidden" style="overflow: hidden;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
