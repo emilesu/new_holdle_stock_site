@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_06_14_094313) do
+ActiveRecord::Schema[7.1].define(version: 2026_06_16_005825) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -46,6 +46,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_06_14_094313) do
     t.decimal "non_controlling_interest", precision: 15, scale: 2, comment: "非控制权益"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.index ["financial_report_id", "report_date"], name: "idx_balance_sheets_report_date"
     t.index ["financial_report_id"], name: "index_balance_sheets_on_financial_report_id"
     t.index ["stock_id", "report_date", "market"], name: "index_balance_sheets_on_stock_id_and_report_date_and_market", unique: true
     t.index ["stock_id"], name: "index_balance_sheets_on_stock_id"
@@ -65,6 +66,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_06_14_094313) do
     t.decimal "ending_cash", precision: 15, scale: 2, comment: "期末现金及等价物"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.index ["financial_report_id", "report_date"], name: "idx_cash_flows_report_date"
     t.index ["financial_report_id"], name: "index_cash_flows_on_financial_report_id"
     t.index ["stock_id", "report_date", "market"], name: "index_cash_flows_on_stock_id_and_report_date_and_market", unique: true
     t.index ["stock_id"], name: "index_cash_flows_on_stock_id"
@@ -118,6 +120,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_06_14_094313) do
     t.decimal "payout_ratio", precision: 15, scale: 2, comment: "派息率"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.index ["financial_report_id", "report_date"], name: "idx_fin_indicators_report_date"
     t.index ["financial_report_id"], name: "index_financial_indicators_on_financial_report_id"
     t.index ["stock_id", "report_date", "market"], name: "idx_on_stock_id_report_date_market_cbb7ad04c1", unique: true
     t.index ["stock_id"], name: "index_financial_indicators_on_stock_id"
@@ -136,6 +139,8 @@ ActiveRecord::Schema[7.1].define(version: 2026_06_14_094313) do
     t.datetime "last_crawled_at", comment: "最后爬取时间"
     t.index ["market"], name: "index_financial_reports_on_market"
     t.index ["stock_id", "report_date", "report_type"], name: "idx_on_stock_id_report_date_report_type_c30446abbc", unique: true
+    t.index ["stock_id", "report_date"], name: "idx_financial_reports_stock_date"
+    t.index ["stock_id", "status"], name: "idx_financial_reports_stock_status"
     t.index ["stock_id"], name: "index_financial_reports_on_stock_id"
   end
 
@@ -170,6 +175,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_06_14_094313) do
     t.decimal "diluted_avg_shares", precision: 15, scale: 2, comment: "稀释加权平均股数"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.index ["financial_report_id", "report_date"], name: "idx_income_stmts_report_date"
     t.index ["financial_report_id"], name: "index_income_statements_on_financial_report_id"
     t.index ["stock_id", "report_date", "market"], name: "index_income_statements_on_stock_id_and_report_date_and_market", unique: true
     t.index ["stock_id"], name: "index_income_statements_on_stock_id"
@@ -196,8 +202,10 @@ ActiveRecord::Schema[7.1].define(version: 2026_06_14_094313) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "sector", comment: "行业板块（中文）"
+    t.index ["sector", "market"], name: "idx_stocks_sector_market"
     t.index ["sector"], name: "index_stocks_on_sector"
     t.index ["symbol", "market"], name: "index_stocks_on_symbol_and_market", unique: true
+    t.index ["symbol"], name: "idx_stocks_symbol", unique: true
   end
 
   create_table "users", force: :cascade do |t|

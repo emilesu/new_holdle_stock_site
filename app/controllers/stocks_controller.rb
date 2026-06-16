@@ -29,30 +29,57 @@ class StocksController < ApplicationController
   end
 
   def show
-    @financial_years = @stock.financial_years
+    @financial_data_by_year = @stock.cached_financial_data
+    @financial_years = @financial_data_by_year.keys.sort
     
-    @financial_data_by_year = {}
-    @financial_years.each do |year|
-      @financial_data_by_year[year] = @stock.get_financial_data_by_year(year)
+    @industry_comparison_data = Rails.cache.fetch(
+      [:industry_comparison, @stock.sector, Date.today].join('/'),
+      expires_in: 12.hours
+    ) do
+      sector_stocks = Stock.where(sector: @stock.sector).includes(
+        financial_reports: [:financial_indicators, :income_statements, :balance_sheets]
+      ).to_a
+      
+      sector_stocks.map do |stock|
+        {
+          stock: stock,
+          roe_average: stock.cached_five_year_roe,
+          is_current_stock: stock.id == @stock.id
+        }
+      end.select { |item| item[:roe_average].present? }
+         .sort_by { |item| -item[:roe_average] }
+         .first(20)
     end
-    
-    sector_stocks = Stock.where(sector: @stock.sector).to_a
-    @industry_comparison_data = sector_stocks.map do |stock|
-      roe_avg = stock.five_year_roe_average
-      {
-        stock: stock,
-        roe_average: roe_avg,
-        is_current_stock: stock.id == @stock.id
-      }
-    end.select { |item| item[:roe_average].present? }
-       .sort_by { |item| -item[:roe_average] }
-       .first(20)
 
-    @radar_data = StockRadarDataService.call(@stock)
-    @comparison_radar_data = if @industry_comparison_data.present?
-      StockRadarDataService.batch_call(@industry_comparison_data.map { |item| item[:stock] })
-    else
-      {}
+    @radar_data = @stock.cached_radar_data
+    @comparison_radar_data = fetch_comparison_radar_data
+
+    preformat_financial_data
+  end
+
+  private
+
+  def fetch_comparison_radar_data
+    stocks = @industry_comparison_data.map { |item| item[:stock] }
+    result = {}
+    stocks.each do |stock|
+      data = stock.cached_radar_data
+      result[stock.symbol] = data if data
+    end
+    result
+  end
+
+  def preformat_financial_data
+    @formatted_financial_data = @financial_data_by_year.transform_values do |data|
+      {
+        roe: data[:roe].present? ? "%.2f%%" % data[:roe] : '-',
+        gross_margin: data[:gross_margin].present? ? "%.2f%%" % data[:gross_margin] : '-',
+        net_profit_margin: data[:net_profit_margin].present? ? "%.2f%%" % data[:net_profit_margin] : '-',
+        eps: data[:eps].present? ? "%.2f" % data[:eps] : '-',
+        asset_liab_ratio: data[:asset_liab_ratio].present? ? "%.2f%%" % data[:asset_liab_ratio] : '-',
+        asset_turnover_ratio: data[:asset_turnover_ratio].present? ? "%.2f" % data[:asset_turnover_ratio] : '-',
+        operating_margin: data[:operating_margin].present? ? "%.2f%%" % data[:operating_margin] : '-'
+      }
     end
   end
 
