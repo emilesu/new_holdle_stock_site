@@ -36,32 +36,42 @@ class StocksController < ApplicationController
       @financial_data_by_year[year] = @stock.get_financial_data_by_year(year)
     end
     
-    @industry_comparison = Stock.where.not(id: @stock.id)
-      .where(sector: @stock.sector)
-      .order(:id)
-      .limit(10)
-    
-    latest_data = @financial_data_by_year[@financial_years.last]
-    @radar_data = {
-      labels: ['ROE', 'ROA', '毛利率', '净利率', 'EPS', '现金流'],
-      datasets: [{
-        label: @stock.symbol,
-        data: [
-          latest_data&.dig(:roe) || 0,
-          latest_data&.dig(:roa) || 0,
-          latest_data&.dig(:gross_margin) || 0,
-          latest_data&.dig(:net_profit_margin) || 0,
-          latest_data&.dig(:eps) || 0,
-          latest_data&.dig(:cash_flow_ps) || 0
-        ],
-        backgroundColor: 'rgba(59, 130, 246, 0.2)',
-        borderColor: 'rgb(59, 130, 246)',
-        borderWidth: 2,
-        pointBackgroundColor: 'rgb(59, 130, 246)',
-        pointBorderColor: '#fff',
-        pointBorderWidth: 2
-      }]
-    }
+    sector_stocks = Stock.where(sector: @stock.sector).to_a
+    @industry_comparison_data = sector_stocks.map do |stock|
+      roe_avg = stock.five_year_roe_average
+      {
+        stock: stock,
+        roe_average: roe_avg,
+        is_current_stock: stock.id == @stock.id
+      }
+    end.select { |item| item[:roe_average].present? }
+       .sort_by { |item| -item[:roe_average] }
+       .first(20)
+
+    @radar_data = StockRadarDataService.call(@stock)
+    @comparison_radar_data = if @industry_comparison_data.present?
+      StockRadarDataService.batch_call(@industry_comparison_data.map { |item| item[:stock] })
+    else
+      {}
+    end
+  end
+
+  def radar_comparison
+    stock = Stock.find_by(symbol: params[:id])
+    unless stock
+      Rails.logger.warn "雷达图对比API：股票不存在 - #{params[:id]}"
+      render json: { error: '股票不存在' }, status: :not_found
+      return
+    end
+
+    data = StockRadarDataService.call(stock)
+    if data
+      Rails.logger.info "雷达图对比API：成功获取 #{stock.symbol} 的数据"
+      render json: data
+    else
+      Rails.logger.warn "雷达图对比API：股票无财务数据 - #{stock.symbol}"
+      render json: { error: '该股票暂无财务数据' }, status: :not_found
+    end
   end
 
   private

@@ -100,4 +100,43 @@ class Stock < ApplicationRecord
     dates += financial_indicators.pluck(:report_date)
     dates.compact.map { |d| d.strftime('%Y') }.uniq.sort.reverse.first(8).sort
   end
+
+  def get_radar_data
+    latest_data = get_financial_data_by_year(financial_years.last)
+    return nil unless latest_data
+
+    {
+      roe: latest_data[:roe],
+      gross_margin: latest_data[:gross_margin],
+      net_profit_margin: latest_data[:net_profit_margin],
+      eps: latest_data[:eps],
+      asset_liab_ratio: latest_data[:asset_liab_ratio],
+      asset_turnover_ratio: latest_data[:asset_turnover_ratio]
+    }
+  end
+
+  def five_year_roe_average
+    recent_years = financial_years.last(5)
+    return nil if recent_years.size < 3
+
+    roe_values = recent_years.map do |year|
+      data = get_financial_data_by_year(year)
+      data[:roe]
+    end.compact
+
+    return nil if roe_values.empty?
+
+    roe_values.sum / roe_values.size
+  end
+
+  def display_name_for_comparison
+    return name if name.blank?
+
+    if market == 'US'
+      parts = name.split('|')
+      return parts.first.strip if parts.size >= 2
+    end
+
+    name
+  end
 end

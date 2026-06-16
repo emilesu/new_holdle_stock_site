@@ -87,10 +87,22 @@
                 </button>
               </div>
               
+              <!-- 雷达图数据存储（隐藏） -->
+              <div id="radar-data" 
+                   data-current='<%= raw @radar_data.to_json if @radar_data %>'
+                   style="display: none;"></div>
+
               <!-- 雷达图 -->
-              <div class="radar-wrapper bg-white p-6">
-                <div class="w-full h-full flex items-center justify-center">
-                  <canvas id="radarChart"></canvas>
+              <div class="radar-wrapper p-6" >
+                <canvas id="radarChart" width="400" height="400" style="display: block; margin: 0 auto;"></canvas>
+                <!-- 图例 -->
+                <div class="flex justify-center items-center space-x-6 mt-4 text-sm">
+                  <div class="flex items-center space-x-2">
+                    <span class="w-4 h-1 bg-blue-500 rounded"></span>
+                  </div>
+                  <div class="flex items-center space-x-2">
+                    <span class="w-4 h-1 bg-red-500 rounded"></span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -308,33 +320,45 @@
       <div class="stock-right-section">
         <div class="sticky top-24 bg-white rounded-lg overflow-hidden border border-gray-200">
           <div class="px-4 py-4 border-b border-gray-200 bg-gray-50">
-            <h3 class="text-base font-semibold text-gray-800">行业对比</h3>
+            <span class="text-blue-600 font-semibold"><%= @stock.sector.presence || '-' %></span>
+            <span class="text-gray-500 items-center justify-right text-xs"> - 近五年ROE对比</span>
           </div>
           <div class="p-4">
-            <div class="flex items-center justify-between text-sm mb-4">
-              <span class="text-gray-500">对比标的</span>
-              <span class="text-blue-600 font-medium"><%= @stock.sector.presence || '-' %></span>
-            </div>
+            
             <div class="border-t border-gray-100">
-              <% if @industry_comparison.any? %>
+              <% if @industry_comparison_data.present? %>
                 <div class="divide-y divide-gray-100">
-                  <% @industry_comparison.first(10).each_with_index do |stock, index| %>
-                    <a href="<%= stock_path(stock) %>" class="block py-3 hover:bg-gray-50 transition-colors">
+                  <% @industry_comparison_data.each_with_index do |item, index| %>
+                    <% stock = item[:stock] %>
+                    <% radar_data = @comparison_radar_data[stock.symbol] %>
+                    <a href="<%= stock_path(stock) %>"
+                       class="block py-3 transition-colors comparison-item <%= item[:is_current_stock] ? '' : 'hover:bg-gray-50' %>"
+                       data-symbol="<%= stock.symbol %>"
+                       data-radar='<%= raw radar_data.to_json if radar_data %>'
+                       <% if item[:is_current_stock] %>style="background-color: #eff6ff;"<% end %>>
                       <div class="flex items-center justify-between">
                         <div class="flex items-center space-x-2">
-                          <span class="w-5 h-5 rounded-full flex items-center justify-center text-xs font-medium <%= index == 0 ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600' %>">
+                          <span class="w-5 h-5 rounded-full flex items-center justify-center text-xs font-medium 
+                            <%= item[:is_current_stock] ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-600' %>">
                             <%= index + 1 %>
                           </span>
-                          <span class="text-sm font-medium text-gray-900"><%= stock.name.presence || stock.symbol %></span>
+                          <div class="flex flex-col">
+                            <span class="text-sm font-medium text-gray-900"><%= stock.display_name_for_comparison %></span>
+                            <span class="text-xs text-gray-400"><%= stock.symbol %></span>
+                          </div>
                         </div>
-                        <span class="text-xs text-green-600 font-medium">+<%= (rand * 5).round(2) %>%</span>
+                        <span class="text-xs font-medium <%= item[:roe_average] >= 15 ? 'text-green-600' : 'text-gray-500' %>">
+                          <%= '%.2f' % item[:roe_average] %>%
+                        </span>
                       </div>
                     </a>
                   <% end %>
                 </div>
               <% else %>
                 <div class="text-center py-8">
-                  <p class="text-sm text-gray-500">暂无同行业股票</p>
+                  <div class="text-gray-400 mb-2">📊</div>
+                  <p class="text-sm text-gray-500">暂无同行业股票数据</p>
+                  <p class="text-xs text-gray-400 mt-1">需要至少3年财务数据才能参与对比</p>
                 </div>
               <% end %>
             </div>
@@ -356,45 +380,95 @@
 </div>
 
 <script>
-document.addEventListener('turbo:load', function() {
-  const ctx = document.getElementById('radarChart');
-  if (ctx) {
-    const data = JSON.parse('<%= @radar_data.to_json.html_safe %>');
-    new Chart(ctx, {
-      type: 'radar',
-      data: {
-        labels: data.labels,
-        datasets: [{
-          label: data.datasets[0].label,
-          data: data.datasets[0].data,
-          backgroundColor: 'rgba(59, 130, 246, 0.1)',
-          borderColor: 'rgb(59, 130, 246)',
-          borderWidth: 2,
-          pointBackgroundColor: 'rgb(59, 130, 246)',
-          pointBorderColor: '#fff',
-          pointBorderWidth: 2,
-          pointRadius: 4
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: true,
-        scales: {
-          r: {
-            beginAtZero: true,
-            max: 50,
-            ticks: { stepSize: 10, font: { size: 10 }, backdropColor: 'transparent', color: '#6B7280' },
-            pointLabels: { font: { size: 11 }, color: '#374151' },
-            grid: { color: '#E5E7EB' },
-            angleLines: { color: '#E5E7EB' }
-          }
-        },
-        plugins: { legend: { display: false } }
-      }
-    });
+function parseRadarData(encodedData) {
+  if (!encodedData) return null;
+  try {
+    return JSON.parse(encodedData);
+  } catch (e) {
+    console.error('Failed to parse radar data:', e);
+    return null;
   }
+}
+
+function getChartData(stockData) {
+  var defaultData = [50, 60, 70, 80, 65, 55];
+  if (!stockData || !stockData.normalized_values) return defaultData;
   
-  const followBtn = document.getElementById('follow-btn');
+  var vals = stockData.normalized_values;
+  return [
+    typeof vals.roe === 'number' ? vals.roe : 0,
+    typeof vals.gross_margin === 'number' ? vals.gross_margin : 0,
+    typeof vals.net_profit_margin === 'number' ? vals.net_profit_margin : 0,
+    typeof vals.eps === 'number' ? vals.eps : 0,
+    typeof vals.asset_liab_ratio === 'number' ? vals.asset_liab_ratio : 0,
+    typeof vals.asset_turnover_ratio === 'number' ? vals.asset_turnover_ratio : 0
+  ];
+}
+
+function initChart() {
+  var canvas = document.getElementById('radarChart');
+  if (!canvas) return;
+  
+  var labels = ['ROE', '毛利率', '净利率', 'EPS', '负债占资产比率', '总资产周转率'];
+  
+  var radarDataElement = document.getElementById('radar-data');
+  var currentStockData = radarDataElement ? parseRadarData(radarDataElement.dataset.current) : null;
+  var currentData = getChartData(currentStockData);
+  
+  window.currentStockData = currentStockData;
+  
+  window.radarChartInstance = new Chart(canvas, {
+    type: 'radar',
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: currentStockData ? (currentStockData.display_name || currentStockData.name) : '当前股票',
+          data: currentData,
+          backgroundColor: 'rgba(239, 68, 68, 0.2)',
+          borderColor: 'rgb(239, 68, 68)',
+          borderWidth: 2,
+          pointRadius: 3
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      scales: {
+        r: {
+          min: 0,
+          max: 100,
+          ticks: { stepSize: 20 },
+          pointLabels: { font: { size: 11 } }
+        }
+      },
+      plugins: { 
+        legend: { 
+          display: true,
+          position: 'bottom',
+          labels: {
+            usePointStyle: true,
+            padding: 20,
+            font: { size: 12 }
+          }
+        } 
+      }
+    }
+  });
+}
+
+document.addEventListener('turbo:load', function() {
+  function tryInitChart() {
+    if (typeof Chart !== 'undefined') {
+      initChart();
+    } else {
+      setTimeout(tryInitChart, 50);
+    }
+  }
+  tryInitChart();
+  
+  var followBtn = document.getElementById('follow-btn');
   if (followBtn) {
     followBtn.addEventListener('click', function() {
       if (followBtn.textContent.trim() === '关注股票') {
@@ -408,5 +482,62 @@ document.addEventListener('turbo:load', function() {
       }
     });
   }
+  
+  var originalRadarData = null;
+  var radarDataElement = document.getElementById('radar-data');
+  if (radarDataElement && radarDataElement.dataset.current) {
+    originalRadarData = parseRadarData(radarDataElement.dataset.current);
+  }
+  
+  var comparisonItems = document.querySelectorAll('.comparison-item');
+  comparisonItems.forEach(function(item) {
+    item.addEventListener('mouseenter', function(e) {
+      var comparisonData = parseRadarData(this.dataset.radar);
+      if (comparisonData) {
+        updateRadarChart(comparisonData);
+      }
+    });
+    
+    item.addEventListener('mouseleave', function(e) {
+      clearComparisonChart();
+    });
+  });
 });
+
+function updateRadarChart(comparisonData) {
+  var chart = window.radarChartInstance;
+  if (!chart) return;
+  
+  var currentStockData = window.currentStockData;
+  var currentData = getChartData(currentStockData);
+  var comparisonDataValues = getChartData(comparisonData);
+  
+  if (comparisonData && chart.data.datasets.length === 1) {
+    chart.data.datasets.push({
+      label: comparisonData.display_name || comparisonData.name || '对比股票',
+      data: comparisonDataValues,
+      backgroundColor: 'rgba(59, 130, 246, 0.2)',
+      borderColor: 'rgb(59, 130, 246)',
+      borderWidth: 2,
+      pointRadius: 3
+    });
+  } else if (comparisonData && chart.data.datasets.length === 2) {
+    chart.data.datasets[1].label = comparisonData.name || '对比股票';
+    chart.data.datasets[1].data = comparisonDataValues;
+  }
+  
+  chart.update();
+}
+
+function clearComparisonChart() {
+  var chart = window.radarChartInstance;
+  if (!chart) return;
+  
+  if (chart.data.datasets.length === 2) {
+    chart.data.datasets.pop();
+    chart.update();
+  }
+}
+
+
 </script>

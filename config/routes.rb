@@ -6,6 +6,9 @@ Rails.application.routes.draw do
   root "home#index"
 
   resources :stocks, only: [:show] do
+    member do
+      get :radar_comparison
+    end
     collection do
       get :autocomplete
     end
