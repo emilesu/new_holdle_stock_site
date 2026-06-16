@@ -83,26 +83,6 @@ class StocksController < ApplicationController
     end
   end
 
-  def radar_comparison
-    stock = Stock.find_by(symbol: params[:id])
-    unless stock
-      Rails.logger.warn "雷达图对比API：股票不存在 - #{params[:id]}"
-      render json: { error: '股票不存在' }, status: :not_found
-      return
-    end
-
-    data = StockRadarDataService.call(stock)
-    if data
-      Rails.logger.info "雷达图对比API：成功获取 #{stock.symbol} 的数据"
-      render json: data
-    else
-      Rails.logger.warn "雷达图对比API：股票无财务数据 - #{stock.symbol}"
-      render json: { error: '该股票暂无财务数据' }, status: :not_found
-    end
-  end
-
-  private
-
   def set_stock
     param = params[:id]
     
