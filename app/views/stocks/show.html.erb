@@ -1,73 +1,77 @@
 <!-- 股票详情页 -->
-<div class="min-h-screen bg-gray-50 pt-20">
+<div class="min-h-screen bg-gray-50 pt-20" id="stock-detail-page">
   <style>
-    /* 可交互元素光标样式 */
-    a, button, [role="button"],
-    .indicator-row, .comparison-item,
-    #modal-backdrop, #modal-close {
-      cursor: pointer;
+    /* 强制布局样式 */
+    #stock-detail-page .main-container {
+      display: grid !important;
+      grid-template-columns: 1fr !important;
+      gap: 24px !important;
     }
     
-    /* 按钮和链接悬停效果增强 */
-    button:hover, [role="button"]:hover {
-      cursor: pointer;
+    @media screen and (min-width: 1024px) {
+      #stock-detail-page .main-container {
+        grid-template-columns: 4fr 1fr !important;
+      }
     }
     
-    /* 确保表格行可点击区域完整 */
-    .indicator-row td {
-      cursor: pointer;
+    #stock-detail-page .top-card {
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 32px !important;
     }
     
-    /* 财务列表数据栏悬停效果 */
-    .indicator-row {
-      transition: background-color 0.2s ease-in-out, box-shadow 0.15s ease-in-out;
+    @media screen and (min-width: 1024px) {
+      #stock-detail-page .top-card {
+        flex-direction: row !important;
+      }
     }
     
-    .indicator-row:hover {
+    #stock-detail-page .company-info,
+    #stock-detail-page .radar-section {
+      flex: 1 !important;
+      min-width: 0 !important;
+    }
+    
+    #stock-detail-page .radar-section {
+      padding-top: 16px !important;
+      border-top: 1px solid #e5e7eb !important;
+    }
+    
+    @media screen and (min-width: 1024px) {
+      #stock-detail-page .radar-section {
+        padding-top: 0 !important;
+        padding-left: 32px !important;
+        border-top: none !important;
+        border-left: 1px solid #e5e7eb !important;
+      }
+    }
+    
+    /* 财务表格悬停效果 */
+    #stock-detail-page .indicator-row {
+      cursor: pointer !important;
+      transition: background-color 0.2s ease-in-out !important;
+    }
+    
+    #stock-detail-page .indicator-row:hover {
       background-color: #eff6ff !important;
-      box-shadow: inset 0 0 0 1px rgba(59, 130, 246, 0.2);
     }
     
-    .indicator-row:active {
-      background-color: #dbeafe !important;
+    #stock-detail-page .indicator-row td {
+      cursor: pointer !important;
     }
     
-    /* 快速操作按钮悬停效果增强 */
-    .quick-action-btn {
-      transition: all 0.2s ease-in-out;
-    }
-    
-    .quick-action-btn:hover {
-      background-color: #eff6ff;
-      color: #2563eb;
-      transform: translateX(4px);
+    #stock-detail-page .indicator-row:hover td {
+      color: #1e40af !important;
     }
     
     /* 对比项悬停效果 */
-    .comparison-item {
-      transition: background-color 0.2s ease-in-out;
+    #stock-detail-page .comparison-item {
+      cursor: pointer !important;
+      transition: background-color 0.2s ease-in-out !important;
     }
     
-    @media (min-width: 1024px) {
-      .stock-main-container {
-        grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
-      }
-      .stock-left-section {
-        grid-column: span 4 / span 4 !important;
-      }
-      .stock-right-section {
-        grid-column: span 1 / span 1 !important;
-      }
-      .top-row {
-        display: flex;
-        gap: 1rem;
-      }
-      .company-info {
-        flex: 1;
-      }
-      .radar-wrapper {
-        flex: 1;
-      }
+    #stock-detail-page .comparison-item:hover {
+      background-color: #f3f4f6 !important;
     }
   </style>
   
@@ -76,77 +80,78 @@
     <!-- 返回按钮 -->
     <div class="mb-6">
       <a href="/" class="inline-flex items-center space-x-2 text-gray-600 hover:text-blue-600 transition-colors">
-
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+        </svg>
+        <span class="text-sm">返回</span>
       </a>
     </div>
 
     <!-- 左右两列布局 -->
-    <div class="grid grid-cols-1 stock-main-container gap-6">
+    <div class="main-container">
       <!-- 左列：80% -->
-      <div class="stock-left-section space-y-6">
+      <div class="space-y-6">
         
         <!-- 上半部分：股票基础信息 + 雷达图 -->
-        <div class="bg-white rounded-lg overflow-hidden">
-          <div class="p-6">
-            <div class="top-row">
-              <!-- 公司信息 -->
-              <div class="company-info">
-                <h1 class="text-2xl font-bold text-gray-900">
-                  <% if @stock.market == 'US' && @stock.name.present? && @stock.name.include?('|') %>
-                    <% parts = @stock.name.split('|', 2) %>
-                    <%= parts.first %><span class="text-sm font-medium text-gray-600"> - <%= parts.last %></span>
-                  <% else %>
-                    <%= @stock.name.presence || '未命名股票' %>
-                  <% end %>
-                </h1>
-                <div class="flex items-center space-x-2 mt-2">
-                  <span class="text-gray-600 text-sm font-mono"><%= @stock.symbol.presence || 'N/A' %></span>
-                  <span class="px-2 py-1 text-xs font-semibold rounded <%= @stock.market == 'CN' ? 'bg-green-100 text-green-800' : @stock.market == 'US' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800' %>">
-                    <%= @stock.market == 'CN' ? 'A股' : @stock.market == 'US' ? '美股' : '其他' %>
-                  </span>
-                  <span class="px-2 py-1 text-xs font-semibold rounded <%= @stock.market == 'CN' ? 'bg-green-100 text-green-800' : @stock.market == 'US' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800' %>">
-                    <%= @stock.exchange.presence || '-' %>
-                  </span>
-                </div>
-                <div class="border-t border-gray-100 pt-4 mt-4 space-y-3">
-                  <div class="flex justify-between py-2">
-                    <span class="text-gray-500 text-xs">所属板块</span>
-                    <span class="px-2 py-1 text-xs font-semibold rounded <%= @stock.market == 'CN' ? 'bg-green-100 text-green-800' : @stock.market == 'US' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800' %>">
-                      <%= @stock.sector.presence || '-' %>
-                    </span>
-                  </div>
-                  <div class="flex justify-between py-2">
-                    <span class="text-gray-500 text-xs">所属行业</span>
-                    <span class="px-2 py-1 text-xs font-semibold rounded <%= @stock.market == 'CN' ? 'bg-green-100 text-green-800' : @stock.market == 'US' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800' %>">
-                      <%= @stock.industry.presence || '-' %>
-                    </span>
-                  </div>
-                  <div class="flex justify-between py-2">
-                    <span class="text-gray-500 text-xs">市值</span>
-                    <span class="text-gray-900 font-medium"><%= @stock.respond_to?(:market_cap) && @stock.market_cap.present? ? "#{(@stock.market_cap / 100000000).round(2)} 亿" : '-' %></span>
-                  </div>
-                </div>
-                <button id="follow-btn" class="w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors mt-4">
-                  关注股票
-                </button>
+        <div class="bg-white rounded-lg overflow-hidden border border-gray-200">
+          <div class="p-6 top-card">
+            <!-- 公司信息 -->
+            <div class="company-info">
+              <h1 class="text-2xl font-bold text-gray-900">
+                <% if @stock.market == 'US' && @stock.name.present? && @stock.name.include?('|') %>
+                  <% parts = @stock.name.split('|', 2) %>
+                  <%= parts.first %><span class="text-sm font-medium text-gray-600"> - <%= parts.last %></span>
+                <% else %>
+                  <%= @stock.name.presence || '未命名股票' %>
+                <% end %>
+              </h1>
+              <div class="flex items-center space-x-2 mt-2">
+                <span class="text-gray-600 text-sm font-mono"><%= @stock.symbol.presence || 'N/A' %></span>
+                <span class="px-2 py-1 text-xs font-semibold rounded <%= @stock.market == 'CN' ? 'bg-green-100 text-green-800' : @stock.market == 'US' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800' %>">
+                  <%= @stock.market == 'CN' ? 'A股' : @stock.market == 'US' ? '美股' : '其他' %>
+                </span>
+                <span class="px-2 py-1 text-xs font-semibold rounded <%= @stock.market == 'CN' ? 'bg-green-100 text-green-800' : @stock.market == 'US' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800' %>">
+                  <%= @stock.exchange.presence || '-' %>
+                </span>
               </div>
-              
-              <!-- 雷达图数据存储（隐藏） -->
-              <div id="radar-data" 
-                   data-current='<%= raw @radar_data.to_json if @radar_data %>'
-                   style="display: none;"></div>
+              <div class="border-t border-gray-100 pt-4 mt-4 space-y-3">
+                <div class="flex justify-between py-2">
+                  <span class="text-gray-500 text-xs">所属板块</span>
+                  <span class="px-2 py-1 text-xs font-semibold rounded <%= @stock.market == 'CN' ? 'bg-green-100 text-green-800' : @stock.market == 'US' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800' %>">
+                    <%= @stock.sector.presence || '-' %>
+                  </span>
+                </div>
+                <div class="flex justify-between py-2">
+                  <span class="text-gray-500 text-xs">所属行业</span>
+                  <span class="px-2 py-1 text-xs font-semibold rounded <%= @stock.market == 'CN' ? 'bg-green-100 text-green-800' : @stock.market == 'US' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800' %>">
+                    <%= @stock.industry.presence || '-' %>
+                  </span>
+                </div>
+                <div class="flex justify-between py-2">
+                  <span class="text-gray-500 text-xs">市值</span>
+                  <span class="text-gray-900 font-medium"><%= @stock.respond_to?(:market_cap) && @stock.market_cap.present? ? "#{(@stock.market_cap / 100000000).round(2)} 亿" : '-' %></span>
+                </div>
+              </div>
+              <button id="follow-btn" class="w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors mt-4">
+                关注股票
+              </button>
+            </div>
+            
+            <!-- 雷达图数据存储（隐藏） -->
+            <div id="radar-data" 
+                 data-current='<%= @radar_data.to_json.html_safe if @radar_data %>'
+                 class="hidden"></div>
 
-              <!-- 雷达图 -->
-              <div class="radar-wrapper p-6" >
-                <canvas id="radarChart" width="400" height="400" style="display: block; margin: 0 auto;"></canvas>
-                <!-- 图例 -->
-                <div class="flex justify-center items-center space-x-6 mt-4 text-sm">
-                  <div class="flex items-center space-x-2">
-                    <span class="w-4 h-1 bg-blue-500 rounded"></span>
-                  </div>
-                  <div class="flex items-center space-x-2">
-                    <span class="w-4 h-1 bg-red-500 rounded"></span>
-                  </div>
+            <!-- 雷达图 -->
+            <div class="radar-section">
+              <canvas id="radarChart" width="400" height="400" style="display: block; margin: 0 auto; max-width: 100%;"></canvas>
+              <!-- 图例 -->
+              <div class="flex justify-center items-center space-x-6 mt-4 text-sm">
+                <div class="flex items-center space-x-2">
+                  <span class="w-4 h-1 bg-blue-500 rounded"></span>
+                </div>
+                <div class="flex items-center space-x-2">
+                  <span class="w-4 h-1 bg-red-500 rounded"></span>
                 </div>
               </div>
             </div>
@@ -361,7 +366,7 @@
       </div>
       
       <!-- 右列：20% -->
-      <div class="stock-right-section">
+      <div class="lg:col-span-1">
         <div class="sticky top-24 bg-white rounded-lg overflow-hidden border border-gray-200">
           <div class="px-4 py-4 border-b border-gray-200 bg-gray-50">
             <span class="text-blue-600 font-semibold"><%= @stock.sector.presence || '-' %></span>
@@ -636,7 +641,15 @@ function clearComparisonChart() {
       return;
     }
 
-    fetch(`/stocks/${STOCK_SYMBOL}/indicator_detail?indicator_key=${indicatorKey}`)
+    const url = new URL(`/stocks/${encodeURIComponent(STOCK_SYMBOL)}/indicator_detail`, window.location.origin);
+    url.searchParams.set('indicator_key', indicatorKey);
+    
+    fetch(url, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json'
+      }
+    })
       .then(res => {
         if (!res.ok) throw new Error('网络请求失败');
         return res.json();
@@ -744,12 +757,16 @@ function clearComparisonChart() {
     const labels = points.map(p => p.year);
     
     const isCashFlowIndicator = ['net_income', 'operating_cash_flow', 'investing_cash_flow', 'financing_cash_flow', 'net_cash_change'].includes(data.indicator_key);
+    const isPercentageIndicator = ['roe', 'roa', 'gross_margin', 'net_profit_margin', 'asset_liab_ratio', 'asset_turnover_ratio', 'cash_flow_ps'].includes(data.indicator_key);
     
     const values = points.map(p => {
       if (!p.value) return null;
-      const val = parseFloat(p.value);
+      let val = parseFloat(p.value);
       if (isCashFlowIndicator && Math.abs(val) >= 100000000) {
         return val / 100000000;
+      }
+      if (isPercentageIndicator && val < 10) {
+        return val * 100;
       }
       return val;
     });

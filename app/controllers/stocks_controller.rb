@@ -1,16 +1,23 @@
 class StocksController < ApplicationController
+  HUNDRED_MILLION = 100_000_000
+  MAX_QUERY_LENGTH = 100
+  AUTOCOMPLETE_LIMIT = 10
+  INDUSTRY_COMPARISON_LIMIT = 20
+  CACHE_EXPIRES_IN = 6.hours
+  INDUSTRY_CACHE_EXPIRES_IN = 12.hours
+  
   before_action :set_stock, only: [:show]
 
   def autocomplete
-    query = params[:q].to_s.strip
+    query = params[:q].to_s.squish
     
-    if query.length < 1
+    if query.length < 1 || query.length > MAX_QUERY_LENGTH
       render json: []
       return
     end
 
-    stocks = Stock.where("symbol ILIKE ? OR name ILIKE ?", "%#{query}%", "%#{query}%")
-      .limit(10)
+    stocks = Stock.where("symbol ILIKE :q OR name ILIKE :q", q: "%#{query}%")
+      .limit(AUTOCOMPLETE_LIMIT)
       .select(:id, :symbol, :name, :market, :exchange)
 
     results = stocks.map do |stock|
@@ -34,11 +41,18 @@ class StocksController < ApplicationController
     
     @industry_comparison_data = Rails.cache.fetch(
       [:industry_comparison, @stock.sector, Date.today].join('/'),
-      expires_in: 12.hours
+      expires_in: INDUSTRY_CACHE_EXPIRES_IN
     ) do
       sector_stocks = Stock.where(sector: @stock.sector).includes(
-        financial_reports: [:financial_indicators, :income_statements, :balance_sheets]
+        financial_reports: [:financial_indicators, :income_statements, :balance_sheets, :cash_flows]
       ).to_a
+      
+      sector_stocks.each do |stock|
+        stock.preloaded_income_statements = stock.income_statements.to_a
+        stock.preloaded_balance_sheets = stock.balance_sheets.to_a
+        stock.preloaded_cash_flows = stock.cash_flows.to_a
+        stock.preloaded_financial_indicators = stock.financial_indicators.to_a
+      end
       
       sector_stocks.map do |stock|
         {
@@ -48,7 +62,7 @@ class StocksController < ApplicationController
         }
       end.select { |item| item[:roe_average].present? }
          .sort_by { |item| -item[:roe_average] }
-         .first(20)
+         .first(INDUSTRY_COMPARISON_LIMIT)
     end
 
     @radar_data = @stock.cached_radar_data
@@ -298,7 +312,7 @@ class StocksController < ApplicationController
     when :eps, :cash_flow_ps
       "%.2f" % value
     when :net_income, :operating_cash_flow, :investing_cash_flow, :financing_cash_flow, :net_cash_change
-      "%.2f" % (value / 100000000.0)
+      "%.2f" % (value / HUNDRED_MILLION)
     else
       "%.2f%%" % value
     end
@@ -306,11 +320,7 @@ class StocksController < ApplicationController
 
   def fetch_comparison_radar_data
     stocks = @industry_comparison_data.map { |item| item[:stock] }
-    result = {}
-    stocks.each do |stock|
-      data = stock.cached_radar_data
-      result[stock.symbol] = data if data
-    end
+    result = StockRadarDataService.batch_call(stocks)
     result
   end
 

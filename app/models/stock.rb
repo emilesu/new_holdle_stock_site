@@ -6,6 +6,8 @@ class Stock < ApplicationRecord
   has_many :balance_sheets, through: :financial_reports
   has_many :cash_flows, through: :financial_reports
   has_many :financial_indicators, through: :financial_reports
+  
+  attr_accessor :preloaded_income_statements, :preloaded_balance_sheets, :preloaded_cash_flows, :preloaded_financial_indicators
 
   def to_param
     if market == 'CN'
@@ -66,10 +68,16 @@ class Stock < ApplicationRecord
 
   def get_financial_data_by_year(year)
     year_str = year.to_s
-    income = income_statements.detect { |i| i.report_date&.strftime('%Y') == year_str }
-    balance = balance_sheets.detect { |b| b.report_date&.strftime('%Y') == year_str }
-    cash = cash_flows.detect { |c| c.report_date&.strftime('%Y') == year_str }
-    indicator = financial_indicators.detect { |i| i.report_date&.strftime('%Y') == year_str }
+    
+    income_collection = preloaded_income_statements.presence || income_statements
+    balance_collection = preloaded_balance_sheets.presence || balance_sheets
+    cash_collection = preloaded_cash_flows.presence || cash_flows
+    indicator_collection = preloaded_financial_indicators.presence || financial_indicators
+    
+    income = income_collection.detect { |i| i.report_date&.strftime('%Y') == year_str }
+    balance = balance_collection.detect { |b| b.report_date&.strftime('%Y') == year_str }
+    cash = cash_collection.detect { |c| c.report_date&.strftime('%Y') == year_str }
+    indicator = indicator_collection.detect { |i| i.report_date&.strftime('%Y') == year_str }
 
     {
       year: year,
@@ -95,12 +103,21 @@ class Stock < ApplicationRecord
   end
 
   def financial_years
-    dates = []
-    dates += income_statements.pluck(:report_date)
-    dates += balance_sheets.pluck(:report_date)
-    dates += cash_flows.pluck(:report_date)
-    dates += financial_indicators.pluck(:report_date)
-    dates.compact.map { |d| d.strftime('%Y') }.uniq.sort.reverse.first(8).sort
+    if preloaded_income_statements.present?
+      dates = []
+      dates += preloaded_income_statements.map(&:report_date)
+      dates += preloaded_balance_sheets.map(&:report_date) if preloaded_balance_sheets
+      dates += preloaded_cash_flows.map(&:report_date) if preloaded_cash_flows
+      dates += preloaded_financial_indicators.map(&:report_date) if preloaded_financial_indicators
+      dates.compact.map { |d| d.strftime('%Y') }.uniq.sort.reverse.first(8).sort
+    else
+      dates = []
+      dates += income_statements.pluck(:report_date)
+      dates += balance_sheets.pluck(:report_date)
+      dates += cash_flows.pluck(:report_date)
+      dates += financial_indicators.pluck(:report_date)
+      dates.compact.map { |d| d.strftime('%Y') }.uniq.sort.reverse.first(8).sort
+    end
   end
 
   def get_radar_data
