@@ -1,5 +1,5 @@
 <!-- 股票详情页 -->
-<div class="min-h-screen bg-gray-50 pt-20" id="stock-detail-page">
+<div class="min-h-screen bg-gray-50 pt-10" id="stock-detail-page">
   <style>
     /* 强制布局样式 */
     #stock-detail-page .main-container {
@@ -76,22 +76,13 @@
   </style>
   
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    
-    <!-- 返回按钮 -->
-    <div class="mb-6">
-      <a href="/" class="inline-flex items-center space-x-2 text-gray-600 hover:text-blue-600 transition-colors">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-        </svg>
-        <span class="text-sm">返回</span>
-      </a>
-    </div>
+ 
 
     <!-- 左右两列布局 -->
     <div class="main-container">
       <!-- 左列：80% -->
       <div class="space-y-6">
-        
+
         <!-- 上半部分：股票基础信息 + 雷达图 -->
         <div class="bg-white rounded-lg overflow-hidden border border-gray-200">
           <div class="p-6 top-card">
@@ -167,7 +158,7 @@
             <table class="w-full">
               <thead class="bg-gray-50">
                 <tr>
-                  <th class="px-6 py-3 text-left text-sm font-medium text-gray-500 w-32">指标</th>
+                  <th class="px-6 py-3 text-left text-sm font-medium text-gray-500 w-32 whitespace-nowrap">指标</th>
                   <% if @financial_years.any? %>
                     <% @financial_years.each do |year| %>
                       <th class="px-4 py-3 text-right text-xs font-semibold text-gray-800 whitespace-nowrap"><%= year %></th>
@@ -179,7 +170,7 @@
               </thead>
               <tbody class="divide-y divide-gray-100">
                 <tr class="hover:bg-blue-50 cursor-pointer indicator-row transition-colors" data-indicator="roe">
-                  <td class="px-6 py-3 text-sm text-gray-700 font-medium">净资产收益率（ROE）</td>
+                  <td class="px-6 py-3 text-sm text-gray-700 font-medium whitespace-nowrap">净资产收益率（ROE）</td>
                   <% if @financial_years.any? %>
                     <% @financial_years.each do |year| %>
                       <td class="px-4 py-3 text-right text-sm text-gray-600">
@@ -191,7 +182,7 @@
                   <% end %>
                 </tr>
                 <tr class="hover:bg-blue-50 cursor-pointer indicator-row transition-colors" data-indicator="roa">
-                  <td class="px-6 py-3 text-sm text-gray-700 font-medium">总资产收益率（ROA）</td>
+                  <td class="px-6 py-3 text-sm text-gray-700 font-medium whitespace-nowrap">总资产收益率（ROA）</td>
                   <% if @financial_years.any? %>
                     <% @financial_years.each do |year| %>
                       <td class="px-4 py-3 text-right text-sm text-gray-600">
@@ -227,7 +218,7 @@
                   <% end %>
                 </tr>
                 <tr class="hover:bg-blue-50 cursor-pointer indicator-row transition-colors" data-indicator="eps">
-                  <td class="px-6 py-3 text-sm text-gray-700 font-medium">每股收益（EPS）</td>
+                  <td class="px-6 py-3 text-sm text-gray-700 font-medium whitespace-nowrap">每股收益（EPS）</td>
                   <% if @financial_years.any? %>
                     <% @financial_years.each do |year| %>
                       <td class="px-4 py-3 text-right text-sm text-gray-600">
@@ -239,7 +230,7 @@
                   <% end %>
                 </tr>
                 <tr class="hover:bg-blue-50 cursor-pointer indicator-row transition-colors" data-indicator="cash_flow_ps">
-                  <td class="px-6 py-3 text-sm text-gray-700 font-medium">每股现金流量</td>
+                  <td class="px-6 py-3 text-sm text-gray-700 font-medium whitespace-nowrap">每股现金流量</td>
                   <% if @financial_years.any? %>
                     <% @financial_years.each do |year| %>
                       <td class="px-4 py-3 text-right text-sm text-gray-600">
@@ -264,7 +255,7 @@
             <table class="w-full">
               <thead class="bg-gray-50">
                 <tr>
-                  <th class="px-6 py-3 text-left text-sm font-medium text-gray-500 w-36">指标</th>
+                  <th class="px-6 py-3 text-left text-sm font-medium text-gray-500 w-36 whitespace-nowrap">指标</th>
                   <% if @financial_years.any? %>
                     <% @financial_years.each do |year| %>
                       <th class="px-4 py-3 text-right text-xs font-semibold text-gray-800 whitespace-nowrap"><%= year %></th>
@@ -276,7 +267,7 @@
               </thead>
               <tbody class="divide-y divide-gray-100">
                 <tr class="hover:bg-blue-50 cursor-pointer indicator-row transition-colors" data-indicator="asset_liab_ratio">
-                  <td class="px-6 py-3 text-sm text-gray-700 font-medium">负债占资产比率</td>
+                  <td class="px-6 py-3 text-sm text-gray-700 font-medium whitespace-nowrap">负债占资产比率</td>
                   <% if @financial_years.any? %>
                     <% @financial_years.each do |year| %>
                       <td class="px-4 py-3 text-right text-sm">
@@ -288,7 +279,7 @@
                   <% end %>
                 </tr>
                 <tr class="hover:bg-blue-50 cursor-pointer indicator-row transition-colors" data-indicator="asset_turnover_ratio">
-                  <td class="px-6 py-3 text-sm text-gray-700 font-medium">总资产周转率</td>
+                  <td class="px-6 py-3 text-sm text-gray-700 font-medium whitespace-nowrap">总资产周转率</td>
                   <% if @financial_years.any? %>
                     <% @financial_years.each do |year| %>
                       <td class="px-4 py-3 text-right text-sm">
@@ -300,7 +291,7 @@
                   <% end %>
                 </tr>
                 <tr class="hover:bg-blue-50 cursor-pointer indicator-row transition-colors" data-indicator="net_income">
-                  <td class="px-6 py-3 text-sm text-gray-700 font-medium">净利润</td>
+                  <td class="px-6 py-3 text-sm text-gray-700 font-medium whitespace-nowrap">净利润</td>
                   <% if @financial_years.any? %>
                     <% @financial_years.each do |year| %>
                       <td class="px-4 py-3 text-right text-sm">
@@ -312,7 +303,7 @@
                   <% end %>
                 </tr>
                 <tr class="hover:bg-blue-50 cursor-pointer indicator-row transition-colors" data-indicator="operating_cash_flow">
-                  <td class="px-6 py-3 text-sm text-gray-700 font-medium">经营活动现金流量</td>
+                  <td class="px-6 py-3 text-sm text-gray-700 font-medium whitespace-nowrap">经营活动现金流量</td>
                   <% if @financial_years.any? %>
                     <% @financial_years.each do |year| %>
                       <td class="px-4 py-3 text-right text-sm">
@@ -324,7 +315,7 @@
                   <% end %>
                 </tr>
                 <tr class="hover:bg-blue-50 cursor-pointer indicator-row transition-colors" data-indicator="investing_cash_flow">
-                  <td class="px-6 py-3 text-sm text-gray-700 font-medium">投资活动现金流量</td>
+                  <td class="px-6 py-3 text-sm text-gray-700 font-medium whitespace-nowrap">投资活动现金流量</td>
                   <% if @financial_years.any? %>
                     <% @financial_years.each do |year| %>
                       <td class="px-4 py-3 text-right text-sm">
@@ -336,7 +327,7 @@
                   <% end %>
                 </tr>
                 <tr class="hover:bg-blue-50 cursor-pointer indicator-row transition-colors" data-indicator="financing_cash_flow">
-                  <td class="px-6 py-3 text-sm text-gray-700 font-medium">筹资活动现金流量</td>
+                  <td class="px-6 py-3 text-sm text-gray-700 font-medium whitespace-nowrap">筹资活动现金流量</td>
                   <% if @financial_years.any? %>
                     <% @financial_years.each do |year| %>
                       <td class="px-4 py-3 text-right text-sm">
@@ -348,7 +339,7 @@
                   <% end %>
                 </tr>
                 <tr class="hover:bg-blue-50 cursor-pointer indicator-row transition-colors" data-indicator="net_cash_change">
-                  <td class="px-6 py-3 text-sm text-gray-700 font-medium">净现金流量</td>
+                  <td class="px-6 py-3 text-sm text-gray-700 font-medium whitespace-nowrap">净现金流量</td>
                   <% if @financial_years.any? %>
                     <% @financial_years.each do |year| %>
                       <td class="px-4 py-3 text-right text-sm">

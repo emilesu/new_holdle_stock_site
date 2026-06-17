@@ -7,7 +7,10 @@ module DataSources
 
     USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36".freeze
 
-    TIMEOUT = 10
+  TIMEOUT = 10
+
+  # 请求间隔时间（秒），避免被限流
+  REQUEST_INTERVAL = 0.5
 
     # 行业板块(Sector)中英映射 - 根据 yahoo_list.md 更新
     SECTOR_MAPPING = {
@@ -208,7 +211,10 @@ module DataSources
         puts "│    代码     │    名称     │  行业板块   │  处理状态   │"
         puts "├─────────────┼─────────────┼─────────────┼─────────────┤"
 
-        stocks.each do |stock|
+        stocks.each_with_index do |stock, index|
+          # 每处理一只股票后等待一段时间，避免被限流
+          sleep REQUEST_INTERVAL if index > 0
+          
           begin
             result = process_single_stock(stock.symbol)
             stats[result] += 1
@@ -270,6 +276,10 @@ module DataSources
       def fetch_chinese_name(ticker)
         puts "\n[1/2] 正在从雪球获取中文名..."
 
+        if ENV["XUEQIU_COOKIE"].blank?
+          puts "⚠️  警告：未配置雪球Cookie (XUEQIU_COOKIE)，可能无法获取中文名"
+        end
+
         begin
           response = Faraday.get(XUEQIU_QUOTE_URL) do |req|
             req.headers["User-Agent"] = USER_AGENT
@@ -283,14 +293,25 @@ module DataSources
           if response.success?
             data = JSON.parse(response.body)
             name = data.dig("data", "quote", "name")
+            
+            if name.blank?
+              puts "⚠️  雪球返回的name字段为空，尝试其他字段路径..."
+              name = data.dig("data", "basic", "name") || data.dig("quote", "name") || data["name"]
+              puts "  备用字段尝试结果: #{name}"
+            end
+            
             puts "✅ 雪球返回中文名: #{name}"
             return name
           else
-            puts "⚠️  雪球请求失败，状态码: #{response.status}"
+            puts "❌ 雪球请求失败，状态码: #{response.status}, 响应摘要: #{response.body.to_s[0..200]}"
             return nil
           end
+        rescue JSON::ParserError => e
+          puts "❌ 雪球响应解析失败: #{e.message}, 响应: #{response&.body&.to_s[0..200]}"
+          return nil
         rescue => e
-          puts "⚠️  雪球请求异常: #{e.message}"
+          puts "❌ 雪球请求异常: #{e.message}"
+          puts "  异常堆栈: #{e.backtrace.take(3).join("\n")}"
           return nil
         end
       end
@@ -379,37 +400,57 @@ module DataSources
       def update_stock(stock, chinese_name, industry_info)
         english_name = stock_english_name(stock.symbol)
         
-        # 组装新名称
+        old_name = stock.name
+        old_sector = stock.sector
+        old_industry = stock.industry
+
+        # 判断当前名称是否已包含中文名（有 | 分隔符）
+        has_chinese_name_already = old_name.include?('|')
+
+        # 组装新名称 - 关键修复：当中文名获取失败时，保留原有名称
         new_name = if chinese_name.present? && english_name.present?
                      "#{chinese_name} | #{english_name}"
-                   elsif english_name.present?
+                   elsif has_chinese_name_already && chinese_name.blank?
+                     # 重要：如果当前已有中文名但这次获取失败，保留原有名称
+                     old_name
+                   elsif english_name.present? && !has_chinese_name_already
                      english_name
                    else
-                     stock.name
+                     old_name
                    end
 
         # 获取行业和板块信息
         new_sector = industry_info ? industry_info[:sector] : stock.sector
         new_industry = industry_info ? industry_info[:industry] : stock.industry
 
-        old_name = stock.name
-        old_sector = stock.sector
-        old_industry = stock.industry
+        # 检查是否有实质性变化
+        has_name_change = new_name != old_name
+        has_sector_change = new_sector != old_sector
+        has_industry_change = new_industry != old_industry
+        
+        # 特殊检测：当前名称是纯英文，但现在能获取到中文名（需要强制更新）
+        can_add_chinese_name = !has_chinese_name_already && chinese_name.present? && english_name.present?
 
-        if new_name == old_name && new_sector == old_sector && new_industry == old_industry
-          puts "⏭️ 名称/板块/行业无变化，跳过更新"
-          return :skipped
-        else
-          stock.name = new_name
-          stock.sector = new_sector if new_sector.present?
-          stock.industry = new_industry if new_industry.present?
-          stock.save!
-          puts "✅ 股票信息发生变更，已完成覆盖更新"
-          puts "  - 名称: #{old_name} → #{new_name}" unless new_name == old_name
-          puts "  - 板块: #{old_sector || '（无）'} → #{new_sector || '（无）'}" unless new_sector == old_sector
-          puts "  - 行业: #{old_industry || '（无）'} → #{new_industry || '（无）'}" unless new_industry == old_industry
-          return :success
+        if !has_name_change && !has_sector_change && !has_industry_change
+          if can_add_chinese_name
+            puts "🔄 检测到新的中文名可用，强制更新名称格式"
+          else
+            puts "⏭️ 名称/板块/行业无变化，跳过更新"
+            return :skipped
+          end
         end
+
+        stock.name = new_name
+        stock.sector = new_sector if new_sector.present?
+        stock.industry = new_industry if new_industry.present?
+        stock.save!
+        
+        puts "✅ 股票信息更新完成"
+        puts "  - 名称: #{old_name} → #{new_name}" if has_name_change || can_add_chinese_name
+        puts "  - 板块: #{old_sector || '（无）'} → #{new_sector || '（无）'}" if has_sector_change
+        puts "  - 行业: #{old_industry || '（无）'} → #{new_industry || '（无）'}" if has_industry_change
+        
+        return :success
       end
     end
   end
