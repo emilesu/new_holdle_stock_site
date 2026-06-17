@@ -748,7 +748,7 @@ function clearComparisonChart() {
     const labels = points.map(p => p.year);
     
     const isCashFlowIndicator = ['net_income', 'operating_cash_flow', 'investing_cash_flow', 'financing_cash_flow', 'net_cash_change'].includes(data.indicator_key);
-    const isPercentageIndicator = ['roe', 'roa', 'gross_margin', 'net_profit_margin', 'asset_liab_ratio', 'asset_turnover_ratio', 'cash_flow_ps'].includes(data.indicator_key);
+    const isAssetTurnover = data.indicator_key === 'asset_turnover_ratio';
     
     const values = points.map(p => {
       if (!p.value) return null;
@@ -756,7 +756,7 @@ function clearComparisonChart() {
       if (isCashFlowIndicator && Math.abs(val) >= 100000000) {
         return val / 100000000;
       }
-      if (isPercentageIndicator && val < 10) {
+      if (isAssetTurnover) {
         return val * 100;
       }
       return val;

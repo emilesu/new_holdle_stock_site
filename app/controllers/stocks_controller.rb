@@ -314,6 +314,8 @@ class StocksController < ApplicationController
     when :net_income, :operating_cash_flow, :investing_cash_flow, :financing_cash_flow, :net_cash_change
       "%.2f" % (value / HUNDRED_MILLION)
     else
+      # 所有百分比指标（包括ROE, ROA, gross_margin, net_profit_margin等）
+      # 已经在 Stock 模型的 calculate_* 方法中处理为正确的百分比值
       "%.2f%%" % value
     end
   end
