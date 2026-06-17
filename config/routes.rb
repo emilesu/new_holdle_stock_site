@@ -15,6 +15,11 @@ Rails.application.routes.draw do
     end
   end
 
+  get "pyramid", to: "pyramids#index"
+  get "pyramid/compare", to: "pyramids#compare"
+  get "pyramid/update_sectors", to: "pyramids#update_sectors"
+  get "pyramid/update_list", to: "pyramids#update_list"
+
   namespace :users do
     get "profile", to: "profiles#show", as: :profile
     get "profile/edit", to: "profiles#edit", as: :edit_profile
@@ -32,9 +37,15 @@ Rails.application.routes.draw do
     get "stock_crawlers/us_finance", to: "stock_crawlers#us_finance"
     get "stock_crawlers/a_stock_list", to: "stock_crawlers#a_stock_list"
     get "stock_crawlers/a_finance", to: "stock_crawlers#a_finance"
+    get "stock_crawlers/update_all_pyramid", to: "stock_crawlers#update_all_pyramid"
+    get "stock_crawlers/refresh_all_radar", to: "stock_crawlers#refresh_all_radar"
     
     resources :users, only: [:index, :show, :new, :create, :edit, :update, :destroy]
-    resources :stocks, only: [:index, :show, :new, :create, :edit, :update, :destroy]
+    resources :stocks, only: [:index, :show, :new, :create, :edit, :update, :destroy] do
+      member do
+        post :recalculate_pyramid
+      end
+    end
     # resources :courses, only: [:index, :new, :create, :edit, :update, :destroy]  # 待开发
     # resources :payment_records, only: [:index, :show]  # 待开发
   end

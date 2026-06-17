@@ -1,99 +1,77 @@
 module Admin
-  class StocksController < BaseController
-    before_action :set_stock, only: [:show, :edit, :update, :destroy]
+  class StocksController < ApplicationController
+    before_action :authenticate_user!
+    before_action :authorize_admin!
+    before_action :set_stock, only: [:recalculate_pyramid]
+
+    PER_PAGE = 20
 
     def index
-      @stocks = Stock.includes(:financial_indicators)
-      
-      if params[:search].present?
-        @stocks = @stocks.where("symbol ILIKE ? OR name ILIKE ?", "%#{params[:search]}%", "%#{params[:search]}%")
-      end
-      
-      if params[:market].present? && params[:market] != 'all'
-        @stocks = @stocks.where(market: params[:market])
-      end
-      
-      @stocks = @stocks.order(market: :asc, symbol: :asc)
-      
-      @per_page = 20
+      @market = params[:market] || 'CN'
+      @sector = params[:sector]
+      @pyramid_min = params[:pyramid_min]
+      @pyramid_max = params[:pyramid_max]
       @page = params[:page] ? params[:page].to_i : 1
-      @total_count = @stocks.count
-      @total_pages = (@total_count.to_f / @per_page).ceil
-      @stocks = @stocks.offset((@page - 1) * @per_page).limit(@per_page)
-    end
 
-    def show
-    end
+      stocks = Stock.where(market: @market)
+      stocks = stocks.where(sector: @sector) if @sector.present?
+      stocks = stocks.where('pyramid_total_score >= ?', @pyramid_min) if @pyramid_min.present?
+      stocks = stocks.where('pyramid_total_score <= ?', @pyramid_max) if @pyramid_max.present?
 
-    def new
-      @stock = Stock.new
-    end
-
-    def create
-      @stock = Stock.new(stock_params)
+      @total_count = stocks.count
+      @total_pages = (@total_count.to_f / PER_PAGE).ceil
+      @stocks = stocks.order(pyramid_total_score: :desc).offset((@page - 1) * PER_PAGE).limit(PER_PAGE)
       
-      if @stock.save
-        redirect_to admin_stock_path(@stock), notice: '股票添加成功'
-      else
-        flash[:alert] = "添加失败：#{@stock.errors.full_messages.join(', ')}"
-        render :new
+      @sectors = Rails.cache.fetch("sectors_#{@market}_#{Date.today}", expires_in: 1.hour) do
+        Stock.where(market: @market).where.not(sector: nil).distinct.pluck(:sector).sort
       end
-    rescue StandardError => e
-      flash[:alert] = "添加失败：#{e.message}"
-      render :new
     end
 
-    def edit
-    end
+    def recalculate_pyramid
+      result = DataSources::StockPyramidService.call(@stock)
 
-    def update
-      if @stock.update(stock_params)
-        redirect_to admin_stock_path(@stock), notice: '股票信息更新成功'
-      else
-        flash[:alert] = "更新失败：#{@stock.errors.full_messages.join(', ')}"
-        render :edit
+      respond_to do |format|
+        format.turbo_stream do
+          render turbo_stream: [
+            turbo_stream.replace(
+              "stock-#{@stock.id}",
+              partial: 'admin/stocks/stock_row',
+              locals: { stock: @stock.reload }
+            )
+          ]
+        end
+        format.html do
+          redirect_to admin_stocks_path, notice: result[:success] ? '计算成功' : "计算失败: #{result[:error]}"
+        end
       end
-    rescue StandardError => e
-      flash[:alert] = "更新失败：#{e.message}"
-      render :edit
-    end
-
-    def destroy
-      if @stock.destroy
-        redirect_to admin_stocks_path, notice: '股票已删除'
-      else
-        redirect_to admin_stocks_path, alert: "删除失败：#{@stock.errors.full_messages.join(', ')}"
+    rescue => e
+      Rails.logger.error "Recalculate pyramid error for #{@stock&.symbol}: #{e.message}"
+      respond_to do |format|
+        format.turbo_stream do
+          render turbo_stream: [
+            turbo_stream.replace(
+              "stock-#{@stock&.id}",
+              partial: 'admin/stocks/stock_row',
+              locals: { stock: @stock&.reload }
+            )
+          ]
+        end
+        format.html do
+          redirect_to admin_stocks_path, alert: "计算失败: #{e.message}"
+        end
       end
-    rescue StandardError => e
-      redirect_to admin_stocks_path, alert: "删除失败：#{e.message}"
     end
 
     private
 
     def set_stock
-      param_id = params[:id]
-      
-      if param_id.to_i.to_s == param_id
-        @stock = Stock.find(param_id)
-      else
-        if param_id.include?('-')
-          symbol = param_id.split('-').last
-          @stock = Stock.find_by(symbol: symbol)
-        else
-          @stock = Stock.find_by(symbol: param_id)
-        end
-      end
-      
-      unless @stock
-        redirect_to admin_stocks_path, alert: '股票不存在'
-        return false
-      end
-    rescue ActiveRecord::RecordNotFound
-      redirect_to admin_stocks_path, alert: '股票不存在'
+      @stock = Stock.find(params[:id])
     end
 
-    def stock_params
-      params.require(:stock).permit(:symbol, :name, :market, :industry, :exchange, :status, :sector, :website, :description)
+    def authorize_admin!
+      unless current_user.is_admin?
+        redirect_to root_path, alert: '无权限访问'
+      end
     end
   end
 end

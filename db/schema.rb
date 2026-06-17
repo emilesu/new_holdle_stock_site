@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_06_16_005825) do
+ActiveRecord::Schema[7.1].define(version: 2026_06_17_080420) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -202,6 +202,14 @@ ActiveRecord::Schema[7.1].define(version: 2026_06_16_005825) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "sector", comment: "行业板块（中文）"
+    t.decimal "pyramid", precision: 12, scale: 2, comment: "金字塔分数"
+    t.integer "pyramid_total_score", default: 0, null: false
+    t.datetime "last_pyramid_calc_at"
+    t.jsonb "radar_dim_scores"
+    t.index ["market", "pyramid"], name: "idx_stocks_market_pyramid", order: { pyramid: :desc }
+    t.index ["market", "sector", "pyramid"], name: "idx_stocks_market_sector_pyramid", order: { pyramid: :desc }
+    t.index ["market", "sector", "pyramid_total_score"], name: "index_stocks_on_market_and_sector_and_pyramid_total_score", order: { pyramid_total_score: :desc }
+    t.index ["radar_dim_scores"], name: "index_stocks_on_radar_dim_scores", using: :gin
     t.index ["sector", "market"], name: "idx_stocks_sector_market"
     t.index ["sector"], name: "index_stocks_on_sector"
     t.index ["symbol", "market"], name: "index_stocks_on_symbol_and_market", unique: true

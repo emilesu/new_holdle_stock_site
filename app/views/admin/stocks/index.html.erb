@@ -1,136 +1,167 @@
-<div class="min-h-screen bg-gray-50">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <div class="mb-8">
-      <h1 class="text-3xl font-bold text-gray-900">股票管理</h1>
-      <p class="mt-2 text-gray-600">管理平台所有股票数据</p>
+<div class="min-h-screen bg-gray-50 pt-10" id="admin-stocks-page">
+  <header class="bg-white border-b border-gray-200 px-4 py-3 sticky top-0 z-10">
+    <div class="max-w-7xl mx-auto flex items-center justify-between">
+      <h1 class="text-lg font-semibold text-gray-900">股票管理</h1>
+      <span class="text-sm text-gray-500">共 <%= @total_count %> 只股票</span>
     </div>
+  </header>
 
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 mb-6">
-      <div class="px-6 py-4 border-b border-gray-100">
-        <div class="flex flex-col sm:flex-row gap-4">
-          <div class="flex-1 relative">
-            <input type="text" name="search" placeholder="搜索股票代码或名称..." value="<%= params[:search] %>"
-              class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              onkeydown="if(event.key === 'Enter') { this.form.submit(); }">
-          </div>
-          <div class="flex gap-2">
-            <select name="market" class="px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-              <option value="all" <%= 'selected' if params[:market].blank? || params[:market] == 'all' %>>全部市场</option>
-              <option value="CN" <%= 'selected' if params[:market] == 'CN' %>>A股</option>
-              <option value="US" <%= 'selected' if params[:market] == 'US' %>>美股</option>
-            </select>
-            <button type="submit" class="px-4 py-2.5 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition-colors">
-              筛选
-            </button>
-            <a href="<%= new_admin_stock_path %>" class="px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors whitespace-nowrap">
-              <svg class="w-5 h-5 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-              </svg>
-              添加股票
-            </a>
-          </div>
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <%= form_with url: admin_stocks_path, method: :get, class: 'bg-white rounded-lg overflow-hidden border border-gray-200 p-4 mb-6' do |f| %>
+      <div class="flex flex-wrap gap-4 items-center">
+        <div class="flex items-center gap-2">
+          <label class="text-sm font-medium text-gray-600 w-12 shrink-0">市场</label>
+          <select name="market" id="market-filter" class="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-28 bg-white">
+            <option value="CN" <%= 'selected' if @market == 'CN' %>>A股</option>
+            <option value="US" <%= 'selected' if @market == 'US' %>>美股</option>
+          </select>
         </div>
-      </div>
 
+        <div class="flex items-center gap-2">
+          <label class="text-sm font-medium text-gray-600 w-12 shrink-0">行业</label>
+          <select name="sector" id="sector-filter" class="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-40 bg-white">
+            <option value="">全部</option>
+            <% @sectors.each do |sector| %>
+              <option value="<%= sector %>" <%= 'selected' if @sector == sector %>><%= sector %></option>
+            <% end %>
+          </select>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <label class="text-sm font-medium text-gray-600 w-20 shrink-0">分数区间</label>
+          <input type="number" name="pyramid_min" id="pyramid-min" value="<%= @pyramid_min %>" placeholder="最低分" 
+                 class="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-20">
+          <span class="text-gray-400">-</span>
+          <input type="number" name="pyramid_max" id="pyramid-max" value="<%= @pyramid_max %>" placeholder="最高分" 
+                 class="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-20">
+        </div>
+
+        <%= f.hidden_field :page, value: 1 %>
+
+        <button type="submit" class="px-5 py-2 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm">
+          <svg class="w-4 h-4 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+          </svg>
+          筛选
+        </button>
+      </div>
+    <% end %>
+
+    <div class="bg-white rounded-lg overflow-hidden border border-gray-200">
       <div class="overflow-x-auto">
         <table class="w-full">
           <thead class="bg-gray-50">
             <tr>
-              <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">股票代码</th>
-              <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">名称</th>
-              <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">市场</th>
-              <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">行业</th>
-              <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">交易所</th>
-              <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">状态</th>
-              <th class="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">操作</th>
+              <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">股票代码</th>
+              <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">名称</th>
+              <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">市场</th>
+              <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">行业</th>
+              <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">金字塔总分</th>
+              <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">上次计算</th>
+              <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">操作</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-100">
-            <% if @stocks.empty? %>
-              <tr>
-                <td colspan="7" class="px-6 py-12 text-center text-gray-500">
-                  暂无股票数据
-                </td>
-              </tr>
-            <% else %>
-              <% @stocks.each do |stock| %>
-                <tr class="hover:bg-gray-50 transition-colors">
-                  <td class="px-6 py-4 whitespace-nowrap">
-                    <span class="font-medium text-gray-900"><%= stock.symbol %></span>
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap">
-                    <span class="text-gray-600"><%= stock.name %></span>
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap">
-                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold
-                      <%= stock.market == 'CN' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800' %>">
-                      <%= stock.market == 'CN' ? 'A股' : '美股' %>
-                    </span>
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap">
-                    <span class="text-gray-600 truncate max-w-[150px]" title="<%= stock.sector.presence || stock.industry %>">
-                      <%= stock.sector.presence || stock.industry || '-' %>
-                    </span>
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap">
-                    <span class="text-gray-600"><%= stock.exchange.presence || '-' %></span>
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap">
-                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold
-                      <%= stock.status == 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800' %>">
-                      <%= stock.status == 'active' ? '活跃' : '暂停' %>
-                    </span>
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap text-right">
-                    <div class="flex items-center justify-end space-x-2">
-                      <a href="<%= admin_stock_path(stock) %>" class="text-blue-600 hover:text-blue-700 text-sm font-medium">查看</a>
-                      <a href="<%= edit_admin_stock_path(stock) %>" class="text-indigo-600 hover:text-indigo-700 text-sm font-medium">编辑</a>
-                      <%= button_to '删除', admin_stock_path(stock), method: :delete, 
-                        class: "text-red-600 hover:text-red-700 text-sm font-medium",
-                        data: { confirm: "确定删除股票 #{stock.symbol} 吗？" } %>
-                    </div>
-                  </td>
-                </tr>
-              <% end %>
+            <% @stocks.each do |stock| %>
+              <%= render partial: 'admin/stocks/stock_row', locals: { stock: stock } %>
             <% end %>
           </tbody>
         </table>
       </div>
 
-      <% if @total_pages > 1 %>
-        <div class="px-6 py-4 border-t border-gray-100">
-          <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <p class="text-sm text-gray-600">
-              显示第 <%= (@page - 1) * @per_page + 1 %> 到 <%= [@page * @per_page, @total_count].min %> 条，共 <%= @total_count %> 条记录
-            </p>
-            <nav class="flex items-center space-x-1">
-              <a href="<%= admin_stocks_path(page: @page - 1, search: params[:search], market: params[:market]) %>"
-                class="px-3 py-1.5 text-sm font-medium rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                <%= 'disabled' if @page <= 1 %>>
-                上一页
+      <div class="bg-gray-50 px-6 py-3 flex items-center justify-between border-t border-gray-200">
+        <span class="text-sm text-gray-600">
+          显示 <span class="font-medium text-gray-900"><%= [(@page - 1) * 20 + 1, @total_count].min %></span> 
+          - <span class="font-medium text-gray-900"><%= [@page * 20, @total_count].min %></span> 条
+        </span>
+        
+        <nav class="flex items-center space-x-1" aria-label="分页导航">
+          <a href="<%= admin_stocks_path(page: [@page - 1, 1].max, market: @market, sector: @sector, pyramid_min: @pyramid_min, pyramid_max: @pyramid_max) %>" 
+             class="px-3 py-2 text-sm bg-white border border-gray-300 rounded-lg hover:bg-gray-50 text-gray-700 transition-colors"
+             <%= 'disabled class="px-3 py-2 text-sm bg-white border border-gray-300 rounded-lg text-gray-400 cursor-not-allowed hover:bg-white"' if @page <= 1 %>>
+            <svg class="w-4 h-4 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+            </svg>
+            上一页
+          </a>
+          
+          <% (1..@total_pages).to_a.each do |page_num| %>
+            <% if page_num == @page %>
+              <span class="px-3 py-2 text-sm bg-blue-600 text-white rounded-lg font-medium"><%= page_num %></span>
+            <% elsif page_num >= @page - 2 && page_num <= @page + 2 %>
+              <a href="<%= admin_stocks_path(page: page_num, market: @market, sector: @sector, pyramid_min: @pyramid_min, pyramid_max: @pyramid_max) %>" 
+                 class="px-3 py-2 text-sm bg-white border border-gray-300 rounded-lg hover:bg-blue-50 hover:border-blue-400 text-gray-700 transition-colors">
+                <%= page_num %>
               </a>
-              <% (([1, @page - 2].max)..([@total_pages, @page + 2].min)).each do |page_num| %>
-                <% if page_num == @page %>
-                  <a href="<%= admin_stocks_path(page: page_num, search: params[:search], market: params[:market]) %>"
-                    class="min-w-[36px] px-3 py-1.5 text-sm font-medium rounded-lg border bg-blue-600 border-blue-600 text-white shadow-sm">
-                    <%= page_num %>
-                  </a>
-                <% else %>
-                  <a href="<%= admin_stocks_path(page: page_num, search: params[:search], market: params[:market]) %>"
-                    class="min-w-[36px] px-3 py-1.5 text-sm font-medium rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 transition-colors">
-                    <%= page_num %>
-                  </a>
-                <% end %>
-              <% end %>
-              <a href="<%= admin_stocks_path(page: @page + 1, search: params[:search], market: params[:market]) %>"
-                class="px-3 py-1.5 text-sm font-medium rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                <%= 'disabled' if @page >= @total_pages %>>
-                下一页
-              </a>
-            </nav>
-          </div>
-        </div>
-      <% end %>
+            <% end %>
+          <% end %>
+          
+          <a href="<%= admin_stocks_path(page: [@page + 1, @total_pages].min, market: @market, sector: @sector, pyramid_min: @pyramid_min, pyramid_max: @pyramid_max) %>" 
+             class="px-3 py-2 text-sm bg-white border border-gray-300 rounded-lg hover:bg-gray-50 text-gray-700 transition-colors"
+             <%= 'disabled class="px-3 py-2 text-sm bg-white border border-gray-300 rounded-lg text-gray-400 cursor-not-allowed hover:bg-white"' if @page >= @total_pages %>>
+            下一页
+            <svg class="w-4 h-4 inline-block ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+            </svg>
+          </a>
+        </nav>
+      </div>
     </div>
-  </div>
+  </main>
 </div>
+
+<script>
+document.addEventListener('turbo:load', function() {
+  const marketFilter = document.getElementById('market-filter');
+  const sectorFilter = document.getElementById('sector-filter');
+  const form = marketFilter?.closest('form');
+
+  if (marketFilter && form) {
+    marketFilter.addEventListener('change', function() {
+      sectorFilter.value = '';
+      form.submit();
+    });
+  }
+  
+  if (sectorFilter && form) {
+    sectorFilter.addEventListener('change', function() {
+      form.submit();
+    });
+  }
+});
+
+function recalculatePyramid(button, stockId) {
+  const originalText = button.innerHTML;
+  button.innerHTML = '计算中...';
+  button.disabled = true;
+  button.style.opacity = '0.7';
+
+  fetch(`/admin/stocks/${stockId}/recalculate_pyramid`, {
+    method: 'POST',
+    headers: {
+      'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content,
+      'Accept': 'text/vnd.turbo-stream.html',
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    body: ''
+  })
+  .then(response => {
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
+    return response.text();
+  })
+  .then(html => {
+    Turbo.renderStreamMessage(html);
+  })
+  .catch(error => {
+    console.error('Recalculate pyramid error:', error);
+    button.innerHTML = '计算失败';
+    setTimeout(() => {
+      button.innerHTML = originalText;
+      button.disabled = false;
+      button.style.opacity = '1';
+    }, 2000);
+  });
+}
+</script>
