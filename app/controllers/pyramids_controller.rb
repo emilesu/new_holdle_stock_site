@@ -76,6 +76,24 @@ class PyramidsController < ApplicationController
     end
   end
 
+  def load_more
+    @market = params[:market] || 'CN'
+    @sector = params[:sector]
+    @page = (params[:page] || 2).to_i
+    @base_page = 1
+
+    stocks = Stock.where(market: @market)
+    stocks = stocks.where(sector: @sector) if @sector.present? && @sector != 'all'
+    
+    @total_count = stocks.count
+    @total_pages = (@total_count.to_f / PER_PAGE).ceil
+    @stocks = stocks.order(pyramid_total_score: :desc).offset((@page - 1) * PER_PAGE).limit(PER_PAGE)
+
+    respond_to do |format|
+      format.turbo_stream
+    end
+  end
+
   private
 
   def authenticate_user!

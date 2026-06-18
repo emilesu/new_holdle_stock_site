@@ -1,17 +1,17 @@
 # Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
 
 one:
-  symbol: MyString
-  name: MyString
-  market: MyString
-  industry: MyString
-  exchange: MyString
-  status: MyString
+  symbol: AAPL
+  name: Apple
+  market: US
+  industry: Technology
+  exchange: NASDAQ
+  status: active
 
 two:
-  symbol: MyString
-  name: MyString
-  market: MyString
-  industry: MyString
-  exchange: MyString
-  status: MyString
+  symbol: 000001
+  name: PingAn
+  market: CN
+  industry: Finance
+  exchange: SZSE
+  status: active

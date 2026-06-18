@@ -3,11 +3,13 @@
 one:
   stock: one
   report_date: 2026-06-11
-  report_type: MyString
-  currency: MyString
+  market: US
+  report_type: annual
+  currency: USD
 
 two:
   stock: two
   report_date: 2026-06-11
-  report_type: MyString
-  currency: MyString
+  market: CN
+  report_type: annual
+  currency: CNY

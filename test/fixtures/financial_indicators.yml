@@ -2,20 +2,18 @@
 
 one:
   financial_report: one
-  roe: 9.99
-  roa: 9.99
+  stock: one
+  report_date: 2024-12-31
+  market: CN
   gross_margin: 9.99
-  net_margin: 9.99
-  debt_to_equity: 9.99
   current_ratio: 9.99
   quick_ratio: 9.99
 
 two:
   financial_report: two
-  roe: 9.99
-  roa: 9.99
+  stock: two
+  report_date: 2024-12-31
+  market: CN
   gross_margin: 9.99
-  net_margin: 9.99
-  debt_to_equity: 9.99
   current_ratio: 9.99
   quick_ratio: 9.99

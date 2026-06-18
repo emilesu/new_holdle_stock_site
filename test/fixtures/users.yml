@@ -1,17 +1,17 @@
 # Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
 
 one:
-  email: MyString
-  password_digest: MyString
-  nickname: MyString
+  email: user1@test.com
+  encrypted_password: password123
+  nickname: UserOne
   member_level: 1
   member_expire_at: 2026-06-11 11:22:30
-  role: MyString
+  role: member
 
 two:
-  email: MyString
-  password_digest: MyString
-  nickname: MyString
-  member_level: 1
+  email: admin@test.com
+  encrypted_password: admin123
+  nickname: AdminUser
+  member_level: 2
   member_expire_at: 2026-06-11 11:22:30
-  role: MyString
+  role: admin

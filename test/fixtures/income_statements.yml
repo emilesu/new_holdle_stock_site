@@ -2,20 +2,26 @@
 
 one:
   financial_report: one
-  revenue: 9.99
-  cost_of_revenue: 9.99
+  stock: one
+  report_date: 2024-12-31
+  market: CN
+  total_revenue: 9.99
+  operating_cost: 9.99
   gross_profit: 9.99
-  operating_expenses: 9.99
+  operating_expense: 9.99
   operating_income: 9.99
   net_income: 9.99
-  eps: 9.99
+  basic_eps: 9.99
 
 two:
   financial_report: two
-  revenue: 9.99
-  cost_of_revenue: 9.99
+  stock: two
+  report_date: 2024-12-31
+  market: CN
+  total_revenue: 9.99
+  operating_cost: 9.99
   gross_profit: 9.99
-  operating_expenses: 9.99
+  operating_expense: 9.99
   operating_income: 9.99
   net_income: 9.99
-  eps: 9.99
+  basic_eps: 9.99

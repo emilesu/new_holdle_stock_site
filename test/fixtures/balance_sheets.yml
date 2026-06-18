@@ -2,20 +2,22 @@
 
 one:
   financial_report: one
+  stock: one
+  report_date: 2024-12-31
+  market: CN
   total_assets: 9.99
   current_assets: 9.99
-  non_current_assets: 9.99
   total_liabilities: 9.99
   current_liabilities: 9.99
-  non_current_liabilities: 9.99
   total_equity: 9.99
 
 two:
   financial_report: two
+  stock: two
+  report_date: 2024-12-31
+  market: CN
   total_assets: 9.99
   current_assets: 9.99
-  non_current_assets: 9.99
   total_liabilities: 9.99
   current_liabilities: 9.99
-  non_current_liabilities: 9.99
   total_equity: 9.99

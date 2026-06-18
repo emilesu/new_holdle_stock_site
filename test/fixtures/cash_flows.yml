@@ -2,14 +2,20 @@
 
 one:
   financial_report: one
+  stock: one
+  report_date: 2024-12-31
+  market: CN
   operating_cash_flow: 9.99
   investing_cash_flow: 9.99
   financing_cash_flow: 9.99
-  net_cash_flow: 9.99
+  net_cash_change: 9.99
 
 two:
   financial_report: two
+  stock: two
+  report_date: 2024-12-31
+  market: CN
   operating_cash_flow: 9.99
   investing_cash_flow: 9.99
   financing_cash_flow: 9.99
-  net_cash_flow: 9.99
+  net_cash_change: 9.99

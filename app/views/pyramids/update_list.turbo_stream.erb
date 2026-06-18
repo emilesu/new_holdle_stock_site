@@ -1,56 +1,42 @@
-<%= turbo_stream.replace 'pyramid-stock-list' do %>
-  <tbody id="pyramid-stock-list" class="bg-white divide-y divide-gray-200">
-    <% @stocks.each_with_index do |stock, index| %>
-      <tr class="cursor-pointer hover:bg-blue-50 transition-colors stock-row"
-          data-stock-id="<%= stock.id %>"
-          data-stock-symbol="<%= stock.symbol %>"
-          data-stock-name="<%= stock.market == 'US' && stock.name&.include?('|') ? stock.name.split('|').first.strip : stock.name %>">
-        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-medium">
-          <%= index + 1 %>
-        </td>
-        <td class="px-6 py-4 whitespace-nowrap">
-          <div class="text-sm font-medium text-gray-900">
-            <%= stock.market == 'US' && stock.name&.include?('|') ? stock.name.split('|').first.strip : stock.name %>
-          </div>
-          <div class="text-xs text-gray-500"><%= stock.symbol %></div>
-        </td>
-        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-          <%= stock.sector %>
-        </td>
-        <td class="px-6 py-4 whitespace-nowrap text-sm">
-          <span class="font-medium text-indigo-600"><%= stock.pyramid_total_score %></span>
-        </td>
-      </tr>
-    <% end %>
-  </tbody>
-<% end %>
+<%= turbo_stream.replace 'pyramid-list-container' do %>
+  <div id="pyramid-list-container">
+    <div id="pyramid-stock-list" class="divide-y divide-gray-100">
+      <% @stocks.each_slice(2) do |pair| %>
+        <div class="grid grid-cols-1 md:grid-cols-2">
+          <% pair.each do |stock| %>
+            <% rank = @stocks.index(stock) + 1 %>
+            <div class="stock-row flex items-center justify-between px-6 py-3 border-r border-gray-100 last:border-r-0"
+                 data-stock-id="<%= stock.id %>"
+                 data-stock-symbol="<%= stock.symbol %>"
+                 data-stock-url="<%= stock_path(stock) %>"
+                 data-stock-name="<%= stock.market == 'US' && stock.name&.include?('|') ? stock.name.split('|').first.strip : stock.name %>">
+              <div class="flex items-center space-x-3 min-w-0">
+                <span class="text-xs font-mono text-gray-400 w-5 text-right shrink-0"><%= rank %></span>
+                <div class="min-w-0">
+                  <div class="stock-name text-sm font-medium text-gray-900 truncate">
+                    <%= stock.market == 'US' && stock.name&.include?('|') ? stock.name.split('|').first.strip : stock.name %>
+                  </div>
+                  <div class="text-xs text-gray-500 truncate"><%= stock.symbol %></div>
+                </div>
+              </div>
+              <span class="stock-score font-semibold text-indigo-600 text-sm shrink-0 ml-2"><%= stock.pyramid_total_score %></span>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
 
-<%= turbo_stream.replace 'pyramid-pagination' do %>
-  <div id="pyramid-pagination" class="px-6 py-4 border-t border-gray-200">
-    <div class="flex items-center justify-between">
-      <span class="text-sm text-gray-500">显示 1 - <%= [20, @total_count].min %> 条，共 <%= @total_count %> 只股票</span>
-      
-      <nav class="flex items-center space-x-1">
-        <span class="px-3 py-2 text-sm bg-gray-200 text-gray-400 rounded-lg cursor-not-allowed">← 上一页</span>
-        
-        <span class="px-3 py-2 text-sm bg-blue-600 text-white rounded-lg font-medium">1</span>
-        
-        <% if @total_pages > 1 %>
-          <a href="<%= pyramid_path(page: 2, market: @market, sector: @sector) %>" 
-             class="px-3 py-2 text-sm bg-white border border-gray-300 rounded-lg hover:bg-gray-50 text-gray-700 transition-colors">
-            2
-          </a>
-        <% end %>
-        
-        <% if @total_pages > 1 %>
-          <a href="<%= pyramid_path(page: 2, market: @market, sector: @sector) %>" 
-             class="px-3 py-2 text-sm bg-white border border-gray-300 rounded-lg hover:bg-gray-50 text-gray-700 transition-colors">
-            下一页 →
-          </a>
-        <% else %>
-          <span class="px-3 py-2 text-sm bg-gray-200 text-gray-400 rounded-lg cursor-not-allowed">下一页 →</span>
-        <% end %>
-      </nav>
+    <div id="pyramid-scroll-sentinel"
+         class="flex justify-center py-4 text-sm text-gray-400 opacity-100 transition-opacity duration-300"
+         data-next-page="2"
+         data-total-pages="<%= @total_pages %>"
+         data-market="<%= @market %>"
+         data-sector="<%= @sector || '' %>">
+      <% if @total_pages > 1 %>
+        <span class="flex items-center space-x-2"><span>滚动加载更多...</span></span>
+      <% else %>
+        <span>— 已全部加载 —</span>
+      <% end %>
     </div>
   </div>
 <% end %>

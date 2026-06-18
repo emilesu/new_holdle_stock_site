@@ -19,6 +19,7 @@ Rails.application.routes.draw do
   get "pyramid/compare", to: "pyramids#compare"
   get "pyramid/update_sectors", to: "pyramids#update_sectors"
   get "pyramid/update_list", to: "pyramids#update_list"
+  get "pyramid/load_more", to: "pyramids#load_more"
 
   namespace :users do
     get "profile", to: "profiles#show", as: :profile
