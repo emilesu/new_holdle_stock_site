@@ -65,8 +65,8 @@ class StocksController < ApplicationController
          .first(INDUSTRY_COMPARISON_LIMIT)
     end
 
-    @radar_data = @stock.cached_radar_data
-    @comparison_radar_data = fetch_comparison_radar_data
+    @radar_data = build_radar_data(@stock)
+    @comparison_radar_data = build_comparison_radar_data
 
     preformat_financial_data
   end
@@ -320,10 +320,27 @@ class StocksController < ApplicationController
     end
   end
 
-  def fetch_comparison_radar_data
-    stocks = @industry_comparison_data.map { |item| item[:stock] }
-    result = StockRadarDataService.batch_call(stocks)
-    result
+  def build_radar_data(stock)
+    values = stock.radar_dim_scores.presence || {}
+    {
+      values: values,
+      name: stock.name,
+      display_name: stock.display_name_for_comparison
+    }
+  end
+
+  def build_comparison_radar_data
+    return {} unless @industry_comparison_data
+
+    @industry_comparison_data.each_with_object({}) do |item, hash|
+      stock = item[:stock]
+      values = stock.radar_dim_scores.presence || {}
+      hash[stock.symbol] = {
+        values: values,
+        name: stock.name,
+        display_name: stock.display_name_for_comparison
+      }
+    end
   end
 
   def preformat_financial_data

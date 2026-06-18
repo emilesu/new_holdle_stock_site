@@ -136,16 +136,8 @@
             <!-- 雷达图 -->
             <div class="radar-section">
               <canvas id="radarChart" width="400" height="400" style="display: block; margin: 0 auto; max-width: 100%;"></canvas>
-              <!-- 图例 -->
-              <div class="flex justify-center items-center space-x-6 mt-4 text-sm">
-                <div class="flex items-center space-x-2">
-                  <span class="w-4 h-1 bg-blue-500 rounded"></span>
-                </div>
-                <div class="flex items-center space-x-2">
-                  <span class="w-4 h-1 bg-red-500 rounded"></span>
-                </div>
-              </div>
-            </div>
+            <!-- 图例区域由 Chart.js 渲染 -->
+          </div>
           </div>
         </div>
         
@@ -420,165 +412,128 @@
 </div>
 
 <script>
-function parseRadarData(encodedData) {
-  if (!encodedData) return null;
-  try {
-    return JSON.parse(encodedData);
-  } catch (e) {
-    console.error('Failed to parse radar data:', e);
-    return null;
-  }
-}
-
-function getChartData(stockData) {
-  var defaultData = [50, 60, 70, 80, 65, 55];
-  if (!stockData || !stockData.normalized_values) return defaultData;
-  
-  var vals = stockData.normalized_values;
-  return [
-    typeof vals.roe === 'number' ? vals.roe : 0,
-    typeof vals.gross_margin === 'number' ? vals.gross_margin : 0,
-    typeof vals.asset_turnover_ratio === 'number' ? vals.asset_turnover_ratio : 0,
-    typeof vals.eps === 'number' ? vals.eps : 0,
-    typeof vals.asset_liab_ratio === 'number' ? vals.asset_liab_ratio : 0,
-    typeof vals.net_profit_margin === 'number' ? vals.net_profit_margin : 0
-  ];
-}
-
-function initChart() {
-  var canvas = document.getElementById('radarChart');
-  if (!canvas) return;
-  
-  var labels = ['ROE', '毛利率', '总资产周转率', 'EPS', '负债占资产比率', '净利率'];
-  
-  var radarDataElement = document.getElementById('radar-data');
-  var currentStockData = radarDataElement ? parseRadarData(radarDataElement.dataset.current) : null;
-  var currentData = getChartData(currentStockData);
-  
-  window.currentStockData = currentStockData;
-  
-  window.radarChartInstance = new Chart(canvas, {
-    type: 'radar',
-    data: {
-      labels: labels,
-      datasets: [
-        {
-          label: currentStockData ? (currentStockData.display_name || currentStockData.name) : '当前股票',
-          data: currentData,
-          backgroundColor: 'rgba(239, 68, 68, 0.2)',
-          borderColor: 'rgb(239, 68, 68)',
-          borderWidth: 2,
-          pointRadius: 3
-        }
-      ]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: true,
-      scales: {
-        r: {
-          min: 0,
-          max: 100,
-          ticks: { stepSize: 20 },
-          pointLabels: { font: { size: 11 } }
-        }
-      },
-      plugins: { 
-        legend: { 
-          display: true,
-          position: 'bottom',
-          labels: {
-            usePointStyle: true,
-            padding: 20,
-            font: { size: 12 }
-          }
-        } 
-      }
-    }
-  });
-}
-
 document.addEventListener('turbo:load', function() {
-  function tryInitChart() {
-    if (typeof Chart !== 'undefined') {
-      initChart();
-    } else {
-      setTimeout(tryInitChart, 50);
+  let chartInstance = null;
+  let currentStockData = null;
+  let hoverTimeout = null;
+
+  const labels = ['ROE', '毛利率', '资产周转率', 'EPS', '负债比率', '净利率'];
+
+  function extractValues(data) {
+    if (!data || !data.values) return [0, 0, 0, 0, 0, 0];
+    var v = data.values;
+    return [
+      typeof v.roe === 'number' ? v.roe : 0,
+      typeof v.gross_margin === 'number' ? v.gross_margin : 0,
+      typeof v.asset_turnover_ratio === 'number' ? v.asset_turnover_ratio : 0,
+      typeof v.eps === 'number' ? v.eps : 0,
+      typeof v.asset_liab_ratio === 'number' ? v.asset_liab_ratio : 0,
+      typeof v.net_profit_margin === 'number' ? v.net_profit_margin : 0
+    ];
+  }
+
+  function initRadarChart(compareData) {
+    if (chartInstance) {
+      chartInstance.destroy();
+      chartInstance = null;
+    }
+
+    var canvas = document.getElementById('radarChart');
+    if (!canvas) return;
+
+    var currentValues = extractValues(currentStockData);
+    var datasets = [{
+      label: currentStockData ? (currentStockData.display_name || currentStockData.name) : '当前股票',
+      data: currentValues,
+      backgroundColor: 'rgba(239, 68, 68, 0.2)',
+      borderColor: 'rgb(239, 68, 68)',
+      borderWidth: 2,
+      pointRadius: 3,
+      pointBackgroundColor: 'rgb(239, 68, 68)',
+      pointBorderColor: '#fff',
+      pointBorderWidth: 1
+    }];
+
+    if (compareData) {
+      var compareValues = extractValues(compareData);
+      datasets.push({
+        label: compareData.display_name || compareData.name || '对比股票',
+        data: compareValues,
+        backgroundColor: 'rgba(59, 130, 246, 0.2)',
+        borderColor: 'rgb(59, 130, 246)',
+        borderWidth: 2,
+        pointRadius: 3,
+        pointBackgroundColor: 'rgb(59, 130, 246)',
+        pointBorderColor: '#fff',
+        pointBorderWidth: 1
+      });
+    }
+
+    chartInstance = new Chart(canvas, {
+       type: 'radar',
+       data: { labels: labels, datasets: datasets },
+       options: {
+         responsive: true,
+         maintainAspectRatio: true,
+         animation: false,
+         scales: {
+           r: {
+             min: 0,
+             max: 100,
+             ticks: { stepSize: 20, backdropColor: 'transparent' },
+             pointLabels: { font: { size: 11 }, color: '#374151' },
+             grid: { color: 'rgba(0, 0, 0, 0.1)' },
+             angleLines: { color: 'rgba(0, 0, 0, 0.1)' }
+           }
+         },
+         plugins: {
+           legend: {
+             display: true,
+             position: 'bottom',
+             labels: {
+               usePointStyle: true,
+               padding: 16,
+               font: { size: 11 }
+             }
+           }
+         }
+       }
+     });
+  }
+
+  var radarDataEl = document.getElementById('radar-data');
+  if (radarDataEl && radarDataEl.dataset.current) {
+    try {
+      currentStockData = JSON.parse(radarDataEl.dataset.current);
+      setTimeout(function() { initRadarChart(null); }, 100);
+    } catch (e) {
+      console.error('Parse radar data error:', e);
     }
   }
-  tryInitChart();
-  
-  var followBtn = document.getElementById('follow-btn');
-  if (followBtn) {
-    followBtn.addEventListener('click', function() {
-      if (followBtn.textContent.trim() === '关注股票') {
-        followBtn.textContent = '已关注';
-        followBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
-        followBtn.classList.add('bg-gray-200', 'text-gray-700');
-      } else {
-        followBtn.textContent = '关注股票';
-        followBtn.classList.remove('bg-gray-200', 'text-gray-700');
-        followBtn.classList.add('bg-blue-600', 'hover:bg-blue-700');
+
+  document.querySelectorAll('.comparison-item').forEach(function(item) {
+    item.addEventListener('mouseenter', function() {
+      if (hoverTimeout) clearTimeout(hoverTimeout);
+      var radarRaw = this.dataset.radar;
+      if (!radarRaw) return;
+      try {
+        var compareData = JSON.parse(radarRaw);
+        initRadarChart(compareData);
+      } catch (e) {
+        console.error('Parse comparison radar data error:', e);
       }
     });
-  }
-  
-  var originalRadarData = null;
-  var radarDataElement = document.getElementById('radar-data');
-  if (radarDataElement && radarDataElement.dataset.current) {
-    originalRadarData = parseRadarData(radarDataElement.dataset.current);
-  }
-  
-  var comparisonItems = document.querySelectorAll('.comparison-item');
-  comparisonItems.forEach(function(item) {
-    item.addEventListener('mouseenter', function(e) {
-      var comparisonData = parseRadarData(this.dataset.radar);
-      if (comparisonData) {
-        updateRadarChart(comparisonData);
-      }
-    });
-    
-    item.addEventListener('mouseleave', function(e) {
-      clearComparisonChart();
+
+    item.addEventListener('mouseleave', function() {
+      hoverTimeout = setTimeout(function() {
+        initRadarChart(null);
+      }, 100);
     });
   });
 });
+</script>
 
-function updateRadarChart(comparisonData) {
-  var chart = window.radarChartInstance;
-  if (!chart) return;
-  
-  var currentStockData = window.currentStockData;
-  var currentData = getChartData(currentStockData);
-  var comparisonDataValues = getChartData(comparisonData);
-  
-  if (comparisonData && chart.data.datasets.length === 1) {
-    chart.data.datasets.push({
-      label: comparisonData.display_name || comparisonData.name || '对比股票',
-      data: comparisonDataValues,
-      backgroundColor: 'rgba(59, 130, 246, 0.2)',
-      borderColor: 'rgb(59, 130, 246)',
-      borderWidth: 2,
-      pointRadius: 3
-    });
-  } else if (comparisonData && chart.data.datasets.length === 2) {
-    chart.data.datasets[1].label = comparisonData.name || '对比股票';
-    chart.data.datasets[1].data = comparisonDataValues;
-  }
-  
-  chart.update();
-}
-
-function clearComparisonChart() {
-  var chart = window.radarChartInstance;
-  if (!chart) return;
-  
-  if (chart.data.datasets.length === 2) {
-    chart.data.datasets.pop();
-    chart.update();
-  }
-}
-
+<script>
 // 财务指标弹窗功能 - 封装在IIFE中避免全局变量污染
 (function() {
   const STOCK_SYMBOL = '<%= @stock.symbol %>';
