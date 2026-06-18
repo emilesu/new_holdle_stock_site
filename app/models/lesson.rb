@@ -13,10 +13,7 @@ class Lesson < ApplicationRecord
 
   def markdown_html
     return '' if content.blank?
-    options = [:DEFAULT, :UNSAFE]
-    extensions = [:DEFAULT, :TABLE, :STRIKETHROUGH, :FENCED_CODE_BLOCKS]
-    doc = CommonMarker.render_doc(content, options, extensions)
-    doc.to_html
+    Commonmarker.to_html(content, options: { unsafe: true })
   rescue => e
     Rails.logger.error "Markdown rendering error: #{e.message}"
     content

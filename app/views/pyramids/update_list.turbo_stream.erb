@@ -44,3 +44,20 @@
 <%= turbo_stream.replace 'base-label' do %>
   <span class="text-gray-600 text-xs" id="base-label"><%= @compare_data ? @compare_data[:base][:display_name] : '行业第一' %></span>
 <% end %>
+
+<% if @compare_data %>
+  <%= turbo_stream.replace 'radar-chart' do %>
+    <canvas id="radar-chart"></canvas>
+  <% end %>
+
+  <%= turbo_stream.append 'pyramid-page' do %>
+    <script>
+      (function() {
+        var data = <%= raw(@compare_data[:base].to_json) %>;
+        if (window.initChart && data) {
+          window.initChart(data);
+        }
+      })();
+    </script>
+  <% end %>
+<% end %>

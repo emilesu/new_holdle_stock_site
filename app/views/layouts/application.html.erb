@@ -120,24 +120,40 @@
     </nav>
 
     <!-- 主内容区 -->
-    <main class="min-h-screen pt-8">
+    <main class="min-h-screen" id="main-content">
       <%= yield %>
     </main>
 
     <script>
+      // 动态计算导航栏高度并将主体内容推送到导航栏下方
+      function adjustMainPadding() {
+        const nav = document.querySelector('nav');
+        const main = document.getElementById('main-content');
+        if (nav && main) {
+          main.style.paddingTop = nav.offsetHeight + 'px';
+        }
+      }
+
       document.addEventListener('turbo:load', function() {
+        adjustMainPadding();
+
         const mobileMenuBtn = document.getElementById('mobile-menu-btn');
         const mobileMenu = document.getElementById('mobile-menu');
         
         if (mobileMenuBtn && mobileMenu) {
           mobileMenuBtn.addEventListener('click', function() {
             mobileMenu.classList.toggle('hidden');
+            // 移动端菜单展开后重新计算导航栏高度
+            setTimeout(adjustMainPadding, 50);
           });
         }
 
         // 股票搜索自动补齐功能
         initStockSearch();
       });
+
+      // 页面窗口大小变化时重新计算
+      window.addEventListener('resize', adjustMainPadding);
 
       function initStockSearch() {
         const searchInput = document.getElementById('stock-search-input');

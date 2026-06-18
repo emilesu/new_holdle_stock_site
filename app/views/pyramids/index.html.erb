@@ -1,4 +1,4 @@
-<div class="min-h-screen bg-gray-50 pt-8" id="pyramid-page">
+<div class="min-h-screen bg-gray-50" id="pyramid-page">
   <style>
     #pyramid-page .stock-row {
       cursor: pointer;
@@ -63,11 +63,12 @@
         </div>
       </div>
 
-      <div class="bg-white rounded-lg overflow-hidden border border-gray-200">
-        <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
-          <h2 class="text-lg font-semibold text-gray-800">金字塔排行榜</h2>
-        </div>
-        <div class="px-6 py-4 border-b border-gray-200">
+      <div class="pyramid-column">
+        <div class="bg-white rounded-lg border border-gray-200">
+          <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+            <h2 class="text-lg font-semibold text-gray-800">金字塔排行榜</h2>
+          </div>
+          <div class="px-6 py-4 border-b border-gray-200">
           <div class="flex flex-wrap gap-4 items-center">
             <div class="flex items-center gap-2">
               <label class="text-sm font-medium text-gray-600 w-12 shrink-0">市场</label>
@@ -224,6 +225,8 @@ document.addEventListener('turbo:load', function initPyramidPage() {
       }
     });
   };
+
+  window.initChart = initChart;
 
   // 仅更新对比数据集，避免销毁重建图表
   const updateChartCompareData = (compareData) => {
@@ -543,14 +546,15 @@ document.addEventListener('turbo:load', function initPyramidPage() {
 
       const radarCardRect = radarCard.getBoundingClientRect();
       const fixedTop = getFixedTop();
-      const stickyThreshold = fixedTop + 16;
+      // 触发阈值：导航栏下方32px
+      const stickyThreshold = fixedTop + 32;
 
       if (radarCardRect.top <= stickyThreshold) {
         pageContainer.classList.add('radar-fixed');
         const columnRect = radarColumn.getBoundingClientRect();
         radarCard.style.width = columnRect.width + 'px';
         radarCard.style.left = columnRect.left + 'px';
-        radarCard.style.top = stickyThreshold + 'px';
+        radarCard.style.top = stickyThreshold + 'px';   // ← 固定值，始终对齐
         radarColumn.style.setProperty('--radar-card-height', radarCard.offsetHeight + 'px');
       } else {
         pageContainer.classList.remove('radar-fixed');

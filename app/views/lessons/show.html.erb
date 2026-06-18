@@ -10,7 +10,7 @@
       <span>/</span>
       <span class="text-gray-900 font-medium"><%= @lesson.title %></span>
     </div>
-    <h1 class="text-xl font-bold text-gray-900"><%= @lesson.title %></h1>
+    <h1 class="text-3xl font-bold text-gray-900"><%= @lesson.title %></h1>
   </div>
 
   <!-- MD 内容渲染区 -->
@@ -20,16 +20,16 @@
 
   <!-- 导航链接 -->
   <div class="border-t border-gray-200 mt-12 pt-6 flex items-center justify-between">
-    <% prev_lesson = @course.lessons.published.sorted.where('sort_num < ?', @lesson.sort_num).last %>
-    <% prev_lesson ||= @chapter.lessons.published.sorted.where('id < ?', @lesson.id).last %>
+    <% prev_lesson = @course.lessons.published.sorted.where('lessons.sort_num < ?', @lesson.sort_num).last %>
+    <% prev_lesson ||= @chapter.lessons.published.sorted.where('lessons.id < ?', @lesson.id).last %>
     <% if prev_lesson %>
       <%= link_to "← #{prev_lesson.title}", lesson_path(prev_lesson), class: 'text-sm text-gray-600 hover:text-blue-600 transition-colors' %>
     <% else %>
       <span></span>
     <% end %>
 
-    <% next_lesson = @course.lessons.published.sorted.where('sort_num > ?', @lesson.sort_num).first %>
-    <% next_lesson ||= @chapter.lessons.published.sorted.where('id > ?', @lesson.id).first %>
+    <% next_lesson = @course.lessons.published.sorted.where('lessons.sort_num > ?', @lesson.sort_num).first %>
+    <% next_lesson ||= @chapter.lessons.published.sorted.where('lessons.id > ?', @lesson.id).first %>
     <% if next_lesson %>
       <%= link_to "#{next_lesson.title} →", lesson_path(next_lesson), class: 'text-sm text-gray-600 hover:text-blue-600 transition-colors' %>
     <% else %>
