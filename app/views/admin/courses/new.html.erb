@@ -1,0 +1,8 @@
+<div class="flex items-center justify-between mb-6">
+  <h1 class="text-2xl font-bold text-gray-900">新建课程</h1>
+  <%= link_to '返回列表', admin_courses_path, class: 'text-sm text-gray-600 hover:text-gray-800' %>
+</div>
+
+<div class="bg-white rounded-md border border-gray-200 p-6 max-w-2xl">
+  <%= render 'form', course: @course %>
+</div>

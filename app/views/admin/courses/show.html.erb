@@ -1,0 +1,75 @@
+<div class="flex items-center justify-between mb-6">
+  <h1 class="text-2xl font-bold text-gray-900">课程详情</h1>
+  <div class="flex items-center space-x-2">
+    <%= link_to '编辑', edit_admin_course_path(@course), class: 'text-sm text-blue-600 hover:text-blue-800' %>
+    <%= link_to '返回列表', admin_courses_path, class: 'text-sm text-gray-600 hover:text-gray-800' %>
+  </div>
+</div>
+
+<div class="bg-white rounded-md border border-gray-200 p-6 mb-6">
+  <div class="flex items-start justify-between">
+    <div>
+      <h2 class="text-xl font-bold text-gray-900"><%= @course.title %></h2>
+      <p class="mt-2 text-gray-600"><%= @course.description %></p>
+    </div>
+    <div class="flex items-center space-x-3">
+      <% if @course.is_published %>
+        <span class="inline-flex px-3 py-1 text-sm font-medium bg-green-100 text-green-700 rounded-full">已发布</span>
+      <% else %>
+        <span class="inline-flex px-3 py-1 text-sm font-medium bg-gray-100 text-gray-600 rounded-full">草稿</span>
+      <% end %>
+      <% if @course.public? %>
+        <span class="inline-flex px-3 py-1 text-sm font-medium bg-gray-100 text-gray-600 rounded-full">公开</span>
+      <% else %>
+        <span class="inline-flex px-3 py-1 text-sm font-medium bg-blue-100 text-blue-700 rounded-full">会员</span>
+      <% end %>
+    </div>
+  </div>
+</div>
+
+<div class="flex items-center justify-between mb-4">
+  <h3 class="text-lg font-bold text-gray-900">章节列表</h3>
+  <%= link_to '新建章节', new_admin_course_chapter_path(@course), class: 'bg-blue-600 text-white px-4 py-2 rounded-md text-sm hover:bg-blue-700' %>
+</div>
+
+<div class="bg-white rounded-md border border-gray-200">
+  <table class="min-w-full">
+    <thead>
+      <tr class="border-b border-gray-200 bg-gray-50">
+        <th class="px-6 py-3 text-left text-sm font-medium text-gray-500">排序</th>
+        <th class="px-6 py-3 text-left text-sm font-medium text-gray-500">标题</th>
+        <th class="px-6 py-3 text-center text-sm font-medium text-gray-500">发布状态</th>
+        <th class="px-6 py-3 text-center text-sm font-medium text-gray-500">小节数</th>
+        <th class="px-6 py-3 text-right text-sm font-medium text-gray-500">操作</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @chapters.each do |chapter| %>
+        <tr class="border-b border-gray-100 hover:bg-gray-50">
+          <td class="px-6 py-4 text-sm text-gray-600"><%= chapter.sort_num %></td>
+          <td class="px-6 py-4 text-sm font-medium text-gray-900"><%= chapter.title %></td>
+          <td class="px-6 py-4 text-center">
+            <% if chapter.is_published %>
+              <span class="inline-flex px-2 py-1 text-xs font-medium bg-green-100 text-green-700 rounded-full">已发布</span>
+            <% else %>
+              <span class="inline-flex px-2 py-1 text-xs font-medium bg-gray-100 text-gray-600 rounded-full">草稿</span>
+            <% end %>
+          </td>
+          <td class="px-6 py-4 text-center text-sm text-gray-600"><%= chapter.lessons.size %></td>
+          <td class="px-6 py-4 text-right">
+            <div class="flex items-center justify-end space-x-2">
+              <%= link_to '小节', admin_course_chapter_lessons_path(@course, chapter), class: 'text-sm text-gray-600 hover:text-blue-600' %>
+              <%= link_to '编辑', edit_admin_course_chapter_path(@course, chapter), class: 'text-sm text-blue-600 hover:text-blue-800' %>
+              <%= button_to '删除', admin_course_chapter_path(@course, chapter), method: :delete, class: 'text-sm text-red-600 hover:text-red-800', data: { turbo_confirm: '确定删除？' } %>
+            </div>
+          </td>
+        </tr>
+      <% end %>
+      <% if @chapters.empty? %>
+        <tr>
+          <td colspan="5" class="px-6 py-8 text-center text-gray-400">暂无章节，请先新建章节</td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>

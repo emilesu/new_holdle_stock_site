@@ -1,7 +1,5 @@
 module Admin
-  class StocksController < ApplicationController
-    before_action :authenticate_user!
-    before_action :authorize_admin!
+  class StocksController < BaseController
     before_action :set_stock, only: [:recalculate_pyramid]
 
     PER_PAGE = 20
@@ -66,12 +64,6 @@ module Admin
 
     def set_stock
       @stock = Stock.find(params[:id])
-    end
-
-    def authorize_admin!
-      unless current_user.is_admin?
-        redirect_to root_path, alert: '无权限访问'
-      end
     end
   end
 end

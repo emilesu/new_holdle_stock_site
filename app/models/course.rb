@@ -2,8 +2,20 @@ class Course < ApplicationRecord
   has_many :chapters, dependent: :destroy
   has_many :lessons, through: :chapters
 
-  enum status: { draft: "draft", published: "published", archived: "archived" }, _default: "draft"
-
   validates :title, presence: true, length: { maximum: 200 }
-  validates :price, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
+
+  scope :published, -> { where(is_published: true) }
+  scope :sorted, -> { order(sort: :asc, id: :asc) }
+
+  def published?
+    is_published
+  end
+
+  def public?
+    access_level == 0
+  end
+
+  def member_only?
+    access_level == 1
+  end
 end

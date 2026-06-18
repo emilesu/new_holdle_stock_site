@@ -1,0 +1,38 @@
+<div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <div class="border-b border-gray-200 pb-6 mb-8">
+    <h1 class="text-2xl font-bold text-gray-900">交易课</h1>
+    <p class="mt-2 text-gray-500">精选投资课程，系统学习股票分析</p>
+  </div>
+
+  <div class="space-y-0">
+    <% @courses.each do |course| %>
+      <%= link_to course_path(course), class: 'block border-b border-gray-100 py-6 hover:bg-gray-50 -mx-4 px-4 transition-colors' do %>
+        <div class="flex items-start justify-between">
+          <div class="flex-1 min-w-0">
+            <h2 class="text-lg font-semibold text-gray-900 truncate"><%= course.title %></h2>
+            <% if course.description.present? %>
+              <p class="mt-1 text-sm text-gray-500 line-clamp-2"><%= course.description %></p>
+            <% end %>
+            <div class="mt-2 flex items-center space-x-4 text-xs text-gray-400">
+              <span><%= course.chapters.size %> 个章节</span>
+              <span><%= course.lessons.size %> 个小节</span>
+            </div>
+          </div>
+          <div class="ml-4 flex-shrink-0">
+            <% if course.member_only? %>
+              <span class="inline-flex px-2 py-1 text-xs font-medium bg-blue-50 text-blue-600 border border-blue-200 rounded">会员</span>
+            <% else %>
+              <span class="inline-flex px-2 py-1 text-xs font-medium bg-gray-50 text-gray-500 border border-gray-200 rounded">公开</span>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    <% end %>
+
+    <% if @courses.empty? %>
+      <div class="py-16 text-center">
+        <p class="text-gray-400">暂无课程</p>
+      </div>
+    <% end %>
+  </div>
+</div>

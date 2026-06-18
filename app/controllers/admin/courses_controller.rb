@@ -1,59 +1,52 @@
-# module Admin
-#   class CoursesController < BaseController
-#     def index
-#       @courses = Course.order(created_at: :desc).page(params[:page]).per(20)
-#     end
+module Admin
+  class CoursesController < BaseController
+    before_action :set_course, only: [:show, :edit, :update, :destroy]
 
-#     def new
-#       @course = Course.new
-#     end
+    def index
+      @courses = Course.sorted
+    end
 
-#     def create
-#       @course = Course.new(course_params)
-#       if @course.save
-#         redirect_to admin_course_path(@course), notice: "课程创建成功"
-#       else
-#         render :new
-#       end
-#     rescue StandardError => e
-#       flash[:alert] = "创建失败：#{e.message}"
-#       render :new
-#     end
+    def show
+      @chapters = @course.chapters.includes(:lessons).sorted
+    end
 
-#     def show
-#       @course = Course.find(params[:id])
-#     end
+    def new
+      @course = Course.new
+    end
 
-#     def edit
-#       @course = Course.find(params[:id])
-#     end
+    def create
+      @course = Course.new(course_params)
+      if @course.save
+        redirect_to admin_courses_path, notice: '课程创建成功'
+      else
+        render :new, status: :unprocessable_entity
+      end
+    end
 
-#     def update
-#       @course = Course.find(params[:id])
-#       if @course.update(course_params)
-#         redirect_to admin_course_path(@course), notice: "课程信息更新成功"
-#       else
-#         render :edit
-#       end
-#     rescue StandardError => e
-#       flash[:alert] = "更新失败：#{e.message}"
-#       render :edit
-#     end
+    def edit
+    end
 
-#     def destroy
-#       @course = Course.find(params[:id])
-#       @course.destroy
-#       redirect_to admin_courses_path, notice: "课程已删除"
-#     rescue StandardError => e
-#       flash[:alert] = "删除失败：#{e.message}"
-#       redirect_to admin_courses_path
-#     end
+    def update
+      if @course.update(course_params)
+        redirect_to admin_courses_path, notice: '课程更新成功'
+      else
+        render :edit, status: :unprocessable_entity
+      end
+    end
 
-#     private
+    def destroy
+      @course.destroy
+      redirect_to admin_courses_path, notice: '课程已删除'
+    end
 
-#     def course_params
-#       params.require(:course).permit(:title, :category, :status, :price, :cover_image, :description)
-#     end
-#   end
-# end
-# 待开发
+    private
+
+    def set_course
+      @course = Course.find(params[:id])
+    end
+
+    def course_params
+      params.require(:course).permit(:title, :description, :is_published, :access_level, :sort)
+    end
+  end
+end

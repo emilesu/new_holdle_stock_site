@@ -1,0 +1,56 @@
+<div class="flex items-center justify-between mb-6">
+  <h1 class="text-2xl font-bold text-gray-900">课程管理</h1>
+  <%= link_to '新建课程', new_admin_course_path, class: 'bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700' %>
+</div>
+
+<div class="bg-white rounded-md border border-gray-200">
+  <table class="min-w-full">
+    <thead>
+      <tr class="border-b border-gray-200 bg-gray-50">
+        <th class="px-6 py-3 text-left text-sm font-medium text-gray-500">排序</th>
+        <th class="px-6 py-3 text-left text-sm font-medium text-gray-500">标题</th>
+        <th class="px-6 py-3 text-center text-sm font-medium text-gray-500">发布状态</th>
+        <th class="px-6 py-3 text-center text-sm font-medium text-gray-500">访问级别</th>
+        <th class="px-6 py-3 text-center text-sm font-medium text-gray-500">章节数</th>
+        <th class="px-6 py-3 text-right text-sm font-medium text-gray-500">操作</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @courses.each do |course| %>
+        <tr class="border-b border-gray-100 hover:bg-gray-50">
+          <td class="px-6 py-4 text-sm text-gray-600"><%= course.sort %></td>
+          <td class="px-6 py-4">
+            <%= link_to course.title, admin_course_path(course), class: 'text-blue-600 hover:text-blue-800 font-medium' %>
+          </td>
+          <td class="px-6 py-4 text-center">
+            <% if course.is_published %>
+              <span class="inline-flex px-2 py-1 text-xs font-medium bg-green-100 text-green-700 rounded-full">已发布</span>
+            <% else %>
+              <span class="inline-flex px-2 py-1 text-xs font-medium bg-gray-100 text-gray-600 rounded-full">草稿</span>
+            <% end %>
+          </td>
+          <td class="px-6 py-4 text-center text-sm">
+            <% if course.public? %>
+              <span class="text-gray-600">公开</span>
+            <% else %>
+              <span class="text-blue-600 font-medium">会员</span>
+            <% end %>
+          </td>
+          <td class="px-6 py-4 text-center text-sm text-gray-600"><%= course.chapters.size %></td>
+          <td class="px-6 py-4 text-right">
+            <div class="flex items-center justify-end space-x-2">
+              <%= link_to '章节', admin_course_chapters_path(course), class: 'text-sm text-gray-600 hover:text-blue-600' %>
+              <%= link_to '编辑', edit_admin_course_path(course), class: 'text-sm text-blue-600 hover:text-blue-800' %>
+              <%= button_to '删除', admin_course_path(course), method: :delete, class: 'text-sm text-red-600 hover:text-red-800', data: { turbo_confirm: '确定删除？' } %>
+            </div>
+          </td>
+        </tr>
+      <% end %>
+      <% if @courses.empty? %>
+        <tr>
+          <td colspan="6" class="px-6 py-8 text-center text-gray-400">暂无课程</td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>

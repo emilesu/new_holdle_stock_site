@@ -21,6 +21,9 @@ Rails.application.routes.draw do
   get "pyramid/update_list", to: "pyramids#update_list"
   get "pyramid/load_more", to: "pyramids#load_more"
 
+  resources :courses, only: [:index, :show]
+  resources :lessons, only: [:show]
+
   namespace :users do
     get "profile", to: "profiles#show", as: :profile
     get "profile/edit", to: "profiles#edit", as: :edit_profile
@@ -47,7 +50,11 @@ Rails.application.routes.draw do
         post :recalculate_pyramid
       end
     end
-    # resources :courses, only: [:index, :new, :create, :edit, :update, :destroy]  # 待开发
+    resources :courses do
+      resources :chapters do
+        resources :lessons
+      end
+    end
     # resources :payment_records, only: [:index, :show]  # 待开发
   end
 end

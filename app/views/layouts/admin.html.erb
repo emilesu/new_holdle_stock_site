@@ -10,18 +10,19 @@
     <%= javascript_include_tag "application", "data-turbo-track": "reload", type: "module" %>
   </head>
 
-  <body class="bg-gray-100 min-h-screen">
+  <body class="bg-gray-50 min-h-screen">
     <nav class="bg-gray-800 text-white">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between items-center h-16">
           <div class="flex items-center space-x-8">
             <a href="<%= admin_root_path %>" class="text-xl font-bold">管理后台</a>
+            <!-- 桌面端导航 -->
             <div class="hidden md:flex space-x-4">
-              <a href="<%= admin_root_path %>" class="text-gray-300 hover:text-white px-3 py-2">仪表盘</a>
-              <a href="<%= admin_users_path %>" class="text-gray-300 hover:text-white px-3 py-2">用户管理</a>
-              <a href="<%= admin_stocks_path %>" class="text-gray-300 hover:text-white px-3 py-2">股票管理</a>
-              <!-- 课程管理 - 待开发 -->
-              <a href="<%= admin_stock_crawlers_path %>" class="text-gray-300 hover:text-white px-3 py-2">爬虫管理</a>
+              <a href="<%= admin_root_path %>" class="text-gray-300 hover:text-white px-3 py-2 transition-colors">仪表盘</a>
+              <a href="<%= admin_users_path %>" class="text-gray-300 hover:text-white px-3 py-2 transition-colors">用户管理</a>
+              <a href="<%= admin_stocks_path %>" class="text-gray-300 hover:text-white px-3 py-2 transition-colors">股票管理</a>
+              <a href="<%= admin_courses_path %>" class="text-gray-300 hover:text-white px-3 py-2 transition-colors">课程管理</a>
+              <a href="<%= admin_stock_crawlers_path %>" class="text-gray-300 hover:text-white px-3 py-2 transition-colors">爬虫管理</a>
             </div>
           </div>
           
@@ -35,20 +36,20 @@
                 <p class="text-xs text-gray-400"><%= current_user.role.humanize %></p>
               </div>
             </div>
-            <%= link_to "退出", destroy_user_session_path, method: :delete, class: "text-gray-300 hover:text-white px-3 py-2" %>
+            <%= link_to "退出", destroy_user_session_path, method: :delete, class: "text-gray-300 hover:text-white px-3 py-2 transition-colors" %>
           </div>
         </div>
       </div>
     </nav>
 
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
       <% if notice %>
-        <div class="mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg">
+        <div class="mb-4 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-md">
           <%= notice %>
         </div>
       <% end %>
       <% if alert %>
-        <div class="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg">
+        <div class="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
           <%= alert %>
         </div>
       <% end %>

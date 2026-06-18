@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_06_17_080420) do
+ActiveRecord::Schema[7.1].define(version: 2026_06_18_075227) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -77,6 +77,18 @@ ActiveRecord::Schema[7.1].define(version: 2026_06_17_080420) do
     t.text "summary"
     t.integer "sort_num", default: 0
     t.boolean "is_published", default: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "course_id", null: false
+    t.index ["course_id"], name: "index_chapters_on_course_id"
+  end
+
+  create_table "courses", force: :cascade do |t|
+    t.string "title", null: false
+    t.text "description"
+    t.boolean "is_published", default: false
+    t.integer "access_level", default: 0
+    t.integer "sort", default: 0
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
   end
@@ -202,9 +214,12 @@ ActiveRecord::Schema[7.1].define(version: 2026_06_17_080420) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "sector", comment: "行业板块（中文）"
+    t.decimal "pyramid", precision: 12, scale: 2, comment: "金字塔分数"
     t.integer "pyramid_total_score", default: 0, null: false
     t.datetime "last_pyramid_calc_at"
     t.jsonb "radar_dim_scores"
+    t.index ["market", "pyramid"], name: "idx_stocks_market_pyramid", order: { pyramid: :desc }
+    t.index ["market", "sector", "pyramid"], name: "idx_stocks_market_sector_pyramid", order: { pyramid: :desc }
     t.index ["market", "sector", "pyramid_total_score"], name: "index_stocks_on_market_and_sector_and_pyramid_total_score", order: { pyramid_total_score: :desc }
     t.index ["radar_dim_scores"], name: "index_stocks_on_radar_dim_scores", using: :gin
     t.index ["sector", "market"], name: "idx_stocks_sector_market"
@@ -235,6 +250,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_06_17_080420) do
   add_foreign_key "balance_sheets", "stocks"
   add_foreign_key "cash_flows", "financial_reports"
   add_foreign_key "cash_flows", "stocks"
+  add_foreign_key "chapters", "courses"
   add_foreign_key "financial_indicators", "financial_reports"
   add_foreign_key "financial_indicators", "stocks"
   add_foreign_key "financial_reports", "stocks"
