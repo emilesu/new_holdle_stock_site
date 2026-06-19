@@ -1,39 +1,41 @@
 <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-  <!-- 面包屑导航 -->
-  <div class="border-b border-gray-200 pb-4 mb-8">
-    <div class="flex items-center space-x-2 text-sm text-gray-400 mb-4">
-      <%= link_to '交易课', courses_path, class: 'hover:text-blue-600 transition-colors' %>
-      <span>/</span>
-      <%= link_to @course.title, course_path(@course), class: 'hover:text-blue-600 transition-colors' %>
-      <span>/</span>
-      <span class="text-gray-600"><%= @chapter.title %></span>
-      <span>/</span>
-      <span class="text-gray-900 font-medium"><%= @lesson.title %></span>
+  <div class="bg-white rounded-lg overflow-hidden border border-gray-200">
+    <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+      <div class="flex items-center space-x-2 text-sm text-gray-400">
+        <%= link_to '交易课', courses_path, class: 'hover:text-blue-600 transition-colors' %>
+        <span>/</span>
+        <%= link_to @course.title, course_path(@course), class: 'hover:text-blue-600 transition-colors' %>
+        <span>/</span>
+        <span class="text-gray-600"><%= @chapter.title %></span>
+        <span>/</span>
+        <span class="text-gray-900 font-medium"><%= @lesson.title %></span>
+      </div>
     </div>
-    <h1 class="text-3xl font-bold text-gray-900"><%= @lesson.title %></h1>
-  </div>
 
-  <!-- MD 内容渲染区 -->
-  <article class="prose prose-gray max-w-none prose-headings:font-semibold prose-a:text-blue-600 prose-code:text-sm prose-code:bg-gray-100 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-pre:bg-gray-900 prose-pre:text-gray-100 prose-pre:rounded-lg prose-img:rounded-lg prose-blockquote:border-l-blue-500 prose-blockquote:text-gray-500 prose-strong:font-semibold">
-    <%= raw @lesson.markdown_html %>
-  </article>
+    <div class="p-6">
+      <h1 class="text-2xl font-bold text-gray-900 mb-6"><%= @lesson.title %></h1>
 
-  <!-- 导航链接 -->
-  <div class="border-t border-gray-200 mt-12 pt-6 flex items-center justify-between">
-    <% prev_lesson = @course.lessons.published.sorted.where('lessons.sort_num < ?', @lesson.sort_num).last %>
-    <% prev_lesson ||= @chapter.lessons.published.sorted.where('lessons.id < ?', @lesson.id).last %>
-    <% if prev_lesson %>
-      <%= link_to "← #{prev_lesson.title}", lesson_path(prev_lesson), class: 'text-sm text-gray-600 hover:text-blue-600 transition-colors' %>
-    <% else %>
-      <span></span>
-    <% end %>
+      <article class="prose prose-gray max-w-none prose-headings:font-semibold prose-a:text-blue-600 prose-code:text-sm prose-code:bg-gray-100 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-pre:bg-gray-900 prose-pre:text-gray-100 prose-pre:rounded-lg prose-img:rounded-lg prose-blockquote:border-l-blue-500 prose-blockquote:text-gray-500 prose-strong:font-semibold">
+        <%= raw @lesson.markdown_html %>
+      </article>
+    </div>
 
-    <% next_lesson = @course.lessons.published.sorted.where('lessons.sort_num > ?', @lesson.sort_num).first %>
-    <% next_lesson ||= @chapter.lessons.published.sorted.where('lessons.id > ?', @lesson.id).first %>
-    <% if next_lesson %>
-      <%= link_to "#{next_lesson.title} →", lesson_path(next_lesson), class: 'text-sm text-gray-600 hover:text-blue-600 transition-colors' %>
-    <% else %>
-      <span></span>
-    <% end %>
+    <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 flex items-center justify-between">
+      <% prev_lesson = @course.lessons.published.sorted.where('lessons.sort_num < ?', @lesson.sort_num).last %>
+      <% prev_lesson ||= @chapter.lessons.published.sorted.where('lessons.id < ?', @lesson.id).last %>
+      <% if prev_lesson %>
+        <%= link_to "← #{prev_lesson.title}", lesson_path(prev_lesson), class: 'text-sm text-gray-600 hover:text-blue-600 transition-colors' %>
+      <% else %>
+        <span></span>
+      <% end %>
+
+      <% next_lesson = @course.lessons.published.sorted.where('lessons.sort_num > ?', @lesson.sort_num).first %>
+      <% next_lesson ||= @chapter.lessons.published.sorted.where('lessons.id > ?', @lesson.id).first %>
+      <% if next_lesson %>
+        <%= link_to "#{next_lesson.title} →", lesson_path(next_lesson), class: 'text-sm text-gray-600 hover:text-blue-600 transition-colors' %>
+      <% else %>
+        <span></span>
+      <% end %>
+    </div>
   </div>
 </div>
