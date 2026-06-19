@@ -51,7 +51,7 @@ module Admin
     end
 
     def lesson_params
-      params.require(:lesson).permit(:title, :content, :sort_num, :is_published)
+      params.require(:lesson).permit(:title, :content, :sort_num, :is_published, :access_level)
     end
   end
 end

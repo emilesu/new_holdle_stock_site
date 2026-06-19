@@ -19,7 +19,7 @@ class CoursesController < ApplicationController
       redirect_to courses_path, alert: '该课程尚未发布'
       return
     end
-    if @course.member_only? && !current_user.is_member?
+    unless @course.available_to?(current_user)
       redirect_to courses_path, alert: '该课程仅限会员访问，请升级会员'
     end
   end

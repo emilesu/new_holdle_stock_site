@@ -46,7 +46,7 @@ module Admin
     end
 
     def course_params
-      params.require(:course).permit(:title, :description, :is_published, :access_level, :sort)
+      params.require(:course).permit(:title, :description, :is_published, :access_level, :sort, :cover)
     end
   end
 end

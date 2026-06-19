@@ -12,13 +12,17 @@ class LessonsController < ApplicationController
 
   def check_access
     lesson = Lesson.find(params[:id])
-    course = lesson.chapter.course
+    unless lesson.published?
+      redirect_to courses_path, alert: '该小节尚未发布'
+      return
+    end
+    course = lesson.course
     unless course.published?
       redirect_to courses_path, alert: '该课程尚未发布'
       return
     end
-    if course.member_only? && !current_user.is_member?
-      redirect_to courses_path, alert: '该课程仅限会员访问，请升级会员'
+    unless lesson.available_to?(current_user)
+      redirect_to courses_path, alert: '该内容仅限会员访问，请升级会员'
     end
   end
 end

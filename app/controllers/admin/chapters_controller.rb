@@ -51,7 +51,7 @@ module Admin
     end
 
     def chapter_params
-      params.require(:chapter).permit(:title, :summary, :sort_num, :is_published)
+      params.require(:chapter).permit(:title, :summary, :sort_num, :is_published, :access_level)
     end
   end
 end
