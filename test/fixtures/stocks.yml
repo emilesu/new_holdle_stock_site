@@ -9,7 +9,7 @@ one:
   status: active
 
 two:
-  symbol: 000001
+  symbol: "000001"
   name: PingAn
   market: CN
   industry: Finance
