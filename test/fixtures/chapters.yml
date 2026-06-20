@@ -1,12 +1,12 @@
-# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
-
 one:
+  course: one
   title: MyString
   summary: MyText
   sort_num: 1
   is_published: false
 
 two:
+  course: two
   title: MyString
   summary: MyText
   sort_num: 1

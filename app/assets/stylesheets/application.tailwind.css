@@ -1,2 +1,310 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
+
+
+/* <%# ====================================================================
+   HOLD LE · TailwindCSS v4 样式片段（追加到 application.css 末尾）
+   路径：app/assets/stylesheets/_tailwind_extras.css  ← （用 _ 前缀，避免被 Sprockets 单独编译）
+   实际使用：把本文件全部内容复制粘贴到 app/assets/stylesheets/application.css 末尾即可
+   ==================================================================== %> */
+
+/* ==================== 设计 Token ==================== */
+@theme {
+  --color-ink: #1f1f1f;
+  --color-ink-soft: #333333;
+  --color-muted: #555555;
+  --color-muted-2: #666666;
+  --color-muted-3: #888888;
+  --color-muted-4: #999999;
+  --color-muted-5: #bbbbbb;
+  --color-muted-6: #cccccc;
+  --color-line: #ececec;
+  --color-line-soft: #f0f0f0;
+  --color-bg-soft: #fafafa;
+  --color-bg-mute: #f5f5f5;
+  --color-profit: #e64545;
+  --color-link: #2c7be5;
+  --color-link-hover: #1a5dba;
+
+  --font-sans: -apple-system, BlinkMacSystemFont, "PingFang SC",
+    "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  --font-mono: -apple-system, "SF Mono", monospace;
+
+  --tracking-wide-2: 0.2em;
+  --tracking-wide-3: 0.3em;
+
+  --spacing-hl-container: 1200px;
+  --spacing-hl-narrow: 880px;
+  --spacing-hl-hero: 88px;
+
+  --text-hl-11: 11px;
+  --text-hl-12: 12px;
+  --text-hl-13: 13px;
+  --text-hl-14: 14px;
+  --text-hl-15: 15px;
+  --text-hl-16: 16px;
+  --text-hl-18: 18px;
+  --text-hl-22: 22px;
+  --text-hl-40: 40px;
+}
+
+/* ==================== 基础重置 ==================== */
+@layer base {
+  html, body {
+    font-family: var(--font-sans);
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--color-ink);
+    background: var(--color-bg-soft);
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: inherit; text-decoration: none; }
+}
+
+/* ==================== 自定义 utility ==================== */
+
+/* 容器 */
+@utility container-hl {
+  max-width: var(--spacing-hl-container);
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 24px;
+  padding-right: 24px;
+}
+@utility container-narrow {
+  max-width: var(--spacing-hl-narrow);
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 24px;
+  padding-right: 24px;
+}
+
+/* 大写英文小标签 */
+@utility label-en {
+  font-size: 11px;
+  color: var(--color-muted-5);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+/* 收益数字（红色 + 等宽 + 半粗 + 前缀 ↑） */
+@utility profit-up {
+  color: var(--color-profit);
+  font-weight: 600;
+  font-family: var(--font-mono);
+}
+@utility profit-up-before {
+  &::before { content: "↑ "; }
+}
+
+/* 列表前缀 */
+@utility list-dot {
+  &::before {
+    content: ""; position: absolute; left: 0; top: 11px;
+    width: 4px; height: 4px;
+    background: var(--color-muted-6);
+    border-radius: 9999px;
+  }
+}
+@utility list-dot-link {
+  &::before {
+    content: ""; position: absolute; left: 0; top: 11px;
+    width: 4px; height: 4px;
+    background: var(--color-link);
+    border-radius: 9999px;
+  }
+}
+
+/* 链接 hover 右移 */
+@utility link-shift {
+  transition: margin-left 0.2s ease;
+  &:hover { margin-left: 4px; }
+}
+
+/* ==================== HOLD LE 专用 class（项目级） ==================== */
+
+@layer components {
+
+  /* 按钮 */
+  .hl-btn {
+    display: inline-block;
+    padding: 10px 18px;
+    font-size: 13px;
+    border-radius: 4px;
+    border: 1px solid var(--color-line);
+    background: #ffffff;
+    color: var(--color-ink);
+    transition: all 0.15s ease;
+    cursor: pointer;
+  }
+  .hl-btn:hover { border-color: var(--color-ink); }
+  .hl-btn-primary {
+    background: var(--color-ink);
+    color: #ffffff;
+    border-color: var(--color-ink);
+  }
+  .hl-btn-primary:hover {
+    background: var(--color-ink-soft);
+    border-color: var(--color-ink-soft);
+  }
+  .hl-btn-line {
+    background: #ffffff;
+    border-color: var(--color-line);
+  }
+
+  /* 卡片（白底 + 细边框 + 圆角） */
+  .hl-card {
+    background: #ffffff;
+    border: 1px solid var(--color-line);
+    border-radius: 6px;
+  }
+  .hl-card-hover {
+    transition: border-color 0.15s ease;
+  }
+  .hl-card-hover:hover {
+    border-color: #d5d5d5;
+  }
+
+  /* 引述 / 高亮块 */
+  .hl-quote {
+    margin-top: 24px;
+    padding: 20px 24px;
+    background: #ffffff;
+    border: 1px solid var(--color-line);
+    border-radius: 6px;
+    text-align: center;
+    font-size: 15px;
+    color: var(--color-ink);
+    line-height: 1.7;
+  }
+
+  /* 关于页 callout（左侧深色竖条） */
+  .hl-callout {
+    padding: 16px 20px;
+    background: var(--color-bg-soft);
+    border-left: 2px solid var(--color-ink);
+    border-radius: 0 4px 4px 0;
+    font-size: 13px;
+    color: var(--color-muted);
+    line-height: 1.7;
+    margin-bottom: 20px;
+  }
+
+  /* 虚线 callout（关于 P2P 那段） */
+  .hl-callout-dashed {
+    padding: 16px 20px;
+    background: var(--color-bg-soft);
+    border-radius: 4px;
+    border: 1px dashed var(--color-muted-5);
+  }
+
+  /* 标签（关于页那些 chip） */
+  .hl-tag {
+    background: var(--color-bg-mute);
+    color: var(--color-muted-2);
+    padding: 2px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+  }
+
+  /* 列表项（方法论卡片里的虚线分隔） */
+  .hl-list-item {
+    position: relative;
+    padding: 8px 0 8px 16px;
+    font-size: 13px;
+    color: var(--color-muted);
+    border-bottom: 1px dashed var(--color-line-soft);
+  }
+  .hl-list-item::before {
+    content: "—";
+    position: absolute;
+    left: 0;
+    color: var(--color-muted-6);
+  }
+  .hl-list-item-last {
+    border-bottom: none;
+  }
+
+  /* 表格（已结案案例） */
+  .hl-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .hl-table th {
+    background: var(--color-bg-soft);
+    text-align: left;
+    padding: 10px 20px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--color-muted-3);
+    border-bottom: 1px solid var(--color-line);
+  }
+  .hl-table td {
+    padding: 14px 20px;
+    font-size: 13px;
+    color: var(--color-muted);
+    border-bottom: 1px solid var(--color-bg-mute);
+  }
+  .hl-table tbody tr {
+    transition: background 0.1s ease;
+  }
+  .hl-table tbody tr:hover {
+    background: var(--color-bg-soft);
+  }
+
+  /* FAQ 折叠（纯 HTML <details> 实现，零 JS） */
+  .hl-faq .hl-faq-item {
+    border-bottom: 1px solid var(--color-line-soft);
+  }
+  .hl-faq .hl-faq-item:last-child {
+    border-bottom: none;
+  }
+  .hl-faq .hl-faq-item summary {
+    padding: 24px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    list-style: none;
+    user-select: none;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-ink);
+  }
+  .hl-faq .hl-faq-item summary::-webkit-details-marker { display: none; }
+  .hl-faq .hl-faq-item summary::marker { display: none; }
+  .hl-faq .hl-faq-item summary:hover { background: var(--color-bg-soft); }
+
+  .hl-faq .hl-q-badge {
+    display: inline-block;
+    background: var(--color-ink);
+    color: #ffffff;
+    width: 18px;
+    height: 18px;
+    border-radius: 3px;
+    font-size: 11px;
+    text-align: center;
+    line-height: 18px;
+    font-weight: 500;
+  }
+
+  .hl-faq .hl-faq-icon {
+    margin-left: auto;
+    color: var(--color-muted-4);
+    font-size: 18px;
+    font-weight: 300;
+    transition: transform 0.2s ease;
+  }
+  .hl-faq .hl-faq-item[open] .hl-faq-icon {
+    transform: rotate(45deg);
+  }
+
+  .hl-faq .hl-faq-content {
+    padding: 0 28px 24px 50px;
+    font-size: 13px;
+    color: var(--color-muted);
+    line-height: 1.7;
+  }
+}
