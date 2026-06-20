@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_06_20_082216) do
+ActiveRecord::Schema[7.1].define(version: 2026_06_20_123517) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -253,8 +253,14 @@ ActiveRecord::Schema[7.1].define(version: 2026_06_20_082216) do
     t.datetime "member_expire_at"
     t.text "bio"
     t.datetime "last_login_at"
+    t.string "weixin_unionid"
+    t.string "weixin_web_openid"
+    t.string "weixin_app_openid"
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
+    t.index ["weixin_app_openid"], name: "index_users_on_weixin_app_openid", unique: true
+    t.index ["weixin_unionid"], name: "index_users_on_weixin_unionid", unique: true
+    t.index ["weixin_web_openid"], name: "index_users_on_weixin_web_openid", unique: true
   end
 
   add_foreign_key "balance_sheets", "financial_reports"

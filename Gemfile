@@ -39,6 +39,14 @@ gem 'pundit'
 gem 'commonmarker'
 gem 'kaminari'
 
+# Devise配套第三方登录基础
+gem 'omniauth'
+gem 'omniauth-rails_csrf_protection'
+# 网页微信OAuth（支持snsapi_userinfo获取UnionID）
+gem 'omniauth-wechat-oauth2'
+# 谷歌全球登录
+gem 'omniauth-google-oauth2'
+
 # Use Redis adapter to run Action Cable in production
 # gem "redis", ">= 4.0.1"
 
