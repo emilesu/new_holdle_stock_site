@@ -1,0 +1,111 @@
+<nav class="hl-nav sticky top-0 z-50 bg-white border-b border-line">
+  <div class="container-hl h-15 flex items-center gap-6">
+
+    <%# ----- Logo ----- %>
+    <%= link_to root_path, class: "hl-nav-logo flex items-center gap-2 shrink-0" do %>
+      <span class="text-hl-15 font-bold text-ink tracking-wide">HOLD LE</span>
+    <% end %>
+
+    <%# ----- 搜索框 ----- %>
+    <div class="hl-nav-search relative flex-1 max-w-[280px]" id="search-container">
+      <span class="hl-nav-search-icon">⌕</span>
+      <input
+        type="text"
+        id="stock-search-input"
+        placeholder="搜索股票代码或名称..."
+        autocomplete="off"
+        class="hl-nav-search-input flex-1 bg-transparent border-none outline-none text-hl-13 text-muted placeholder:text-muted-4"
+      >
+      <div id="search-suggestions" class="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-lg border border-line overflow-hidden hidden z-50">
+        <div id="suggestions-list"></div>
+        <div id="no-results" class="px-4 py-6 text-center text-muted-4 hidden">
+          <p class="text-hl-13">未找到匹配的股票</p>
+        </div>
+      </div>
+    </div>
+
+    <%# ----- 导航链接 ----- %>
+    <div class="hl-nav-links hidden md:flex">
+      <%= link_to pyramid_path, class: "hl-nav-link #{'hl-nav-link-active' if controller_name == 'pyramids'}" do %>
+        金字塔
+      <% end %>
+      <%= link_to courses_path, class: "hl-nav-link #{'hl-nav-link-active' if controller_name == 'courses'}" do %>
+        交易课
+      <% end %>
+      <%= link_to "#", class: "hl-nav-link" do %>
+        关于
+      <% end %>
+      <%= link_to "#", class: "hl-nav-link hl-nav-link-new flex items-center" do %>
+        <span>新内容</span>
+        <span class="hl-nav-dot"></span>
+      <% end %>
+    </div>
+
+    <%# ----- 用户区域 / 登录入口（右侧） ----- %>
+    <div class="ml-auto flex items-center gap-3">
+      <% if user_signed_in? %>
+        <div class="hl-nav-admin hidden md:flex">
+          <div class="hl-nav-admin-avatar"><%= current_user.avatar_char || "U" %></div>
+          <span><%= current_user.nickname || current_user.email %></span>
+        </div>
+        <div class="hidden md:flex items-center gap-2">
+          <%= link_to '个人中心', users_profile_path, class: "hl-nav-link text-hl-13" %>
+          <% if current_user.admin? %>
+            <%= link_to '管理', admin_root_path, class: "hl-nav-link text-hl-13" %>
+          <% end %>
+          <%= link_to '退出', destroy_user_session_path, method: :delete, class: "hl-nav-link text-hl-13" %>
+        </div>
+      <% else %>
+        <%= link_to '登录', new_user_session_path, class: "hl-nav-link text-hl-13" %>
+        <%= link_to '注册', new_user_registration_path, class: "hl-btn hl-btn-primary text-hl-13 !py-[6px] !px-[14px]" %>
+      <% end %>
+
+      <%# ----- 移动端菜单按钮 ----- %>
+      <button id="mobile-menu-btn" class="md:hidden p-2 hover:bg-bg-mute rounded" aria-label="切换菜单">
+        <svg class="w-[18px] h-[18px] text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <%# ----- 移动端菜单 ----- %>
+  <div id="mobile-menu" class="md:hidden hidden bg-white border-t border-line">
+    <div class="px-4 py-4 space-y-3">
+      <div class="space-y-1">
+        <%= link_to "金字塔", pyramid_path, class: "block px-4 py-2 text-hl-14 text-muted hover:text-ink hover:bg-bg-mute rounded" %>
+        <%= link_to "交易课", courses_path, class: "block px-4 py-2 text-hl-14 text-muted hover:text-ink hover:bg-bg-mute rounded" %>
+        <%= link_to "关于", "#", class: "block px-4 py-2 text-hl-14 text-muted hover:text-ink hover:bg-bg-mute rounded" %>
+        <a href="#" class="block px-4 py-2 text-hl-14 text-muted hover:text-ink hover:bg-bg-mute rounded flex items-center">
+          新内容
+          <span class="ml-2 w-2 h-2 bg-profit rounded-full"></span>
+        </a>
+      </div>
+      <div class="pt-4 border-t border-line-soft">
+        <% if user_signed_in? %>
+          <div class="flex items-center gap-3 pb-3">
+            <div class="w-10 h-10 bg-link text-white rounded-full flex items-center justify-center font-bold text-hl-14">
+              <%= current_user.avatar_char || "U" %>
+            </div>
+            <div>
+              <p class="font-medium text-ink"><%= current_user.nickname || current_user.email %></p>
+              <p class="text-hl-13 text-muted-3"><%= current_user.email %></p>
+            </div>
+          </div>
+          <div class="space-y-1">
+            <%= link_to '个人中心', users_profile_path, class: "block px-4 py-2 text-hl-13 text-muted hover:text-ink hover:bg-bg-mute rounded" %>
+            <% if current_user.admin? %>
+              <%= link_to '后台管理', admin_root_path, class: "block px-4 py-2 text-hl-13 text-muted hover:text-ink hover:bg-bg-mute rounded" %>
+            <% end %>
+            <%= link_to '退出登录', destroy_user_session_path, method: :delete, class: "block px-4 py-2 text-hl-13 text-muted hover:text-ink hover:bg-bg-mute rounded" %>
+          </div>
+        <% else %>
+          <div class="flex gap-3">
+            <%= link_to '登录', new_user_session_path, class: "flex-1 px-4 py-2 text-center text-hl-13 text-muted border border-line rounded hover:bg-bg-mute" %>
+            <%= link_to '注册', new_user_registration_path, class: "flex-1 px-4 py-2 text-center text-hl-13 bg-ink text-white rounded hover:opacity-90" %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</nav>

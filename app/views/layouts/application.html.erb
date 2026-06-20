@@ -11,150 +11,18 @@
     <%= javascript_include_tag "application", "data-turbo-track": "reload", type: "module" %>
   </head>
 
-  <body class="bg-gray-50 text-gray-900 font-sans">
-    <!-- 导航栏 -->
-    <nav class="bg-white border-b border-gray-200 fixed top-0 left-0 right-0 z-50 w-full">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex items-center justify-between h-16">
-          <!-- Logo -->
-          <a href="/" class="flex items-center space-x-2">
-            <span class="text-xl font-bold text-black-600">HOLD LE</span>
-          </a>
-          
-          <!-- 桌面端导航 -->
-          <div class="hidden md:flex items-center space-x-8">
-            <!-- 搜索栏 -->
-            <div class="relative" id="search-container">
-              <input 
-                type="text" 
-                id="stock-search-input"
-                placeholder="搜索股票代码或名称..." 
-                autocomplete="off"
-                class="w-72 px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-full text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 placeholder-gray-400"
-              >
-              <!-- 下拉建议框 -->
-              <div id="search-suggestions" class="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden hidden z-50">
-                <div id="suggestions-list"></div>
-                <div id="no-results" class="px-4 py-6 text-center text-gray-400 hidden">
-                  <p class="text-sm">未找到匹配的股票</p>
-                </div>
-              </div>
-            </div>
-            
-            <!-- 导航链接 -->
-            <div class="flex items-center space-x-1">
-              <a href="/pyramid" class="px-4 py-2 text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg transition-colors">金字塔</a>
-              <a href="/courses" class="px-4 py-2 text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg transition-colors">交易课</a>
-              <a href="#" class="px-4 py-2 text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg transition-colors">关于</a>
-              <a href="#" class="px-4 py-2 text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg transition-colors flex items-center">
-                新内容
-                <span class="ml-1.5 w-2 h-2 bg-red-500 rounded-full"></span>
-              </a>
-            </div>
-            
-            <!-- 用户区域 -->
-            <% if user_signed_in? %>
-              <div class="flex items-center space-x-3">
-                <div class="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-bold text-sm">
-                  <%= current_user.avatar_char %>
-                </div>
-                <span class="text-sm font-medium text-gray-700"><%= current_user.nickname %></span>
-              </div>
-            <% else %>
-              <div class="flex items-center space-x-3">
-                <%= link_to '登录', new_user_session_path, class: 'px-4 py-2 text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg transition-colors' %>
-                <%= link_to '注册', new_user_registration_path, class: 'px-4 py-2 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors' %>
-              </div>
-            <% end %>
-          </div>
-          
-          <!-- 移动端菜单按钮 -->
-          <button id="mobile-menu-btn" class="md:hidden p-2 hover:bg-gray-100 rounded-lg" aria-label="切换菜单">
-            <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
-            </svg>
-          </button>
-        </div>
-      </div>
-      
-      <!-- 移动端菜单 -->
-      <div id="mobile-menu" class="md:hidden hidden bg-white border-t border-gray-200">
-        <div class="px-4 py-4 space-y-3">
-          <input type="text" placeholder="搜索股票..." class="w-full px-4 py-2 bg-gray-100 border border-gray-200 rounded-full text-sm focus:outline-none focus:border-blue-500">
-          <div class="space-y-1">
-            <a href="/pyramid" class="block px-4 py-2 text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg">金字塔</a>
-            <a href="/courses" class="block px-4 py-2 text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg">交易课</a>
-            <a href="#" class="block px-4 py-2 text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg">关于</a>
-            <a href="#" class="block px-4 py-2 text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg flex items-center">
-              新内容
-              <span class="ml-2 w-2 h-2 bg-red-500 rounded-full"></span>
-            </a>
-          </div>
-          <div class="pt-4 border-t border-gray-200">
-            <% if user_signed_in? %>
-              <div class="flex items-center space-x-3 pb-3">
-                <div class="w-10 h-10 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-bold">
-                  <%= current_user.avatar_char %>
-                </div>
-                <div>
-                  <p class="font-medium text-gray-900"><%= current_user.nickname %></p>
-                  <p class="text-sm text-gray-500"><%= current_user.email %></p>
-                </div>
-              </div>
-              <div class="space-y-1">
-                <%= link_to '个人中心', users_profile_path, class: 'block px-4 py-2 text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg' %>
-                <% if current_user.admin? %>
-                  <%= link_to '后台管理', admin_root_path, class: 'block px-4 py-2 text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg' %>
-                <% end %>
-                <%= link_to '退出登录', destroy_user_session_path, method: :delete, class: 'block px-4 py-2 text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg' %>
-              </div>
-            <% else %>
-              <div class="flex space-x-3">
-                <%= link_to '登录', new_user_session_path, class: 'flex-1 px-4 py-2 text-center text-sm font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50' %>
-                <%= link_to '注册', new_user_registration_path, class: 'flex-1 px-4 py-2 text-center text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700' %>
-              </div>
-            <% end %>
-          </div>
-        </div>
-      </div>
-    </nav>
+  <body>
+    <%= render "shared/navbar" %>
 
     <!-- 主内容区 -->
     <main class="min-h-screen" id="main-content">
       <%= yield %>
     </main>
 
+    <%= render "shared/footer" %>
+
     <script>
-      // 动态计算导航栏高度并将主体内容推送到导航栏下方
-      function adjustMainPadding() {
-        const nav = document.querySelector('nav');
-        const main = document.getElementById('main-content');
-        if (nav && main) {
-          main.style.paddingTop = nav.offsetHeight + 'px';
-        }
-      }
-
-      document.addEventListener('turbo:load', function() {
-        adjustMainPadding();
-
-        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
-        const mobileMenu = document.getElementById('mobile-menu');
-        
-        if (mobileMenuBtn && mobileMenu) {
-          mobileMenuBtn.addEventListener('click', function() {
-            mobileMenu.classList.toggle('hidden');
-            // 移动端菜单展开后重新计算导航栏高度
-            setTimeout(adjustMainPadding, 50);
-          });
-        }
-
-        // 股票搜索自动补齐功能
-        initStockSearch();
-      });
-
-      // 页面窗口大小变化时重新计算
-      window.addEventListener('resize', adjustMainPadding);
-
+      // 股票搜索自动补齐功能
       function initStockSearch() {
         const searchInput = document.getElementById('stock-search-input');
         const suggestionsBox = document.getElementById('search-suggestions');
@@ -167,7 +35,6 @@
         let selectedIndex = -1;
         let currentResults = [];
 
-        // 防抖函数
         function debounce(func, delay) {
           return function(...args) {
             clearTimeout(debounceTimer);
@@ -175,7 +42,6 @@
           };
         }
 
-        // 搜索函数
         async function searchStocks(query) {
           if (query.length < 1) {
             hideSuggestions();
@@ -192,7 +58,6 @@
           }
         }
 
-        // 渲染建议列表
         function renderSuggestions(results) {
           selectedIndex = -1;
           
@@ -226,7 +91,6 @@
             `;
           }).join('');
 
-          // 绑定点击事件
           document.querySelectorAll('.suggestion-item').forEach(item => {
             item.addEventListener('click', function() {
               const url = this.dataset.url;
@@ -235,13 +99,11 @@
           });
         }
 
-        // 隐藏建议框
         function hideSuggestions() {
           suggestionsBox.classList.add('hidden');
           selectedIndex = -1;
         }
 
-        // 更新选中状态
         function updateSelection() {
           const items = document.querySelectorAll('.suggestion-item');
           items.forEach((item, index) => {
@@ -253,13 +115,11 @@
           });
         }
 
-        // 输入事件
         searchInput.addEventListener('input', debounce(function(e) {
           const query = e.target.value.trim();
           searchStocks(query);
         }, 300));
 
-        // 键盘导航
         searchInput.addEventListener('keydown', function(e) {
           const items = document.querySelectorAll('.suggestion-item');
           
@@ -281,14 +141,12 @@
           }
         });
 
-        // 聚焦时显示已有结果
         searchInput.addEventListener('focus', function() {
           if (currentResults.length > 0) {
             suggestionsBox.classList.remove('hidden');
           }
         });
 
-        // 点击外部关闭
         document.addEventListener('click', function(e) {
           const container = document.getElementById('search-container');
           if (container && !container.contains(e.target)) {
@@ -296,6 +154,20 @@
           }
         });
       }
+
+      // 移动端菜单
+      document.addEventListener('turbo:load', function() {
+        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+        const mobileMenu = document.getElementById('mobile-menu');
+        
+        if (mobileMenuBtn && mobileMenu) {
+          mobileMenuBtn.addEventListener('click', function() {
+            mobileMenu.classList.toggle('hidden');
+          });
+        }
+
+        initStockSearch();
+      });
     </script>
   </body>
 </html>

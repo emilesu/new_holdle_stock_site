@@ -1,0 +1,63 @@
+<footer class="hl-footer bg-white border-t border-line pt-12 pb-8 mt-auto">
+  <div class="container-hl">
+
+    <%# ----- 4 列内容区 ----- %>
+    <div class="hl-footer-grid">
+
+      <%# 第 1 列：品牌介绍 %>
+      <div>
+        <div class="hl-footer-brand">HOLD LE</div>
+        <p class="hl-footer-tagline">
+          一个程序员的个人交易学习社区。<br>
+          核心理念：用规则做决策，不是用情绪。<br>
+          老地方，老规矩，主人回来了。
+        </p>
+      </div>
+
+      <%# 第 2 列：导航 %>
+      <div>
+        <h5 class="hl-footer-col-title">导航</h5>
+        <ul>
+          <li><%= link_to "首页", root_path, class: "hl-footer-link" %></li>
+          <li><%= link_to "工具表", pyramid_path, class: "hl-footer-link" %></li>
+          <li><%= link_to "历史案例", "#", class: "hl-footer-link" %></li>
+          <li><%= link_to "关于", "#", class: "hl-footer-link" %></li>
+        </ul>
+      </div>
+
+      <%# 第 3 列：内容 %>
+      <div>
+        <h5 class="hl-footer-col-title">内容</h5>
+        <ul>
+          <li><a href="#" class="hl-footer-link">新内容</a></li>
+          <li><a href="#" class="hl-footer-link">历史文章</a></li>
+          <li><a href="#" class="hl-footer-link">视频频道</a></li>
+          <li><a href="#" class="hl-footer-link">RSS 订阅</a></li>
+        </ul>
+      </div>
+
+      <%# 第 4 列：联系 %>
+      <div>
+        <h5 class="hl-footer-col-title">联系</h5>
+        <ul>
+          <li class="hl-footer-static">公众号：HOLD LE</li>
+          <li class="hl-footer-static">邮箱：xxx@holdle.com</li>
+          <li class="hl-footer-static">微信群：没有</li>
+          <li class="hl-footer-static">RSS：/feed</li>
+        </ul>
+      </div>
+    </div>
+
+    <%# ----- 版权条 ----- %>
+    <div class="hl-footer-bottom">
+      <div class="hl-footer-copy">
+        &copy; <%= Date.current.year %> HOLD LE &middot; Designed by Emile Su
+        <span class="hl-footer-divider">|</span>
+        本网站不提供投资建议，投资有风险，决策需谨慎
+      </div>
+      <div>
+        <a href="#" class="hl-footer-top">返回顶部 &uarr;</a>
+      </div>
+    </div>
+  </div>
+</footer>

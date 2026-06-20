@@ -307,4 +307,196 @@
     color: var(--color-muted);
     line-height: 1.7;
   }
+
+  /* ==================== 顶部导航栏 ==================== */
+  .hl-nav {
+    background: #ffffff;
+  }
+  .hl-nav-logo {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--color-ink);
+    letter-spacing: 0.05em;
+    flex-shrink: 0;
+  }
+
+  .hl-nav-search {
+    flex: 1;
+    max-width: 280px;
+    height: 32px;
+    border: 1px solid var(--color-line-soft);
+    background: var(--color-bg-soft);
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    color: var(--color-muted-4);
+    font-size: 13px;
+    cursor: pointer;
+    transition: border-color 0.15s ease;
+  }
+  .hl-nav-search:hover { border-color: var(--color-muted-5); }
+  .hl-nav-search-icon {
+    margin-right: 8px;
+    color: var(--color-muted-5);
+    font-size: 14px;
+  }
+  .hl-nav-search-input {
+    background: transparent;
+    border: none;
+    outline: none;
+  }
+  .hl-nav-search-placeholder { user-select: none; }
+
+  .hl-nav-links {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+  }
+  .hl-nav-link {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 14px;
+    font-size: 14px;
+    color: var(--color-muted);
+    border-radius: 4px;
+    transition: all 0.15s ease;
+  }
+  .hl-nav-link:hover {
+    background: var(--color-bg-mute);
+    color: var(--color-ink);
+  }
+  .hl-nav-link-active {
+    color: var(--color-ink);
+    font-weight: 600;
+  }
+  .hl-nav-link-new { position: relative; }
+  .hl-nav-dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    background: var(--color-profit);
+    border-radius: 50%;
+    margin-left: 4px;
+    flex-shrink: 0;
+  }
+
+  .hl-nav-admin {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--color-muted);
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: background 0.15s ease;
+  }
+  .hl-nav-admin:hover { background: var(--color-bg-soft); }
+  .hl-nav-admin-avatar {
+    width: 24px;
+    height: 24px;
+    background: var(--color-link);
+    color: #ffffff;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  /* ==================== Footer ==================== */
+  .hl-footer {
+    background: #ffffff;
+  }
+  .hl-footer-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr;
+    gap: 32px;
+    margin-bottom: 32px;
+  }
+  @media (max-width: 768px) {
+    .hl-footer-grid {
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+  }
+  @media (max-width: 480px) {
+    .hl-footer-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .hl-footer-brand {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--color-ink);
+    letter-spacing: 0.05em;
+    margin-bottom: 12px;
+  }
+  .hl-footer-tagline {
+    font-size: 13px;
+    color: var(--color-muted-3);
+    line-height: 1.7;
+    max-width: 320px;
+  }
+
+  .hl-footer-col-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--color-ink);
+    margin-bottom: 12px;
+  }
+  .hl-footer ul { list-style: none; padding: 0; margin: 0; }
+  .hl-footer ul li {
+    padding: 4px 0;
+  }
+  .hl-footer-link {
+    font-size: 13px;
+    color: var(--color-muted-3);
+    transition: color 0.15s ease;
+  }
+  .hl-footer-link:hover { color: var(--color-ink); }
+  .hl-footer-static {
+    font-size: 13px;
+    color: var(--color-muted-3);
+  }
+
+  .hl-footer-bottom {
+    padding-top: 24px;
+    border-top: 1px solid var(--color-line-soft);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .hl-footer-copy {
+    font-size: 12px;
+    color: var(--color-muted-5);
+  }
+  .hl-footer-divider {
+    margin: 0 8px;
+    color: var(--color-muted-6);
+  }
+  .hl-footer-top {
+    font-size: 12px;
+    color: var(--color-muted-3);
+    transition: color 0.15s ease;
+  }
+  .hl-footer-top:hover { color: var(--color-ink); }
+}
+
+/* ==================== 让 footer 始终在底部（极简 flex 布局） ==================== */
+@layer utilities {
+  body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+  main {
+    flex: 1;
+  }
 }
