@@ -1,42 +1,86 @@
-<h2>Edit <%= resource_name.to_s.humanize %></h2>
+<div class="py-16 bg-bg-soft min-h-screen">
+  <div class="container-narrow">
+    <div class="hl-card p-8 sm:p-10">
 
-<%= form_for(resource, as: resource_name, url: registration_path(resource_name), html: { method: :put }) do |f| %>
-  <%= render "devise/shared/error_messages", resource: resource %>
+      <div class="text-center mb-7">
+        <span class="text-hl-11 text-muted-5 tracking-wide-2 font-medium block mb-3">HOLD LE</span>
+        <h1 class="text-hl-22 font-semibold text-ink">编辑账号</h1>
+        <p class="mt-2 text-hl-13 text-muted-3">修改您的账号信息</p>
+      </div>
 
-  <div class="field">
-    <p><%= f.label :email %></p>
-    <p><%= f.email_field :email, autofocus: true, autocomplete: "email" %></p>
+      <%= form_for(resource, as: resource_name, url: registration_path(resource_name), html: { method: :put }) do |f| %>
+        <% if resource.errors.any? %>
+          <div class="mb-5 p-4 border border-line-soft rounded bg-bg-soft">
+            <p class="text-hl-13 font-medium text-profit mb-2"><%= pluralize(resource.errors.count, "个") %> 错误：</p>
+            <ul class="list-disc pl-5 text-hl-12 text-profit space-y-1">
+              <% resource.errors.full_messages.each do |msg| %>
+                <li><%= msg %></li>
+              <% end %>
+            </ul>
+          </div>
+        <% end %>
+
+        <div class="space-y-4">
+          <div>
+            <%= f.label :email, class: "block text-hl-13 font-medium text-muted mb-1.5" %>
+            <%= f.email_field :email, autofocus: true, autocomplete: "email",
+              class: "w-full px-4 py-2.5 border border-line rounded text-hl-14 text-ink placeholder:text-muted-4 bg-white focus:outline-none focus:border-muted-3 transition-colors" %>
+          </div>
+
+          <% if devise_mapping.confirmable? && resource.pending_reconfirmation? %>
+            <div class="p-3 border border-line-soft rounded bg-bg-soft text-hl-13 text-muted-3">
+              等待确认：<%= resource.unconfirmed_email %>
+            </div>
+          <% end %>
+
+          <div>
+            <%= f.label :password, class: "block text-hl-13 font-medium text-muted mb-1.5" do %>
+              新密码
+              <span class="text-muted-4 font-normal">（不修改则留空）</span>
+            <% end %>
+            <%= f.password_field :password, autocomplete: "new-password", placeholder: "留空则不修改",
+              class: "w-full px-4 py-2.5 border border-line rounded text-hl-14 text-ink placeholder:text-muted-4 bg-white focus:outline-none focus:border-muted-3 transition-colors" %>
+            <% if @minimum_password_length %>
+              <p class="mt-1 text-hl-12 text-muted-4">至少 <%= @minimum_password_length %> 位</p>
+            <% end %>
+          </div>
+
+          <div>
+            <%= f.label :password_confirmation, class: "block text-hl-13 font-medium text-muted mb-1.5" %>
+            <%= f.password_field :password_confirmation, autocomplete: "new-password", placeholder: "再次输入新密码",
+              class: "w-full px-4 py-2.5 border border-line rounded text-hl-14 text-ink placeholder:text-muted-4 bg-white focus:outline-none focus:border-muted-3 transition-colors" %>
+          </div>
+
+          <div>
+            <%= f.label :current_password, class: "block text-hl-13 font-medium text-muted mb-1.5" do %>
+              当前密码
+              <span class="text-muted-4 font-normal">（需要确认您的身份）</span>
+            <% end %>
+            <%= f.password_field :current_password, autocomplete: "current-password", placeholder: "输入当前密码",
+              class: "w-full px-4 py-2.5 border border-line rounded text-hl-14 text-ink placeholder:text-muted-4 bg-white focus:outline-none focus:border-muted-3 transition-colors" %>
+          </div>
+
+          <div class="pt-2">
+            <%= f.submit "更新账号", class: "hl-btn hl-btn-primary w-full text-center" %>
+          </div>
+        </div>
+      <% end %>
+
+      <div class="mt-8 pt-6 border-t border-line-soft">
+        <div class="bg-bg-soft rounded p-4">
+          <h3 class="text-hl-14 font-medium text-profit mb-2">注销账号</h3>
+          <p class="text-hl-13 text-muted-3 mb-3">注销后所有数据将被永久删除，不可恢复</p>
+          <%= button_to "注销我的账号", registration_path(resource_name),
+            data: { turbo_confirm: "确定要注销账号吗？此操作不可撤销。" },
+            method: :delete,
+            class: "hl-btn text-profit border-profit hover:bg-bg-mute" %>
+        </div>
+      </div>
+
+      <div class="mt-5 text-center">
+        <%= link_to "返回", users_profile_path, class: "text-hl-13 text-link hover:text-link-hover transition-colors" %>
+      </div>
+
+    </div>
   </div>
-
-  <% if devise_mapping.confirmable? && resource.pending_reconfirmation? %>
-    <div>Currently waiting confirmation for: <%= resource.unconfirmed_email %></div>
-  <% end %>
-
-  <div class="field">
-    <p><%= f.label :password %> <i>(leave blank if you don't want to change it)</i></p>
-    <p><%= f.password_field :password, autocomplete: "new-password" %></p>
-    <% if @minimum_password_length %>
-      <p><em><%= @minimum_password_length %> characters minimum</em></p>
-    <% end %>
-  </div>
-
-  <div class="field">
-    <p><%= f.label :password_confirmation %></p>
-    <p><%= f.password_field :password_confirmation, autocomplete: "new-password" %></p>
-  </div>
-
-  <div class="field">
-    <p><%= f.label :current_password %> <i>(we need your current password to confirm your changes)</i></p>
-    <p><%= f.password_field :current_password, autocomplete: "current-password" %></p>
-  </div>
-
-  <div class="actions">
-    <%= f.submit "Update" %>
-  </div>
-<% end %>
-
-<h3>Cancel my account</h3>
-
-<div>Unhappy? <%= button_to "Cancel my account", registration_path(resource_name), data: { confirm: "Are you sure?", turbo_confirm: "Are you sure?" }, method: :delete %></div>
-
-<%= link_to "Back", :back %>
+</div>

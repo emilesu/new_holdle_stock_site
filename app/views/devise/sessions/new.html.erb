@@ -1,61 +1,61 @@
-<div class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-  <div class="max-w-md w-full space-y-8">
-    <div>
-      <div class="flex justify-center">
-        <div class="w-16 h-16 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
-          <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-          </svg>
-        </div>
+<div class="py-16 bg-bg-soft min-h-screen">
+  <div class="container-narrow">
+    <div class="hl-card p-8 sm:p-10">
+
+      <div class="text-center mb-7">
+        <span class="text-hl-11 text-muted-5 tracking-wide-2 font-medium block mb-3">HOLD LE</span>
+        <h1 class="text-hl-22 font-semibold text-ink">欢迎回来</h1>
+        <p class="mt-2 text-hl-13 text-muted-3">请登录您的账号</p>
       </div>
-      <h2 class="mt-6 text-center text-3xl font-bold text-gray-900">欢迎回来</h2>
-      <p class="mt-2 text-center text-sm text-gray-600">请登录您的账号</p>
+
+      <%= form_for(resource, as: resource_name, url: session_path(resource_name)) do |f| %>
+        <% if resource.errors.any? %>
+          <div class="mb-5 p-4 border border-line-soft rounded bg-bg-soft">
+            <p class="text-hl-13 font-medium text-profit mb-2"><%= pluralize(resource.errors.count, "个") %> 错误：</p>
+            <ul class="list-disc pl-5 text-hl-12 text-profit space-y-1">
+              <% resource.errors.full_messages.each do |msg| %>
+                <li><%= msg %></li>
+              <% end %>
+            </ul>
+          </div>
+        <% end %>
+
+        <div class="space-y-4">
+          <div>
+            <%= f.label :email, class: "block text-hl-13 font-medium text-muted mb-1.5" %>
+            <%= f.email_field :email, autofocus: true, autocomplete: "email", placeholder: "your@email.com",
+              class: "w-full px-4 py-2.5 border border-line rounded text-hl-14 text-ink placeholder:text-muted-4 bg-white focus:outline-none focus:border-muted-3 transition-colors" %>
+          </div>
+
+          <div>
+            <%= f.label :password, class: "block text-hl-13 font-medium text-muted mb-1.5" %>
+            <%= f.password_field :password, autocomplete: "current-password", placeholder: "请输入密码",
+              class: "w-full px-4 py-2.5 border border-line rounded text-hl-14 text-ink placeholder:text-muted-4 bg-white focus:outline-none focus:border-muted-3 transition-colors" %>
+          </div>
+
+          <% if devise_mapping.rememberable? %>
+            <div class="flex items-center justify-between">
+              <label class="flex items-center gap-2 cursor-pointer">
+                <%= f.check_box :remember_me, class: "w-4 h-4 border border-line rounded text-ink focus:ring-0 focus:outline-none" %>
+                <span class="text-hl-13 text-muted-3">保持登录状态</span>
+              </label>
+              <%= link_to "忘记密码？", new_password_path(resource_name), class: "text-hl-13 text-link hover:text-link-hover transition-colors" %>
+            </div>
+          <% end %>
+
+          <div class="pt-2">
+            <%= f.submit "登录", class: "hl-btn hl-btn-primary w-full text-center" %>
+          </div>
+        </div>
+      <% end %>
+
+      <div class="mt-7 pt-5 border-t border-line-soft text-center">
+        <p class="text-hl-13 text-muted-3">
+          还没有账号？
+          <%= link_to "立即注册", new_registration_path(resource_name), class: "text-link hover:text-link-hover font-medium transition-colors" %>
+        </p>
+      </div>
+
     </div>
-
-    <%= form_for(resource, as: resource_name, url: session_path(resource_name), class: "mt-8 space-y-6") do |f| %>
-      <% if resource.errors.any? %>
-        <div class="bg-red-50 border border-red-200 rounded-lg p-4">
-          <p class="text-red-800 text-sm font-medium">请检查以下错误：</p>
-          <ul class="mt-2 text-red-600 text-sm">
-            <% resource.errors.full_messages.each do |msg| %>
-              <li><%= msg %></li>
-            <% end %>
-          </ul>
-        </div>
-      <% end %>
-
-      <div class="rounded-lg shadow-sm">
-        <div>
-          <label for="email" class="block text-sm font-medium text-gray-700 px-4 pt-3 pb-1">邮箱地址</label>
-          <%= f.email_field :email, autofocus: true, autocomplete: "email", 
-            class: "appearance-none rounded-t-lg relative block w-full px-4 py-3 border border-gray-300 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" %>
-        </div>
-        <div>
-          <label for="password" class="block text-sm font-medium text-gray-700 px-4 pt-3 pb-1">密码</label>
-          <%= f.password_field :password, autocomplete: "current-password", 
-            class: "appearance-none rounded-b-lg relative block w-full px-4 py-3 border border-t-0 border-gray-300 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" %>
-        </div>
-      </div>
-
-      <% if devise_mapping.rememberable? %>
-        <div class="flex items-center justify-between">
-          <label class="flex items-center">
-            <%= f.check_box :remember_me, class: "h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded" %>
-            <span class="ml-2 block text-sm text-gray-600">保持登录状态</span>
-          </label>
-          <a href="<%= new_password_path(resource_name) %>" class="text-sm text-blue-600 hover:text-blue-500 font-medium">忘记密码？</a>
-        </div>
-      <% end %>
-
-      <div>
-        <%= f.submit "登录", 
-          class: "w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 shadow-md hover:shadow-lg" %>
-      </div>
-    <% end %>
-
-    <p class="mt-6 text-center text-sm text-gray-600">
-      还没有账号？
-      <%= link_to "立即注册", new_registration_path(resource_name), class: "font-medium text-blue-600 hover:text-blue-500" %>
-    </p>
   </div>
 </div>

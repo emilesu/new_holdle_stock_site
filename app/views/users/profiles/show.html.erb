@@ -1,96 +1,90 @@
-<div class="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
-  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
-      <div class="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 px-6 py-10">
-        <div class="flex items-center space-x-6">
-          <div class="relative">
-            <div class="w-28 h-28 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-white text-5xl font-bold shadow-2xl">
-              <%= @user.avatar_char %>
-            </div>
-            <div class="absolute -bottom-2 -right-2 w-10 h-10 bg-green-500 rounded-full border-4 border-white flex items-center justify-center">
-              <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-              </svg>
-            </div>
+<div class="py-16 bg-bg-soft min-h-screen">
+  <div class="container-narrow">
+
+    <div class="hl-card overflow-hidden">
+
+      <%# 用户头部 %>
+      <div class="bg-ink px-6 sm:px-8 py-8">
+        <div class="flex items-center gap-5">
+          <div class="w-20 h-20 rounded-full bg-white/10 flex items-center justify-center text-white text-hl-22 font-bold shrink-0">
+            <%= @user.avatar_char || "U" %>
           </div>
-          <div class="text-white">
-            <h1 class="text-3xl font-bold tracking-tight"><%= @user.nickname %></h1>
-            <p class="text-blue-100 mt-2 text-lg"><%= @user.email %></p>
+          <div class="min-w-0">
+            <h1 class="text-hl-18 font-semibold text-white"><%= @user.nickname %></h1>
+            <p class="text-hl-13 text-white/60 mt-0.5"><%= @user.email %></p>
             <div class="flex flex-wrap gap-2 mt-3">
-              <span class="inline-flex items-center px-4 py-1.5 rounded-full text-sm font-medium bg-white/20 backdrop-blur-sm">
-                <%= @user.member_status %>
-              </span>
-              <span class="inline-flex items-center px-4 py-1.5 rounded-full text-sm font-medium bg-white/20 backdrop-blur-sm">
-                <%= @user.role.humanize %>
-              </span>
+              <span class="inline-flex px-2.5 py-0.5 text-hl-11 font-medium bg-white/10 text-white/80 border border-white/20 rounded"><%= @user.member_status %></span>
+              <span class="inline-flex px-2.5 py-0.5 text-hl-11 font-medium bg-white/10 text-white/80 border border-white/20 rounded"><%= @user.role.humanize %></span>
             </div>
           </div>
         </div>
       </div>
 
-      <div class="px-6 py-6">
-        <div class="flex border-b border-gray-200 mb-6">
-          <nav class="flex space-x-8">
-            <a href="<%= users_profile_path %>" class="pb-3 border-b-2 border-blue-600 text-blue-600 font-semibold">基本信息</a>
-            <a href="<%= users_profile_favorites_path %>" class="pb-3 text-gray-500 hover:text-gray-700 transition-colors">我的收藏</a>
-          </nav>
-        </div>
-
-        <div class="space-y-6">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div class="bg-gray-50 rounded-xl p-5">
-              <label class="block text-sm font-medium text-gray-600 mb-2">昵称</label>
-              <p class="text-gray-800 text-lg font-medium"><%= @user.nickname %></p>
-            </div>
-            <div class="bg-gray-50 rounded-xl p-5">
-              <label class="block text-sm font-medium text-gray-600 mb-2">邮箱</label>
-              <p class="text-gray-800 text-lg font-medium"><%= @user.email %></p>
-            </div>
-          </div>
-
-          <div class="bg-gray-50 rounded-xl p-5">
-            <label class="block text-sm font-medium text-gray-600 mb-2">个人简介</label>
-            <p class="text-gray-800 text-lg leading-relaxed min-h-[80px]">
-              <%= @user.bio.presence || "<span class='text-gray-400'>暂无简介</span>".html_safe %>
-            </p>
-          </div>
-
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div class="bg-gray-50 rounded-xl p-5">
-              <label class="block text-sm font-medium text-gray-600 mb-2">会员到期时间</label>
-              <p class="text-gray-800 text-lg font-medium">
-                <%= @user.member_expire_at.present? ? l(@user.member_expire_at, format: :long) : "<span class='text-gray-400'>未开通会员</span>".html_safe %>
-              </p>
-            </div>
-            <div class="bg-gray-50 rounded-xl p-5">
-              <label class="block text-sm font-medium text-gray-600 mb-2">角色权限</label>
-              <p class="text-gray-800 text-lg font-medium"><%= @user.role.humanize %></p>
-            </div>
-          </div>
-
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div class="bg-gray-50 rounded-xl p-5">
-              <label class="block text-sm font-medium text-gray-600 mb-2">注册时间</label>
-              <p class="text-gray-800 text-lg font-medium"><%= l(@user.created_at, format: :long) %></p>
-            </div>
-            <div class="bg-gray-50 rounded-xl p-5">
-              <label class="block text-sm font-medium text-gray-600 mb-2">最后登录</label>
-              <p class="text-gray-800 text-lg font-medium">
-                <%= @user.last_login_at.present? ? l(@user.last_login_at, format: :long) : "<span class='text-gray-400'>暂无记录</span>".html_safe %>
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div class="mt-8 flex space-x-4">
-          <%= link_to "编辑资料", users_edit_profile_path, 
-            class: "inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all duration-200 shadow-md hover:shadow-lg font-medium" %>
-          <% if current_user.is_admin? %>
-            <%= link_to "后台管理", admin_root_path, 
-              class: "inline-flex items-center px-6 py-3 bg-gray-800 text-white rounded-xl hover:bg-gray-900 transition-all duration-200 shadow-md hover:shadow-lg font-medium" %>
-          <% end %>
-        </div>
+      <%# 导航标签 %>
+      <div class="flex border-b border-line px-6 sm:px-8">
+        <nav class="flex gap-6">
+          <a href="<%= users_profile_path %>" class="pb-3 border-b-2 border-ink text-ink font-medium text-hl-13">基本信息</a>
+          <a href="<%= users_profile_favorites_path %>" class="pb-3 text-muted-3 hover:text-ink transition-colors text-hl-13">我的收藏</a>
+        </nav>
       </div>
+
+      <%# 信息区域 %>
+      <div class="p-6 sm:p-8 space-y-5">
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div class="bg-bg-soft rounded p-4 sm:p-5">
+            <span class="text-hl-12 text-muted-4 block mb-1">昵称</span>
+            <span class="text-hl-15 text-ink font-medium"><%= @user.nickname %></span>
+          </div>
+          <div class="bg-bg-soft rounded p-4 sm:p-5">
+            <span class="text-hl-12 text-muted-4 block mb-1">邮箱</span>
+            <span class="text-hl-15 text-ink font-medium"><%= @user.email %></span>
+          </div>
+        </div>
+
+        <div class="bg-bg-soft rounded p-4 sm:p-5">
+          <span class="text-hl-12 text-muted-4 block mb-1">个人简介</span>
+          <span class="text-hl-14 text-muted leading-relaxed block min-h-[40px]">
+            <%= @user.bio.presence || "<span class='text-muted-4'>暂无简介</span>".html_safe %>
+          </span>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div class="bg-bg-soft rounded p-4 sm:p-5">
+            <span class="text-hl-12 text-muted-4 block mb-1">会员到期时间</span>
+            <span class="text-hl-14 text-ink font-medium">
+              <%= @user.member_expire_at.present? ? l(@user.member_expire_at, format: :long) : "<span class='text-muted-4'>未开通会员</span>".html_safe %>
+            </span>
+          </div>
+          <div class="bg-bg-soft rounded p-4 sm:p-5">
+            <span class="text-hl-12 text-muted-4 block mb-1">角色权限</span>
+            <span class="text-hl-14 text-ink font-medium"><%= @user.role.humanize %></span>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div class="bg-bg-soft rounded p-4 sm:p-5">
+            <span class="text-hl-12 text-muted-4 block mb-1">注册时间</span>
+            <span class="text-hl-14 text-ink font-medium"><%= l(@user.created_at, format: :long) %></span>
+          </div>
+          <div class="bg-bg-soft rounded p-4 sm:p-5">
+            <span class="text-hl-12 text-muted-4 block mb-1">最后登录</span>
+            <span class="text-hl-14 text-ink font-medium">
+              <%= @user.last_login_at.present? ? l(@user.last_login_at, format: :long) : "<span class='text-muted-4'>暂无记录</span>".html_safe %>
+            </span>
+          </div>
+        </div>
+
+      </div>
+
+      <%# 操作按钮 %>
+      <div class="px-6 sm:px-8 pb-6 sm:pb-8 flex flex-wrap gap-3">
+        <%= link_to "编辑资料", users_edit_profile_path, class: "hl-btn hl-btn-primary" %>
+        <% if current_user.admin? %>
+          <%= link_to "后台管理", admin_root_path, class: "hl-btn hl-btn-line" %>
+        <% end %>
+      </div>
+
     </div>
   </div>
 </div>

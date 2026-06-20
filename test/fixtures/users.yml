@@ -1,17 +1,14 @@
-# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
-
 one:
   email: user1@test.com
-  encrypted_password: password123
-  nickname: UserOne
-  member_level: 1
-  member_expire_at: 2026-06-11 11:22:30
-  role: member
+  encrypted_password: $2a$04$Z5ztQaXKHO9FC7oW0CYm1.7/S.Fs/kvB/sO.ceeQy9zJ25vnMXbh6
+  nickname: 测试用户一
+  created_at: <%= 1.month.ago.to_fs(:db) %>
+  updated_at: <%= 1.month.ago.to_fs(:db) %>
 
 two:
-  email: admin@test.com
-  encrypted_password: admin123
-  nickname: AdminUser
-  member_level: 2
-  member_expire_at: 2026-06-11 11:22:30
+  email: user2@test.com
+  encrypted_password: $2a$04$jOMq6qFAyVp.wHA/CPfjwue3O/fV7gp6U1ADdYRTerrySeyZFe8WS
+  nickname: 测试用户二
   role: admin
+  created_at: <%= 1.month.ago.to_fs(:db) %>
+  updated_at: <%= 1.month.ago.to_fs(:db) %>

@@ -1,65 +1,74 @@
-<div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-  <div class="bg-white rounded-lg overflow-hidden border border-gray-200">
-    <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
-      <div class="flex items-start justify-between">
-        <div>
-          <h1 class="text-lg font-semibold text-gray-800"><%= @course.title %></h1>
+<div class="py-16">
+  <div class="container-narrow">
+    <%# 面包屑导航 %>
+    <div class="text-hl-12 text-muted-4 mb-6">
+      <%= link_to '交易课', courses_path, class: 'hover:text-link transition-colors' %>
+      <span class="mx-1.5 text-muted-5">/</span>
+      <span class="text-ink font-medium"><%= @course.title %></span>
+    </div>
+
+    <%# 课程头部 %>
+    <div class="hl-card p-6 sm:p-8 mb-6">
+      <div class="flex flex-col sm:flex-row gap-6">
+        <% if @course.cover_url %>
+          <div class="shrink-0">
+            <%= image_tag @course.cover_url,
+                  alt: "#{@course.title} 封面",
+                  class: 'w-full sm:w-56 h-32 sm:h-40 object-cover rounded border border-line',
+                  loading: 'lazy' %>
+          </div>
+        <% end %>
+        <div class="flex-1 min-w-0">
+          <h1 class="text-hl-22 font-semibold text-ink mb-2"><%= @course.title %></h1>
           <% if @course.description.present? %>
-            <p class="mt-1 text-sm text-gray-500"><%= @course.description %></p>
+            <p class="text-hl-14 text-muted leading-relaxed"><%= @course.description %></p>
           <% end %>
-        </div>
-        <div class="ml-4 flex-shrink-0 flex items-center space-x-3">
-          <% if @course.member_only? %>
-            <span class="inline-flex px-2 py-1 text-xs font-medium bg-blue-50 text-blue-600 border border-blue-200 rounded">会员课程</span>
-          <% else %>
-            <span class="inline-flex px-2 py-1 text-xs font-medium bg-gray-50 text-gray-500 border border-gray-200 rounded">公开课程</span>
-          <% end %>
+          <div class="mt-4 flex flex-wrap items-center gap-4 text-hl-12 text-muted-4">
+            <span><%= @course.chapters.size %> 个章节</span>
+            <span><%= @course.lessons.size %> 个小节</span>
+          </div>
         </div>
       </div>
     </div>
 
-    <% if @course.cover_url %>
-      <div class="px-6 py-4 border-b border-gray-100">
-        <%= image_tag @course.cover_url,
-              alt: "#{@course.title} 封面",
-              class: 'w-full max-w-2xl h-40 sm:h-56 object-cover rounded border border-gray-100',
-              loading: 'lazy' %>
-      </div>
-    <% end %>
-
-    <div class="p-6 space-y-8">
+    <%# 章节列表 %>
+    <div class="space-y-6">
       <% @chapters.each_with_index do |chapter, index| %>
-        <div>
-          <div class="flex items-center space-x-3 mb-4">
-            <span class="flex items-center justify-center w-6 h-6 bg-gray-100 text-xs font-bold text-gray-500"><%= index + 1 %></span>
-            <h2 class="text-sm font-semibold text-gray-900"><%= chapter.title %></h2>
+        <div class="hl-card">
+          <%# 章节头部 %>
+          <div class="flex items-center gap-3 px-6 sm:px-8 py-4 border-b border-line-soft">
+            <span class="flex items-center justify-center w-7 h-7 bg-bg-mute text-hl-12 font-bold text-muted-2 rounded"><%= index + 1 %></span>
+            <h2 class="text-hl-15 font-semibold text-ink"><%= chapter.title %></h2>
             <% if chapter.summary.present? %>
-              <span class="text-xs text-gray-400">· <%= chapter.summary %></span>
-            <% end %>
-            <% if chapter.member_only? %>
-              <span class="inline-flex px-2 py-0.5 text-xs font-medium bg-blue-50 text-blue-600 border border-blue-200 rounded">会员</span>
+              <span class="text-hl-12 text-muted-4 hidden sm:inline">· <%= chapter.summary %></span>
             <% end %>
           </div>
-          <div class="space-y-1">
+
+          <%# 小节列表 %>
+          <div class="divide-y divide-line-soft">
             <% chapter.lessons.published.sorted.each do |lesson| %>
-              <%= link_to lesson_path(lesson), class: 'flex items-center space-x-3 px-4 py-2.5 border-b border-gray-50 last:border-b-0 hover:bg-blue-50 transition-colors rounded' do %>
-                <span class="w-4 text-xs text-gray-400 font-mono text-right flex-shrink-0"><%= lesson.sort_num %></span>
-                <span class="text-sm text-gray-700 hover:text-blue-600"><%= lesson.title %></span>
+              <%= link_to lesson_path(lesson), class: 'flex items-center gap-3 px-6 sm:px-8 py-3 hover:bg-bg-soft transition-colors' do %>
+                <span class="w-5 text-hl-12 text-muted-4 font-mono text-right shrink-0"><%= lesson.sort_num %></span>
+                <span class="flex-1 text-hl-13 text-muted hover:text-ink transition-colors min-w-0"><%= lesson.title %></span>
                 <% if lesson.member_only? %>
-                  <span class="inline-flex px-2 py-0.5 text-xs font-medium bg-blue-50 text-blue-600 border border-blue-200 rounded ml-auto">会员</span>
+                  <span class="shrink-0 inline-flex px-2 py-0.5 text-hl-11 font-medium bg-bg-mute text-muted-3 border border-line-soft rounded">会员</span>
+                <% else %>
+                  <span class="shrink-0 inline-flex px-2 py-0.5 text-hl-11 font-medium bg-bg-soft text-muted-4 border border-line-soft rounded">公开</span>
                 <% end %>
               <% end %>
             <% end %>
             <% if chapter.lessons.published.empty? %>
-              <p class="px-4 py-2 text-sm text-gray-400">暂无小节</p>
+              <div class="px-6 sm:px-8 py-5 text-center">
+                <p class="text-hl-13 text-muted-4">暂无小节</p>
+              </div>
             <% end %>
           </div>
         </div>
       <% end %>
 
       <% if @chapters.empty? %>
-        <div class="py-16 text-center">
-          <p class="text-gray-400">暂无章节内容</p>
+        <div class="hl-card py-16 text-center">
+          <p class="text-hl-14 text-muted-4">暂无章节内容</p>
         </div>
       <% end %>
     </div>

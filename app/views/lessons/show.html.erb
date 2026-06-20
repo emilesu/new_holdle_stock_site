@@ -1,30 +1,58 @@
-<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-  <div class="bg-white rounded-lg overflow-hidden border border-gray-200">
-    <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
-      <div class="flex items-center space-x-2 text-sm text-gray-400">
-        <%= link_to '交易课', courses_path, class: 'hover:text-blue-600 transition-colors' %>
-        <span>/</span>
-        <%= link_to @course.title, course_path(@course), class: 'hover:text-blue-600 transition-colors' %>
-        <span>/</span>
-        <span class="text-gray-600"><%= @chapter.title %></span>
-        <span>/</span>
-        <span class="text-gray-900 font-medium"><%= @lesson.title %></span>
-      </div>
+<div class="py-16">
+  <div class="container-narrow">
+
+    <%# 面包屑导航 %>
+    <div class="text-hl-12 text-muted-4 mb-6">
+      <%= link_to '交易课', courses_path, class: 'hover:text-link transition-colors' %>
+      <span class="mx-1.5 text-muted-5">/</span>
+      <%= link_to @course.title, course_path(@course), class: 'hover:text-link transition-colors' %>
+      <span class="mx-1.5 text-muted-5">/</span>
+      <span class="text-muted-2"><%= @chapter.title %></span>
+      <span class="mx-1.5 text-muted-5">/</span>
+      <span class="text-ink font-medium"><%= @lesson.title %></span>
     </div>
 
-    <div class="p-6">
-      <h1 class="text-2xl font-bold text-gray-900 mb-6"><%= @lesson.title %></h1>
+    <%# 小节标题区 %>
+    <div class="hl-card p-6 sm:p-8 mb-6">
+      <div class="flex items-center gap-3 mb-4">
+        <span class="text-hl-12 text-muted-4 font-mono"><%= @lesson.sort_num %></span>
+        <span class="text-muted-6">·</span>
+        <span class="text-hl-12 text-muted-3"><%= @chapter.title %></span>
+        <% if @lesson.member_only? %>
+          <span class="inline-flex px-2 py-0.5 text-hl-11 font-medium bg-bg-mute text-muted-3 border border-line-soft rounded ml-auto">会员</span>
+        <% else %>
+          <span class="inline-flex px-2 py-0.5 text-hl-11 font-medium bg-bg-soft text-muted-4 border border-line-soft rounded ml-auto">公开</span>
+        <% end %>
+      </div>
 
-      <article class="prose prose-gray max-w-none prose-headings:font-semibold prose-a:text-blue-600 prose-code:text-sm prose-code:bg-gray-100 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-pre:bg-gray-900 prose-pre:text-gray-100 prose-pre:rounded-lg prose-img:rounded-lg prose-blockquote:border-l-blue-500 prose-blockquote:text-gray-500 prose-strong:font-semibold">
+      <h1 class="text-hl-22 font-semibold text-ink mb-2"><%= @lesson.title %></h1>
+    </div>
+
+    <%# Markdown 内容 %>
+    <div class="hl-card p-6 sm:p-8 mb-6">
+      <article class="prose prose-gray max-w-none
+        prose-headings:font-semibold prose-headings:text-ink
+        prose-h2:text-hl-18 prose-h3:text-hl-16
+        prose-p:text-hl-14 prose-p:text-muted prose-p:leading-relaxed
+        prose-a:text-link prose-a:no-underline hover:prose-a:text-link-hover
+        prose-code:text-hl-13 prose-code:bg-bg-mute prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded
+        prose-pre:bg-ink prose-pre:text-white prose-pre:rounded
+        prose-img:rounded prose-img:border prose-img:border-line-soft
+        prose-blockquote:border-l-link prose-blockquote:text-muted-3 prose-blockquote:not-italic
+        prose-strong:text-ink prose-strong:font-semibold
+        prose-ul:text-muted prose-ol:text-muted
+        prose-li:text-hl-14
+        prose-hr:border-line-soft">
         <%= raw @lesson.markdown_html %>
       </article>
     </div>
 
-    <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 flex items-center justify-between">
+    <%# 上下篇导航 %>
+    <div class="hl-card px-6 sm:px-8 py-4 flex items-center justify-between">
       <% prev_lesson = @course.lessons.published.sorted.where('lessons.sort_num < ?', @lesson.sort_num).last %>
       <% prev_lesson ||= @chapter.lessons.published.sorted.where('lessons.id < ?', @lesson.id).last %>
       <% if prev_lesson %>
-        <%= link_to "← #{prev_lesson.title}", lesson_path(prev_lesson), class: 'text-sm text-gray-600 hover:text-blue-600 transition-colors' %>
+        <%= link_to "← #{prev_lesson.title}", lesson_path(prev_lesson), class: 'text-hl-13 text-muted hover:text-link transition-colors truncate max-w-[45%]' %>
       <% else %>
         <span></span>
       <% end %>
@@ -32,10 +60,11 @@
       <% next_lesson = @course.lessons.published.sorted.where('lessons.sort_num > ?', @lesson.sort_num).first %>
       <% next_lesson ||= @chapter.lessons.published.sorted.where('lessons.id > ?', @lesson.id).first %>
       <% if next_lesson %>
-        <%= link_to "#{next_lesson.title} →", lesson_path(next_lesson), class: 'text-sm text-gray-600 hover:text-blue-600 transition-colors' %>
+        <%= link_to "#{next_lesson.title} →", lesson_path(next_lesson), class: 'text-hl-13 text-muted hover:text-link transition-colors truncate max-w-[45%]' %>
       <% else %>
         <span></span>
       <% end %>
     </div>
+
   </div>
 </div>
