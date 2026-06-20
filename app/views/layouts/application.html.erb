@@ -22,152 +22,169 @@
     <%= render "shared/footer" %>
 
     <script>
-      // 股票搜索自动补齐功能
-      function initStockSearch() {
-        const searchInput = document.getElementById('stock-search-input');
-        const suggestionsBox = document.getElementById('search-suggestions');
-        const suggestionsList = document.getElementById('suggestions-list');
-        const noResults = document.getElementById('no-results');
-        
-        if (!searchInput) return;
+      // 股票搜索自动补齐功能 - 防竞态设计
+      (function() {
+        var searchState = null;
 
-        let debounceTimer = null;
-        let selectedIndex = -1;
-        let currentResults = [];
+        function initStockSearch() {
+          if (searchState) return;
+          var searchInput = document.getElementById('stock-search-input');
+          var suggestionsBox = document.getElementById('search-suggestions');
+          var suggestionsList = document.getElementById('suggestions-list');
+          var noResults = document.getElementById('no-results');
 
-        function debounce(func, delay) {
-          return function(...args) {
-            clearTimeout(debounceTimer);
-            debounceTimer = setTimeout(() => func.apply(this, args), delay);
+          if (!searchInput) return;
+
+          var state = {
+            selectedIndex: -1,
+            currentResults: [],
+            debounceTimer: null,
+            requestCounter: 0,
+            abortController: null
           };
-        }
+          searchState = state;
 
-        async function searchStocks(query) {
-          if (query.length < 1) {
-            hideSuggestions();
-            return;
+          function hideSuggestions() {
+            suggestionsBox.classList.add('hidden');
+            state.selectedIndex = -1;
           }
 
-          try {
-            const response = await fetch(`/stocks/autocomplete?q=${encodeURIComponent(query)}`);
-            const data = await response.json();
-            currentResults = data;
-            renderSuggestions(data);
-          } catch (error) {
-            console.error('搜索失败:', error);
+          function abortPreviousRequest() {
+            if (state.abortController) {
+              state.abortController.abort();
+            }
+            state.abortController = new AbortController();
+            return state.abortController;
           }
-        }
 
-        function renderSuggestions(results) {
-          selectedIndex = -1;
-          
-          if (results.length === 0) {
-            suggestionsList.innerHTML = '';
+          function searchStocks(query) {
+            if (query.length < 1) {
+              hideSuggestions();
+              return;
+            }
+
+            var controller = abortPreviousRequest();
+            var requestId = ++state.requestCounter;
+            var signal = controller.signal;
+
+            fetch('/stocks/autocomplete?q=' + encodeURIComponent(query), { signal: signal })
+              .then(function(response) { return response.json(); })
+              .then(function(data) {
+                if (requestId !== state.requestCounter) return;
+                state.currentResults = data;
+                renderSuggestions(data);
+              })
+              .catch(function(error) {
+                if (error.name === 'AbortError') return;
+                console.error('搜索失败:', error);
+              });
+          }
+
+          function renderSuggestions(results) {
+            state.selectedIndex = -1;
+
+            if (results.length === 0) {
+              suggestionsList.innerHTML = '';
+              suggestionsBox.classList.remove('hidden');
+              noResults.classList.remove('hidden');
+              return;
+            }
+
+            noResults.classList.add('hidden');
             suggestionsBox.classList.remove('hidden');
-            noResults.classList.remove('hidden');
-            return;
+
+            suggestionsList.innerHTML = results.map(function(stock, index) {
+              var marketClass = stock.market === 'CN'
+                ? 'bg-green-100 text-green-700'
+                : 'bg-blue-100 text-blue-700';
+
+              return '<div class="suggestion-item px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors" data-index="' + index + '" data-url="' + stock.url + '" data-symbol="' + stock.symbol + '">' +
+                '<div class="flex items-center justify-between">' +
+                  '<div class="flex items-center space-x-3">' +
+                    '<span class="px-2 py-0.5 text-xs font-medium rounded ' + marketClass + '">' + stock.market_label + '</span>' +
+                    '<span class="font-mono text-sm font-medium text-gray-800">' + stock.symbol + '</span>' +
+                  '</div>' +
+                  '<span class="text-sm text-gray-600 truncate max-w-[200px]" title="' + stock.name + '">' + stock.name + '</span>' +
+                '</div>' +
+              '</div>';
+            }).join('');
           }
 
-          noResults.classList.add('hidden');
-          suggestionsBox.classList.remove('hidden');
-
-          suggestionsList.innerHTML = results.map((stock, index) => {
-            const marketClass = stock.market === 'CN' 
-              ? 'bg-green-100 text-green-700' 
-              : 'bg-blue-100 text-blue-700';
-            
-            return `
-              <div class="suggestion-item px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors" 
-                   data-index="${index}"
-                   data-url="${stock.url}">
-                <div class="flex items-center justify-between">
-                  <div class="flex items-center space-x-3">
-                    <span class="px-2 py-0.5 text-xs font-medium rounded ${marketClass}">${stock.market_label}</span>
-                    <span class="font-mono text-sm font-medium text-gray-800">${stock.symbol}</span>
-                  </div>
-                  <span class="text-sm text-gray-600 truncate max-w-[200px]" title="${stock.name}">${stock.name}</span>
-                </div>
-              </div>
-            `;
-          }).join('');
-
-          document.querySelectorAll('.suggestion-item').forEach(item => {
-            item.addEventListener('click', function() {
-              const url = this.dataset.url;
-              window.location.href = url;
+          function updateSelection() {
+            var items = document.querySelectorAll('.suggestion-item');
+            items.forEach(function(item, index) {
+              if (index === state.selectedIndex) {
+                item.classList.add('bg-blue-50', 'border-l-2', 'border-blue-500');
+              } else {
+                item.classList.remove('bg-blue-50', 'border-l-2', 'border-blue-500');
+              }
             });
+          }
+
+          searchInput.addEventListener('input', function() {
+            clearTimeout(state.debounceTimer);
+            state.debounceTimer = setTimeout(function() {
+              searchStocks(searchInput.value.trim());
+            }, 300);
           });
-        }
 
-        function hideSuggestions() {
-          suggestionsBox.classList.add('hidden');
-          selectedIndex = -1;
-        }
+          searchInput.addEventListener('keydown', function(e) {
+            var items = document.querySelectorAll('.suggestion-item');
 
-        function updateSelection() {
-          const items = document.querySelectorAll('.suggestion-item');
-          items.forEach((item, index) => {
-            if (index === selectedIndex) {
-              item.classList.add('bg-blue-50', 'border-l-2', 'border-blue-500');
-            } else {
-              item.classList.remove('bg-blue-50', 'border-l-2', 'border-blue-500');
+            if (e.key === 'ArrowDown') {
+              e.preventDefault();
+              state.selectedIndex = Math.min(state.selectedIndex + 1, items.length - 1);
+              updateSelection();
+            } else if (e.key === 'ArrowUp') {
+              e.preventDefault();
+              state.selectedIndex = Math.max(state.selectedIndex - 1, -1);
+              updateSelection();
+            } else if (e.key === 'Enter') {
+              e.preventDefault();
+              if (state.selectedIndex >= 0 && items[state.selectedIndex]) {
+                window.location.href = items[state.selectedIndex].dataset.url;
+              }
+            } else if (e.key === 'Escape') {
+              hideSuggestions();
+            }
+          });
+
+          searchInput.addEventListener('focus', function() {
+            if (state.currentResults.length > 0) {
+              suggestionsBox.classList.remove('hidden');
+            }
+          });
+
+          // 事件委托：下拉项点击跳转
+          suggestionsBox.addEventListener('click', function(e) {
+            var item = e.target.closest('.suggestion-item');
+            if (item) {
+              window.location.href = item.dataset.url;
+            }
+          });
+
+          document.addEventListener('click', function(e) {
+            var container = document.getElementById('search-container');
+            if (container && !container.contains(e.target)) {
+              hideSuggestions();
             }
           });
         }
 
-        searchInput.addEventListener('input', debounce(function(e) {
-          const query = e.target.value.trim();
-          searchStocks(query);
-        }, 300));
+        // 移动端菜单
+        document.addEventListener('turbo:load', function() {
+          var mobileMenuBtn = document.getElementById('mobile-menu-btn');
+          var mobileMenu = document.getElementById('mobile-menu');
 
-        searchInput.addEventListener('keydown', function(e) {
-          const items = document.querySelectorAll('.suggestion-item');
-          
-          if (e.key === 'ArrowDown') {
-            e.preventDefault();
-            selectedIndex = Math.min(selectedIndex + 1, items.length - 1);
-            updateSelection();
-          } else if (e.key === 'ArrowUp') {
-            e.preventDefault();
-            selectedIndex = Math.max(selectedIndex - 1, -1);
-            updateSelection();
-          } else if (e.key === 'Enter') {
-            e.preventDefault();
-            if (selectedIndex >= 0 && items[selectedIndex]) {
-              window.location.href = items[selectedIndex].dataset.url;
-            }
-          } else if (e.key === 'Escape') {
-            hideSuggestions();
+          if (mobileMenuBtn && mobileMenu) {
+            mobileMenuBtn.addEventListener('click', function() {
+              mobileMenu.classList.toggle('hidden');
+            });
           }
+
+          initStockSearch();
         });
-
-        searchInput.addEventListener('focus', function() {
-          if (currentResults.length > 0) {
-            suggestionsBox.classList.remove('hidden');
-          }
-        });
-
-        document.addEventListener('click', function(e) {
-          const container = document.getElementById('search-container');
-          if (container && !container.contains(e.target)) {
-            hideSuggestions();
-          }
-        });
-      }
-
-      // 移动端菜单
-      document.addEventListener('turbo:load', function() {
-        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
-        const mobileMenu = document.getElementById('mobile-menu');
-        
-        if (mobileMenuBtn && mobileMenu) {
-          mobileMenuBtn.addEventListener('click', function() {
-            mobileMenu.classList.toggle('hidden');
-          });
-        }
-
-        initStockSearch();
-      });
+      })();
     </script>
   </body>
 </html>
