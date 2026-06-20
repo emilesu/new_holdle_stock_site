@@ -38,7 +38,7 @@ class Users::ProfilesController < ApplicationController
 
   def favorites
     authorize @user
-    @favorite_stocks = @user.favorite_stocks.includes(:stock).order(created_at: :desc)
+    @favorites = UserFavorite.where(user: @user).includes(:stock).order(created_at: :desc).page(params[:page]).per(20)
   end
 
   private

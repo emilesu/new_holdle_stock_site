@@ -1,0 +1,31 @@
+zh-CN:
+  activerecord:
+    errors:
+      messages:
+        record_invalid: "记录无效：%{errors}"
+  time:
+    formats:
+      default: "%Y-%m-%d %H:%M:%S"
+      short: "%m-%d %H:%M"
+      long: "%Y年%m月%d日 %H:%M"
+  date:
+    formats:
+      default: "%Y-%m-%d"
+      short: "%m-%d"
+      long: "%Y年%m月%d日"
+  views:
+    pagination:
+      first: "首页"
+      last: "末页"
+      previous: "上一页"
+      next: "下一页"
+      truncate: "…"
+  helpers:
+    page_entries_info:
+      one_page:
+        display_entries:
+          zero: "暂无数据"
+          one: "显示 1 条数据"
+          other: "显示所有 %{count} 条数据"
+      more_pages:
+        display_entries: "第 %{first}–%{last} 条，共 %{total} 条"

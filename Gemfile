@@ -37,6 +37,7 @@ gem 'devise'
 # 细粒度权限控制
 gem 'pundit'
 gem 'commonmarker'
+gem 'kaminari'
 
 # Use Redis adapter to run Action Cable in production
 # gem "redis", ">= 4.0.1"

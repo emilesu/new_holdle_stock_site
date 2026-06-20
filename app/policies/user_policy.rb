@@ -15,6 +15,10 @@ class UserPolicy < ApplicationPolicy
     user == record
   end
 
+  def favorites?
+    user == record
+  end
+
   def index?
     user&.is_admin?
   end

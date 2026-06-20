@@ -1,6 +1,8 @@
 class Stock < ApplicationRecord
   include CacheableFinancialData
 
+  has_many :user_favorites, dependent: :destroy
+  has_many :favorite_users, through: :user_favorites, source: :user
   has_many :financial_reports
   has_many :income_statements, through: :financial_reports
   has_many :balance_sheets, through: :financial_reports

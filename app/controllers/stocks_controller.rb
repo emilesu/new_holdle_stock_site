@@ -68,6 +68,8 @@ class StocksController < ApplicationController
     @radar_data = build_radar_data(@stock)
     @comparison_radar_data = build_comparison_radar_data
 
+    @user_favorite = current_user&.user_favorites&.find_by(stock_id: @stock.id)
+
     preformat_financial_data
   end
 

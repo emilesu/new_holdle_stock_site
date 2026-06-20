@@ -123,9 +123,18 @@
                   <span class="text-gray-900 font-medium"><%= @stock.respond_to?(:market_cap) && @stock.market_cap.present? ? "#{(@stock.market_cap / 100000000).round(2)} 亿" : '-' %></span>
                 </div>
               </div>
-              <button id="follow-btn" class="w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors mt-4">
-                关注股票
-              </button>
+              <%= turbo_frame_tag "follow_stock_#{@stock.id}" do %>
+                <% if user_signed_in? && @user_favorite.present? %>
+                  <%= button_to "已关注", user_favorite_path(@user_favorite, stock_id: @stock.id), method: :delete,
+                    class: "w-full py-3 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors mt-4" %>
+                <% elsif user_signed_in? %>
+                  <%= button_to "收藏股票", user_favorites_path(stock_id: @stock.id), method: :post,
+                    class: "w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors mt-4" %>
+                <% else %>
+                  <%= link_to "收藏股票", new_user_session_path,
+                    class: "w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors mt-4 text-center block" %>
+                <% end %>
+              <% end %>
             </div>
             
             <!-- 雷达图数据存储（隐藏） -->
@@ -401,7 +410,18 @@
         <div class="mt-6 bg-white rounded-lg border border-gray-200 p-4">
           <h3 class="text-sm font-semibold text-gray-800 mb-4">快速操作</h3>
           <div class="space-y-2">
-            <button class="w-full py-2 text-left text-sm text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">添加到自选</button>
+            <%= turbo_frame_tag "follow_stock_quick_#{@stock.id}" do %>
+              <% if user_signed_in? && @user_favorite.present? %>
+                <%= button_to "已收藏", user_favorite_path(@user_favorite, stock_id: @stock.id), method: :delete,
+                  class: "w-full py-2 text-left text-sm text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" %>
+              <% elsif user_signed_in? %>
+                <%= button_to "收藏股票", user_favorites_path(stock_id: @stock.id), method: :post,
+                  class: "w-full py-2 text-left text-sm text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" %>
+              <% else %>
+                <%= link_to "收藏股票", new_user_session_path,
+                  class: "w-full py-2 text-left text-sm text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors block" %>
+              <% end %>
+            <% end %>
             <button class="w-full py-2 text-left text-sm text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">查看历史走势</button>
             <button class="w-full py-2 text-left text-sm text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">生成分析报告</button>
           </div>

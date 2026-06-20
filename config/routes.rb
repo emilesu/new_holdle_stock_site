@@ -5,6 +5,8 @@ Rails.application.routes.draw do
 
   root "home#index"
 
+  resources :user_favorites, only: [:create, :destroy]
+
   resources :stocks, only: [:show] do
     member do
       get :radar_comparison

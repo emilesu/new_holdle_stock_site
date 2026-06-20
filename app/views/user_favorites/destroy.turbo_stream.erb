@@ -1,0 +1,11 @@
+<%= turbo_stream.replace "follow_stock_#{@stock.id}" do %>
+  <%= button_to "收藏股票", user_favorites_path(stock_id: @stock.id), method: :post,
+    class: "w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors mt-4" %>
+<% end %>
+
+<%= turbo_stream.replace "follow_stock_quick_#{@stock.id}" do %>
+  <%= button_to "收藏股票", user_favorites_path(stock_id: @stock.id), method: :post,
+    class: "w-full py-2 text-left text-sm text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" %>
+<% end %>
+
+<%= turbo_stream.remove "favorite_card_#{@stock.id}" %>

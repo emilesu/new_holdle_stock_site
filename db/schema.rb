@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_06_19_093241) do
+ActiveRecord::Schema[7.1].define(version: 2026_06_20_082216) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -231,6 +231,14 @@ ActiveRecord::Schema[7.1].define(version: 2026_06_19_093241) do
     t.index ["symbol"], name: "idx_stocks_symbol", unique: true
   end
 
+  create_table "user_favorites", force: :cascade do |t|
+    t.bigint "user_id", null: false, comment: "用户ID"
+    t.bigint "stock_id", null: false, comment: "股票ID"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id", "stock_id"], name: "index_user_favorites_on_user_id_and_stock_id", unique: true
+  end
+
   create_table "users", force: :cascade do |t|
     t.string "email", default: "", null: false
     t.string "encrypted_password", default: "", null: false
@@ -260,4 +268,6 @@ ActiveRecord::Schema[7.1].define(version: 2026_06_19_093241) do
   add_foreign_key "income_statements", "financial_reports"
   add_foreign_key "income_statements", "stocks"
   add_foreign_key "lessons", "chapters"
+  add_foreign_key "user_favorites", "stocks"
+  add_foreign_key "user_favorites", "users"
 end

@@ -1,0 +1,9 @@
+<%= turbo_stream.replace "follow_stock_#{@stock.id}" do %>
+  <%= button_to "已关注", user_favorite_path(current_user.user_favorites.find_by(stock_id: @stock.id), stock_id: @stock.id), method: :delete,
+    class: "w-full py-3 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors mt-4" %>
+<% end %>
+
+<%= turbo_stream.replace "follow_stock_quick_#{@stock.id}" do %>
+  <%= button_to "已收藏", user_favorite_path(current_user.user_favorites.find_by(stock_id: @stock.id), stock_id: @stock.id), method: :delete,
+    class: "w-full py-2 text-left text-sm text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" %>
+<% end %>
