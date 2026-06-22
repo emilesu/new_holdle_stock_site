@@ -394,19 +394,6 @@
     transition: background 0.15s ease;
   }
   .hl-nav-admin:hover { background: var(--color-bg-soft); }
-  .hl-nav-admin-avatar {
-    width: 24px;
-    height: 24px;
-    background: var(--color-link);
-    color: #ffffff;
-    border-radius: 4px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 12px;
-    font-weight: 600;
-  }
-
   /* ==================== Footer ==================== */
   .hl-footer {
     background: #ffffff;

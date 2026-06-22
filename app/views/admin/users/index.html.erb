@@ -57,9 +57,7 @@
             <tr class="hover:bg-gray-50 transition-colors">
               <td class="px-6 py-4 whitespace-nowrap">
                 <div class="flex items-center space-x-3">
-                  <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-semibold">
-                    <%= user.avatar_char %>
-                  </div>
+                  <%= user_avatar_tag(user, size: "w-10 h-10") %>
                   <div>
                     <p class="font-medium text-gray-900"><%= user.nickname %></p>
                     <p class="text-sm text-gray-500">#<%= user.id %></p>

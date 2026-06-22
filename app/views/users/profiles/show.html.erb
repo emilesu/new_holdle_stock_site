@@ -6,9 +6,7 @@
       <%# 用户头部 %>
       <div class="bg-ink px-6 sm:px-8 py-8">
         <div class="flex items-center gap-5">
-          <div class="w-20 h-20 rounded-full bg-white/10 flex items-center justify-center text-white text-hl-22 font-bold shrink-0">
-            <%= @user.avatar_char || "U" %>
-          </div>
+          <%= user_avatar_tag(@user, size: "w-20 h-20", css_class: "text-hl-22") %>
           <div class="min-w-0">
             <h1 class="text-hl-18 font-semibold text-white"><%= @user.nickname %></h1>
             <p class="text-hl-13 text-white/60 mt-0.5"><%= @user.email %></p>

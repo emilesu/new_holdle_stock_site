@@ -97,7 +97,8 @@ namespace :users do
 
           # 仅同步基础资料
           created_at: created_at,
-          updated_at: updated_at
+          updated_at: updated_at,
+          avatar: avatar
         )
         success_import += 1
       rescue StandardError => e

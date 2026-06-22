@@ -45,9 +45,9 @@
     <div class="ml-auto flex items-center gap-3">
       <% if user_signed_in? %>
         <div class="hl-nav-admin hidden md:flex">
-          <div class="hl-nav-admin-avatar"><%= current_user.avatar_char || "U" %></div>
-          <span><%= current_user.nickname || current_user.email %></span>
-        </div>
+            <%= user_avatar_tag(current_user, size: "w-6 h-6") %>
+            <span><%= current_user.nickname || current_user.email %></span>
+          </div>
         <div class="hidden md:flex items-center gap-2">
           <%= link_to '个人中心', users_profile_path, class: "hl-nav-link text-hl-13" %>
           <% if current_user.admin? %>
@@ -84,9 +84,7 @@
       <div class="pt-4 border-t border-line-soft">
         <% if user_signed_in? %>
           <div class="flex items-center gap-3 pb-3">
-            <div class="w-10 h-10 bg-link text-white rounded-full flex items-center justify-center font-bold text-hl-14">
-              <%= current_user.avatar_char || "U" %>
-            </div>
+            <%= user_avatar_tag(current_user, size: "w-10 h-10") %>
             <div>
               <p class="font-medium text-ink"><%= current_user.nickname || current_user.email %></p>
               <p class="text-hl-13 text-muted-3"><%= current_user.email %></p>

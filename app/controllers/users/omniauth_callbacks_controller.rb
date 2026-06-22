@@ -13,7 +13,8 @@ class Users::OmniauthCallbacksController < Devise::OmniauthCallbacks
       # 老用户：回填unionid，更新最新头像昵称
       user.update(
         weixin_unionid: union_id,
-        nickname: wx_nickname
+        nickname: wx_nickname,
+        avatar: wx_avatar
       )
       sign_in user
       redirect_to root_path, notice: "微信登录成功，已同步账号信息"
@@ -28,6 +29,7 @@ class Users::OmniauthCallbacksController < Devise::OmniauthCallbacks
       password: random_pw,
       nickname: wx_nickname.presence || "微信用户",
       role: "user",
+      avatar: wx_avatar,
       weixin_web_openid: open_id,
       weixin_unionid: union_id,
       weixin_app_openid: nil
@@ -54,13 +56,14 @@ class Users::OmniauthCallbacksController < Devise::OmniauthCallbacks
 
     # 无邮箱匹配则新建账号
     random_pw = Devise.friendly_token(20)
-    User.create(
+    user = User.create(
       email: email,
       password: random_pw,
       nickname: g_name.presence || "Google用户",
-      role: "user"
+      role: "user",
+      avatar: g_avatar
     )
-    sign_in User.find_by(email: email)
+    sign_in user
     redirect_to root_path, notice: "Google注册登录成功"
   end
 

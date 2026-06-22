@@ -178,9 +178,7 @@
       <% @recent_users.each do |user| %>
         <div class="px-5 py-3 flex items-center justify-between hover:bg-gray-50 transition-colors">
           <div class="flex items-center space-x-3">
-            <div class="w-9 h-9 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold text-sm">
-              <%= user.avatar_char %>
-            </div>
+            <%= user_avatar_tag(user, size: "w-9 h-9", css_class: "text-sm") %>
             <div>
               <p class="text-sm font-medium text-gray-900"><%= user.nickname %></p>
               <p class="text-xs text-gray-500"><%= user.email %></p>
