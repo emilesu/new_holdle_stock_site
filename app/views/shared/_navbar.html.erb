@@ -32,6 +32,9 @@
       <%= link_to courses_path, class: "hl-nav-link #{'hl-nav-link-active' if controller_name == 'courses'}" do %>
         交易课
       <% end %>
+      <%= link_to join_path, class: "hl-nav-link #{'hl-nav-link-active' if controller_name == 'pages'}" do %>
+        加入我们
+      <% end %>
       <%= link_to "#", class: "hl-nav-link" do %>
         关于
       <% end %>
@@ -75,6 +78,7 @@
       <div class="space-y-1">
         <%= link_to "金字塔", pyramid_path, class: "block px-4 py-2 text-hl-14 text-muted hover:text-ink hover:bg-bg-mute rounded" %>
         <%= link_to "交易课", courses_path, class: "block px-4 py-2 text-hl-14 text-muted hover:text-ink hover:bg-bg-mute rounded" %>
+        <%= link_to "加入我们", join_path, class: "block px-4 py-2 text-hl-14 text-muted hover:text-ink hover:bg-bg-mute rounded" %>
         <%= link_to "关于", "#", class: "block px-4 py-2 text-hl-14 text-muted hover:text-ink hover:bg-bg-mute rounded" %>
         <a href="#" class="block px-4 py-2 text-hl-14 text-muted hover:text-ink hover:bg-bg-mute rounded flex items-center">
           新内容

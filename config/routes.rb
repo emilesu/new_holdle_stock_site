@@ -31,6 +31,8 @@ Rails.application.routes.draw do
   resources :courses, only: [:index, :show]
   resources :lessons, only: [:show]
 
+  get "join", to: "pages#join"
+
   namespace :users do
     get "profile", to: "profiles#show", as: :profile
     get "profile/edit", to: "profiles#edit", as: :edit_profile

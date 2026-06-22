@@ -37,6 +37,22 @@
   --spacing-hl-narrow: 880px;
   --spacing-hl-hero: 88px;
 
+  --spacing-20: 5rem;
+  --spacing-24: 6rem;
+  --spacing-28: 7rem;
+  --spacing-32: 8rem;
+  --spacing-36: 9rem;
+  --spacing-40: 10rem;
+  --spacing-44: 11rem;
+  --spacing-48: 12rem;
+  --spacing-52: 13rem;
+  --spacing-56: 14rem;
+  --spacing-60: 15rem;
+  --spacing-64: 16rem;
+  --spacing-72: 18rem;
+  --spacing-80: 20rem;
+  --spacing-96: 24rem;
+
   --text-hl-11: 11px;
   --text-hl-12: 12px;
   --text-hl-13: 13px;
@@ -252,6 +268,15 @@
   }
   .hl-table tbody tr:hover {
     background: var(--color-bg-soft);
+  }
+
+  /* 当前期高亮行 */
+  .hl-table tbody tr.hl-active {
+    background: var(--color-bg-soft);
+  }
+  .hl-table tbody tr.hl-active td {
+    color: var(--color-ink);
+    font-weight: 500;
   }
 
   /* FAQ 折叠（纯 HTML <details> 实现，零 JS） */
