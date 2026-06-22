@@ -6,6 +6,11 @@
         <span class="text-hl-11 text-muted-5 tracking-wide-2 font-medium block mb-3">HOLD LE</span>
         <h1 class="text-hl-22 font-semibold text-ink">欢迎回来</h1>
         <p class="mt-2 text-hl-13 text-muted-3">请登录您的账号</p>
+        <%= button_to "微信登录", user_wechat_omniauth_authorize_path, data: { turbo: false },
+        class: "text-link hover:text-link-hover font-medium transition-colors bg-transparent border-none cursor-pointer inline-block p-0" %>
+        <%= button_to "Google登录", user_google_oauth2_omniauth_authorize_path, data: { turbo: false },
+        class: "text-link hover:text-link-hover font-medium transition-colors bg-transparent border-none cursor-pointer inline-block p-0" %>
+
       </div>
 
       <%= form_for(resource, as: resource_name, url: session_path(resource_name)) do |f| %>

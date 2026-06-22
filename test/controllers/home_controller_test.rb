@@ -8,7 +8,7 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
 
   test "index renders case data with Chinese quotes correctly" do
     get root_url
-    assert_match "等回调再买", @response.body
+    assert_match "等状态A再买", @response.body
     assert_match "长潜", @response.body
   end
 
