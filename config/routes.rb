@@ -1,5 +1,10 @@
 Rails.application.routes.draw do
-  devise_for :users
+
+  # Devise OAuth回调路由
+  devise_for :users, controllers: { omniauth_callbacks: 'users/omniauth_callbacks' }
+
+  # OAuth失败跳转路由
+  get '/users/oauth_failure', to: 'sessions#oauth_failure', as: :oauth_failure
 
   get "up" => "rails/health#show", as: :rails_health_check
 
