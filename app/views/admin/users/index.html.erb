@@ -14,7 +14,7 @@
       <div class="flex gap-2">
         <select name="role" class="px-4 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500">
           <option value="all" <%= 'selected' if params[:role] == 'all' || params[:role].blank? %>>全部角色</option>
-          <option value="user" <%= 'selected' if params[:role] == 'user' %>>普通用户</option>
+          <option value="user" <%= 'selected' if params[:role] == 'user' %>>访客</option>
           <option value="member" <%= 'selected' if params[:role] == 'member' %>>会员</option>
           <option value="admin" <%= 'selected' if params[:role] == 'admin' %>>管理员</option>
           <option value="super_admin" <%= 'selected' if params[:role] == 'super_admin' %>>超级管理员</option>
@@ -75,7 +75,7 @@
                        when 'member' then 'bg-blue-100 text-blue-800'
                        else 'bg-gray-100 text-gray-800'
                      end %>">
-                  <%= user.role.humanize %>
+                  <%= human_role(user.role) %>
                 </span>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">

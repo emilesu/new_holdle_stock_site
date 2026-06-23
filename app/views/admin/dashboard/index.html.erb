@@ -191,7 +191,7 @@
                  when 'member' then 'bg-blue-50 text-blue-700'
                  else 'bg-gray-100 text-gray-600'
                end %>">
-            <%= user.role.humanize %>
+            <%= human_role(user.role) %>
           </span>
         </div>
       <% end %>

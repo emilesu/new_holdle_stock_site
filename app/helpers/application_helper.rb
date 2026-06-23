@@ -1,4 +1,14 @@
 module ApplicationHelper
+  def human_role(role)
+    case role
+    when "super_admin" then "超级管理员"
+    when "admin" then "管理员"
+    when "member" then "会员"
+    when "user" then "访客"
+    else role.humanize
+    end
+  end
+
   def user_avatar_tag(user, css_class: "", size: nil)
     size_css = size || "w-10 h-10"
 

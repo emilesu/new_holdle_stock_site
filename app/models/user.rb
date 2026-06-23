@@ -115,7 +115,7 @@ class User < ApplicationRecord
     elsif member_expire_at.present?
       member_expire_at > Time.current ? "会员（#{I18n.l(member_expire_at.to_date)} 到期）" : "会员已过期（#{I18n.l(member_expire_at.to_date)}）"
     else
-      "普通用户"
+      "访客"
     end
   end
 end

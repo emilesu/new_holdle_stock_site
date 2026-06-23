@@ -31,7 +31,7 @@
               <%= user_avatar_tag(current_user, size: "w-8 h-8") %>
               <div class="text-right hidden sm:block">
                 <p class="text-sm font-medium"><%= current_user.nickname %></p>
-                <p class="text-xs text-gray-400"><%= current_user.role.humanize %></p>
+                <p class="text-xs text-gray-400"><%= human_role(current_user.role) %></p>
               </div>
             </div>
             <%= link_to "退出", destroy_user_session_path, method: :delete, class: "text-gray-300 hover:text-white px-3 py-2 transition-colors" %>

@@ -28,35 +28,81 @@
     <div class="hl-nav-links hidden md:flex">
       <%= link_to pyramid_path, class: "hl-nav-link #{'hl-nav-link-active' if controller_name == 'pyramids'}" do %>
         金字塔
+        <%= tag.span class: "hl-nav-link-active-dot", aria: { hidden: "true" } if controller_name == 'pyramids' %>
       <% end %>
       <%= link_to courses_path, class: "hl-nav-link #{'hl-nav-link-active' if controller_name == 'courses'}" do %>
         交易课
+        <%= tag.span class: "hl-nav-link-active-dot", aria: { hidden: "true" } if controller_name == 'courses' %>
       <% end %>
       <%= link_to join_path, class: "hl-nav-link #{'hl-nav-link-active' if controller_name == 'pages'}" do %>
         加入我们
+        <%= tag.span class: "hl-nav-link-active-dot", aria: { hidden: "true" } if controller_name == 'pages' %>
       <% end %>
       <%= link_to "#", class: "hl-nav-link" do %>
         关于
       <% end %>
       <%= link_to "#", class: "hl-nav-link hl-nav-link-new flex items-center" do %>
         <span>新内容</span>
-        <span class="hl-nav-dot"></span>
       <% end %>
     </div>
 
     <%# ----- 用户区域 / 登录入口（右侧） ----- %>
     <div class="ml-auto flex items-center gap-3">
       <% if user_signed_in? %>
-        <div class="hl-nav-admin hidden md:flex">
+        <div data-controller="user-dropdown" class="relative hidden md:block">
+          <button data-action="click->user-dropdown#toggle"
+                  class="hl-nav-admin flex items-center gap-2 cursor-pointer select-none"
+                  aria-haspopup="true"
+                  aria-expanded="false">
             <%= user_avatar_tag(current_user, size: "w-6 h-6") %>
-            <span><%= current_user.nickname || current_user.email %></span>
+            <span class="text-hl-13 text-muted"><%= current_user.nickname || current_user.email %></span>
+            <svg class="w-3 h-3 text-muted-4 transition-transform duration-150" data-user-dropdown-target="arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+          </button>
+
+          <div data-user-dropdown-target="menu"
+               class="hidden absolute right-0 top-full mt-2 w-56 bg-white border border-line rounded
+                      opacity-0 translate-y-[-4px] transition-all duration-150 ease-out z-50
+                      hl-dropdown-open:opacity-100 hl-dropdown-open:translate-y-0
+                      hl-dropdown-closing:opacity-0 hl-dropdown-closing:translate-y-[-4px]">
+            <div class="px-4 py-3 border-b border-line-soft">
+              <div class="flex items-center gap-3">
+                <%= user_avatar_tag(current_user, size: "w-9 h-9") %>
+                <div class="min-w-0 flex-1">
+                  <p class="text-hl-13 font-medium text-ink truncate"><%= current_user.nickname || "用户" %></p>
+                  <p class="text-hl-12 text-muted-3 truncate"><%= current_user.email %></p>
+                </div>
+              </div>
+            </div>
+            <div class="py-1">
+              <%= link_to users_profile_path, class: "flex items-center gap-3 px-4 py-2 text-hl-13 text-muted hover:text-ink hover:bg-bg-mute transition-colors" do %>
+                <svg class="w-4 h-4 text-muted-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                </svg>
+                个人中心
+              <% end %>
+              <% if current_user.admin? %>
+                <%= link_to admin_root_path, class: "flex items-center gap-3 px-4 py-2 text-hl-13 text-muted hover:text-ink hover:bg-bg-mute transition-colors" do %>
+                  <svg class="w-4 h-4 text-muted-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                  </svg>
+                  后台管理
+                <% end %>
+              <% end %>
+            </div>
+            <div class="border-t border-line-soft py-1">
+              <%= button_to destroy_user_session_path, method: :delete,
+                    class: "flex items-center gap-3 w-full px-4 py-2 text-hl-13 text-muted hover:text-profit hover:bg-bg-mute transition-colors text-left",
+                    data: { turbo: false } do %>
+                <svg class="w-4 h-4 text-muted-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                </svg>
+                退出登录
+              <% end %>
+            </div>
           </div>
-        <div class="hidden md:flex items-center gap-2">
-          <%= link_to '个人中心', users_profile_path, class: "hl-nav-link text-hl-13" %>
-          <% if current_user.admin? %>
-            <%= link_to '管理', admin_root_path, class: "hl-nav-link text-hl-13" %>
-          <% end %>
-          <%= button_to '退出', destroy_user_session_path, method: :delete, class: "hl-nav-link text-hl-13", form_class: "inline-block" %>
         </div>
       <% else %>
         <%= link_to '登录', new_user_session_path, class: "hl-nav-link text-hl-13" %>
@@ -76,9 +122,9 @@
   <div id="mobile-menu" class="md:hidden hidden bg-white border-t border-line">
     <div class="px-4 py-4 space-y-3">
       <div class="space-y-1">
-        <%= link_to "金字塔", pyramid_path, class: "block px-4 py-2 text-hl-14 text-muted hover:text-ink hover:bg-bg-mute rounded" %>
-        <%= link_to "交易课", courses_path, class: "block px-4 py-2 text-hl-14 text-muted hover:text-ink hover:bg-bg-mute rounded" %>
-        <%= link_to "加入我们", join_path, class: "block px-4 py-2 text-hl-14 text-muted hover:text-ink hover:bg-bg-mute rounded" %>
+        <%= link_to "金字塔", pyramid_path, class: "block px-4 py-2 text-hl-14 rounded #{controller_name == 'pyramids' ? 'bg-bg-mute text-ink font-medium border-l-2 border-profit' : 'text-muted hover:text-ink hover:bg-bg-mute'}" %>
+        <%= link_to "交易课", courses_path, class: "block px-4 py-2 text-hl-14 rounded #{controller_name == 'courses' ? 'bg-bg-mute text-ink font-medium border-l-2 border-profit' : 'text-muted hover:text-ink hover:bg-bg-mute'}" %>
+        <%= link_to "加入我们", join_path, class: "block px-4 py-2 text-hl-14 rounded #{controller_name == 'pages' ? 'bg-bg-mute text-ink font-medium border-l-2 border-profit' : 'text-muted hover:text-ink hover:bg-bg-mute'}" %>
         <%= link_to "关于", "#", class: "block px-4 py-2 text-hl-14 text-muted hover:text-ink hover:bg-bg-mute rounded" %>
         <a href="#" class="block px-4 py-2 text-hl-14 text-muted hover:text-ink hover:bg-bg-mute rounded flex items-center">
           新内容
