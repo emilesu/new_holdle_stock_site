@@ -9,7 +9,6 @@
           <%= user_avatar_tag(@user, size: "w-20 h-20", css_class: "text-hl-22") %>
           <div class="min-w-0">
             <h1 class="text-hl-18 font-semibold text-white"><%= @user.nickname %></h1>
-            <p class="text-hl-13 text-white/60 mt-0.5"><%= @user.email %></p>
             <div class="flex flex-wrap gap-2 mt-3">
               <span class="inline-flex px-2.5 py-0.5 text-hl-11 font-medium bg-white/10 text-white/80 border border-white/20 rounded"><%= @user.member_status %></span>
               <span class="inline-flex px-2.5 py-0.5 text-hl-11 font-medium bg-white/10 text-white/80 border border-white/20 rounded"><%= human_role(@user.role) %></span>
@@ -29,15 +28,9 @@
       <%# 信息区域 %>
       <div class="p-6 sm:p-8 space-y-5">
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div class="bg-bg-soft rounded p-4 sm:p-5">
-            <span class="text-hl-12 text-muted-4 block mb-1">昵称</span>
-            <span class="text-hl-15 text-ink font-medium"><%= @user.nickname %></span>
-          </div>
-          <div class="bg-bg-soft rounded p-4 sm:p-5">
-            <span class="text-hl-12 text-muted-4 block mb-1">邮箱</span>
-            <span class="text-hl-15 text-ink font-medium"><%= @user.email %></span>
-          </div>
+        <div class="bg-bg-soft rounded p-4 sm:p-5">
+          <span class="text-hl-12 text-muted-4 block mb-1">昵称</span>
+          <span class="text-hl-15 text-ink font-medium"><%= @user.nickname %></span>
         </div>
 
         <div class="bg-bg-soft rounded p-4 sm:p-5">

@@ -140,11 +140,10 @@
 
 <script>
 document.addEventListener('turbo:load', function initPyramidPage() {
-  if (document.getElementById('pyramid-page') && !document.getElementById('pyramid-page').dataset._initialized) {
-    document.getElementById('pyramid-page').dataset._initialized = 'true';
-  } else if (document.getElementById('pyramid-page')) {
-    return;
-  }
+  const pyramidPage = document.getElementById('pyramid-page');
+  if (!pyramidPage) return;
+  if (pyramidPage.dataset._initialized) return;
+  pyramidPage.dataset._initialized = 'true';
 
   let chartInstance = null;
   let currentBaseStockId = '<%= @top_stock&.id || 0 %>';
