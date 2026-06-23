@@ -1,0 +1,11 @@
+<%= form_with url: message_boards_path, data: { turbo: true } do |f| %>
+  <%= f.text_area :content,
+      maxlength: 500,
+      rows: 6,
+      placeholder: "请输入留言内容（最多500字）",
+      required: true,
+      data: { message_target: "contentInput" },
+      class: "w-full border border-line rounded p-3 text-hl-13 text-ink placeholder:text-muted-4 resize-none focus:outline-none focus:border-link transition-colors" %>
+  <%= f.submit "提交留言",
+        class: "hl-btn hl-btn-primary mt-4 cursor-pointer" %>
+<% end %>

@@ -1,0 +1,40 @@
+<% if @messages.empty? %>
+  <div class="text-hl-13 text-muted-4 text-center py-8">暂无留言记录</div>
+<% else %>
+  <div class="space-y-4">
+    <% @messages.each do |msg| %>
+      <div class="border border-line rounded p-4">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-hl-12 text-muted-4"><%= msg.created_at.strftime("%Y-%m-%d %H:%M") %></span>
+        </div>
+        <div class="bg-bg-mute rounded p-3 mb-3">
+          <p class="text-hl-13 text-ink"><%= msg.content %></p>
+        </div>
+        <% if msg.reply_content.present? %>
+          <div class="bg-bg-soft border-l-2 border-link rounded p-3">
+            <p class="text-hl-12 text-link font-medium mb-1">大苏回复</p>
+            <p class="text-hl-13 text-muted"><%= msg.reply_content %></p>
+            <p class="text-hl-11 text-muted-4 mt-1"><%= msg.replied_at&.strftime("%Y-%m-%d %H:%M") %></p>
+          </div>
+        <% else %>
+          <p class="text-hl-12 text-muted-4 italic">大苏暂未回复</p>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+  <% if @messages.respond_to?(:total_pages) && @messages.total_pages > 1 %>
+    <div class="flex items-center justify-center gap-2 mt-6">
+      <% if @messages.prev_page %>
+        <%= link_to "← 上一页", "#",
+              class: "px-3 py-1.5 text-hl-13 text-muted border border-line rounded hover:bg-bg-mute transition-colors",
+              data: { action: "click->message#loadPage", page: @messages.prev_page } %>
+      <% end %>
+      <span class="text-hl-12 text-muted-4 px-2"><%= @messages.current_page %> / <%= @messages.total_pages %></span>
+      <% if @messages.next_page %>
+        <%= link_to "下一页 →", "#",
+              class: "px-3 py-1.5 text-hl-13 text-muted border border-line rounded hover:bg-bg-mute transition-colors",
+              data: { action: "click->message#loadPage", page: @messages.next_page } %>
+      <% end %>
+    </div>
+  <% end %>
+<% end %>

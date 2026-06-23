@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_06_22_054320) do
+ActiveRecord::Schema[7.1].define(version: 2026_06_23_083729) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -207,6 +207,22 @@ ActiveRecord::Schema[7.1].define(version: 2026_06_22_054320) do
     t.index ["chapter_id"], name: "index_lessons_on_chapter_id"
   end
 
+  create_table "message_boards", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.string "username", null: false
+    t.string "email", null: false
+    t.text "content", null: false
+    t.text "reply_content"
+    t.datetime "replied_at"
+    t.boolean "is_read", default: false
+    t.datetime "deleted_at", comment: "软删除时间，非空代表已隐藏"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["deleted_at"], name: "index_message_boards_on_deleted_at"
+    t.index ["is_read"], name: "index_message_boards_on_is_read"
+    t.index ["user_id"], name: "index_message_boards_on_user_id"
+  end
+
   create_table "stocks", force: :cascade do |t|
     t.string "symbol"
     t.string "name"
@@ -275,6 +291,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_06_22_054320) do
   add_foreign_key "income_statements", "financial_reports"
   add_foreign_key "income_statements", "stocks"
   add_foreign_key "lessons", "chapters"
+  add_foreign_key "message_boards", "users", on_delete: :cascade
   add_foreign_key "user_favorites", "stocks"
   add_foreign_key "user_favorites", "users"
 end

@@ -33,6 +33,11 @@ Rails.application.routes.draw do
 
   get "join", to: "pages#join"
 
+  # 前台登录用户留言
+  resources :message_boards, only: [:create] do
+    get :my, on: :collection
+  end
+
   namespace :users do
     get "profile", to: "profiles#show", as: :profile
     get "profile/edit", to: "profiles#edit", as: :edit_profile
@@ -52,6 +57,13 @@ Rails.application.routes.draw do
     get "stock_crawlers/a_finance", to: "stock_crawlers#a_finance"
     get "stock_crawlers/update_all_pyramid", to: "stock_crawlers#update_all_pyramid"
     get "stock_crawlers/refresh_all_radar", to: "stock_crawlers#refresh_all_radar"
+
+    # 管理员后台留言管理
+    resources :message_boards, only: [:index, :update, :destroy] do
+      patch :reply, on: :member      # 回复留言
+      patch :mark_read, on: :member  # 标记已读
+      patch :restore, on: :member    # 恢复软删除留言
+    end
     
     resources :users, only: [:index, :show, :new, :create, :edit, :update, :destroy]
     resources :stocks, only: [:index, :show, :new, :create, :edit, :update, :destroy] do

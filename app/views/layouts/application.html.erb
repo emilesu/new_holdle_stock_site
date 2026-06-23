@@ -11,7 +11,7 @@
     <%= javascript_include_tag "application", "data-turbo-track": "reload", type: "module" %>
   </head>
 
-  <body>
+  <body data-controller="message">
     <%= render "shared/navbar" %>
 
     <!-- 主内容区 -->
@@ -186,5 +186,43 @@
         });
       })();
     </script>
+
+    <!-- 留言功能：浮窗按钮 + 弹窗 -->
+      <!-- PC右下角悬浮留言按钮 -->
+      <div class="message-float" data-action="click->message#open:prevent">留言</div>
+
+      <!-- 留言弹窗 -->
+      <div data-message-target="modal"
+           class="hidden fixed inset-0 z-[9999]">
+        <div data-message-target="mask"
+             data-action="click->message#closeByMask"
+             class="absolute inset-0 bg-black/40"></div>
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2
+                    bg-white border border-line rounded
+                    w-[650px] max-w-[92%] max-h-[85vh] overflow-y-auto">
+          <div class="flex items-center justify-between px-6 py-4 border-b border-line">
+            <span class="text-hl-15 font-semibold text-ink">给「大苏」留言</span>
+            <button data-action="message#close"
+                    class="text-muted-4 hover:text-ink transition-colors text-hl-18 leading-none">&times;</button>
+          </div>
+          <div class="flex border-b border-line">
+            <button data-action="message#switchTabPublish"
+                    class="flex-1 px-4 py-3 text-hl-13 text-muted hover:text-ink hover:bg-bg-mute transition-colors border-r border-line last:border-r-0">我要留言</button>
+            <button data-action="message#switchTabList"
+                    class="flex-1 px-4 py-3 text-hl-13 text-muted hover:text-ink hover:bg-bg-mute transition-colors">留言回复</button>
+          </div>
+          <div data-message-target="tabPublish" class="p-6">
+            <div id="modal_flash_result" class="mb-4 hidden"></div>
+            <div id="message_form_content">
+              <div id="message_form_area">
+                <%= render partial: "message_boards/form" %>
+              </div>
+            </div>
+          </div>
+          <div data-message-target="tabList" class="p-6 hidden" id="message_modal_content">
+            <p class="text-hl-13 text-muted-4 text-center py-8">点击tab加载留言记录</p>
+          </div>
+        </div>
+      </div>
   </body>
 </html>

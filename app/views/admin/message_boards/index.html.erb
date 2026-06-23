@@ -1,0 +1,105 @@
+<div class="flex items-center justify-between mb-6">
+  <div class="flex items-center gap-3">
+    <h1 class="text-hl-22 font-semibold text-ink">留言管理</h1>
+    <% if params[:show_deleted] == "1" %>
+      <span class="inline-flex items-center px-3 py-1 text-hl-12 font-medium bg-red-50 text-profit border border-red-200 rounded">已删除留言视图</span>
+    <% end %>
+  </div>
+  <%= link_to (params[:show_deleted] == "1" ? "查看正常留言" : "查看已删除留言"),
+      admin_message_boards_path(show_deleted: params[:show_deleted] == "1" ? nil : 1),
+      class: "hl-btn hl-btn-line text-hl-13" %>
+</div>
+
+<% if params[:show_deleted] == "1" %>
+  <div class="mb-4 px-4 py-3 bg-red-50 border border-red-200 rounded text-hl-13 text-profit">
+    当前正在查看已删除的留言记录，共 <%= @messages.total_count %> 条
+  </div>
+<% end %>
+
+<div class="hl-card overflow-hidden">
+  <table class="hl-table">
+    <thead>
+      <tr>
+        <th class="w-12">ID</th>
+        <th class="w-32">用户</th>
+        <th>留言内容</th>
+        <th class="w-16">已读</th>
+        <th>管理员回复</th>
+        <th class="w-56">操作</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @messages.each do |m| %>
+      <tr class="<%= 'opacity-60 border-l-2 border-profit' if m.deleted_at.present? %>">
+        <td class="text-hl-12 text-muted-4 font-mono"><%= m.id %></td>
+        <td>
+          <div class="font-medium text-ink text-hl-13"><%= m.username %></div>
+          <div class="text-hl-11 text-muted-4"><%= m.email %></div>
+        </td>
+        <td>
+          <p class="text-hl-13 text-ink"><%= m.content %></p>
+          <p class="text-hl-11 text-muted-4 mt-1"><%= m.created_at.strftime("%Y-%m-%d %H:%M") %></p>
+        </td>
+        <td>
+          <% if m.is_read %>
+            <span class="inline-flex px-2 py-0.5 text-hl-11 font-medium bg-bg-mute text-muted-3 rounded">已读</span>
+          <% else %>
+            <span class="inline-flex px-2 py-0.5 text-hl-11 font-medium bg-bg-soft text-link rounded">未读</span>
+          <% end %>
+        </td>
+        <td>
+          <% if m.reply_content.present? %>
+            <div class="text-hl-13 text-muted">
+              <p><%= m.reply_content %></p>
+              <p class="text-hl-11 text-muted-4 mt-1"><%= m.replied_at&.strftime("%Y-%m-%d %H:%M") %></p>
+            </div>
+          <% else %>
+            <span class="text-hl-12 text-muted-4">无回复</span>
+          <% end %>
+        </td>
+        <td>
+          <div class="flex items-center gap-2 flex-wrap">
+            <% if m.deleted_at.nil? %>
+              <%= form_with url: reply_admin_message_board_path(m), method: :patch, class: "flex items-center gap-1" do |f| %>
+                <%= f.text_field :reply, placeholder: "回复内容", class: "w-28 px-2 py-1 text-hl-12 border border-line rounded focus:outline-none focus:border-link", maxlength: 500 %>
+                <%= f.submit "回复", class: "px-2 py-1 text-hl-11 bg-ink text-white rounded cursor-pointer hover:opacity-90 transition-opacity" %>
+              <% end %>
+              <% unless m.is_read %>
+                <%= button_to "标记已读", mark_read_admin_message_board_path(m), method: :patch,
+                      form_class: "inline",
+                      class: "px-2 py-1 text-hl-11 text-link border border-line rounded hover:bg-bg-mute transition-colors cursor-pointer" %>
+              <% end %>
+              <%= button_to "删除", admin_message_board_path(m), method: :delete,
+                    form_class: "inline",
+                    data: { turbo_confirm: "确定隐藏这条留言？" },
+                    class: "px-2 py-1 text-hl-11 text-profit border border-line rounded hover:bg-bg-mute transition-colors cursor-pointer" %>
+            <% else %>
+              <span class="text-hl-11 text-muted-4 italic">已删除</span>
+              <%= button_to "恢复", restore_admin_message_board_path(m), method: :patch,
+                    form_class: "inline",
+                    class: "px-2 py-1 text-hl-11 text-link border border-line rounded hover:bg-bg-mute transition-colors cursor-pointer" %>
+            <% end %>
+          </div>
+        </td>
+      </tr>
+      <% end %>
+    </tbody>
+  </table>
+  <% if @messages.empty? %>
+    <div class="px-6 py-12 text-center text-hl-13 text-muted-4">暂无留言</div>
+  <% end %>
+</div>
+
+<% if @messages.respond_to?(:total_pages) && @messages.total_pages > 1 %>
+  <div class="flex items-center justify-center gap-2 mt-6">
+    <% if @messages.prev_page %>
+      <%= link_to "← 上一页", admin_message_boards_path(page: @messages.prev_page, show_deleted: params[:show_deleted]),
+            class: "px-3 py-1.5 text-hl-13 text-muted border border-line rounded hover:bg-bg-mute transition-colors" %>
+    <% end %>
+    <span class="text-hl-12 text-muted-4 px-2"><%= @messages.current_page %> / <%= @messages.total_pages %></span>
+    <% if @messages.next_page %>
+      <%= link_to "下一页 →", admin_message_boards_path(page: @messages.next_page, show_deleted: params[:show_deleted]),
+            class: "px-3 py-1.5 text-hl-13 text-muted border border-line rounded hover:bg-bg-mute transition-colors" %>
+    <% end %>
+  </div>
+<% end %>

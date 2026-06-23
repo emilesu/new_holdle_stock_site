@@ -45,8 +45,12 @@
                   </span>
                 </div>
                 <div class="flex justify-between py-2">
-                  <span class="text-muted-3 text-hl-11">市值</span>
-                  <span class="text-ink font-medium"><%= @stock.respond_to?(:market_cap) && @stock.market_cap.present? ? "#{(@stock.market_cap / 100000000).round(2)} 亿" : '-' %></span>
+                  <span class="text-muted-3 text-hl-11">金字塔分</span>
+                  <% if user_signed_in? && current_user.is_member? %>
+                    <span class="text-ink font-medium"><%= @stock.pyramid_total_score %></span>
+                  <% else %>
+                    <span class="text-muted-4 text-hl-11">会员可见</span>
+                  <% end %>
                 </div>
               </div>
               <%= turbo_frame_tag "follow_stock_#{@stock.id}" do %>

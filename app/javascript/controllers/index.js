@@ -12,3 +12,6 @@ application.register("user-dropdown", UserDropdownController)
 
 import MobileMenuController from "./mobile_menu_controller"
 application.register("mobile-menu", MobileMenuController)
+
+import MessageController from "./message_controller"
+application.register("message", MessageController)

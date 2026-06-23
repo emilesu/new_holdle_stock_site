@@ -589,3 +589,28 @@
     flex: 1;
   }
 }
+
+/* ==================== 留言弹窗 ==================== */
+@layer components {
+  .message-float {
+    position: fixed;
+    right: 30px;
+    bottom: 40px;
+    padding: 12px 20px;
+    background: var(--color-link);
+    color: #fff;
+    border-radius: 999px;
+    cursor: pointer;
+    z-index: 9998;
+    font-size: 13px;
+    transition: background 0.15s ease;
+  }
+  .message-float:hover {
+    background: var(--color-link-hover);
+  }
+  @media (max-width: 767px) {
+    .message-float {
+      display: none !important;
+    }
+  }
+}
