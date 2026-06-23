@@ -58,7 +58,7 @@ module DataSources
 
         # 缓存缺失，实时计算兜底（使用与StockRadarSingleService相同的计算逻辑）
         begin
-          financial_years = stock.financial_years.select { |y| y.to_i >= Date.today.year - 5 }.sort.last(5)
+          financial_years = stock.financial_years.select { |y| y.to_i >= Date.current.year - 5 }.sort.last(5)
           return default_zero_values if financial_years.empty?
 
           # 获取财务数据

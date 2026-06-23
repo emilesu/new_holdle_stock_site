@@ -36,7 +36,7 @@ module DataSources
       def calculate_total_score(stock)
         score = 0
         
-        financial_years = stock.financial_years.select { |y| y.to_i >= Date.today.year - 5 }.sort.last(5)
+        financial_years = stock.financial_years.select { |y| y.to_i >= Date.current.year - 5 }.sort.last(5)
         return 0 if financial_years.empty?
 
         all_data = financial_years.map { |year| stock.get_financial_data_by_year(year) }.compact

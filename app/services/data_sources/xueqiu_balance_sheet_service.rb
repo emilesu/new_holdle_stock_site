@@ -280,12 +280,12 @@ module DataSources
 
         timestamp = timestamp.to_i
         if timestamp.to_s.length >= 12
-          Time.at(timestamp / 1000).to_date
+          Time.zone.at(timestamp / 1000).to_date
         else
-          Time.at(timestamp).to_date
+          Time.zone.at(timestamp).to_date
         end
       rescue => e
-        puts "❌ 时间戳转换失败：#{timestamp}，错误: #{e.message}"
+        puts "时间戳转换失败：#{timestamp}，错误: #{e.message}"
         nil
       end
 

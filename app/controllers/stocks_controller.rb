@@ -40,7 +40,7 @@ class StocksController < ApplicationController
     @financial_years = @financial_data_by_year.keys.sort
     
     @industry_comparison_data = Rails.cache.fetch(
-      [:industry_comparison, @stock.sector, Date.today].join('/'),
+      [:industry_comparison, @stock.sector, Date.current].join('/'),
       expires_in: INDUSTRY_CACHE_EXPIRES_IN
     ) do
       sector_stocks = Stock.where(sector: @stock.sector).includes(

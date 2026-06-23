@@ -16,7 +16,7 @@ class PyramidsController < ApplicationController
     @stocks = stocks.order(pyramid_total_score: :desc).offset((@page - 1) * PER_PAGE).limit(PER_PAGE)
     @top_stock = @stocks.first
 
-    @sectors = Rails.cache.fetch("pyramid_sectors_#{@market}_#{Date.today}", expires_in: 1.hour) do
+    @sectors = Rails.cache.fetch("pyramid_sectors_#{@market}_#{Date.current}", expires_in: 1.hour) do
       Stock.where(market: @market).where.not(sector: nil).distinct.pluck(:sector).sort
     end
 
@@ -43,7 +43,7 @@ class PyramidsController < ApplicationController
   def update_sectors
     @market = params[:market] || 'CN'
     
-    @sectors = Rails.cache.fetch("pyramid_sectors_#{@market}_#{Date.today}", expires_in: 1.hour) do
+    @sectors = Rails.cache.fetch("pyramid_sectors_#{@market}_#{Date.current}", expires_in: 1.hour) do
       Stock.where(market: @market).where.not(sector: nil).distinct.pluck(:sector).sort
     end
 

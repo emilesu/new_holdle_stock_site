@@ -8,9 +8,9 @@ module Admin
       
       # 用户统计
       @total_users = User.count
-      @today_active_users = User.where(last_login_at: Date.today.all_day).count
+      @today_active_users = User.where(last_login_at: Date.current.all_day).count
       @week_active_users = User.where(last_login_at: 7.days.ago..Time.current).count
-      @today_registered_users = User.where(created_at: Date.today.all_day).count
+      @today_registered_users = User.where(created_at: Date.current.all_day).count
       
       # 会员统计
       @member_count = User.where(role: 'member').count

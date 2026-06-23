@@ -21,7 +21,7 @@ module DataSources
 
         begin
           # 获取近5年财务年份
-          financial_years = stock.financial_years.select { |y| y.to_i >= Date.today.year - 5 }.sort.last(5)
+          financial_years = stock.financial_years.select { |y| y.to_i >= Date.current.year - 5 }.sort.last(5)
           return { success: false, error: '财务数据不足' } if financial_years.empty?
 
           # 获取财务数据（需要income_statement和balance_sheet用于计算）
