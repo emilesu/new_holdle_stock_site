@@ -1,103 +1,29 @@
 <!-- 股票详情页 -->
-<div class="min-h-screen bg-gray-50" id="stock-detail-page">
-  <style>
-    /* 强制布局样式 */
-    #stock-detail-page .main-container {
-      display: grid !important;
-      grid-template-columns: 1fr !important;
-      gap: 24px !important;
-    }
-    
-    @media screen and (min-width: 1024px) {
-      #stock-detail-page .main-container {
-        grid-template-columns: 4fr 1fr !important;
-      }
-    }
-    
-    #stock-detail-page .top-card {
-      display: flex !important;
-      flex-direction: column !important;
-      gap: 32px !important;
-    }
-    
-    @media screen and (min-width: 1024px) {
-      #stock-detail-page .top-card {
-        flex-direction: row !important;
-      }
-    }
-    
-    #stock-detail-page .company-info,
-    #stock-detail-page .radar-section {
-      flex: 1 !important;
-      min-width: 0 !important;
-    }
-    
-    #stock-detail-page .radar-section {
-      padding-top: 16px !important;
-      border-top: 1px solid #e5e7eb !important;
-    }
-    
-    @media screen and (min-width: 1024px) {
-      #stock-detail-page .radar-section {
-        padding-top: 0 !important;
-        padding-left: 32px !important;
-        border-top: none !important;
-        border-left: 1px solid #e5e7eb !important;
-      }
-    }
-    
-    /* 财务表格悬停效果 */
-    #stock-detail-page .indicator-row {
-      cursor: pointer !important;
-      transition: background-color 0.2s ease-in-out !important;
-    }
-    
-    #stock-detail-page .indicator-row:hover {
-      background-color: #eff6ff !important;
-    }
-    
-    #stock-detail-page .indicator-row td {
-      cursor: pointer !important;
-    }
-    
-    #stock-detail-page .indicator-row:hover td {
-      color: #1e40af !important;
-    }
-    
-    /* 对比项悬停效果 */
-    #stock-detail-page .comparison-item {
-      cursor: pointer !important;
-      transition: background-color 0.2s ease-in-out !important;
-    }
-    
-    #stock-detail-page .comparison-item:hover {
-      background-color: #f3f4f6 !important;
-    }
-  </style>
-  
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
- 
+<div class="min-h-screen bg-bg-soft" id="stock-detail-page">
+
+  <div class="container-hl py-8">
+
 
     <!-- 左右两列布局 -->
-    <div class="main-container">
+    <div class="main-container grid grid-cols-1 lg:grid-cols-[4fr_1fr] gap-6">
       <!-- 左列：80% -->
       <div class="space-y-6">
 
         <!-- 上半部分：股票基础信息 + 雷达图 -->
-        <div class="bg-white rounded-lg overflow-hidden border border-gray-200">
-          <div class="p-6 top-card">
+        <div class="bg-white hl-card overflow-hidden">
+          <div class="p-6 top-card flex flex-col lg:flex-row gap-8">
             <!-- 公司信息 -->
-            <div class="company-info">
-              <h1 class="text-2xl font-bold text-gray-900">
+            <div class="company-info flex-1 min-w-0">
+              <h1 class="text-hl-22 font-bold text-ink">
                 <% if @stock.market == 'US' && @stock.name.present? && @stock.name.include?('|') %>
                   <% parts = @stock.name.split('|', 2) %>
-                  <%= parts.first %><span class="text-sm font-medium text-gray-600"> - <%= parts.last %></span>
+                  <%= parts.first %><span class="text-hl-13 font-medium text-muted-2"> - <%= parts.last %></span>
                 <% else %>
                   <%= @stock.name.presence || '未命名股票' %>
                 <% end %>
               </h1>
               <div class="flex items-center space-x-2 mt-2">
-                <span class="text-gray-600 text-sm font-mono"><%= @stock.symbol.presence || 'N/A' %></span>
+                <span class="text-muted-2 text-hl-13 font-mono"><%= @stock.symbol.presence || 'N/A' %></span>
                 <span class="px-2 py-1 text-xs font-semibold rounded <%= @stock.market == 'CN' ? 'bg-green-100 text-green-800' : @stock.market == 'US' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800' %>">
                   <%= @stock.market == 'CN' ? 'A股' : @stock.market == 'US' ? '美股' : '其他' %>
                 </span>
@@ -105,34 +31,34 @@
                   <%= @stock.exchange.presence || '-' %>
                 </span>
               </div>
-              <div class="border-t border-gray-100 pt-4 mt-4 space-y-3">
+              <div class="border-t border-line-soft pt-4 mt-4 space-y-3">
                 <div class="flex justify-between py-2">
-                  <span class="text-gray-500 text-xs">所属板块</span>
+                  <span class="text-muted-3 text-hl-11">所属板块</span>
                   <span class="px-2 py-1 text-xs font-semibold rounded <%= @stock.market == 'CN' ? 'bg-green-100 text-green-800' : @stock.market == 'US' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800' %>">
                     <%= @stock.sector.presence || '-' %>
                   </span>
                 </div>
                 <div class="flex justify-between py-2">
-                  <span class="text-gray-500 text-xs">所属行业</span>
+                  <span class="text-muted-3 text-hl-11">所属行业</span>
                   <span class="px-2 py-1 text-xs font-semibold rounded <%= @stock.market == 'CN' ? 'bg-green-100 text-green-800' : @stock.market == 'US' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800' %>">
                     <%= @stock.industry.presence || '-' %>
                   </span>
                 </div>
                 <div class="flex justify-between py-2">
-                  <span class="text-gray-500 text-xs">市值</span>
-                  <span class="text-gray-900 font-medium"><%= @stock.respond_to?(:market_cap) && @stock.market_cap.present? ? "#{(@stock.market_cap / 100000000).round(2)} 亿" : '-' %></span>
+                  <span class="text-muted-3 text-hl-11">市值</span>
+                  <span class="text-ink font-medium"><%= @stock.respond_to?(:market_cap) && @stock.market_cap.present? ? "#{(@stock.market_cap / 100000000).round(2)} 亿" : '-' %></span>
                 </div>
               </div>
               <%= turbo_frame_tag "follow_stock_#{@stock.id}" do %>
                 <% if user_signed_in? && @user_favorite.present? %>
                   <%= button_to "已关注", user_favorite_path(@user_favorite, stock_id: @stock.id), method: :delete,
-                    class: "w-full py-3 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors mt-4" %>
+                    class: "w-full hl-btn hl-btn-line mt-4" %>
                 <% elsif user_signed_in? %>
                   <%= button_to "收藏股票", user_favorites_path(stock_id: @stock.id), method: :post,
-                    class: "w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors mt-4" %>
+                    class: "w-full hl-btn hl-btn-primary mt-4" %>
                 <% else %>
                   <%= link_to "收藏股票", new_user_session_path,
-                    class: "w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors mt-4 text-center block" %>
+                    class: "w-full hl-btn hl-btn-primary mt-4 text-center block" %>
                 <% end %>
               <% end %>
             </div>
@@ -143,7 +69,7 @@
                  class="hidden"></div>
 
             <!-- 雷达图 -->
-            <div class="radar-section">
+            <div class="radar-section flex-1 min-w-0 border-t border-line lg:border-t-0 lg:border-l lg:border-l-line lg:pl-8 pt-4 lg:pt-0">
               <canvas id="radarChart" width="400" height="400" style="display: block; margin: 0 auto; max-width: 100%;"></canvas>
             <!-- 图例区域由 Chart.js 渲染 -->
           </div>
@@ -151,95 +77,95 @@
         </div>
         
         <!-- 获利能力表 -->
-        <div class="bg-white rounded-lg overflow-hidden border border-gray-200">
-          <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
-            <h2 class="text-lg font-semibold text-gray-800">获利能力 <span class="text-gray-500 text-xs">(单位：<%= @stock.market == 'US' ? '美元' : '元' %>)</span></h2>
+        <div class="bg-white hl-card overflow-hidden">
+          <div class="px-6 py-4 border-b border-line bg-bg-mute">
+            <h2 class="text-hl-16 font-semibold text-ink-soft">获利能力 <span class="text-muted-3 text-hl-11">(单位：<%= @stock.market == 'US' ? '美元' : '元' %>)</span></h2>
           </div>
           <div class="overflow-x-auto">
             <table class="w-full">
-              <thead class="bg-gray-50">
+              <thead class="bg-bg-mute">
                 <tr>
-                  <th class="px-6 py-3 text-left text-sm font-medium text-gray-500 w-32 whitespace-nowrap">指标</th>
+                  <th class="px-6 py-3 text-left text-hl-13 font-medium text-muted-3 w-32 whitespace-nowrap">指标</th>
                   <% if @financial_years.any? %>
                     <% @financial_years.each do |year| %>
-                      <th class="px-4 py-3 text-right text-xs font-semibold text-gray-800 whitespace-nowrap"><%= year %></th>
+                      <th class="px-4 py-3 text-right text-hl-11 font-semibold text-ink-soft whitespace-nowrap"><%= year %></th>
                     <% end %>
                   <% else %>
-                    <th class="px-6 py-3 text-center text-sm text-gray-400">暂无数据</th>
+                    <th class="px-6 py-3 text-center text-hl-13 text-muted-4">暂无数据</th>
                   <% end %>
                 </tr>
               </thead>
-              <tbody class="divide-y divide-gray-100">
-                <tr class="hover:bg-blue-50 cursor-pointer indicator-row transition-colors" data-indicator="roe">
-                  <td class="px-6 py-3 text-sm text-gray-700 font-medium whitespace-nowrap">净资产收益率（ROE）</td>
+              <tbody class="divide-y divide-line-soft">
+                <tr class="hover:bg-bg-mute cursor-pointer indicator-row transition-colors" data-indicator="roe">
+                  <td class="px-6 py-3 text-hl-13 text-muted font-medium whitespace-nowrap">净资产收益率（ROE）</td>
                   <% if @financial_years.any? %>
                     <% @financial_years.each do |year| %>
-                      <td class="px-4 py-3 text-right text-sm text-gray-600">
+                      <td class="px-4 py-3 text-right text-hl-13 text-muted-2">
                         <%= @financial_data_by_year[year][:roe].present? ? "%.2f%%" % @financial_data_by_year[year][:roe] : '-' %>
                       </td>
                     <% end %>
                   <% else %>
-                    <td class="px-6 py-3 text-center text-sm text-gray-400">-</td>
+                    <td class="px-6 py-3 text-center text-hl-13 text-muted-4">-</td>
                   <% end %>
                 </tr>
-                <tr class="hover:bg-blue-50 cursor-pointer indicator-row transition-colors" data-indicator="roa">
-                  <td class="px-6 py-3 text-sm text-gray-700 font-medium whitespace-nowrap">总资产收益率（ROA）</td>
+                <tr class="hover:bg-bg-mute cursor-pointer indicator-row transition-colors" data-indicator="roa">
+                  <td class="px-6 py-3 text-hl-13 text-muted font-medium whitespace-nowrap">总资产收益率（ROA）</td>
                   <% if @financial_years.any? %>
                     <% @financial_years.each do |year| %>
-                      <td class="px-4 py-3 text-right text-sm text-gray-600">
+                      <td class="px-4 py-3 text-right text-hl-13 text-muted-2">
                         <%= @financial_data_by_year[year][:roa].present? ? "%.2f%%" % @financial_data_by_year[year][:roa] : '-' %>
                       </td>
                     <% end %>
                   <% else %>
-                    <td class="px-6 py-3 text-center text-sm text-gray-400">-</td>
+                    <td class="px-6 py-3 text-center text-hl-13 text-muted-4">-</td>
                   <% end %>
                 </tr>
-                <tr class="hover:bg-blue-50 cursor-pointer indicator-row transition-colors" data-indicator="gross_margin">
-                  <td class="px-6 py-3 text-sm text-gray-700 font-medium">毛利率</td>
+                <tr class="hover:bg-bg-mute cursor-pointer indicator-row transition-colors" data-indicator="gross_margin">
+                  <td class="px-6 py-3 text-hl-13 text-muted font-medium">毛利率</td>
                   <% if @financial_years.any? %>
                     <% @financial_years.each do |year| %>
-                      <td class="px-4 py-3 text-right text-sm text-gray-600">
+                      <td class="px-4 py-3 text-right text-hl-13 text-muted-2">
                         <%= @financial_data_by_year[year][:gross_margin].present? ? "%.2f%%" % @financial_data_by_year[year][:gross_margin] : '-' %>
                       </td>
                     <% end %>
                   <% else %>
-                    <td class="px-6 py-3 text-center text-sm text-gray-400">-</td>
+                    <td class="px-6 py-3 text-center text-hl-13 text-muted-4">-</td>
                   <% end %>
                 </tr>
-                <tr class="hover:bg-blue-50 cursor-pointer indicator-row transition-colors" data-indicator="net_profit_margin">
-                  <td class="px-6 py-3 text-sm text-gray-700 font-medium">净利率</td>
+                <tr class="hover:bg-bg-mute cursor-pointer indicator-row transition-colors" data-indicator="net_profit_margin">
+                  <td class="px-6 py-3 text-hl-13 text-muted font-medium">净利率</td>
                   <% if @financial_years.any? %>
                     <% @financial_years.each do |year| %>
-                      <td class="px-4 py-3 text-right text-sm text-gray-600">
+                      <td class="px-4 py-3 text-right text-hl-13 text-muted-2">
                         <%= @financial_data_by_year[year][:net_profit_margin].present? ? "%.2f%%" % @financial_data_by_year[year][:net_profit_margin] : '-' %>
                       </td>
                     <% end %>
                   <% else %>
-                    <td class="px-6 py-3 text-center text-sm text-gray-400">-</td>
+                    <td class="px-6 py-3 text-center text-hl-13 text-muted-4">-</td>
                   <% end %>
                 </tr>
-                <tr class="hover:bg-blue-50 cursor-pointer indicator-row transition-colors" data-indicator="eps">
-                  <td class="px-6 py-3 text-sm text-gray-700 font-medium whitespace-nowrap">每股收益（EPS）</td>
+                <tr class="hover:bg-bg-mute cursor-pointer indicator-row transition-colors" data-indicator="eps">
+                  <td class="px-6 py-3 text-hl-13 text-muted font-medium whitespace-nowrap">每股收益（EPS）</td>
                   <% if @financial_years.any? %>
                     <% @financial_years.each do |year| %>
-                      <td class="px-4 py-3 text-right text-sm text-gray-600">
+                      <td class="px-4 py-3 text-right text-hl-13 text-muted-2">
                         <%= @financial_data_by_year[year][:eps].present? ? "%.2f" % @financial_data_by_year[year][:eps] : '-' %>
                       </td>
                     <% end %>
                   <% else %>
-                    <td class="px-6 py-3 text-center text-sm text-gray-400">-</td>
+                    <td class="px-6 py-3 text-center text-hl-13 text-muted-4">-</td>
                   <% end %>
                 </tr>
-                <tr class="hover:bg-blue-50 cursor-pointer indicator-row transition-colors" data-indicator="cash_flow_ps">
-                  <td class="px-6 py-3 text-sm text-gray-700 font-medium whitespace-nowrap">每股现金流量</td>
+                <tr class="hover:bg-bg-mute cursor-pointer indicator-row transition-colors" data-indicator="cash_flow_ps">
+                  <td class="px-6 py-3 text-hl-13 text-muted font-medium whitespace-nowrap">每股现金流量</td>
                   <% if @financial_years.any? %>
                     <% @financial_years.each do |year| %>
-                      <td class="px-4 py-3 text-right text-sm text-gray-600">
+                      <td class="px-4 py-3 text-right text-hl-13 text-muted-2">
                         <%= @financial_data_by_year[year][:cash_flow_ps].present? ? "%.2f" % @financial_data_by_year[year][:cash_flow_ps] : '-' %>
                       </td>
                     <% end %>
                   <% else %>
-                    <td class="px-6 py-3 text-center text-sm text-gray-400">-</td>
+                    <td class="px-6 py-3 text-center text-hl-13 text-muted-4">-</td>
                   <% end %>
                 </tr>
               </tbody>
@@ -248,107 +174,107 @@
         </div>
         
         <!-- 财务结构 & 现金流量表 -->
-        <div class="bg-white rounded-lg overflow-hidden border border-gray-200">
-          <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
-            <h2 class="text-lg font-semibold text-gray-800">财务结构 & 现金流量 <span class="text-gray-500 text-xs">(单位：<%= @stock.market == 'US' ? '亿美元' : '亿元' %>)</span></h2>
+        <div class="bg-white hl-card overflow-hidden">
+          <div class="px-6 py-4 border-b border-line bg-bg-mute">
+            <h2 class="text-hl-16 font-semibold text-ink-soft">财务结构 & 现金流量 <span class="text-muted-3 text-hl-11">(单位：<%= @stock.market == 'US' ? '亿美元' : '亿元' %>)</span></h2>
           </div>
           <div class="overflow-x-auto">
             <table class="w-full">
-              <thead class="bg-gray-50">
+              <thead class="bg-bg-mute">
                 <tr>
-                  <th class="px-6 py-3 text-left text-sm font-medium text-gray-500 w-36 whitespace-nowrap">指标</th>
+                  <th class="px-6 py-3 text-left text-hl-13 font-medium text-muted-3 w-36 whitespace-nowrap">指标</th>
                   <% if @financial_years.any? %>
                     <% @financial_years.each do |year| %>
-                      <th class="px-4 py-3 text-right text-xs font-semibold text-gray-800 whitespace-nowrap"><%= year %></th>
+                      <th class="px-4 py-3 text-right text-hl-11 font-semibold text-ink-soft whitespace-nowrap"><%= year %></th>
                     <% end %>
                   <% else %>
-                    <th class="px-6 py-3 text-center text-sm text-gray-400">暂无数据</th>
+                    <th class="px-6 py-3 text-center text-hl-13 text-muted-4">暂无数据</th>
                   <% end %>
                 </tr>
               </thead>
-              <tbody class="divide-y divide-gray-100">
-                <tr class="hover:bg-blue-50 cursor-pointer indicator-row transition-colors" data-indicator="asset_liab_ratio">
-                  <td class="px-6 py-3 text-sm text-gray-700 font-medium whitespace-nowrap">负债占资产比率</td>
+              <tbody class="divide-y divide-line-soft">
+                <tr class="hover:bg-bg-mute cursor-pointer indicator-row transition-colors" data-indicator="asset_liab_ratio">
+                  <td class="px-6 py-3 text-hl-13 text-muted font-medium whitespace-nowrap">负债占资产比率</td>
                   <% if @financial_years.any? %>
                     <% @financial_years.each do |year| %>
-                      <td class="px-4 py-3 text-right text-sm">
+                      <td class="px-4 py-3 text-right text-hl-13">
                         <%= @financial_data_by_year[year][:asset_liab_ratio].present? ? "%.2f%%" % @financial_data_by_year[year][:asset_liab_ratio] : '-' %>
                       </td>
                     <% end %>
                   <% else %>
-                    <td class="px-6 py-3 text-center text-sm text-gray-400">-</td>
+                    <td class="px-6 py-3 text-center text-hl-13 text-muted-4">-</td>
                   <% end %>
                 </tr>
-                <tr class="hover:bg-blue-50 cursor-pointer indicator-row transition-colors" data-indicator="asset_turnover_ratio">
-                  <td class="px-6 py-3 text-sm text-gray-700 font-medium whitespace-nowrap">总资产周转率</td>
+                <tr class="hover:bg-bg-mute cursor-pointer indicator-row transition-colors" data-indicator="asset_turnover_ratio">
+                  <td class="px-6 py-3 text-hl-13 text-muted font-medium whitespace-nowrap">总资产周转率</td>
                   <% if @financial_years.any? %>
                     <% @financial_years.each do |year| %>
-                      <td class="px-4 py-3 text-right text-sm">
+                      <td class="px-4 py-3 text-right text-hl-13">
                         <%= @financial_data_by_year[year][:asset_turnover_ratio].present? ? "%.2f%%" % (@financial_data_by_year[year][:asset_turnover_ratio] * 100) : '-' %>
                       </td>
                     <% end %>
                   <% else %>
-                    <td class="px-6 py-3 text-center text-sm text-gray-400">-</td>
+                    <td class="px-6 py-3 text-center text-hl-13 text-muted-4">-</td>
                   <% end %>
                 </tr>
-                <tr class="hover:bg-blue-50 cursor-pointer indicator-row transition-colors" data-indicator="net_income">
-                  <td class="px-6 py-3 text-sm text-gray-700 font-medium whitespace-nowrap">净利润</td>
+                <tr class="hover:bg-bg-mute cursor-pointer indicator-row transition-colors" data-indicator="net_income">
+                  <td class="px-6 py-3 text-hl-13 text-muted font-medium whitespace-nowrap">净利润</td>
                   <% if @financial_years.any? %>
                     <% @financial_years.each do |year| %>
-                      <td class="px-4 py-3 text-right text-sm">
+                      <td class="px-4 py-3 text-right text-hl-13">
                         <%= @financial_data_by_year[year][:net_income].present? ? "%.2f" % (@financial_data_by_year[year][:net_income] / 100000000.0) : '-' %>
                       </td>
                     <% end %>
                   <% else %>
-                    <td class="px-6 py-3 text-center text-sm text-gray-400">-</td>
+                    <td class="px-6 py-3 text-center text-hl-13 text-muted-4">-</td>
                   <% end %>
                 </tr>
-                <tr class="hover:bg-blue-50 cursor-pointer indicator-row transition-colors" data-indicator="operating_cash_flow">
-                  <td class="px-6 py-3 text-sm text-gray-700 font-medium whitespace-nowrap">经营活动现金流量</td>
+                <tr class="hover:bg-bg-mute cursor-pointer indicator-row transition-colors" data-indicator="operating_cash_flow">
+                  <td class="px-6 py-3 text-hl-13 text-muted font-medium whitespace-nowrap">经营活动现金流量</td>
                   <% if @financial_years.any? %>
                     <% @financial_years.each do |year| %>
-                      <td class="px-4 py-3 text-right text-sm">
+                      <td class="px-4 py-3 text-right text-hl-13">
                         <%= @financial_data_by_year[year][:operating_cash_flow].present? ? "%.2f" % (@financial_data_by_year[year][:operating_cash_flow] / 100000000.0) : '-' %>
                       </td>
                     <% end %>
                   <% else %>
-                    <td class="px-6 py-3 text-center text-sm text-gray-400">-</td>
+                    <td class="px-6 py-3 text-center text-hl-13 text-muted-4">-</td>
                   <% end %>
                 </tr>
-                <tr class="hover:bg-blue-50 cursor-pointer indicator-row transition-colors" data-indicator="investing_cash_flow">
-                  <td class="px-6 py-3 text-sm text-gray-700 font-medium whitespace-nowrap">投资活动现金流量</td>
+                <tr class="hover:bg-bg-mute cursor-pointer indicator-row transition-colors" data-indicator="investing_cash_flow">
+                  <td class="px-6 py-3 text-hl-13 text-muted font-medium whitespace-nowrap">投资活动现金流量</td>
                   <% if @financial_years.any? %>
                     <% @financial_years.each do |year| %>
-                      <td class="px-4 py-3 text-right text-sm">
+                      <td class="px-4 py-3 text-right text-hl-13">
                         <%= @financial_data_by_year[year][:investing_cash_flow].present? ? "%.2f" % (@financial_data_by_year[year][:investing_cash_flow] / 100000000.0) : '-' %>
                       </td>
                     <% end %>
                   <% else %>
-                    <td class="px-6 py-3 text-center text-sm text-gray-400">-</td>
+                    <td class="px-6 py-3 text-center text-hl-13 text-muted-4">-</td>
                   <% end %>
                 </tr>
-                <tr class="hover:bg-blue-50 cursor-pointer indicator-row transition-colors" data-indicator="financing_cash_flow">
-                  <td class="px-6 py-3 text-sm text-gray-700 font-medium whitespace-nowrap">筹资活动现金流量</td>
+                <tr class="hover:bg-bg-mute cursor-pointer indicator-row transition-colors" data-indicator="financing_cash_flow">
+                  <td class="px-6 py-3 text-hl-13 text-muted font-medium whitespace-nowrap">筹资活动现金流量</td>
                   <% if @financial_years.any? %>
                     <% @financial_years.each do |year| %>
-                      <td class="px-4 py-3 text-right text-sm">
+                      <td class="px-4 py-3 text-right text-hl-13">
                         <%= @financial_data_by_year[year][:financing_cash_flow].present? ? "%.2f" % (@financial_data_by_year[year][:financing_cash_flow] / 100000000.0) : '-' %>
                       </td>
                     <% end %>
                   <% else %>
-                    <td class="px-6 py-3 text-center text-sm text-gray-400">-</td>
+                    <td class="px-6 py-3 text-center text-hl-13 text-muted-4">-</td>
                   <% end %>
                 </tr>
-                <tr class="hover:bg-blue-50 cursor-pointer indicator-row transition-colors" data-indicator="net_cash_change">
-                  <td class="px-6 py-3 text-sm text-gray-700 font-medium whitespace-nowrap">净现金流量</td>
+                <tr class="hover:bg-bg-mute cursor-pointer indicator-row transition-colors" data-indicator="net_cash_change">
+                  <td class="px-6 py-3 text-hl-13 text-muted font-medium whitespace-nowrap">净现金流量</td>
                   <% if @financial_years.any? %>
                     <% @financial_years.each do |year| %>
-                      <td class="px-4 py-3 text-right text-sm">
+                      <td class="px-4 py-3 text-right text-hl-13">
                         <%= @financial_data_by_year[year][:net_cash_change].present? ? "%.2f" % (@financial_data_by_year[year][:net_cash_change] / 100000000.0) : '-' %>
                       </td>
                     <% end %>
                   <% else %>
-                    <td class="px-6 py-3 text-center text-sm text-gray-400">-</td>
+                    <td class="px-6 py-3 text-center text-hl-13 text-muted-4">-</td>
                   <% end %>
                 </tr>
               </tbody>
@@ -359,36 +285,35 @@
       
       <!-- 右列：20% -->
       <div class="lg:col-span-1">
-        <div class="sticky top-24 bg-white rounded-lg overflow-hidden border border-gray-200">
-          <div class="px-4 py-4 border-b border-gray-200 bg-gray-50">
-            <span class="text-blue-600 font-semibold"><%= @stock.sector.presence || '-' %></span>
-            <span class="text-gray-500 items-center justify-right text-xs"> - 近五年ROE对比</span>
+        <div class="sticky top-24 bg-white hl-card overflow-hidden">
+          <div class="px-4 py-4 border-b border-line bg-bg-mute">
+            <span class="text-link font-semibold"><%= @stock.sector.presence || '-' %></span>
+            <span class="text-muted-3 items-center justify-right text-hl-11"> - 近五年ROE对比</span>
           </div>
           <div class="p-4">
             
-            <div class="border-t border-gray-100">
+            <div class="border-t border-line-soft">
               <% if @industry_comparison_data.present? %>
-                <div class="divide-y divide-gray-100">
+                <div class="divide-y divide-line-soft">
                   <% @industry_comparison_data.each_with_index do |item, index| %>
                     <% stock = item[:stock] %>
                     <% radar_data = @comparison_radar_data[stock.symbol] %>
                     <a href="<%= stock_path(stock) %>"
-                       class="block py-3 transition-colors comparison-item <%= item[:is_current_stock] ? '' : 'hover:bg-gray-50' %>"
+                       class="block py-3 transition-colors comparison-item <%= item[:is_current_stock] ? 'bg-blue-50' : 'hover:bg-bg-mute' %>"
                        data-symbol="<%= stock.symbol %>"
-                       data-radar='<%= raw radar_data.to_json if radar_data %>'
-                       <% if item[:is_current_stock] %>style="background-color: #eff6ff;"<% end %>>
+                       data-radar='<%= raw radar_data.to_json if radar_data %>'>
                       <div class="flex items-center justify-between">
                         <div class="flex items-center space-x-2">
-                          <span class="w-5 h-5 rounded-full flex items-center justify-center text-xs font-medium 
-                            <%= item[:is_current_stock] ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-600' %>">
+                          <span class="w-5 h-5 rounded-full flex items-center justify-center text-hl-11 font-medium 
+                            <%= item[:is_current_stock] ? 'bg-blue-500 text-white' : 'bg-bg-mute text-muted-2' %>">
                             <%= index + 1 %>
                           </span>
                           <div class="flex flex-col">
-                            <span class="text-sm font-medium text-gray-900"><%= stock.display_name_for_comparison %></span>
-                            <span class="text-xs text-gray-400"><%= stock.symbol %></span>
+                            <span class="text-hl-13 font-medium text-ink"><%= stock.display_name_for_comparison %></span>
+                            <span class="text-hl-11 text-muted-4"><%= stock.symbol %></span>
                           </div>
                         </div>
-                        <span class="text-xs font-medium <%= item[:roe_average] >= 15 ? 'text-green-600' : 'text-gray-500' %>">
+                        <span class="text-hl-11 font-medium <%= item[:roe_average] >= 15 ? 'text-green-600' : 'text-muted-3' %>">
                           <%= '%.2f' % item[:roe_average] %>%
                         </span>
                       </div>
@@ -397,9 +322,9 @@
                 </div>
               <% else %>
                 <div class="text-center py-8">
-                  <div class="text-gray-400 mb-2">📊</div>
-                  <p class="text-sm text-gray-500">暂无同行业股票数据</p>
-                  <p class="text-xs text-gray-400 mt-1">需要至少3年财务数据才能参与对比</p>
+                  <div class="text-muted-4 mb-2">📊</div>
+                  <p class="text-hl-13 text-muted-3">暂无同行业股票数据</p>
+                  <p class="text-hl-11 text-muted-4 mt-1">需要至少3年财务数据才能参与对比</p>
                 </div>
               <% end %>
             </div>
@@ -407,23 +332,23 @@
         </div>
         
         <!-- 快速操作 -->
-        <div class="mt-6 bg-white rounded-lg border border-gray-200 p-4">
-          <h3 class="text-sm font-semibold text-gray-800 mb-4">快速操作</h3>
+        <div class="mt-6 bg-white hl-card p-4">
+          <h3 class="text-hl-13 font-semibold text-ink-soft mb-4">快速操作</h3>
           <div class="space-y-2">
             <%= turbo_frame_tag "follow_stock_quick_#{@stock.id}" do %>
               <% if user_signed_in? && @user_favorite.present? %>
                 <%= button_to "已收藏", user_favorite_path(@user_favorite, stock_id: @stock.id), method: :delete,
-                  class: "w-full py-2 text-left text-sm text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" %>
+                  class: "w-full py-2 text-left text-hl-13 text-muted-2 hover:text-link hover:bg-bg-mute rounded transition-colors" %>
               <% elsif user_signed_in? %>
                 <%= button_to "收藏股票", user_favorites_path(stock_id: @stock.id), method: :post,
-                  class: "w-full py-2 text-left text-sm text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" %>
+                  class: "w-full py-2 text-left text-hl-13 text-muted-2 hover:text-link hover:bg-bg-mute rounded transition-colors" %>
               <% else %>
                 <%= link_to "收藏股票", new_user_session_path,
-                  class: "w-full py-2 text-left text-sm text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors block" %>
+                  class: "w-full py-2 text-left text-hl-13 text-muted-2 hover:text-link hover:bg-bg-mute rounded transition-colors block" %>
               <% end %>
             <% end %>
-            <button class="w-full py-2 text-left text-sm text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">查看历史走势</button>
-            <button class="w-full py-2 text-left text-sm text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">生成分析报告</button>
+            <button class="w-full py-2 text-left text-hl-13 text-muted-2 hover:text-link hover:bg-bg-mute rounded transition-colors">查看历史走势</button>
+            <button class="w-full py-2 text-left text-hl-13 text-muted-2 hover:text-link hover:bg-bg-mute rounded transition-colors">生成分析报告</button>
           </div>
         </div>
       </div>
@@ -637,7 +562,7 @@ document.addEventListener('turbo:load', function() {
   function showError(message) {
     const errorContainer = document.getElementById('error-container');
     const contentContainer = document.getElementById('content-container');
-    errorContainer.innerHTML = `<div class="bg-gray-100 rounded-lg p-4"><p class="text-gray-600 text-center text-xs">${message}</p></div>`;
+    errorContainer.innerHTML = `<div class="bg-bg-mute rounded p-4"><p class="text-muted-2 text-center text-hl-11">${message}</p></div>`;
     errorContainer.classList.remove('hidden');
     contentContainer.classList.add('hidden');
   }
@@ -694,8 +619,8 @@ document.addEventListener('turbo:load', function() {
       interpretation.innerHTML = order.map(key => {
         if (data.interpretation[key]) {
           return `
-            <div class="text-xs text-gray-600 py-1">
-              <span class="text-gray-500 font-medium">${labels[key]}：</span>
+            <div class="text-hl-11 text-muted-2 py-1">
+              <span class="text-muted-3 font-medium">${labels[key]}：</span>
               ${data.interpretation[key]}
             </div>
           `;
@@ -703,7 +628,7 @@ document.addEventListener('turbo:load', function() {
         return '';
       }).join('');
     } else {
-      interpretation.innerHTML = '<p class="text-xs text-gray-500">暂无解读标准</p>';
+      interpretation.innerHTML = '<p class="text-hl-11 text-muted-3">暂无解读标准</p>';
     }
 
     // 渲染图表
@@ -886,42 +811,42 @@ document.addEventListener('turbo:load', function() {
 <!-- 指标弹窗 -->
 <div id="indicator-modal" class="fixed inset-0 z-50 flex items-center justify-center p-6 hidden">
   <div id="modal-backdrop" class="fixed inset-0 bg-black/40"></div>
-  <div id="modal-content" class="relative bg-white rounded-lg shadow-xl w-[896px] min-w-[896px] max-w-[896px] max-h-[85vh] overflow-hidden" style="width: 896px; min-width: 896px; max-width: 896px;">
-    <div class="px-6 border-b border-gray-100 flex justify-between items-center overflow-hidden" style="padding-top: 16px; padding-bottom: 16px; padding-left: 24px; padding-right: 24px;">
-      <h3 id="modal-title" class="text-base font-semibold text-gray-800 truncate" style="margin-right: 16px;"></h3>
-      <button id="modal-close" class="p-1.5 hover:bg-gray-100 rounded transition-colors" style="margin-left: 16px;">
-        <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+  <div id="modal-content" class="relative bg-white rounded w-[896px] min-w-[896px] max-w-[896px] max-h-[85vh] overflow-hidden">
+    <div class="px-6 py-4 border-b border-line-soft flex justify-between items-center overflow-hidden">
+      <h3 id="modal-title" class="text-base font-semibold text-ink-soft truncate mr-4"></h3>
+      <button id="modal-close" class="p-1.5 hover:bg-bg-mute rounded transition-colors ml-4">
+        <svg class="w-4 h-4 text-muted-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
         </svg>
       </button>
     </div>
-    <div class="p-5 overflow-y-auto max-h-[calc(85vh-70px)] overflow-x-hidden" style="overflow-x: hidden;">
+    <div class="p-5 overflow-y-auto max-h-[calc(85vh-70px)] overflow-x-hidden">
       <div id="error-container" class="hidden"></div>
       
-      <div id="chart-container" class="mb-6 overflow-hidden" style="overflow: hidden;">
+      <div id="chart-container" class="mb-6 overflow-hidden">
         <div style="height: 256px; overflow: hidden;">
           <canvas id="indicator-chart"></canvas>
         </div>
       </div>
       
-      <div id="content-container" class="overflow-hidden" style="overflow: hidden;">
+      <div id="content-container" class="overflow-hidden">
         <div class="mb-6">
-          <h4 class="font-semibold text-gray-700 text-sm mb-3 truncate">指标定义</h4>
-          <p id="indicator-description" class="text-gray-600 text-xs leading-relaxed wrap-break-word" style="word-break: break-word; hyphens: auto;"></p>
+          <h4 class="font-semibold text-muted text-hl-13 mb-3 truncate">指标定义</h4>
+          <p id="indicator-description" class="text-muted-2 text-hl-11 leading-relaxed" style="word-break: break-word; hyphens: auto;"></p>
         </div>
         
-        <div class="h-px bg-gray-100 mb-6"></div>
+        <div class="h-px bg-line-soft mb-6"></div>
         
         <div class="mb-6">
-          <h4 class="font-semibold text-gray-700 text-sm mb-3 truncate">计算公式</h4>
-          <div id="indicator-formula" class="text-gray-600 text-xs font-mono p-3 rounded overflow-x-auto" style="word-break: break-all; overflow-x: auto; overflow-y: hidden;"></div>
+          <h4 class="font-semibold text-muted text-hl-13 mb-3 truncate">计算公式</h4>
+          <div id="indicator-formula" class="text-muted-2 text-hl-11 font-mono p-3 bg-bg-mute rounded overflow-x-auto break-all overflow-y-hidden"></div>
         </div>
         
-        <div class="h-px bg-gray-100 mb-6"></div>
+        <div class="h-px bg-line-soft mb-6"></div>
         
         <div>
-          <h4 class="font-semibold text-gray-700 text-sm mb-3 truncate">解读标准</h4>
-          <div id="indicator-interpretation" class="space-y-3 overflow-hidden" style="overflow: hidden;"></div>
+          <h4 class="font-semibold text-muted text-hl-13 mb-3 truncate">解读标准</h4>
+          <div id="indicator-interpretation" class="space-y-3 overflow-hidden"></div>
         </div>
       </div>
     </div>

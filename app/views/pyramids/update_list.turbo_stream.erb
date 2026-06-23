@@ -1,25 +1,25 @@
 <%= turbo_stream.replace 'pyramid-list-container' do %>
   <div id="pyramid-list-container">
-    <div id="pyramid-stock-list" class="divide-y divide-gray-100">
+    <div id="pyramid-stock-list" class="divide-y divide-line-soft">
       <% @stocks.each_slice(2) do |pair| %>
         <div class="grid grid-cols-1 md:grid-cols-2">
           <% pair.each do |stock| %>
             <% rank = @stocks.index(stock) + 1 %>
-            <div class="stock-row flex items-center justify-between px-6 py-3 border-r border-gray-100 last:border-r-0"
+            <div class="stock-row flex items-center justify-between px-6 py-3 border-r border-line-soft last:border-r-0 cursor-pointer transition-colors duration-150 hover:bg-bg-mute"
                  data-stock-id="<%= stock.id %>"
                  data-stock-symbol="<%= stock.symbol %>"
                  data-stock-url="<%= stock_path(stock) %>"
                  data-stock-name="<%= stock.market == 'US' && stock.name&.include?('|') ? stock.name.split('|').first.strip : stock.name %>">
               <div class="flex items-center space-x-3 min-w-0">
-                <span class="text-xs font-mono text-gray-400 w-5 text-right shrink-0"><%= rank %></span>
+                <span class="text-hl-11 font-mono text-muted-4 w-5 text-right shrink-0"><%= rank %></span>
                 <div class="min-w-0">
-                  <div class="stock-name text-sm font-medium text-gray-900 truncate">
+                  <div class="stock-name text-hl-13 font-medium text-ink truncate hover:text-link">
                     <%= stock.market == 'US' && stock.name&.include?('|') ? stock.name.split('|').first.strip : stock.name %>
                   </div>
-                  <div class="text-xs text-gray-500 truncate"><%= stock.symbol %></div>
+                  <div class="text-hl-11 text-muted-3 truncate"><%= stock.symbol %></div>
                 </div>
               </div>
-              <span class="stock-score font-semibold text-indigo-600 text-sm shrink-0 ml-2"><%= stock.pyramid_total_score %></span>
+              <span class="stock-score font-semibold text-link text-hl-13 shrink-0 ml-2"><%= stock.pyramid_total_score %></span>
             </div>
           <% end %>
         </div>
@@ -27,7 +27,7 @@
     </div>
 
     <div id="pyramid-scroll-sentinel"
-         class="flex justify-center py-4 text-sm text-gray-400 opacity-100 transition-opacity duration-300"
+         class="flex justify-center py-4 text-hl-13 text-muted-4 opacity-100 transition-opacity duration-300"
          data-next-page="2"
          data-total-pages="<%= @total_pages %>"
          data-market="<%= @market %>"
@@ -42,7 +42,7 @@
 <% end %>
 
 <%= turbo_stream.replace 'base-label' do %>
-  <span class="text-gray-600 text-xs" id="base-label"><%= @compare_data ? @compare_data[:base][:display_name] : '行业第一' %></span>
+  <span class="text-muted-2 text-hl-11" id="base-label"><%= @compare_data ? @compare_data[:base][:display_name] : '行业第一' %></span>
 <% end %>
 
 <% if @compare_data %>
