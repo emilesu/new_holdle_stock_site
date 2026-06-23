@@ -1,4 +1,4 @@
-<nav class="hl-nav sticky top-0 z-50 bg-white border-b border-line">
+<nav class="hl-nav sticky top-0 z-50 bg-white border-b border-line" data-controller="mobile-menu">
   <div class="container-hl h-15 flex items-center gap-6">
 
     <%# ----- Logo ----- %>
@@ -70,8 +70,15 @@
               <div class="flex items-center gap-3">
                 <%= user_avatar_tag(current_user, size: "w-9 h-9") %>
                 <div class="min-w-0 flex-1">
-                  <p class="text-hl-13 font-medium text-ink truncate"><%= current_user.nickname || "用户" %></p>
-                  <p class="text-hl-12 text-muted-3 truncate"><%= current_user.email %></p>
+                  <p class="text-hl-13 font-medium text-ink truncate"><%= current_user.nickname || current_user.email %></p>
+                  <% role_name = human_role(current_user.role) %>
+                  <% role_color = case current_user.role
+                       when 'super_admin' then 'text-amber-600'
+                       when 'admin' then 'text-link'
+                       when 'member' then 'text-profit'
+                       else 'text-muted-3'
+                     end %>
+                  <p class="text-hl-12 <%= role_color %> truncate"><%= role_name %></p>
                 </div>
               </div>
             </div>
@@ -105,13 +112,14 @@
           </div>
         </div>
       <% else %>
-        <%= link_to '登录', new_user_session_path, class: "hl-nav-link text-hl-13" %>
-        <%= link_to '注册', new_user_registration_path, class: "hl-btn hl-btn-primary text-hl-13 !py-[6px] !px-[14px]" %>
+        <%= link_to '登录', new_user_session_path, class: "hl-nav-link text-hl-13 hidden md:inline-flex" %>
+        <%= link_to '注册', new_user_registration_path, class: "hl-btn hl-btn-primary text-hl-13 !py-[6px] !px-[14px] hidden md:inline-flex" %>
       <% end %>
 
       <%# ----- 移动端菜单按钮 ----- %>
-      <button id="mobile-menu-btn" class="md:hidden p-2 hover:bg-bg-mute rounded" aria-label="切换菜单">
-        <svg class="w-[18px] h-[18px] text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <button id="mobile-menu-btn" data-action="click->mobile-menu#toggle"
+              class="md:hidden p-2 hover:bg-bg-mute rounded" aria-label="切换菜单">
+        <svg data-mobile-menu-target="buttonIcon" class="w-[18px] h-[18px] text-muted transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
         </svg>
       </button>
@@ -119,7 +127,8 @@
   </div>
 
   <%# ----- 移动端菜单 ----- %>
-  <div id="mobile-menu" class="md:hidden hidden bg-white border-t border-line">
+  <div id="mobile-menu" data-mobile-menu-target="menu"
+       class="md:hidden hidden bg-white border-t border-line overflow-hidden transition-[max-height] duration-200 ease-out">
     <div class="px-4 py-4 space-y-3">
       <div class="space-y-1">
         <%= link_to "金字塔", pyramid_path, class: "block px-4 py-2 text-hl-14 rounded #{controller_name == 'pyramids' ? 'bg-bg-mute text-ink font-medium border-l-2 border-profit' : 'text-muted hover:text-ink hover:bg-bg-mute'}" %>
@@ -137,7 +146,14 @@
             <%= user_avatar_tag(current_user, size: "w-10 h-10") %>
             <div>
               <p class="font-medium text-ink"><%= current_user.nickname || current_user.email %></p>
-              <p class="text-hl-13 text-muted-3"><%= current_user.email %></p>
+              <% mob_role_name = human_role(current_user.role) %>
+              <% mob_role_color = case current_user.role
+                   when 'super_admin' then 'text-amber-600'
+                   when 'admin' then 'text-link'
+                   when 'member' then 'text-profit'
+                   else 'text-muted-3'
+                 end %>
+              <p class="text-hl-13 <%= mob_role_color %>"><%= mob_role_name %></p>
             </div>
           </div>
           <div class="space-y-1">

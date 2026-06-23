@@ -452,9 +452,13 @@
     transform: translateY(0) !important;
   }
   .hl-dropdown-closing {
-    opacity: 0 !important;
-    transform: translateY(-4px) !important;
-  }
+  opacity: 0 !important;
+  transform: translateY(-4px) !important;
+}
+
+.mobile-menu-open {
+  max-height: 600px !important;
+}
 
   /* ==================== Footer ==================== */
   .hl-footer {
