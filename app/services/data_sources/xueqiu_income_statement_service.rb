@@ -2,6 +2,7 @@ module DataSources
   class XueqiuIncomeStatementService
     US_BASE_URL = "https://stock.xueqiu.com/v5/stock/finance/us/income.json".freeze
     CN_BASE_URL = "https://stock.xueqiu.com/v5/stock/finance/cn/income.json".freeze
+    HK_BASE_URL = "https://stock.xueqiu.com/v5/stock/finance/hk/income.json".freeze
 
     USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36".freeze
     REFERER = "https://xueqiu.com/".freeze
@@ -16,7 +17,8 @@ module DataSources
     class << self
       def call(symbol, market: "US")
         puts "=" * 70
-        puts "开始爬取雪球#{market == 'CN' ? 'A股' : '美股'}利润表数据"
+        market_name = market == 'CN' ? 'A股' : market == 'HK' ? '港股' : '美股'
+        puts "开始爬取雪球#{market_name}利润表数据"
         puts "股票代码: #{symbol}, 市场: #{market}"
         puts "=" * 70
 
@@ -44,7 +46,7 @@ module DataSources
       def fetch_data(symbol, market)
         puts "\n正在请求雪球接口..."
 
-        base_url = market == 'CN' ? CN_BASE_URL : US_BASE_URL
+        base_url = market == 'CN' ? CN_BASE_URL : market == 'HK' ? HK_BASE_URL : US_BASE_URL
         
         connection = Faraday.new(
           url: base_url,
@@ -253,6 +255,13 @@ module DataSources
             operating_income: parse_financial_value(item["op"]),
             income_before_tax: parse_financial_value(item["profit_before_tax"]),
             net_income: parse_financial_value(item["net_profit"])
+          }
+        elsif market == 'HK'
+          {
+            total_revenue: parse_financial_value(item["tto"]),
+            operating_income: parse_financial_value(item["opeploinclfincost"] || item["op"]),
+            income_before_tax: parse_financial_value(item["profit_before_tax"]),
+            net_income: parse_financial_value(item["ploashh"] || item["plocyr"])
           }
         else
           {

@@ -2,6 +2,7 @@ module DataSources
   class XueqiuIndicatorService
     US_BASE_URL = "https://stock.xueqiu.com/v5/stock/finance/us/indicator.json".freeze
     CN_BASE_URL = "https://stock.xueqiu.com/v5/stock/finance/cn/indicator.json".freeze
+    HK_BASE_URL = "https://stock.xueqiu.com/v5/stock/finance/hk/indicator.json".freeze
 
     USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36".freeze
     REFERER = "https://xueqiu.com/".freeze
@@ -16,7 +17,8 @@ module DataSources
     class << self
       def call(symbol, market: "US")
         puts "=" * 70
-        puts "开始爬取雪球#{market == 'CN' ? 'A股' : '美股'}财务指标数据"
+        market_name = market == 'CN' ? 'A股' : market == 'HK' ? '港股' : '美股'
+        puts "开始爬取雪球#{market_name}财务指标数据"
         puts "股票代码: #{symbol}, 市场: #{market}"
         puts "=" * 70
 
@@ -44,7 +46,7 @@ module DataSources
       def fetch_data(symbol, market)
         puts "\n正在请求雪球财务指标接口..."
 
-        base_url = market == 'CN' ? CN_BASE_URL : US_BASE_URL
+        base_url = market == 'CN' ? CN_BASE_URL : market == 'HK' ? HK_BASE_URL : US_BASE_URL
         
         connection = Faraday.new(
           url: base_url,
@@ -249,6 +251,17 @@ module DataSources
             net_interest_of_ta: parse_financial_value(item["net_interest_of_total_assets"]),
             gross_margin: parse_financial_value(item["gross_selling_rate"]),
             asset_liab_ratio: nil
+          }
+        elsif market == 'HK'
+          {
+            basic_eps: parse_financial_value(item["beps"]),
+            nav_ps: parse_financial_value(item["bps"]),
+            ncf_from_oa_ps: parse_financial_value(item["ncfps"]),
+            capital_reserve: nil,
+            roe_avg: parse_financial_value(item["roe"]),
+            net_interest_of_ta: parse_financial_value(item["rota"]),
+            gross_margin: parse_financial_value(item["gpm"]),
+            asset_liab_ratio: parse_financial_value(item["tlia_ta"])
           }
         else
           {
