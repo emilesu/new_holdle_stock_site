@@ -1,74 +1,134 @@
 module DataSources
   class NasdaqStockListService
     API_ENDPOINTS = {
-      "NASDAQ" => "https://api.nasdaq.com/api/screener/stocks?tabletype=NASDAQ&exchange=NASDAQ",
-      "NYSE" => "https://api.nasdaq.com/api/screener/stocks?tabletype=NYSE&exchange=NYSE",
-      "AMEX" => "https://api.nasdaq.com/api/screener/stocks?tabletype=AMEX&exchange=AMEX"
+      "NASDAQ" => "https://api.nasdaq.com/api/screener/stocks?tabletype=NASDAQ&exchange=NASDAQ&limit=5000",
+      "NYSE" => "https://api.nasdaq.com/api/screener/stocks?tabletype=NYSE&exchange=NYSE&limit=5000",
+      "AMEX" => "https://api.nasdaq.com/api/screener/stocks?tabletype=AMEX&exchange=AMEX&limit=5000"
     }.freeze
 
-    SLEEP_SEC = 0.3
+    TIMEOUT = 30
+    RETRY_TIMES = 2
+    RETRY_INTERVAL = 2
 
     class << self
       def call
-        puts "=" * 70
-        puts "开始爬取美股列表（NASDAQ/NYSE/AMEX）"
-        puts "=" * 70
+        Rails.logger.info "=" * 70
+        Rails.logger.info "开始爬取美股列表（NASDAQ/NYSE/AMEX）"
+        Rails.logger.info "=" * 70
+
+        stats = { total: 0, created: 0, updated: 0, skipped: 0, failed: 0 }
 
         API_ENDPOINTS.each_key do |market|
-          fetch_market(market)
+          market_stats = fetch_market(market)
+          merge_stats(stats, market_stats)
         end
 
-        puts "\n✅ 美股列表爬取完成"
+        Rails.logger.info "=" * 70
+        Rails.logger.info "美股列表爬取完成"
+        Rails.logger.info "📊 统计: 总计 #{stats[:total]}, 新增 #{stats[:created]}, 更新 #{stats[:updated]}, 跳过 #{stats[:skipped]}, 失败 #{stats[:failed]}"
+        Rails.logger.info "=" * 70
+
+        stats
       end
 
       private
 
       def fetch_market(market)
-        puts "\n正在抓取 #{market} 市场..."
+        Rails.logger.info "正在抓取 #{market} 市场..."
         url = API_ENDPOINTS[market]
 
-        response = Faraday.get(url, nil, {
-          "User-Agent" => "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-          "Accept" => "application/json"
-        })
+        stats = { total: 0, created: 0, updated: 0, skipped: 0, failed: 0 }
 
-        if response.success?
-          data = JSON.parse(response.body)
-          # 修复点：rows 列表在 data['table']['rows'] 下
-          stocks = data.dig("data", "table", "rows")
-          return unless stocks.is_a?(Array)
+        existing_stocks = Stock.where(market: "US").index_by(&:symbol)
 
-          puts "获取到 #{stocks.size} 条数据"
-          stocks.each do |item|
-            save_stock(market, item)
-            sleep SLEEP_SEC
+        retries = RETRY_TIMES
+        begin
+          response = Faraday.get(url, nil, {
+            "User-Agent" => "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "Accept" => "application/json"
+          }) do |req|
+            req.options.timeout = TIMEOUT
           end
 
-          puts "✅ #{market} 处理完成，共 #{stocks.size} 条"
-        else
-          puts "❌ #{market} 请求失败，状态码：#{response.status}"
+          if response.success?
+            data = JSON.parse(response.body)
+            stocks = data.dig("data", "table", "rows")
+            unless stocks.is_a?(Array) && stocks.any?
+              Rails.logger.warn "#{market} 返回数据为空"
+              return stats
+            end
+
+            total_records = data.dig("data", "totalrecords") || stocks.size
+            Rails.logger.info "#{market} 获取到 #{stocks.size} 条（总计约 #{total_records} 条）"
+
+            stats[:total] = stocks.size
+
+            stocks.each do |item|
+              result = save_stock(market, item, existing_stocks)
+              stats[result] += 1
+            end
+
+            Rails.logger.info "✅ #{market} 处理完成: 新增 #{stats[:created]}, 更新 #{stats[:updated]}, 跳过 #{stats[:skipped]}, 失败 #{stats[:failed]}"
+          else
+            Rails.logger.error "❌ #{market} 请求失败，状态码：#{response.status}"
+          end
+        rescue Faraday::TimeoutError, Faraday::ConnectionFailed => e
+          retries -= 1
+          if retries >= 0
+            Rails.logger.warn "#{market} 请求超时/断连，重试中（剩余 #{retries + 1} 次）..."
+            sleep RETRY_INTERVAL
+            retry
+          end
+          Rails.logger.error "#{market} 请求失败（已重试）: #{e.message}"
+        rescue JSON::ParserError => e
+          Rails.logger.error "#{market} JSON 解析失败: #{e.message}"
+        rescue => e
+          Rails.logger.error "#{market} 请求异常: #{e.message}"
         end
-      rescue => e
-        puts "❌ #{market} 请求异常：#{e.message}"
+
+        stats
       end
 
-      def save_stock(market, item)
+      def save_stock(market, item, existing_stocks = {})
         symbol = item["symbol"]
-        return if symbol.blank?
+        return :failed if symbol.blank?
 
-        stock = Stock.find_or_initialize_by(
+        name = item["name"]
+        return :failed if name.blank?
+
+        existing = existing_stocks[symbol]
+        if existing
+          if existing.name == name && existing.exchange == market
+            return :skipped
+          end
+          existing.name = name
+          existing.exchange = market
+          existing.status = "listed"
+          existing.save!
+          return :updated
+        end
+
+        Stock.create!(
           symbol: symbol,
-          market: "US"
+          name: name,
+          market: "US",
+          exchange: market,
+          status: "listed"
         )
 
-        stock.name = item["name"]
-        stock.exchange = market
-        stock.status = "listed"
-
-        stock.save!
-        puts "  入库：#{symbol} | #{item['name']}"
+        :created
+      rescue ActiveRecord::RecordInvalid => e
+        Rails.logger.error "入库失败 #{symbol}: #{e.message}"
+        :failed
       rescue => e
-        puts "❌ 入库失败 #{symbol}: #{e.message}"
+        Rails.logger.error "入库异常 #{symbol}: #{e.message}"
+        :failed
+      end
+
+      def merge_stats(target, source)
+        %i[total created updated skipped failed].each do |key|
+          target[key] += source[key] if source[key]
+        end
       end
     end
   end

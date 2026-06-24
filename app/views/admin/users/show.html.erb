@@ -3,14 +3,14 @@
   <p class="mt-2 text-gray-600">查看用户 <%= @user.nickname %> 的详细信息</p>
 </div>
 
-<div class="bg-white rounded-md border border-gray-200 mb-6">
-  <div class="px-6 py-4 border-b border-gray-100">
+<div class="hl-card">
+  <div class="px-6 py-4 border-b border-line">
     <div class="flex items-center justify-between">
       <div class="flex items-center space-x-4">
         <%= user_avatar_tag(@user, size: "w-14 h-14", css_class: "text-2xl") %>
         <div>
-          <h2 class="text-xl font-bold text-gray-900"><%= @user.nickname %></h2>
-          <p class="text-gray-600">#<%= @user.id %></p>
+          <h2 class="text-hl-18 font-bold text-ink"><%= @user.nickname %></h2>
+          <p class="text-muted">#<%= @user.id %></p>
         </div>
       </div>
       <span class="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-semibold
@@ -83,7 +83,7 @@
 
 <div class="flex space-x-4">
   <%= link_to "编辑", edit_admin_user_path(@user),
-    class: "px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 font-medium" %>
+    class: "hl-btn hl-btn-primary" %>
   <%= link_to "返回列表", admin_users_path,
-    class: "px-6 py-2 bg-white border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 font-medium" %>
+    class: "hl-btn hl-btn-line" %>
 </div>

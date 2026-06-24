@@ -1,13 +1,13 @@
 <div class="mb-6">
-  <h1 class="text-2xl font-bold text-gray-900">数据统计看板</h1>
-  <p class="mt-1 text-hl-13 text-gray-500">实时监控平台核心数据指标</p>
+  <h1 class="text-hl-22 font-bold text-ink">数据统计看板</h1>
+  <p class="mt-1 text-hl-13 text-muted">实时监控平台核心数据指标</p>
 </div>
 
 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-6">
   <div class="hl-card p-4">
     <div class="flex items-center justify-between">
       <div>
-        <p class="text-hl-12 font-medium text-gray-500">A股股票</p>
+        <p class="text-hl-12 font-medium text-muted-3">A股股票</p>
         <p class="mt-1 text-hl-22 font-bold text-ink"><%= @a_stock_count %></p>
       </div>
       <div class="w-10 h-10 bg-green-50 rounded-md flex items-center justify-center">
@@ -21,7 +21,7 @@
   <div class="hl-card p-4">
     <div class="flex items-center justify-between">
       <div>
-        <p class="text-hl-12 font-medium text-gray-500">港股股票</p>
+        <p class="text-hl-12 font-medium text-muted-3">港股股票</p>
         <p class="mt-1 text-hl-22 font-bold text-ink"><%= @hk_stock_count %></p>
       </div>
       <div class="w-10 h-10 bg-indigo-50 rounded-md flex items-center justify-center">
@@ -35,7 +35,7 @@
   <div class="hl-card p-4">
     <div class="flex items-center justify-between">
       <div>
-        <p class="text-hl-12 font-medium text-gray-500">美股股票</p>
+        <p class="text-hl-12 font-medium text-muted-3">美股股票</p>
         <p class="mt-1 text-hl-22 font-bold text-ink"><%= @us_stock_count %></p>
       </div>
       <div class="w-10 h-10 bg-blue-50 rounded-md flex items-center justify-center">
@@ -49,7 +49,7 @@
   <div class="hl-card p-4">
     <div class="flex items-center justify-between">
       <div>
-        <p class="text-hl-12 font-medium text-gray-500">总股票数</p>
+        <p class="text-hl-12 font-medium text-muted-3">总股票数</p>
         <p class="mt-1 text-hl-22 font-bold text-ink"><%= @total_stocks %></p>
       </div>
       <div class="w-10 h-10 bg-purple-50 rounded-md flex items-center justify-center">
@@ -63,7 +63,7 @@
   <div class="hl-card p-4">
     <div class="flex items-center justify-between">
       <div>
-        <p class="text-hl-12 font-medium text-gray-500">注册用户</p>
+        <p class="text-hl-12 font-medium text-muted-3">注册用户</p>
         <p class="mt-1 text-hl-22 font-bold text-ink"><%= @total_users %></p>
       </div>
       <div class="w-10 h-10 bg-orange-50 rounded-md flex items-center justify-center">
@@ -77,7 +77,7 @@
   <div class="hl-card p-4">
     <div class="flex items-center justify-between">
       <div>
-        <p class="text-hl-12 font-medium text-gray-500">日活用户</p>
+        <p class="text-hl-12 font-medium text-muted-3">日活用户</p>
         <p class="mt-1 text-hl-22 font-bold text-ink"><%= @today_active_users %></p>
       </div>
       <div class="w-10 h-10 bg-cyan-50 rounded-md flex items-center justify-center">
@@ -91,7 +91,7 @@
   <div class="hl-card p-4">
     <div class="flex items-center justify-between">
       <div>
-        <p class="text-hl-12 font-medium text-gray-500">周活用户</p>
+        <p class="text-hl-12 font-medium text-muted-3">周活用户</p>
         <p class="mt-1 text-hl-22 font-bold text-ink"><%= @week_active_users %></p>
       </div>
       <div class="w-10 h-10 bg-indigo-50 rounded-md flex items-center justify-center">
@@ -105,44 +105,44 @@
 
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
   <div class="hl-card">
-    <div class="px-5 py-4 border-b border-gray-100">
-      <h3 class="text-base font-semibold text-gray-900">今日新增</h3>
+    <div class="px-5 py-4 border-b border-line">
+      <h3 class="text-hl-16 font-semibold text-ink">今日新增</h3>
     </div>
     <div class="p-5 grid grid-cols-2 gap-4">
       <div class="bg-blue-50 rounded-md p-4">
         <p class="text-hl-12 text-blue-600">新用户</p>
-        <p class="mt-1 text-2xl font-bold text-blue-800"><%= @today_registered_users %></p>
+        <p class="mt-1 text-hl-22 font-bold text-blue-800"><%= @today_registered_users %></p>
       </div>
       <div class="bg-green-50 rounded-md p-4">
         <p class="text-hl-12 text-green-600">会员用户</p>
-        <p class="mt-1 text-2xl font-bold text-green-800"><%= @member_count %></p>
+        <p class="mt-1 text-hl-22 font-bold text-green-800"><%= @member_count %></p>
       </div>
     </div>
   </div>
 
   <div class="hl-card">
-    <div class="px-5 py-4 border-b border-gray-100">
-      <h3 class="text-base font-semibold text-gray-900">管理员统计</h3>
+    <div class="px-5 py-4 border-b border-line">
+      <h3 class="text-hl-16 font-semibold text-ink">管理员统计</h3>
     </div>
     <div class="p-5 flex items-center justify-center">
       <div class="text-center">
         <div class="w-20 h-20 bg-red-500 rounded-full flex items-center justify-center mx-auto mb-3">
-          <span class="text-2xl font-bold text-white"><%= @admin_count %></span>
+          <span class="text-hl-22 font-bold text-white"><%= @admin_count %></span>
         </div>
-        <p class="text-hl-13 text-gray-500">系统管理员</p>
+        <p class="text-hl-13 text-muted-3">系统管理员</p>
       </div>
     </div>
   </div>
 </div>
 
 <div class="mb-6">
-  <h2 class="text-lg font-bold text-gray-900 mb-1">快捷功能入口</h2>
+  <h2 class="text-hl-18 font-bold text-ink mb-1">快捷功能入口</h2>
   <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
     <a href="<%= admin_stocks_path %>" class="block bg-green-600 rounded-md p-5 text-white hover:bg-green-700 transition-colors">
       <div class="flex items-center justify-between">
         <div>
-          <h3 class="text-base font-bold">股票管理</h3>
-          <p class="mt-1 text-hl-12 text-green-100">管理A股和美股股票数据</p>
+          <h3 class="text-hl-16 font-bold">股票管理</h3>
+          <p class="mt-1 text-hl-12 text-green-100">管理A股、港股和美股股票数据</p>
         </div>
         <div class="w-10 h-10 bg-white/20 rounded-md flex items-center justify-center">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -155,7 +155,7 @@
     <a href="<%= admin_users_path %>" class="block bg-blue-600 rounded-md p-5 text-white hover:bg-blue-700 transition-colors">
       <div class="flex items-center justify-between">
         <div>
-          <h3 class="text-base font-bold">用户管理</h3>
+          <h3 class="text-hl-16 font-bold">用户管理</h3>
           <p class="mt-1 text-hl-12 text-blue-100">管理平台注册用户</p>
         </div>
         <div class="w-10 h-10 bg-white/20 rounded-md flex items-center justify-center">
@@ -169,7 +169,7 @@
     <a href="<%= admin_stock_crawlers_path %>" class="block bg-purple-600 rounded-md p-5 text-white hover:bg-purple-700 transition-colors">
       <div class="flex items-center justify-between">
         <div>
-          <h3 class="text-base font-bold">爬虫管理</h3>
+          <h3 class="text-hl-16 font-bold">爬虫管理</h3>
           <p class="mt-1 text-hl-12 text-purple-100">管理股票数据爬虫任务</p>
         </div>
         <div class="w-10 h-10 bg-white/20 rounded-md flex items-center justify-center">
@@ -184,18 +184,18 @@
 
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
   <div class="hl-card">
-    <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
-      <h3 class="text-base font-semibold text-gray-900">最近注册用户</h3>
-      <a href="<%= admin_users_path %>" class="text-hl-13 text-blue-600 hover:text-blue-700">查看全部</a>
+    <div class="px-5 py-4 border-b border-line flex items-center justify-between">
+      <h3 class="text-hl-16 font-semibold text-ink">最近注册用户</h3>
+      <a href="<%= admin_users_path %>" class="text-hl-13 text-link hover:text-link-hover">查看全部</a>
     </div>
-    <div class="divide-y divide-gray-50">
+    <div class="divide-y divide-line">
       <% @recent_users.each do |user| %>
-        <div class="px-5 py-3 flex items-center justify-between hover:bg-gray-50 transition-colors">
+        <div class="px-5 py-3 flex items-center justify-between hover:bg-bg-mute transition-colors">
           <div class="flex items-center space-x-3">
             <%= user_avatar_tag(user, size: "w-9 h-9", css_class: "text-hl-13") %>
             <div>
-              <p class="text-hl-13 font-medium text-gray-900"><%= user.nickname %></p>
-              <p class="text-hl-12 text-gray-500"><%= user.email %></p>
+              <p class="text-hl-13 font-medium text-ink"><%= user.nickname %></p>
+              <p class="text-hl-12 text-muted-3"><%= user.email %></p>
             </div>
           </div>
           <span class="inline-flex items-center px-2 py-0.5 rounded text-hl-12 font-medium
@@ -203,7 +203,7 @@
                  when 'super_admin' then 'bg-red-50 text-red-700'
                  when 'admin' then 'bg-purple-50 text-purple-700'
                  when 'member' then 'bg-blue-50 text-blue-700'
-                 else 'bg-gray-100 text-gray-600'
+                 else 'bg-bg-mute text-muted-2'
                end %>">
             <%= human_role(user.role) %>
           </span>
@@ -213,16 +213,16 @@
   </div>
 
   <div class="hl-card">
-    <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
-      <h3 class="text-base font-semibold text-gray-900">最近添加股票</h3>
-      <a href="<%= admin_stocks_path %>" class="text-hl-13 text-blue-600 hover:text-blue-700">查看全部</a>
+    <div class="px-5 py-4 border-b border-line flex items-center justify-between">
+      <h3 class="text-hl-16 font-semibold text-ink">最近添加股票</h3>
+      <a href="<%= admin_stocks_path %>" class="text-hl-13 text-link hover:text-link-hover">查看全部</a>
     </div>
-    <div class="divide-y divide-gray-50">
+    <div class="divide-y divide-line">
       <% @recent_stocks.each do |stock| %>
-        <div class="px-5 py-3 flex items-center justify-between hover:bg-gray-50 transition-colors">
+        <div class="px-5 py-3 flex items-center justify-between hover:bg-bg-mute transition-colors">
           <div>
-            <p class="text-hl-13 font-medium text-gray-900"><%= stock.symbol %></p>
-            <p class="text-hl-12 text-gray-500"><%= stock.name %></p>
+            <p class="text-hl-13 font-medium text-ink"><%= stock.symbol %></p>
+            <p class="text-hl-12 text-muted-3"><%= stock.name %></p>
           </div>
           <span class="inline-flex items-center px-2 py-0.5 rounded text-hl-12 font-medium
             <%= stock.market == 'CN' ? 'bg-green-50 text-green-700' : stock.market == 'HK' ? 'bg-indigo-50 text-indigo-700' : 'bg-blue-50 text-blue-700' %>">

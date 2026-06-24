@@ -3,6 +3,6 @@
   <%= link_to '返回章节列表', admin_course_chapters_path(@course), class: 'text-sm text-gray-600 hover:text-gray-800' %>
 </div>
 
-<div class="bg-white rounded-md border border-gray-200 p-6 max-w-2xl">
+<div class="hl-card p-6">
   <%= render 'form', course: @course, chapter: @chapter %>
 </div>

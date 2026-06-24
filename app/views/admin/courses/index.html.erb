@@ -1,49 +1,49 @@
 <div class="flex items-center justify-between mb-6">
-  <h1 class="text-lg font-semibold text-gray-800">课程管理</h1>
-  <%= link_to '新增课程', new_admin_course_path, class: 'bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 text-sm' %>
+  <h1 class="text-hl-22 font-bold text-ink">课程管理</h1>
+  <%= link_to '新增课程', new_admin_course_path, class: 'hl-btn hl-btn-primary' %>
 </div>
 
-<div class="bg-white rounded-md border border-gray-200 overflow-hidden">
+<div class="hl-card overflow-hidden">
   <table class="w-full">
     <thead>
-      <tr class="border-b border-gray-200 bg-gray-50">
-        <th class="px-6 py-3 text-left text-sm font-medium text-gray-500">封面</th>
-        <th class="px-6 py-3 text-left text-sm font-medium text-gray-500">标题</th>
-        <th class="px-6 py-3 text-left text-sm font-medium text-gray-500">访问级别</th>
-        <th class="px-6 py-3 text-left text-sm font-medium text-gray-500">状态</th>
-        <th class="px-6 py-3 text-left text-sm font-medium text-gray-500">排序</th>
-        <th class="px-6 py-3 text-right text-sm font-medium text-gray-500">操作</th>
+      <tr class="border-b border-line bg-bg-mute">
+        <th class="px-6 py-4 text-left text-hl-12 font-semibold text-muted-3 uppercase tracking-wider">封面</th>
+        <th class="px-6 py-4 text-left text-hl-12 font-semibold text-muted-3 uppercase tracking-wider">标题</th>
+        <th class="px-6 py-4 text-left text-hl-12 font-semibold text-muted-3 uppercase tracking-wider">访问级别</th>
+        <th class="px-6 py-4 text-left text-hl-12 font-semibold text-muted-3 uppercase tracking-wider">状态</th>
+        <th class="px-6 py-4 text-left text-hl-12 font-semibold text-muted-3 uppercase tracking-wider">排序</th>
+        <th class="px-6 py-4 text-right text-hl-12 font-semibold text-muted-3 uppercase tracking-wider">操作</th>
       </tr>
     </thead>
     <tbody>
       <% @courses.each do |course| %>
-        <tr class="border-b border-gray-100 hover:bg-gray-50">
-          <td class="px-6 py-4 text-sm">
+        <tr class="border-b border-line hover:bg-bg-mute">
+          <td class="px-6 py-4 text-hl-13">
             <% if course.cover_url %>
-              <img src="<%= course.cover_url %>" alt="<%= course.title %>" class="w-16 h-10 object-cover rounded border border-gray-100">
+              <img src="<%= course.cover_url %>" alt="<%= course.title %>" class="w-16 h-10 object-cover rounded border border-line">
             <% else %>
-              <span class="text-gray-300 text-xs">无</span>
+              <span class="text-muted-5 text-hl-12">无</span>
             <% end %>
           </td>
-          <td class="px-6 py-4 text-sm">
-            <%= link_to course.title, admin_course_path(course), class: 'text-blue-600 hover:text-blue-800' %>
+          <td class="px-6 py-4 text-hl-13">
+            <%= link_to course.title, admin_course_path(course), class: 'text-link hover:text-link-hover' %>
           </td>
-          <td class="px-6 py-4 text-sm">
+          <td class="px-6 py-4 text-hl-13">
             <% if course.member_only? %>
-              <span class="inline-flex px-2 py-1 text-xs font-medium bg-blue-50 text-blue-600 border border-blue-200 rounded">会员</span>
+              <span class="hl-tag bg-blue-50 text-blue-600 border border-blue-200">会员</span>
             <% else %>
-              <span class="inline-flex px-2 py-1 text-xs font-medium bg-gray-50 text-gray-500 border border-gray-200 rounded">公开</span>
+              <span class="hl-tag bg-bg-mute text-muted-3 border border-line">公开</span>
             <% end %>
           </td>
-          <td class="px-6 py-4 text-sm text-gray-600">
+          <td class="px-6 py-4 text-hl-13 text-muted">
             <%= course.published? ? '已发布' : '草稿' %>
           </td>
-          <td class="px-6 py-4 text-sm text-gray-600"><%= course.sort %></td>
-          <td class="px-6 py-4 text-sm text-right">
+          <td class="px-6 py-4 text-hl-13 text-muted"><%= course.sort %></td>
+          <td class="px-6 py-4 text-hl-13 text-right">
             <div class="flex items-center justify-end space-x-3">
-              <%= link_to '章节', admin_course_chapters_path(course), class: 'text-blue-600 hover:text-blue-800' %>
-              <%= link_to '编辑', edit_admin_course_path(course), class: 'text-gray-600 hover:text-gray-800' %>
-              <%= button_to '删除', admin_course_path(course), method: :delete, class: 'text-red-600 hover:text-red-800', data: { turbo_confirm: '确认删除？' } %>
+              <%= link_to '章节', admin_course_chapters_path(course), class: 'text-link hover:text-link-hover' %>
+              <%= link_to '编辑', edit_admin_course_path(course), class: 'text-muted hover:text-ink' %>
+              <%= button_to '删除', admin_course_path(course), method: :delete, class: 'text-profit hover:text-red-700', data: { turbo_confirm: '确认删除？' } %>
             </div>
           </td>
         </tr>

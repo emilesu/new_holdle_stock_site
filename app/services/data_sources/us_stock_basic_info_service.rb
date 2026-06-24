@@ -39,119 +39,153 @@ module DataSources
       "Agribusiness" => "农业综合",
       "Aluminum" => "铝",
       "Building Materials" => "建材",
+      "Building Products & Equipment" => "建筑产品与设备",
       "Chemicals" => "化工",
+      "Coking Coal" => "焦煤",
       "Copper" => "铜",
       "Gold" => "黄金",
       "Lumber & Wood Production" => "木材与木制品",
       "Metal Fabrication" => "金属加工",
       "Mining" => "采矿",
       "Nonferrous Metals" => "有色金属",
+      "Other Industrial Metals & Mining" => "其他工业金属和采矿",
+      "Other Precious Metals & Mining" => "其他贵金属和采矿",
       "Paper & Paper Products" => "造纸",
       "Silver" => "白银",
       "Specialty Chemicals" => "特种化工",
-      
+      "Steel" => "钢铁",
+      "Uranium" => "铀",
+
       # Communication Services 通信服务
       "Advertising Agencies" => "广告代理",
       "Broadcasting" => "广播电视",
       "Entertainment" => "娱乐",
       "Internet Content & Information" => "互联网内容与信息",
       "Media" => "传媒",
+      "Publishing" => "出版",
       "Telecom Services" => "电信服务",
-      
+
       # Consumer Cyclical 消费周期
       "Apparel Manufacturing" => "服装制造",
+      "Apparel Retail" => "服装零售",
       "Auto & Truck Dealerships" => "汽车经销",
       "Auto Manufacturers" => "汽车制造",
       "Auto Parts" => "汽车零部件",
+      "Footwear & Accessories" => "鞋类与配件",
       "Furnishings, Fixtures & Appliances" => "家居与家电",
       "Gambling" => "博彩",
       "Home Improvement Retail" => "家居零售",
+      "Leisure" => "休闲",
       "Luxury Goods" => "奢侈品",
       "Packaging & Containers" => "包装",
       "Personal Services" => "个人服务",
       "Recreational Vehicles" => "休闲车",
+      "Rental & Leasing Services" => "租赁服务",
       "Residential Construction" => "住宅建造",
+      "Restaurants" => "餐饮",
       "Retail—Apparel & Specialty" => "服装零售",
+      "Specialty Retail" => "专业零售",
       "Textile Manufacturing" => "纺织制造",
       "Internet Retail" => "互联网零售",
-      
+
       # Consumer Defensive 消费防御
       "Beverages—Alcoholic" => "酒精饮料",
+      "Beverages—Brewers" => "啤酒酿造",
       "Beverages—Non-Alcoholic" => "非酒精饮料",
+      "Beverages—Non—Alcoholic" => "非酒精饮料",
       "Confectioners" => "糖果",
       "Discount Stores" => "折扣零售",
+      "Education & Training Services" => "教育培训服务",
       "Food Distribution" => "食品分销",
       "Food Products" => "食品",
       "Household & Personal Products" => "家居个人用品",
       "Packaged Foods" => "包装食品",
       "Tobacco" => "烟草",
-      
+
       # Energy 能源
       "Oil & Gas Drilling" => "油气钻井",
       "Oil & Gas E&P" => "油气勘探开采",
+      "Oil & Gas Equipment & Services" => "油气设备与服务",
       "Oil & Gas Integrated" => "综合油气",
       "Oil & Gas Midstream" => "油气中游",
       "Oil & Gas Refining & Marketing" => "油气炼化销售",
       "Oil & Gas Services" => "油气服务",
       "Renewable Energy" => "可再生能源",
-      
+
       # Financial Services 金融服务
       "Asset Management" => "资产管理",
       "Banks—Diversified" => "多元化银行",
       "Banks—Regional" => "地区银行",
       "Capital Markets" => "资本市场",
       "Credit Services" => "信用服务",
+      "Financial Conglomerates" => "金融综合集团",
       "Financial Data & Stock Exchanges" => "金融数据与交易所",
       "Insurance—Diversified" => "综合保险",
       "Insurance—Life" => "寿险",
       "Insurance—Property & Casualty" => "财险",
       "Insurance—Reinsurance" => "再保险",
+      "Insurance Brokers" => "保险经纪",
       "Mortgage Finance" => "抵押金融",
       "Real Estate" => "房地产",
       "Real Estate—Development" => "地产开发",
       "Real Estate—Diversified" => "综合地产",
       "Real Estate—REITs" => "房地产信托",
+      "Real Estate Services" => "房地产服务",
+      "REIT—Healthcare Facilities" => "医疗设施REIT",
+      "REIT—Hotel & Motel" => "酒店REIT",
+      "REIT—Industrial" => "工业REIT",
+      "REIT—Mortgage" => "抵押REIT",
+      "REIT—Retail" => "零售REIT",
+      "REIT—Specialty" => "专业REIT",
       "Savings & Cooperative Banks" => "储蓄合作银行",
-      
+
       # Healthcare 医疗保健
       "Biotechnology" => "生物技术",
       "Drug Manufacturers—General" => "综合制药",
       "Drug Manufacturers—Specialty" => "专科制药",
+      "Drug Manufacturers—Specialty & Generic" => "专科仿制药",
       "Healthcare Equipment" => "医疗设备",
       "Healthcare Plans" => "医保计划",
+      "Medical Care Facilities" => "医疗护理设施",
       "Medical Devices" => "医疗器械",
       "Medical Diagnostics & Research" => "医疗诊断与研究",
       "Medical Distribution" => "医药分销",
+      "Medical Instruments & Supplies" => "医疗器械与用品",
       "Pharmaceutical Retailers" => "医药零售",
-      
+
       # Industrials 工业
       "Aerospace & Defense" => "航空航天国防",
       "Airlines" => "航空",
       "Building Products" => "建筑产品",
       "Business Services" => "商业服务",
+      "Conglomerates" => "企业集团",
       "Construction" => "建筑工程",
       "Consulting Services" => "咨询服务",
       "Electrical Equipment" => "电气设备",
+      "Electrical Equipment & Parts" => "电气设备与零部件",
       "Engineering & Construction" => "工程建设",
       "Farm & Heavy Construction Machinery" => "农业与重型工程机械",
       "Freight & Logistics" => "货运物流",
       "Industrial Distribution" => "工业分销",
       "Infrastructure Operations" => "基建运营",
+      "Integrated Freight & Logistics" => "综合货运与物流",
       "Marine Shipping" => "海运",
       "Metalworking Equipment" => "金属加工设备",
       "Office Supplies" => "办公用品",
       "Railroads" => "铁路",
       "Security & Protection" => "安防",
+      "Specialty Business Services" => "专业商业服务",
+      "Specialty Industrial Machinery" => "专业工业机械",
       "Staffing & Employment Services" => "人力服务",
       "Tools & Accessories" => "工具配件",
-      
+
       # Real Estate 房地产
       "Real Estate—Residential" => "住宅地产",
       "Real Estate—Commercial" => "商业地产",
       "Real Estate—Industrial" => "工业地产",
       "Real Estate—Retail" => "零售地产",
       "Real Estate—Hospitality" => "酒店地产",
-      
+
       # Technology 科技
       "Application Software" => "应用软件",
       "Communication Equipment" => "通信设备",
@@ -162,25 +196,24 @@ module DataSources
       "Internet Software & Services" => "互联网软件服务",
       "Semiconductors" => "半导体",
       "Semiconductor Equipment" => "半导体设备",
+      "Semiconductor Equipment & Materials" => "半导体设备与材料",
       "Solar" => "太阳能",
       "Software—Application" => "应用软件",
       "Software—Infrastructure" => "基础设施软件",
-      "Tech Hardware, Storage & Peripherals" => "硬件存储外设",
       "Software - Infrastructure" => "基础设施软件",
       "Software - Application" => "应用软件",
-      
+      "Tech Hardware, Storage & Peripherals" => "硬件存储外设",
+
       # Utilities 公用事业
       "Electric Utilities" => "电力公用",
       "Gas Utilities" => "燃气公用",
+      "Utilities—Regulated Electric" => "监管电力公用",
+      "Utilities—Regulated Gas" => "监管燃气公用",
       "Water Utilities" => "水务公用",
       "Renewable Utilities" => "可再生公用",
-      
-      # 额外补充的行业映射
-      "Uranium" => "铀",
-      "Conglomerates" => "企业集团",
-      "Steel" => "钢铁",
-      "Medical Care Facilities" => "医疗护理设施",
-      "Other Industrial Metals & Mining" => "其他工业金属和采矿"
+
+      # Travel & Hospitality 旅行与酒店
+      "Travel Services" => "旅行服务",
     }.freeze
 
     class << self
