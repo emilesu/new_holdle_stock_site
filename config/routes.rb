@@ -57,6 +57,8 @@ Rails.application.routes.draw do
     get "stock_crawlers/a_finance", to: "stock_crawlers#a_finance"
     get "stock_crawlers/update_all_pyramid", to: "stock_crawlers#update_all_pyramid"
     get "stock_crawlers/refresh_all_radar", to: "stock_crawlers#refresh_all_radar"
+    get "stock_crawlers/hk_stock_list", to: "stock_crawlers#hk_stock_list"
+    get "stock_crawlers/hk_finance", to: "stock_crawlers#hk_finance"
 
     # 管理员后台留言管理
     resources :message_boards, only: [:index, :update, :destroy] do
@@ -67,6 +69,9 @@ Rails.application.routes.draw do
     
     resources :users, only: [:index, :show, :new, :create, :edit, :update, :destroy]
     resources :stocks, only: [:index, :show, :new, :create, :edit, :update, :destroy] do
+      collection do
+        get :sectors
+      end
       member do
         post :recalculate_pyramid
       end

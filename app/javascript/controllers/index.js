@@ -15,3 +15,6 @@ application.register("mobile-menu", MobileMenuController)
 
 import MessageController from "./message_controller"
 application.register("message", MessageController)
+
+import MarketSectorController from "./market_sector_controller"
+application.register("market-sector", MarketSectorController)

@@ -53,6 +53,20 @@ module Admin
       end
     end
 
+    def hk_stock_list
+      execute_crawler("爬取港股列表、名称&行业") do
+        DataSources::HkStockListService.call
+        "港股列表及基本信息爬取完成"
+      end
+    end
+
+    def hk_finance
+      execute_crawler("爬取港股全套财务") do
+        DataSources::XueqiuHkFinanceService.call
+        "港股全套财务数据爬取完成"
+      end
+    end
+
     private
 
     def execute_crawler(task_name)

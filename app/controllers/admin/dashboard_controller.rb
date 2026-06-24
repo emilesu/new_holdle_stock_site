@@ -2,8 +2,9 @@ module Admin
   class DashboardController < BaseController
     def index
       # 股票统计
-      @a_stock_count = Stock.where(market: 'A股').count
-      @us_stock_count = Stock.where(market: '美股').count
+      @a_stock_count = Stock.where(market: 'CN').count
+      @hk_stock_count = Stock.where(market: 'HK').count
+      @us_stock_count = Stock.where(market: 'US').count
       @total_stocks = Stock.count
       
       # 用户统计

@@ -60,6 +60,12 @@ module Admin
       end
     end
 
+    def sectors
+      market = params[:market] || 'CN'
+      sectors = Stock.where(market: market).where.not(sector: nil).distinct.pluck(:sector).sort
+      render json: sectors
+    end
+
     private
 
     def set_stock

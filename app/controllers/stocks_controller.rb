@@ -21,7 +21,7 @@ class StocksController < ApplicationController
       .select(:id, :symbol, :name, :market, :exchange)
 
     results = stocks.map do |stock|
-      market_label = stock.market == 'CN' ? 'A股' : '美股'
+      market_label = stock.market == 'CN' ? 'A股' : stock.market == 'HK' ? '港股' : '美股'
       {
         id: stock.id,
         symbol: stock.symbol,
@@ -362,7 +362,10 @@ class StocksController < ApplicationController
   def set_stock
     param = params[:id]
     
-    if param.include?('-')
+    if param.match?(/\AHK\d+\z/)
+      symbol = "#{param.sub(/\AHK/, '')}.HK"
+      @stock = Stock.find_by(symbol: symbol, market: 'HK')
+    elsif param.include?('-')
       parts = param.split('-', 2)
       exchange = parts[0]
       symbol = parts[1]

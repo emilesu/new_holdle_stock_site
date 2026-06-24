@@ -14,6 +14,8 @@ class Stock < ApplicationRecord
   def to_param
     if market == 'CN'
       symbol
+    elsif market == 'HK'
+      "HK#{symbol.sub(/\.HK\z/, '')}"
     else
       exchange_name = exchange.present? ? exchange.gsub('证券交易所', '').strip.upcase : 'NASDAQ'
       "#{exchange_name}-#{symbol}"
