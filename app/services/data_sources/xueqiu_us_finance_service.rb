@@ -4,12 +4,13 @@ module DataSources
     PENDING_STATUS = "pending".freeze
 
     class << self
-      def call
+      def call(limit: nil)
         puts "=" * 70
         puts "开始执行美股财务数据爬取任务"
         puts "=" * 70
 
         pending_stocks = Stock.where(market: "US")
+        pending_stocks = pending_stocks.limit(limit) if limit
         puts "\n待爬取股票数量: #{pending_stocks.count}"
 
         success_count = 0

@@ -15,7 +15,8 @@ module DataSources
           new_score = calculate_total_score(stock)
           
           if new_score == old_score
-            { success: true, old_score: old_score, new_score: new_score, error: nil, updated: false }
+            touch_timestamp(stock)
+            { success: true, old_score: old_score, new_score: new_score, error: nil, updated: true }
           else
             update_stock(stock, new_score)
             { success: true, old_score: old_score, new_score: new_score, error: nil, updated: true }
@@ -167,6 +168,11 @@ module DataSources
           pyramid_total_score: score,
           last_pyramid_calc_at: Time.current
         )
+      end
+
+      # 分数不变时仅更新时间戳，提供视觉反馈
+      def touch_timestamp(stock)
+        stock.update!(last_pyramid_calc_at: Time.current)
       end
     end
   end

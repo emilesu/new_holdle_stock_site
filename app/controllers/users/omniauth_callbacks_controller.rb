@@ -1,4 +1,4 @@
-class Users::OmniauthCallbacksController < Devise::OmniauthCallbacks
+class Users::OmniauthCallbacksController < Devise::OmniauthCallbacksController
   def wechat
     auth = request.env["omniauth.auth"]
     open_id = auth.uid

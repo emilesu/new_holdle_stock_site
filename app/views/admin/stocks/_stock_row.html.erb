@@ -1,4 +1,4 @@
-<tr id="stock-<%= stock.id %>" class="hover:bg-bg-mute cursor-pointer transition-colors">
+<tr id="stock-<%= stock.id %>" class="hover:bg-bg-mute cursor-pointer transition-colors" data-controller="pyramid" data-pyramid-stock-id-value="<%= stock.id %>">
   <td class="px-6 py-3 whitespace-nowrap">
     <div class="text-hl-13 font-medium text-link">
       <%= link_to stock.symbol, stock_path(stock) %>
@@ -20,6 +20,18 @@
     </span>
   </td>
   <td class="px-6 py-3 whitespace-nowrap">
+    <span class="px-2 py-1 text-hl-12 font-semibold rounded <%= stock.market == 'CN' ? 'bg-green-100 text-green-800' : stock.market == 'HK' ? 'bg-indigo-100 text-indigo-800' : 'bg-blue-100 text-blue-800' %>">
+      <%= stock.industry.presence || '-' %>
+    </span>
+  </td>
+  <td class="px-6 py-3 whitespace-nowrap text-center">
+    <% if stock.financial_data_complete? %>
+      <span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-green-100 text-green-700 text-hl-14 font-bold">✓</span>
+    <% else %>
+      <span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-red-100 text-red-600 text-hl-14 font-bold">✗</span>
+    <% end %>
+  </td>
+  <td class="px-6 py-3 whitespace-nowrap">
     <div class="text-hl-13 font-semibold text-link"><%= stock.pyramid_total_score %></div>
   </td>
   <td class="px-6 py-3 whitespace-nowrap text-hl-13 text-muted-3">
@@ -29,8 +41,7 @@
     <% if current_user.is_admin? %>
       <button type="button" 
               class="text-profit hover:text-red-800 px-3 py-1.5 border border-line rounded hover:bg-bg-mute transition-colors"
-              data-stock-id="<%= stock.id %>"
-              onclick="recalculatePyramid(this, <%= stock.id %>)">
+              data-action="pyramid#recalculate">
         重新计算
       </button>
     <% end %>

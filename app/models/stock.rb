@@ -11,6 +11,10 @@ class Stock < ApplicationRecord
   
   attr_accessor :preloaded_income_statements, :preloaded_balance_sheets, :preloaded_cash_flows, :preloaded_financial_indicators
 
+  def financial_data_complete?
+    income_statements.exists? && balance_sheets.exists? && cash_flows.exists? && financial_indicators.exists?
+  end
+
   def to_param
     if market == 'CN'
       symbol

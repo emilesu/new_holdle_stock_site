@@ -18,3 +18,6 @@ application.register("message", MessageController)
 
 import MarketSectorController from "./market_sector_controller"
 application.register("market-sector", MarketSectorController)
+
+import PyramidController from "./pyramid_controller"
+application.register("pyramid", PyramidController)
