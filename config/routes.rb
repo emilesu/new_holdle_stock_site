@@ -59,6 +59,8 @@ Rails.application.routes.draw do
     get "stock_crawlers/refresh_all_radar", to: "stock_crawlers#refresh_all_radar"
     get "stock_crawlers/hk_stock_list", to: "stock_crawlers#hk_stock_list"
     get "stock_crawlers/hk_finance", to: "stock_crawlers#hk_finance"
+    get "stock_crawlers/hk_finance_em", to: "stock_crawlers#hk_finance_em"
+    get "stock_crawlers/hk_finance_em_single", to: "stock_crawlers#hk_finance_em_single"
 
     # 管理员后台留言管理
     resources :message_boards, only: [:index, :update, :destroy] do

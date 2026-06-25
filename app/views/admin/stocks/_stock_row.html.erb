@@ -1,7 +1,7 @@
 <tr id="stock-<%= stock.id %>" class="hover:bg-bg-mute cursor-pointer transition-colors" data-controller="pyramid" data-pyramid-stock-id-value="<%= stock.id %>">
   <td class="px-6 py-3 whitespace-nowrap">
     <div class="text-hl-13 font-medium text-link">
-      <%= link_to stock.symbol, stock_path(stock) %>
+      <%= link_to stock.symbol, admin_stock_path(stock) %>
     </div>
   </td>
   <td class="px-6 py-3 whitespace-nowrap">

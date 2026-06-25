@@ -2,7 +2,7 @@
   <div class="flex items-center justify-between">
     <div>
       <h1 class="text-2xl font-bold text-gray-900">股票详情</h1>
-      <p class="mt-1 text-sm text-gray-500"><%= @stock.symbol %> 基本信息</p>
+      <p class="mt-1 text-sm text-gray-500"><%= @stock.symbol %> 财务数据总览</p>
     </div>
     <div class="flex items-center space-x-2">
       <%= link_to "编辑", edit_admin_stock_path(@stock), class: "px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm font-medium" %>
@@ -11,77 +11,201 @@
   </div>
 </div>
 
-<div class="bg-white rounded-md border border-gray-200 mb-6">
-  <div class="px-6 py-4 border-b border-gray-100">
+<%# 基础信息卡片 %>
+<div class="hl-card mb-6">
+  <div class="px-6 py-4 border-b border-line">
     <div class="flex items-center justify-between">
       <div>
-        <span class="text-2xl font-bold text-gray-900"><%= @stock.symbol %></span>
-        <span class="ml-3 text-lg text-gray-600"><%= @stock.name %></span>
+        <span class="text-hl-22 font-bold text-ink"><%= @stock.symbol %></span>
+        <span class="ml-3 text-hl-16 text-muted-2"><%= @stock.name %></span>
       </div>
-      <span class="inline-flex items-center px-3 py-1 rounded-md text-sm font-medium
-        <%= @stock.market == 'A股' ? 'bg-green-50 text-green-700' : 'bg-blue-50 text-blue-700' %>">
-        <%= @stock.market %>
-      </span>
+      <span class="hl-tag"><%= @stock.market %></span>
     </div>
   </div>
-
-  <div class="px-6 py-6">
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <div class="bg-gray-50 rounded-md p-5">
-        <h3 class="text-sm font-medium text-gray-500 mb-4">基本信息</h3>
-        <div class="space-y-3">
-          <div class="flex justify-between">
-            <span class="text-gray-500">交易所</span>
-            <span class="font-medium text-gray-900"><%= @stock.exchange.presence || '-' %></span>
-          </div>
-          <div class="flex justify-between">
-            <span class="text-gray-500">行业</span>
-            <span class="font-medium text-gray-900"><%= @stock.sector.presence || @stock.industry || '-' %></span>
-          </div>
-          <div class="flex justify-between">
-            <span class="text-gray-500">状态</span>
-            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium
-              <%= @stock.status == 'active' ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-600' %>">
-              <%= @stock.status == 'active' ? '活跃' : '暂停' %>
-            </span>
-          </div>
-          <div class="flex justify-between">
-            <span class="text-gray-500">创建时间</span>
-            <span class="font-medium text-gray-900"><%= l(@stock.created_at, format: :long) %></span>
-          </div>
-          <div class="flex justify-between">
-            <span class="text-gray-500">更新时间</span>
-            <span class="font-medium text-gray-900"><%= l(@stock.updated_at, format: :long) %></span>
-          </div>
+  <div class="px-6 py-5">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div>
+        <div class="space-y-2 text-hl-13">
+          <div class="flex justify-between"><span class="text-muted-3">交易所</span><span class="text-ink font-medium"><%= @stock.exchange.presence || '-' %></span></div>
+          <div class="flex justify-between"><span class="text-muted-3">行业</span><span class="text-ink font-medium"><%= @stock.sector.presence || @stock.industry || '-' %></span></div>
         </div>
       </div>
-
-      <div class="bg-gray-50 rounded-md p-5">
-        <h3 class="text-sm font-medium text-gray-500 mb-4">扩展信息</h3>
-        <div class="space-y-3">
-          <div>
-            <span class="text-gray-500 block mb-1">官网</span>
-            <% if @stock.website.present? %>
-              <a href="<%= @stock.website %>" target="_blank" class="font-medium text-blue-600 hover:text-blue-700 truncate" title="<%= @stock.website %>">
-                <%= @stock.website %>
-              </a>
-            <% else %>
-              <span class="text-gray-400">-</span>
-            <% end %>
-          </div>
-          <div>
-            <span class="text-gray-500 block mb-1">描述</span>
-            <p class="text-gray-900 leading-relaxed min-h-[60px]">
-              <%= @stock.description.presence || '<span class="text-gray-400">暂无描述</span>'.html_safe %>
-            </p>
-          </div>
+      <div>
+        <div class="space-y-2 text-hl-13">
+          <div class="flex justify-between"><span class="text-muted-3">状态</span><span class="<%= @stock.status == 'active' ? 'text-green-600' : 'text-muted' %> font-medium"><%= @stock.status == 'active' ? '活跃' : '暂停' %></span></div>
+          <div class="flex justify-between"><span class="text-muted-3">金字塔评分</span><span class="text-ink font-medium"><%= @stock.pyramid_total_score ? format("%.1f", @stock.pyramid_total_score) : '-' %></span></div>
+        </div>
+      </div>
+      <div>
+        <div class="space-y-2 text-hl-13">
+          <div class="flex justify-between"><span class="text-muted-3">创建时间</span><span class="text-ink"><%= l(@stock.created_at, format: :long) %></span></div>
+          <div class="flex justify-between"><span class="text-muted-3">更新时间</span><span class="text-ink"><%= l(@stock.updated_at, format: :long) %></span></div>
         </div>
       </div>
     </div>
   </div>
 </div>
 
-<div class="flex space-x-3">
-  <%= link_to "编辑", edit_admin_stock_path(@stock), class: "px-5 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors font-medium" %>
-  <%= link_to "返回列表", admin_stocks_path, class: "px-5 py-2 bg-white border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors font-medium" %>
+<%# Helper lambdas %>
+<% fmt_val = ->(v) { v.nil? ? '-' : format("%.2f", v) } %>
+<% fmt_pct = ->(v) { v.nil? ? '-' : format("%.2f%%", v * 100) } %>
+<% fmt_eps = ->(v) { v.nil? ? '-' : format("%.4f", v) } %>
+<% fmt_ratio = ->(v) { v.nil? ? '-' : format("%.2f", v) } %>
+<% rec_for_date = ->(records, date) { records.find { |r| r.report_date == date } } %>
+
+<%# Transposed table builder %>
+<% build_table = ->(dates, records, metrics, fmt_type, unit_note) do %>
+  <table class="hl-table">
+    <thead>
+      <tr>
+        <th class="text-left sticky left-0 bg-bg-mute z-10 min-w-[120px]">指标</th>
+        <% dates.each do |d| %>
+          <th class="text-right min-w-[90px] whitespace-nowrap"><%= d %></th>
+        <% end %>
+      </tr>
+    </thead>
+    <tbody>
+      <% metrics.each do |m| %>
+        <tr>
+          <td class="text-left font-medium text-ink sticky left-0 bg-white z-10 whitespace-nowrap"><%= m[:cn] %></td>
+          <% dates.each do |d| %>
+            <% rec = rec_for_date.call(records, d) %>
+            <% val = rec&.send(m[:key]) %>
+            <td class="text-right font-mono text-hl-12 <%= fmt_type == :pct && val && val > 0 ? 'text-ink' : 'text-muted' %>">
+              <%= val.nil? ? '-' : (fmt_type == :val ? fmt_val.call(val) : fmt_type == :pct ? fmt_pct.call(val) : fmt_type == :eps ? fmt_eps.call(val) : fmt_ratio.call(val)) %>
+            </td>
+          <% end %>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+  <div class="px-6 py-3 bg-bg-soft border-t border-line-soft text-hl-12 text-muted-5"><%= unit_note %></div>
+<% end %>
+
+<% if @annual_dates.any? %>
+  <%# 1. 利润表 %>
+  <div class="hl-card mb-6 overflow-x-auto overflow-hidden">
+    <div class="px-6 py-4 border-b border-line">
+      <h2 class="text-hl-16 font-semibold text-ink">利润表 <span class="text-hl-12 text-muted-4 ml-2">Income Statement</span></h2>
+    </div>
+    <% if @income_statements.any? %>
+      <% build_table.call(
+        @annual_dates, @income_statements,
+        [
+          { cn: "营业收入",         key: :total_revenue },
+          { cn: "营业成本",         key: :operating_cost },
+          { cn: "毛利",             key: :gross_profit },
+          { cn: "毛利率",           key: :gross_margin },
+          { cn: "营业利润",         key: :operating_income },
+          { cn: "税前利润",         key: :income_before_tax },
+          { cn: "所得税",           key: :income_tax },
+          { cn: "归母净利润",       key: :net_income_to_shareholders },
+          { cn: "基本每股收益(元)", key: :basic_eps },
+          { cn: "稀释每股收益(元)", key: :diluted_eps },
+        ],
+        :val,
+        "金额单位：亿元（除每股收益外） | 共 #{@income_statements.select { |r| @annual_dates.include?(r.report_date) }.size} 条年报"
+      ) %>
+    <% else %>
+      <div class="px-6 py-10 text-center text-muted-4 text-hl-13">暂无利润表数据</div>
+    <% end %>
+  </div>
+
+  <%# 2. 资产负债表 %>
+  <div class="hl-card mb-6 overflow-x-auto overflow-hidden">
+    <div class="px-6 py-4 border-b border-line">
+      <h2 class="text-hl-16 font-semibold text-ink">资产负债表 <span class="text-hl-12 text-muted-4 ml-2">Balance Sheet</span></h2>
+    </div>
+    <% if @balance_sheets.any? %>
+      <% build_table.call(
+        @annual_dates, @balance_sheets,
+        [
+          { cn: "总资产",             key: :total_assets },
+          { cn: "总负债",             key: :total_liabilities },
+          { cn: "净资产(股东权益)",   key: :total_equity },
+          { cn: "流动资产",           key: :current_assets },
+          { cn: "流动负债",           key: :current_liabilities },
+          { cn: "现金及现金等价物",   key: :cash_and_cash_equivalents },
+          { cn: "应收账款",           key: :accounts_receivable },
+          { cn: "存货",               key: :inventory },
+          { cn: "固定资产",           key: :property_plant_equipment },
+          { cn: "长期借款",           key: :long_term_debt },
+          { cn: "短期借款",           key: :short_term_debt },
+          { cn: "商誉",               key: :goodwill },
+          { cn: "无形资产",           key: :intangible_assets },
+          { cn: "长期股权投资",       key: :investments },
+        ],
+        :val,
+        "金额单位：亿元 | 共 #{@balance_sheets.select { |r| @annual_dates.include?(r.report_date) }.size} 条年报"
+      ) %>
+    <% else %>
+      <div class="px-6 py-10 text-center text-muted-4 text-hl-13">暂无资产负债表数据</div>
+    <% end %>
+  </div>
+
+  <%# 3. 现金流量表 %>
+  <div class="hl-card mb-6 overflow-x-auto overflow-hidden">
+    <div class="px-6 py-4 border-b border-line">
+      <h2 class="text-hl-16 font-semibold text-ink">现金流量表 <span class="text-hl-12 text-muted-4 ml-2">Cash Flow Statement</span></h2>
+    </div>
+    <% if @cash_flows.any? %>
+      <% build_table.call(
+        @annual_dates, @cash_flows,
+        [
+          { cn: "经营活动现金流",     key: :operating_cash_flow },
+          { cn: "投资活动现金流",     key: :investing_cash_flow },
+          { cn: "筹资活动现金流",     key: :financing_cash_flow },
+          { cn: "现金净变动",         key: :net_cash_change },
+          { cn: "期初现金余额",       key: :beginning_cash },
+          { cn: "期末现金余额",       key: :ending_cash },
+        ],
+        :val,
+        "金额单位：亿元 | 共 #{@cash_flows.select { |r| @annual_dates.include?(r.report_date) }.size} 条年报"
+      ) %>
+    <% else %>
+      <div class="px-6 py-10 text-center text-muted-4 text-hl-13">暂无现金流量表数据</div>
+    <% end %>
+  </div>
+
+  <%# 4. 财务指标 %>
+  <div class="hl-card mb-6 overflow-x-auto overflow-hidden">
+    <div class="px-6 py-4 border-b border-line">
+      <h2 class="text-hl-16 font-semibold text-ink">财务指标 <span class="text-hl-12 text-muted-4 ml-2">Financial Indicators</span></h2>
+    </div>
+    <% if @financial_indicators.any? %>
+      <% build_table.call(
+        @annual_dates, @financial_indicators,
+        [
+          { cn: "基本每股收益(元)", key: :basic_eps },
+          { cn: "稀释每股收益(元)", key: :diluted_eps },
+          { cn: "ROE(平均)",       key: :roe_avg },
+          { cn: "ROE(TTM)",        key: :roe_ttm },
+          { cn: "每股净资产(元)",   key: :nav_ps },
+          { cn: "毛利率",           key: :gross_margin },
+          { cn: "净利率",           key: :net_sales_rate },
+          { cn: "资产负债率",       key: :asset_liab_ratio },
+          { cn: "流动比率",         key: :current_ratio },
+          { cn: "速动比率",         key: :quick_ratio },
+          { cn: "PE(市盈率)",       key: :pe_ratio },
+          { cn: "PB(市净率)",       key: :pb_ratio },
+        ],
+        :val,
+        "百分比指标以 % 显示 | ROE/毛利率/净利率/资产负债率单位为 % | 共 #{@financial_indicators.select { |r| @annual_dates.include?(r.report_date) }.size} 条年报"
+      ) %>
+    <% else %>
+      <div class="px-6 py-10 text-center text-muted-4 text-hl-13">暂无财务指标数据</div>
+    <% end %>
+  </div>
+<% else %>
+  <div class="hl-card">
+    <div class="px-6 py-16 text-center">
+      <p class="text-hl-14 text-muted-4 mb-2">暂无财务数据</p>
+      <p class="text-hl-12 text-muted-5">该股票尚未爬取财务数据，请先执行爬虫任务</p>
+    </div>
+  </div>
+<% end %>
+
+<div class="flex space-x-3 mt-6">
+  <%= link_to "编辑", edit_admin_stock_path(@stock), class: "hl-btn hl-btn-primary" %>
+  <%= link_to "返回列表", admin_stocks_path, class: "hl-btn hl-btn-line" %>
 </div>

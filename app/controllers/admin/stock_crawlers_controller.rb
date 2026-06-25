@@ -67,6 +67,29 @@ module Admin
       end
     end
 
+    def hk_finance_em
+      execute_crawler("爬取港股全套财务(东方财富)") do
+        result = DataSources::EastMoneyFinanceService.call(market: "HK")
+        "港股全套财务数据爬取完成(东方财富) - 成功: #{result[:success]}, 失败: #{result[:failed]}"
+      end
+    end
+
+    def hk_finance_em_single
+      limit = (params[:limit] || 5).to_i
+      execute_crawler("爬取港股财务(东方财富) #{limit}只") do
+        # 逐个爬取
+        stocks = Stock.where(market: "HK").limit(limit)
+        stocks.each do |s|
+          begin
+            DataSources::EastMoneyFinanceService.call_single(s.symbol, market: "HK")
+          rescue => e
+            Rails.logger.error "[hk_finance_em_single] #{s.symbol}: #{e.message}"
+          end
+        end
+        "#{limit}只港股财务数据爬取完成(东方财富)"
+      end
+    end
+
     private
 
     def execute_crawler(task_name)
