@@ -20,8 +20,30 @@ module Admin
 
     def us_finance
       execute_crawler("爬取美股全套财务") do
-        DataSources::XueqiuUsFinanceService.call
-        "美股全套财务数据爬取完成"
+        result = DataSources::EastMoneyFinanceService.call(market: "US")
+        "美股全套财务数据爬取完成(东方财富) - 成功: #{result[:success]}, 失败: #{result[:failed]}"
+      end
+    end
+
+    def us_finance_em
+      execute_crawler("爬取美股全套财务(东方财富)") do
+        result = DataSources::EastMoneyFinanceService.call(market: "US")
+        "美股全套财务数据爬取完成(东方财富) - 成功: #{result[:success]}, 失败: #{result[:failed]}"
+      end
+    end
+
+    def us_finance_em_single
+      limit = (params[:limit] || 5).to_i
+      execute_crawler("爬取美股财务(东方财富) #{limit}只") do
+        stocks = Stock.where(market: "US").limit(limit)
+        stocks.each do |s|
+          begin
+            DataSources::EastMoneyFinanceService.call_single(s.symbol, market: "US")
+          rescue => e
+            Rails.logger.error "[us_finance_em_single] #{s.symbol}: #{e.message}"
+          end
+        end
+        "#{limit}只美股财务数据爬取完成(东方财富)"
       end
     end
 
@@ -34,8 +56,30 @@ module Admin
 
     def a_finance
       execute_crawler("爬取A股全套财务") do
-        DataSources::XueqiuAcnFinanceService.call
-        "A股全套财务数据爬取完成"
+        result = DataSources::EastMoneyFinanceService.call(market: "CN")
+        "A股全套财务数据爬取完成(东方财富) - 成功: #{result[:success]}, 失败: #{result[:failed]}"
+      end
+    end
+
+    def a_finance_em
+      execute_crawler("爬取A股全套财务(东方财富)") do
+        result = DataSources::EastMoneyFinanceService.call(market: "CN")
+        "A股全套财务数据爬取完成(东方财富) - 成功: #{result[:success]}, 失败: #{result[:failed]}"
+      end
+    end
+
+    def a_finance_em_single
+      limit = (params[:limit] || 5).to_i
+      execute_crawler("爬取A股财务(东方财富) #{limit}只") do
+        stocks = Stock.where(market: "CN").limit(limit)
+        stocks.each do |s|
+          begin
+            DataSources::EastMoneyFinanceService.call_single(s.symbol, market: "CN")
+          rescue => e
+            Rails.logger.error "[a_finance_em_single] #{s.symbol}: #{e.message}"
+          end
+        end
+        "#{limit}只A股财务数据爬取完成(东方财富)"
       end
     end
 
@@ -62,8 +106,8 @@ module Admin
 
     def hk_finance
       execute_crawler("爬取港股全套财务") do
-        DataSources::XueqiuHkFinanceService.call
-        "港股全套财务数据爬取完成"
+        result = DataSources::EastMoneyFinanceService.call(market: "HK")
+        "港股全套财务数据爬取完成(东方财富) - 成功: #{result[:success]}, 失败: #{result[:failed]}"
       end
     end
 
