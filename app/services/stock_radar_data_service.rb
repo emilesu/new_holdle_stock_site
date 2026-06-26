@@ -4,7 +4,7 @@ module StockRadarDataService
     gross_margin: 100,
     net_profit_margin: 100,
     eps: 20,
-    asset_liab_ratio: 100,
+    cash_to_assets_ratio: 100,
     asset_turnover_ratio: 2
   }.freeze
 
@@ -46,7 +46,7 @@ module StockRadarDataService
         gross_margin: average_values(data_array, :gross_margin),
         net_profit_margin: average_values(data_array, :net_profit_margin),
         eps: average_values(data_array, :eps),
-        asset_liab_ratio: average_values(data_array, :asset_liab_ratio),
+        cash_to_assets_ratio: average_values(data_array, :cash_to_assets_ratio),
         asset_turnover_ratio: average_values(data_array, :asset_turnover_ratio)
       }
     end
@@ -64,7 +64,7 @@ module StockRadarDataService
         gross_margin: normalize(raw_values[:gross_margin], MAX_VALUES[:gross_margin]),
         net_profit_margin: normalize(raw_values[:net_profit_margin], MAX_VALUES[:net_profit_margin]),
         eps: normalize(raw_values[:eps], MAX_VALUES[:eps]),
-        asset_liab_ratio: normalize_reverse(raw_values[:asset_liab_ratio], MAX_VALUES[:asset_liab_ratio]),
+        cash_to_assets_ratio: normalize(raw_values[:cash_to_assets_ratio], MAX_VALUES[:cash_to_assets_ratio]),
         asset_turnover_ratio: normalize(raw_values[:asset_turnover_ratio], MAX_VALUES[:asset_turnover_ratio])
       }
     end
@@ -73,13 +73,6 @@ module StockRadarDataService
       return 0 if value.blank?
 
       score = (value.to_f / max_value) * 100
-      score.clamp(0, 100)
-    end
-
-    def normalize_reverse(value, max_value)
-      return 0 if value.blank?
-
-      score = (1 - value.to_f / max_value) * 100
       score.clamp(0, 100)
     end
 

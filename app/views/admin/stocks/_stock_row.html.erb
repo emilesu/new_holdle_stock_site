@@ -1,4 +1,4 @@
-<tr id="stock-<%= stock.id %>" class="hover:bg-bg-mute cursor-pointer transition-colors" data-controller="pyramid" data-pyramid-stock-id-value="<%= stock.id %>">
+<tr id="stock-<%= stock.id %>" class="hover:bg-bg-mute transition-colors" data-controller="pyramid" data-pyramid-stock-id-value="<%= stock.id %>">
   <td class="px-6 py-3 whitespace-nowrap">
     <div class="text-hl-13 font-medium text-link">
       <%= link_to stock.symbol, admin_stock_path(stock) %>
@@ -39,11 +39,15 @@
   </td>
   <td class="px-6 py-3 whitespace-nowrap text-hl-13 font-medium">
     <% if current_user.is_admin? %>
-      <button type="button" 
-              class="text-profit hover:text-red-800 px-3 py-1.5 border border-line rounded hover:bg-bg-mute transition-colors"
-              data-action="pyramid#recalculate">
-        重新计算
-      </button>
+      <div class="flex items-center space-x-2">
+        <button type="button"
+                class="text-profit hover:text-red-800 px-3 py-1.5 border border-line rounded hover:bg-bg-mute transition-colors"
+                data-action="pyramid#recalculate"
+                data-turbo="false">
+          重新计算
+        </button>
+        <span id="pyramid-status-<%= stock.id %>"></span>
+      </div>
     <% end %>
   </td>
 </tr>

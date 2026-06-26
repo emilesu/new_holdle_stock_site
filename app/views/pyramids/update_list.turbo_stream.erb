@@ -28,6 +28,7 @@
 
     <div id="pyramid-scroll-sentinel"
          class="flex justify-center py-4 text-hl-13 text-muted-4 opacity-100 transition-opacity duration-300"
+         data-scroll-has-more="<%= @total_pages > 1 %>"
          data-next-page="2"
          data-total-pages="<%= @total_pages %>"
          data-market="<%= @market %>"

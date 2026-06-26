@@ -64,24 +64,66 @@ module Admin
     end
 
     def recalculate_pyramid
+      symbol = @stock&.symbol
+      stock_id = @stock&.id
+      Rails.logger.info "[RecalculatePyramid] 开始: stock=#{symbol}(id=#{stock_id}), params_id=#{params[:id]}"
+
+      # 验证 stock 存在
+      unless @stock
+        Rails.logger.error "[RecalculatePyramid] 股票不存在: id=#{params[:id]}"
+        return render_error_turbo("股票不存在")
+      end
+
+      # 记录计算前的状态
+      before_score = @stock.pyramid_total_score
+      before_calc_at = @stock.last_pyramid_calc_at
+      Rails.logger.info "[RecalculatePyramid] 计算前状态: score=#{before_score}, last_calc_at=#{before_calc_at}"
+
       result = DataSources::StockPyramidService.call(@stock)
+
+      Rails.logger.info "[RecalculatePyramid] Service返回: stock=#{symbol}, result=#{result.inspect}"
+
+      # 重新加载获取最新数据
+      reloaded = @stock.reload
+      after_score = reloaded.pyramid_total_score
+      after_calc_at = reloaded.last_pyramid_calc_at
+      Rails.logger.info "[RecalculatePyramid] 计算后状态: score=#{after_score}, last_calc_at=#{after_calc_at}, 分数变化=#{before_score != after_score}"
 
       respond_to do |format|
         format.turbo_stream do
-          render turbo_stream: [
+          streams = [
             turbo_stream.replace(
-              "stock-#{@stock.id}",
+              "stock-#{stock_id}",
               partial: 'admin/stocks/stock_row',
-              locals: { stock: @stock.reload }
+              locals: { stock: reloaded }
             )
           ]
+
+          # 添加状态提示消息
+          if result[:success]
+            if before_score != after_score
+              msg = "✅ #{symbol} 分数已更新: #{before_score} → #{after_score}"
+              Rails.logger.info "[RecalculatePyramid] #{msg}"
+            else
+              msg = "ℹ️ #{symbol} 分数未变化 (#{after_score})，已更新时间戳"
+              Rails.logger.info "[RecalculatePyramid] #{msg}"
+            end
+            streams << turbo_stream.update("pyramid-status-#{stock_id}", html: status_badge(:success, msg))
+          else
+            msg = "❌ #{symbol} 计算失败: #{result[:error]}"
+            Rails.logger.error "[RecalculatePyramid] #{msg}"
+            streams << turbo_stream.update("pyramid-status-#{stock_id}", html: status_badge(:error, msg))
+          end
+
+          render turbo_stream: streams
         end
         format.html do
           redirect_to admin_stocks_path, notice: result[:success] ? '计算成功' : "计算失败: #{result[:error]}"
         end
       end
     rescue => e
-      Rails.logger.error "Recalculate pyramid error for #{@stock&.symbol}: #{e.message}"
+      Rails.logger.error "[RecalculatePyramid] 异常: stock=#{@stock&.symbol}, error=#{e.message}"
+      Rails.logger.error e.backtrace&.first(5)&.join("\n")
       respond_to do |format|
         format.turbo_stream do
           render turbo_stream: [
@@ -89,12 +131,31 @@ module Admin
               "stock-#{@stock&.id}",
               partial: 'admin/stocks/stock_row',
               locals: { stock: @stock&.reload }
-            )
+            ),
+            turbo_stream.update("pyramid-status-#{@stock&.id}", html: status_badge(:error, "异常: #{e.message}"))
           ]
         end
         format.html do
           redirect_to admin_stocks_path, alert: "计算失败: #{e.message}"
         end
+      end
+    end
+
+    private
+
+    def status_badge(type, message)
+      color = type == :success ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'
+      %(<span class="inline-flex items-center text-hl-12 px-2 py-0.5 rounded border #{color} ml-2">#{ERB::Util.html_escape(message)}</span>)
+    end
+
+    def render_error_turbo(message)
+      respond_to do |format|
+        format.turbo_stream do
+          render turbo_stream: [
+            turbo_stream.update("pyramid-status-global", html: status_badge(:error, message))
+          ]
+        end
+        format.html { redirect_to admin_stocks_path, alert: message }
       end
     end
 

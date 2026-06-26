@@ -1,6 +1,6 @@
 module DataSources
   # 金字塔分数计算服务
-  # 依据金字塔8项打分规则计算股票总分，仅存储累加后的总分
+  # 依据金字塔9项打分规则计算股票总分，仅存储累加后的总分
   class StockPyramidService
     class << self
       # 主入口方法
@@ -30,28 +30,62 @@ module DataSources
 
       private
 
-      # 计算金字塔总分（8项指标累加）
+      # 计算金字塔总分（9项指标累加）
       # @param stock [Stock] 股票对象
       # @param all_data [Array] 近5年财务数据
       # @return [Integer] 总分（0-1000分）
       def calculate_total_score(stock)
         score = 0
+        symbol = stock.symbol
         
         financial_years = stock.financial_years.select { |y| y.to_i >= Date.current.year - 5 }.sort.last(5)
-        return 0 if financial_years.empty?
+        Rails.logger.info "[PyramidService] #{symbol} financial_years(近5年): #{financial_years.inspect}"
+        return 0.tap { Rails.logger.warn "[PyramidService] #{symbol} 无财务年份数据，总分=0" } if financial_years.empty?
 
         all_data = financial_years.map { |year| stock.get_financial_data_by_year(year) }.compact
-        return 0 if all_data.empty?
+        Rails.logger.info "[PyramidService] #{symbol} all_data 数量: #{all_data.size}"
+        return 0.tap { Rails.logger.warn "[PyramidService] #{symbol} 财务数据为空，总分=0" } if all_data.empty?
 
-        score += calculate_roe_score(all_data)           # ROE分数（核心指标，权重最高）
-        score += calculate_roa_score(all_data)           # ROA分数
-        score += calculate_net_income_score(all_data)    # 净利润规模分数
-        score += calculate_asset_turnover_score(all_data) # 资产周转率分数
-        score += calculate_gross_margin_score(stock, all_data) # 毛利率分数
-        score += calculate_net_profit_growth_score(stock, all_data) # 净利润增长率分数
-        score += calculate_cash_flow_growth_score(all_data) # 经营现金流增长分数
-        
-        score.clamp(0, 1000)
+        # 记录每个年份的关键指标
+        all_data.each_with_index do |d, i|
+          Rails.logger.info "[PyramidService] #{symbol} year=#{d[:year]}, roe=#{d[:roe]}, roa=#{d[:roa]}, gross_margin=#{d[:gross_margin]}, net_income=#{d[:net_income]}, asset_turnover=#{d[:asset_turnover_ratio]}, operating_cf=#{d[:operating_cash_flow]}, cash_ratio=#{d[:cash_to_assets_ratio]}"
+        end
+
+        roe_score = calculate_roe_score(all_data)
+        score += roe_score
+        Rails.logger.info "[PyramidService] #{symbol} ROE得分: #{roe_score}, 累计: #{score}"
+
+        roa_score = calculate_roa_score(all_data)
+        score += roa_score
+        Rails.logger.info "[PyramidService] #{symbol} ROA得分: #{roa_score}, 累计: #{score}"
+
+        ni_score = calculate_net_income_score(all_data)
+        score += ni_score
+        Rails.logger.info "[PyramidService] #{symbol} 净利润规模得分: #{ni_score}, 累计: #{score}"
+
+        turnover_score = calculate_asset_turnover_score(all_data)
+        score += turnover_score
+        Rails.logger.info "[PyramidService] #{symbol} 资产周转率得分: #{turnover_score}, 累计: #{score}"
+
+        gm_score = calculate_gross_margin_score(stock, all_data)
+        score += gm_score
+        Rails.logger.info "[PyramidService] #{symbol} 毛利率得分: #{gm_score}, 累计: #{score}"
+
+        growth_score = calculate_net_profit_growth_score(stock, all_data)
+        score += growth_score
+        Rails.logger.info "[PyramidService] #{symbol} 净利润增长率得分: #{growth_score}, 累计: #{score}"
+
+        cf_score = calculate_cash_flow_growth_score(all_data)
+        score += cf_score
+        Rails.logger.info "[PyramidService] #{symbol} 经营现金流增长得分: #{cf_score}, 累计: #{score}"
+
+        cash_ratio_score = calculate_cash_ratio_score(all_data)
+        score += cash_ratio_score
+        Rails.logger.info "[PyramidService] #{symbol} 现金占总资产比率得分: #{cash_ratio_score}, 累计: #{score}"
+
+        final_score = score.clamp(0, 1000)
+        Rails.logger.info "[PyramidService] #{symbol} 总分(限制后): #{final_score}"
+        final_score
       end
 
       # 计算ROE分数（权重最高，0-550分）
@@ -137,14 +171,15 @@ module DataSources
 
         years.each_with_index do |i, idx|
           next if i + 1 >= ni_values.size
-          score += weights[idx] if ni_values[i] > ni_values[i + 1]  # 增长加分
-          score -= weights[idx] if ni_values[i] < ni_values[i + 1]  # 下降扣分
+          score += weights[idx] if ni_values[i] < ni_values[i + 1]  # 增长加分（后值更大）
+          score -= weights[idx] if ni_values[i] > ni_values[i + 1]  # 下降扣分（前值更大）
         end
 
         score.clamp(-90, 90)
       end
 
-      # 计算经营现金流增长分数（-35至35分）
+      # 计算经营现金流增长分数（-90至90分）
+      # 使用经营活动现金流量(operating_cash_flow)数据，逻辑与净利润增长分数一致
       def calculate_cash_flow_growth_score(all_data)
         cf_values = all_data.map { |d| d[:operating_cash_flow] }.compact.map(&:to_f)
         return 0 if cf_values.size < 5
@@ -155,11 +190,26 @@ module DataSources
 
         years.each_with_index do |i, idx|
           next if i + 1 >= cf_values.size
-          score += weights[idx] if cf_values[i] > cf_values[i + 1]
-          score -= weights[idx] if cf_values[i] < cf_values[i + 1]
+          score += weights[idx] if cf_values[i] < cf_values[i + 1]  # 增长加分（后值更大）
+          score -= weights[idx] if cf_values[i] > cf_values[i + 1]  # 下降扣分（前值更大）
         end
 
-        score.clamp(-35, 35)
+        score.clamp(-90, 90)
+      end
+
+      # 计算现金占总资产比率分数（0-100分）
+      # 近5年现金占总资产比率平均值，≥20%得100分，≥10%得50分
+      def calculate_cash_ratio_score(all_data)
+        cr_values = all_data.map { |d| d[:cash_to_assets_ratio] }.compact.map(&:to_f)
+        return 0 if cr_values.size < 3
+
+        avg_cr = cr_values.sum / cr_values.size
+
+        case
+        when avg_cr >= 20 then 100  # 现金充裕，抗风险能力强
+        when avg_cr >= 10 then 50   # 现金充足
+        else 0
+        end
       end
 
       # 更新股票金字塔分数

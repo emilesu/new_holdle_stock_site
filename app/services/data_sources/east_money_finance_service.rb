@@ -83,20 +83,20 @@ module DataSources
         stock = find_stock(symbol, market)
         unless stock
           puts "❌ 未找到股票: #{symbol} (#{market})"
-          return false
+          return { status: :error, error: "股票不存在" }
         end
 
         fetcher_class = FETCHER_MAP[market]
         unless fetcher_class
           puts "❌ 不支持的市场: #{market}"
-          return false
+          return { status: :error, error: "不支持的市场" }
         end
 
         fetcher = fetcher_class.new
         all_success = fetcher.fetch_all(stock)
         update_stock_status(stock) if all_success
 
-        all_success
+        { status: all_success ? :success : :partial, error: nil }
       end
 
       private

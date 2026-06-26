@@ -26,44 +26,32 @@ class Stock < ApplicationRecord
     end
   end
 
-  def calculate_gross_margin(income_statement, financial_indicator)
-    return nil unless financial_indicator || income_statement
-
-    if market == 'CN'
-      financial_indicator&.gross_margin
-    else
-      return nil unless income_statement
-      return nil unless income_statement.total_revenue.present? && income_statement.total_revenue != 0
-      return nil unless income_statement.operating_income.present?
-
-      (income_statement.operating_income.to_f / income_statement.total_revenue.to_f) * 100
-    end
+  # 毛利率：统一使用财务指标表中已存储的 gross_margin 字段
+  def calculate_gross_margin(_income_statement, financial_indicator)
+    financial_indicator&.gross_margin
   end
 
-  def calculate_net_profit_margin(income_statement, financial_indicator)
-    return nil unless financial_indicator || income_statement
-
-    if market == 'CN'
-      return nil unless income_statement
-      return nil unless income_statement.total_revenue.present? && income_statement.total_revenue != 0
-      return nil unless income_statement.net_income_to_shareholders.present?
-
-      (income_statement.net_income_to_shareholders.to_f / income_statement.total_revenue.to_f) * 100
-    else
-      financial_indicator&.net_sales_rate
-    end
+  # 净利率：统一使用财务指标表中已存储的 net_sales_rate 字段
+  def calculate_net_profit_margin(_income_statement, financial_indicator)
+    financial_indicator&.net_sales_rate
   end
 
   def calculate_net_income(income_statement)
     income_statement&.net_income_to_shareholders
   end
 
-  def calculate_asset_liab_ratio(balance_sheet)
-    return nil unless balance_sheet
-    return nil unless balance_sheet.total_assets.present? && balance_sheet.total_assets != 0
-    return nil unless balance_sheet.total_liabilities.present?
+  # 负债占资产比率：统一使用财务指标表中已存储的 asset_liab_ratio 字段
+  def calculate_asset_liab_ratio(balance_sheet, financial_indicator = nil)
+    financial_indicator&.asset_liab_ratio
+  end
 
-    (balance_sheet.total_liabilities.to_f / balance_sheet.total_assets.to_f) * 100
+  # ROA(总资产收益率)：归母净利润 / 总资产
+  def calculate_roa(income_statement, balance_sheet)
+    return nil unless income_statement && balance_sheet
+    return nil unless income_statement.net_income_to_shareholders.present?
+    return nil unless balance_sheet.total_assets.present? && balance_sheet.total_assets != 0
+
+    (income_statement.net_income_to_shareholders.to_f / balance_sheet.total_assets.to_f) * 100
   end
 
   def calculate_asset_turnover_ratio(income_statement, balance_sheet)
@@ -72,6 +60,40 @@ class Stock < ApplicationRecord
     return nil unless income_statement.total_revenue.present?
 
     income_statement.total_revenue.to_f / balance_sheet.total_assets.to_f
+  end
+
+  # 现金占总资产比率：现金及现金等价物 / 总资产
+  def calculate_cash_to_assets_ratio(balance_sheet)
+    return nil unless balance_sheet
+    return nil unless balance_sheet.cash_and_cash_equivalents.present? && balance_sheet.total_assets.present? && balance_sheet.total_assets != 0
+
+    (balance_sheet.cash_and_cash_equivalents.to_f / balance_sheet.total_assets.to_f) * 100
+  end
+
+  # 应收账款周转率(次)：营业收入 / 应收账款
+  def calculate_receivable_turnover(income_statement, balance_sheet)
+    return nil unless income_statement && balance_sheet
+    return nil unless income_statement.total_revenue.present?
+    return nil unless balance_sheet.accounts_receivable.present? && balance_sheet.accounts_receivable != 0
+
+    income_statement.total_revenue.to_f / balance_sheet.accounts_receivable.to_f
+  end
+
+  # 平均收现日数：365 / (营业收入 / 应收账款)
+  def calculate_avg_collection_days(income_statement, balance_sheet)
+    turnover = calculate_receivable_turnover(income_statement, balance_sheet)
+    return nil unless turnover.present? && turnover != 0
+
+    365.0 / turnover
+  end
+
+  # 固定资产周转率(次)：固定资产 / 营业收入
+  def calculate_fixed_asset_turnover(income_statement, balance_sheet)
+    return nil unless income_statement && balance_sheet
+    return nil unless income_statement.total_revenue.present? && income_statement.total_revenue != 0
+    return nil unless balance_sheet.property_plant_equipment.present?
+
+    balance_sheet.property_plant_equipment.to_f / income_statement.total_revenue.to_f
   end
 
   def get_financial_data_by_year(year)
@@ -96,14 +118,22 @@ class Stock < ApplicationRecord
       gross_margin: calculate_gross_margin(income, indicator),
       net_profit_margin: calculate_net_profit_margin(income, indicator),
       net_income: calculate_net_income(income),
-      asset_liab_ratio: calculate_asset_liab_ratio(balance),
+      asset_liab_ratio: calculate_asset_liab_ratio(balance, indicator),
       asset_turnover_ratio: calculate_asset_turnover_ratio(income, balance),
+      # 财务结构
+      cash_to_assets_ratio: calculate_cash_to_assets_ratio(balance),
+      # 经营能力
+      receivable_turnover: calculate_receivable_turnover(income, balance),
+      avg_collection_days: calculate_avg_collection_days(income, balance),
+      fixed_asset_turnover: calculate_fixed_asset_turnover(income, balance),
+      # 现金流量表
+      cash_and_cash_equivalents: balance&.cash_and_cash_equivalents,
       operating_cash_flow: cash&.operating_cash_flow,
       investing_cash_flow: cash&.investing_cash_flow,
       financing_cash_flow: cash&.financing_cash_flow,
       net_cash_change: cash&.net_cash_change,
       roe: indicator&.roe_avg,
-      roa: indicator&.net_interest_of_ta,
+      roa: calculate_roa(income, balance),
       eps: indicator&.basic_eps,
       cash_flow_ps: indicator&.ncf_from_oa_ps,
       operating_margin: indicator&.operating_margin
@@ -111,21 +141,14 @@ class Stock < ApplicationRecord
   end
 
   def financial_years
-    if preloaded_income_statements.present?
-      dates = []
-      dates += preloaded_income_statements.map(&:report_date)
-      dates += preloaded_balance_sheets.map(&:report_date) if preloaded_balance_sheets
-      dates += preloaded_cash_flows.map(&:report_date) if preloaded_cash_flows
-      dates += preloaded_financial_indicators.map(&:report_date) if preloaded_financial_indicators
-      dates.compact.map { |d| d.strftime('%Y') }.uniq.sort.reverse.first(8).sort
+    # 只从 financial_indicators 表获取年份（四张表中数据最核心的表）
+    # 避免其他表有数据但指标表缺失时，页面显示全是空值的列
+    dates = if preloaded_income_statements.present?
+      preloaded_financial_indicators&.map(&:report_date) || []
     else
-      dates = []
-      dates += income_statements.pluck(:report_date)
-      dates += balance_sheets.pluck(:report_date)
-      dates += cash_flows.pluck(:report_date)
-      dates += financial_indicators.pluck(:report_date)
-      dates.compact.map { |d| d.strftime('%Y') }.uniq.sort.reverse.first(8).sort
+      financial_indicators.pluck(:report_date)
     end
+    dates.compact.map { |d| d.strftime('%Y') }.uniq.sort.reverse.first(8).sort
   end
 
   def get_radar_data
@@ -137,7 +160,7 @@ class Stock < ApplicationRecord
       gross_margin: latest_data[:gross_margin],
       net_profit_margin: latest_data[:net_profit_margin],
       eps: latest_data[:eps],
-      asset_liab_ratio: latest_data[:asset_liab_ratio],
+      cash_to_assets_ratio: latest_data[:cash_to_assets_ratio],
       asset_turnover_ratio: latest_data[:asset_turnover_ratio]
     }
   end

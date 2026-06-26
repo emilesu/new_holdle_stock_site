@@ -82,17 +82,17 @@
         
         <!-- 获利能力表 -->
         <div class="bg-white hl-card overflow-hidden">
-          <div class="px-6 py-4 border-b border-line bg-bg-mute">
-            <h2 class="text-hl-16 font-semibold text-ink-soft">获利能力 <span class="text-muted-3 text-hl-11">(单位：<%= @stock.market == 'US' ? '美元' : @stock.market == 'HK' ? '港币' : '元' %>)</span></h2>
+          <div class="px-6 py-4 border-b border-line">
+            <h2 class="text-hl-16 font-semibold text-ink">获利能力 <span class="text-hl-12 text-muted-4 ml-2">Profitability</span> <span class="text-hl-12 text-muted-4 ml-2">(单位：<%= @stock.market == 'US' ? '美元' : @stock.market == 'HK' ? '港币' : '元' %>)</span></h2>
           </div>
           <div class="overflow-x-auto">
             <table class="w-full">
-              <thead class="bg-bg-mute">
+              <thead>
                 <tr>
-                  <th class="px-6 py-3 text-left text-hl-13 font-medium text-muted-3 w-32 whitespace-nowrap">指标</th>
+                  <th class="text-left sticky left-0 bg-bg-soft z-10 min-w-[120px] px-6 py-3">指标</th>
                   <% if @financial_years.any? %>
                     <% @financial_years.each do |year| %>
-                      <th class="px-4 py-3 text-right text-hl-11 font-semibold text-ink-soft whitespace-nowrap"><%= year %></th>
+                      <th class="px-4 py-3 text-right text-hl-11 font-semibold text-ink-soft whitespace-nowrap bg-bg-soft"><%= year %></th>
                     <% end %>
                   <% else %>
                     <th class="px-6 py-3 text-center text-hl-13 text-muted-4">暂无数据</th>
@@ -160,12 +160,49 @@
                     <td class="px-6 py-3 text-center text-hl-13 text-muted-4">-</td>
                   <% end %>
                 </tr>
-                <tr class="hover:bg-bg-mute cursor-pointer indicator-row transition-colors" data-indicator="cash_flow_ps">
-                  <td class="px-6 py-3 text-hl-13 text-muted font-medium whitespace-nowrap">每股现金流量</td>
+                </tbody>
+            </table>
+          </div>
+        </div>
+        
+        <!-- 财务结构表 -->
+        <div class="bg-white hl-card overflow-hidden">
+          <div class="px-6 py-4 border-b border-line">
+            <h2 class="text-hl-16 font-semibold text-ink">财务结构 <span class="text-hl-12 text-muted-4 ml-2">Financial Structure</span></h2>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full">
+              <thead>
+                <tr>
+                  <th class="text-left sticky left-0 bg-bg-soft z-10 min-w-[120px] px-6 py-3">指标</th>
+                  <% if @financial_years.any? %>
+                    <% @financial_years.each do |year| %>
+                      <th class="px-4 py-3 text-right text-hl-11 font-semibold text-ink-soft whitespace-nowrap bg-bg-soft"><%= year %></th>
+                    <% end %>
+                  <% else %>
+                    <th class="px-6 py-3 text-center text-hl-13 text-muted-4">暂无数据</th>
+                  <% end %>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-line-soft">
+                <tr class="hover:bg-bg-mute cursor-pointer indicator-row transition-colors" data-indicator="cash_to_assets_ratio">
+                  <td class="px-6 py-3 text-hl-13 text-muted font-medium whitespace-nowrap">现金占总资产比率</td>
                   <% if @financial_years.any? %>
                     <% @financial_years.each do |year| %>
                       <td class="px-4 py-3 text-right text-hl-13 text-muted-2">
-                        <%= @financial_data_by_year[year][:cash_flow_ps].present? ? "%.2f" % @financial_data_by_year[year][:cash_flow_ps] : '-' %>
+                        <%= @financial_data_by_year[year][:cash_to_assets_ratio].present? ? "%.2f%%" % @financial_data_by_year[year][:cash_to_assets_ratio] : '-' %>
+                      </td>
+                    <% end %>
+                  <% else %>
+                    <td class="px-6 py-3 text-center text-hl-13 text-muted-4">-</td>
+                  <% end %>
+                </tr>
+                <tr class="hover:bg-bg-mute cursor-pointer indicator-row transition-colors" data-indicator="asset_liab_ratio">
+                  <td class="px-6 py-3 text-hl-13 text-muted font-medium whitespace-nowrap">负债占总资产比率</td>
+                  <% if @financial_years.any? %>
+                    <% @financial_years.each do |year| %>
+                      <td class="px-4 py-3 text-right text-hl-13 text-muted-2">
+                        <%= @financial_data_by_year[year][:asset_liab_ratio].present? ? "%.2f%%" % @financial_data_by_year[year][:asset_liab_ratio] : '-' %>
                       </td>
                     <% end %>
                   <% else %>
@@ -176,20 +213,20 @@
             </table>
           </div>
         </div>
-        
-        <!-- 财务结构 & 现金流量表 -->
+
+        <!-- 经营能力表 -->
         <div class="bg-white hl-card overflow-hidden">
-          <div class="px-6 py-4 border-b border-line bg-bg-mute">
-            <h2 class="text-hl-16 font-semibold text-ink-soft">财务结构 & 现金流量 <span class="text-muted-3 text-hl-11">(单位：<%= @stock.market == 'US' ? '亿美元' : @stock.market == 'HK' ? '亿港币' : '亿元' %>)</span></h2>
+          <div class="px-6 py-4 border-b border-line">
+            <h2 class="text-hl-16 font-semibold text-ink">经营能力 <span class="text-hl-12 text-muted-4 ml-2">Operating Capability</span></h2>
           </div>
           <div class="overflow-x-auto">
             <table class="w-full">
-              <thead class="bg-bg-mute">
+              <thead>
                 <tr>
-                  <th class="px-6 py-3 text-left text-hl-13 font-medium text-muted-3 w-36 whitespace-nowrap">指标</th>
+                  <th class="text-left sticky left-0 bg-bg-soft z-10 min-w-[120px] px-6 py-3">指标</th>
                   <% if @financial_years.any? %>
                     <% @financial_years.each do |year| %>
-                      <th class="px-4 py-3 text-right text-hl-11 font-semibold text-ink-soft whitespace-nowrap"><%= year %></th>
+                      <th class="px-4 py-3 text-right text-hl-11 font-semibold text-ink-soft whitespace-nowrap bg-bg-soft"><%= year %></th>
                     <% end %>
                   <% else %>
                     <th class="px-6 py-3 text-center text-hl-13 text-muted-4">暂无数据</th>
@@ -197,12 +234,36 @@
                 </tr>
               </thead>
               <tbody class="divide-y divide-line-soft">
-                <tr class="hover:bg-bg-mute cursor-pointer indicator-row transition-colors" data-indicator="asset_liab_ratio">
-                  <td class="px-6 py-3 text-hl-13 text-muted font-medium whitespace-nowrap">负债占资产比率</td>
+                <tr class="hover:bg-bg-mute cursor-pointer indicator-row transition-colors" data-indicator="receivable_turnover">
+                  <td class="px-6 py-3 text-hl-13 text-muted font-medium whitespace-nowrap">应收账款周转率(次)</td>
                   <% if @financial_years.any? %>
                     <% @financial_years.each do |year| %>
-                      <td class="px-4 py-3 text-right text-hl-13">
-                        <%= @financial_data_by_year[year][:asset_liab_ratio].present? ? "%.2f%%" % @financial_data_by_year[year][:asset_liab_ratio] : '-' %>
+                      <td class="px-4 py-3 text-right text-hl-13 text-muted-2">
+                        <%= @financial_data_by_year[year][:receivable_turnover].present? ? "%.2f" % @financial_data_by_year[year][:receivable_turnover] : '-' %>
+                      </td>
+                    <% end %>
+                  <% else %>
+                    <td class="px-6 py-3 text-center text-hl-13 text-muted-4">-</td>
+                  <% end %>
+                </tr>
+                <tr class="hover:bg-bg-mute cursor-pointer indicator-row transition-colors" data-indicator="avg_collection_days">
+                  <td class="px-6 py-3 text-hl-13 text-muted font-medium whitespace-nowrap">平均收现日数</td>
+                  <% if @financial_years.any? %>
+                    <% @financial_years.each do |year| %>
+                      <td class="px-4 py-3 text-right text-hl-13 text-muted-2">
+                        <%= @financial_data_by_year[year][:avg_collection_days].present? ? "%.0f 天" % @financial_data_by_year[year][:avg_collection_days] : '-' %>
+                      </td>
+                    <% end %>
+                  <% else %>
+                    <td class="px-6 py-3 text-center text-hl-13 text-muted-4">-</td>
+                  <% end %>
+                </tr>
+                <tr class="hover:bg-bg-mute cursor-pointer indicator-row transition-colors" data-indicator="fixed_asset_turnover">
+                  <td class="px-6 py-3 text-hl-13 text-muted font-medium whitespace-nowrap">固定资产周转率(次)</td>
+                  <% if @financial_years.any? %>
+                    <% @financial_years.each do |year| %>
+                      <td class="px-4 py-3 text-right text-hl-13 text-muted-2">
+                        <%= @financial_data_by_year[year][:fixed_asset_turnover].present? ? "%.4f" % @financial_data_by_year[year][:fixed_asset_turnover] : '-' %>
                       </td>
                     <% end %>
                   <% else %>
@@ -213,8 +274,45 @@
                   <td class="px-6 py-3 text-hl-13 text-muted font-medium whitespace-nowrap">总资产周转率</td>
                   <% if @financial_years.any? %>
                     <% @financial_years.each do |year| %>
-                      <td class="px-4 py-3 text-right text-hl-13">
+                      <td class="px-4 py-3 text-right text-hl-13 text-muted-2">
                         <%= @financial_data_by_year[year][:asset_turnover_ratio].present? ? "%.2f%%" % (@financial_data_by_year[year][:asset_turnover_ratio] * 100) : '-' %>
+                      </td>
+                    <% end %>
+                  <% else %>
+                    <td class="px-6 py-3 text-center text-hl-13 text-muted-4">-</td>
+                  <% end %>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 现金流量表 -->
+        <div class="bg-white hl-card overflow-hidden">
+          <div class="px-6 py-4 border-b border-line">
+            <h2 class="text-hl-16 font-semibold text-ink">现金流量 <span class="text-hl-12 text-muted-4 ml-2">Cash Flow</span> <span class="text-hl-12 text-muted-4 ml-2">(单位：<%= @stock.market == 'US' ? '亿美元' : @stock.market == 'HK' ? '亿港币' : '亿元' %>)</span></h2>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full">
+              <thead>
+                <tr>
+                  <th class="text-left sticky left-0 bg-bg-soft z-10 min-w-[120px] px-6 py-3">指标</th>
+                  <% if @financial_years.any? %>
+                    <% @financial_years.each do |year| %>
+                      <th class="px-4 py-3 text-right text-hl-11 font-semibold text-ink-soft whitespace-nowrap bg-bg-soft"><%= year %></th>
+                    <% end %>
+                  <% else %>
+                    <th class="px-6 py-3 text-center text-hl-13 text-muted-4">暂无数据</th>
+                  <% end %>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-line-soft">
+                <tr class="hover:bg-bg-mute cursor-pointer indicator-row transition-colors" data-indicator="cash_and_cash_equivalents">
+                  <td class="px-6 py-3 text-hl-13 text-muted font-medium whitespace-nowrap">现金及现金等价物</td>
+                  <% if @financial_years.any? %>
+                    <% @financial_years.each do |year| %>
+                      <td class="px-4 py-3 text-right text-hl-13 text-muted-2">
+                        <%= @financial_data_by_year[year][:cash_and_cash_equivalents].present? ? "%.2f" % (@financial_data_by_year[year][:cash_and_cash_equivalents].to_f / 100_000_000) : '-' %>
                       </td>
                     <% end %>
                   <% else %>
@@ -225,8 +323,8 @@
                   <td class="px-6 py-3 text-hl-13 text-muted font-medium whitespace-nowrap">净利润</td>
                   <% if @financial_years.any? %>
                     <% @financial_years.each do |year| %>
-                      <td class="px-4 py-3 text-right text-hl-13">
-                        <%= @financial_data_by_year[year][:net_income].present? ? "%.2f" % (@financial_data_by_year[year][:net_income] / 100000000.0) : '-' %>
+                      <td class="px-4 py-3 text-right text-hl-13 text-muted-2">
+                        <%= @financial_data_by_year[year][:net_income].present? ? "%.2f" % (@financial_data_by_year[year][:net_income].to_f / 100_000_000) : '-' %>
                       </td>
                     <% end %>
                   <% else %>
@@ -237,8 +335,8 @@
                   <td class="px-6 py-3 text-hl-13 text-muted font-medium whitespace-nowrap">经营活动现金流量</td>
                   <% if @financial_years.any? %>
                     <% @financial_years.each do |year| %>
-                      <td class="px-4 py-3 text-right text-hl-13">
-                        <%= @financial_data_by_year[year][:operating_cash_flow].present? ? "%.2f" % (@financial_data_by_year[year][:operating_cash_flow] / 100000000.0) : '-' %>
+                      <td class="px-4 py-3 text-right text-hl-13 text-muted-2">
+                        <%= @financial_data_by_year[year][:operating_cash_flow].present? ? "%.2f" % (@financial_data_by_year[year][:operating_cash_flow].to_f / 100_000_000) : '-' %>
                       </td>
                     <% end %>
                   <% else %>
@@ -249,8 +347,8 @@
                   <td class="px-6 py-3 text-hl-13 text-muted font-medium whitespace-nowrap">投资活动现金流量</td>
                   <% if @financial_years.any? %>
                     <% @financial_years.each do |year| %>
-                      <td class="px-4 py-3 text-right text-hl-13">
-                        <%= @financial_data_by_year[year][:investing_cash_flow].present? ? "%.2f" % (@financial_data_by_year[year][:investing_cash_flow] / 100000000.0) : '-' %>
+                      <td class="px-4 py-3 text-right text-hl-13 text-muted-2">
+                        <%= @financial_data_by_year[year][:investing_cash_flow].present? ? "%.2f" % (@financial_data_by_year[year][:investing_cash_flow].to_f / 100_000_000) : '-' %>
                       </td>
                     <% end %>
                   <% else %>
@@ -261,8 +359,8 @@
                   <td class="px-6 py-3 text-hl-13 text-muted font-medium whitespace-nowrap">筹资活动现金流量</td>
                   <% if @financial_years.any? %>
                     <% @financial_years.each do |year| %>
-                      <td class="px-4 py-3 text-right text-hl-13">
-                        <%= @financial_data_by_year[year][:financing_cash_flow].present? ? "%.2f" % (@financial_data_by_year[year][:financing_cash_flow] / 100000000.0) : '-' %>
+                      <td class="px-4 py-3 text-right text-hl-13 text-muted-2">
+                        <%= @financial_data_by_year[year][:financing_cash_flow].present? ? "%.2f" % (@financial_data_by_year[year][:financing_cash_flow].to_f / 100_000_000) : '-' %>
                       </td>
                     <% end %>
                   <% else %>
@@ -273,8 +371,8 @@
                   <td class="px-6 py-3 text-hl-13 text-muted font-medium whitespace-nowrap">净现金流量</td>
                   <% if @financial_years.any? %>
                     <% @financial_years.each do |year| %>
-                      <td class="px-4 py-3 text-right text-hl-13">
-                        <%= @financial_data_by_year[year][:net_cash_change].present? ? "%.2f" % (@financial_data_by_year[year][:net_cash_change] / 100000000.0) : '-' %>
+                      <td class="px-4 py-3 text-right text-hl-13 text-muted-2">
+                        <%= @financial_data_by_year[year][:net_cash_change].present? ? "%.2f" % (@financial_data_by_year[year][:net_cash_change].to_f / 100_000_000) : '-' %>
                       </td>
                     <% end %>
                   <% else %>
@@ -366,7 +464,7 @@ document.addEventListener('turbo:load', function() {
   let currentStockData = null;
   let hoverTimeout = null;
 
-  const labels = ['ROE', '毛利率', '资产周转率', 'EPS', '负债比率', '净利率'];
+  const labels = ['ROE', '毛利率', '资产周转率', 'EPS', '现金比率', '净利率'];
 
   function extractValues(data) {
     if (!data || !data.values) return [0, 0, 0, 0, 0, 0];
@@ -376,7 +474,7 @@ document.addEventListener('turbo:load', function() {
       typeof v.gross_margin === 'number' ? v.gross_margin : 0,
       typeof v.asset_turnover_ratio === 'number' ? v.asset_turnover_ratio : 0,
       typeof v.eps === 'number' ? v.eps : 0,
-      typeof v.asset_liab_ratio === 'number' ? v.asset_liab_ratio : 0,
+      typeof v.cash_to_assets_ratio === 'number' ? v.cash_to_assets_ratio : 0,
       typeof v.net_profit_margin === 'number' ? v.net_profit_margin : 0
     ];
   }
@@ -485,7 +583,7 @@ document.addEventListener('turbo:load', function() {
 <script>
 // 财务指标弹窗功能 - 封装在IIFE中避免全局变量污染
 (function() {
-  const STOCK_SYMBOL = '<%= @stock.symbol %>';
+  const STOCK_PARAM = '<%= @stock.to_param %>';
   const CACHE_TTL = 300000; // 5分钟缓存
   let chartInstance = null;
 
@@ -536,7 +634,7 @@ document.addEventListener('turbo:load', function() {
       return;
     }
 
-    const url = new URL(`/stocks/${encodeURIComponent(STOCK_SYMBOL)}/indicator_detail`, window.location.origin);
+    const url = new URL(`/stocks/${encodeURIComponent(STOCK_PARAM)}/indicator_detail`, window.location.origin);
     url.searchParams.set('indicator_key', indicatorKey);
     
     fetch(url, {
@@ -573,7 +671,7 @@ document.addEventListener('turbo:load', function() {
 
   function getCachedData(indicatorKey) {
     try {
-      const cacheKey = `indicator_${STOCK_SYMBOL}_${indicatorKey}`;
+      const cacheKey = `indicator_${STOCK_PARAM}_${indicatorKey}`;
       const cached = localStorage.getItem(cacheKey);
       if (cached) {
         const data = JSON.parse(cached);
@@ -589,7 +687,7 @@ document.addEventListener('turbo:load', function() {
 
   function cacheData(indicatorKey, payload) {
     try {
-      const cacheKey = `indicator_${STOCK_SYMBOL}_${indicatorKey}`;
+      const cacheKey = `indicator_${STOCK_PARAM}_${indicatorKey}`;
       localStorage.setItem(cacheKey, JSON.stringify({
         timestamp: Date.now(),
         payload: payload
@@ -651,7 +749,7 @@ document.addEventListener('turbo:load', function() {
     const points = data.data_points || [];
     const labels = points.map(p => p.year);
     
-    const isCashFlowIndicator = ['net_income', 'operating_cash_flow', 'investing_cash_flow', 'financing_cash_flow', 'net_cash_change'].includes(data.indicator_key);
+    const isCashFlowIndicator = ['net_income', 'operating_cash_flow', 'investing_cash_flow', 'financing_cash_flow', 'net_cash_change', 'cash_and_cash_equivalents'].includes(data.indicator_key);
     const isAssetTurnover = data.indicator_key === 'asset_turnover_ratio';
     
     const values = points.map(p => {

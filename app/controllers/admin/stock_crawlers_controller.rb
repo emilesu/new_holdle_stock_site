@@ -85,7 +85,7 @@ module Admin
 
     def update_all_pyramid
       execute_crawler("全局更新金字塔分数") do
-        stats = DataSources::StockPyramidBatchService.call(full_recalc: false)
+        stats = DataSources::StockPyramidBatchService.call(full_recalc: true)
         "金字塔分数更新完成 - 总计: #{stats[:total]}, 更新: #{stats[:updated]}, 跳过: #{stats[:skipped]}, 失败: #{stats[:failed]}"
       end
     end

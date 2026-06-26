@@ -150,6 +150,7 @@ module DataSources
           financial_data.each { |k, v| record.send("#{k}=", v) }
           save_with_overflow_protection(record, financial_data)
           mark_crawled(financial_report)
+          Rails.logger.info "[#{self.class}] #{model_class} 新建记录: stock=#{stock.symbol}, date=#{report_date}, market=#{market}"
           :success
         else
           new_data = financial_data.merge(report_type: report_type)
@@ -159,8 +160,10 @@ module DataSources
             new_data.each { |k, v| record.send("#{k}=", v) if financial_data.key?(k) }
             save_with_overflow_protection(record, financial_data)
             mark_crawled(financial_report)
+            Rails.logger.info "[#{self.class}] #{model_class} 更新记录: stock=#{stock.symbol}, date=#{report_date}, market=#{market}"
             :success
           else
+            Rails.logger.info "[#{self.class}] #{model_class} 跳过记录: stock=#{stock.symbol}, date=#{report_date}, market=#{market} (数据无变化，字段数=#{new_data.size})"
             :skipped
           end
         end

@@ -102,6 +102,7 @@
 
           <div id="pyramid-scroll-sentinel"
                class="flex justify-center py-4 text-hl-13 text-muted-4 opacity-100 transition-opacity duration-300"
+               data-scroll-has-more="<%= @total_pages > 1 %>"
                data-next-page="2"
                data-total-pages="<%= @total_pages %>"
                data-market="<%= @market %>"
@@ -141,13 +142,13 @@ document.addEventListener('turbo:load', function initPyramidPage() {
     const ctx = document.getElementById('radar-chart');
     if (!ctx) return;
 
-    const labels = ['ROE', '毛利率', '资产周转率', 'EPS', '负债比率', '净利率'];
+    const labels = ['ROE', '毛利率', '资产周转率', 'EPS', '现金比率', '净利率'];
     const baseValues = baseData ? [
       baseData.values.roe || 0,
       baseData.values.gross_margin || 0,
       baseData.values.asset_turnover_ratio || 0,
       baseData.values.eps || 0,
-      baseData.values.asset_liab_ratio || 0,
+      baseData.values.cash_to_assets_ratio || 0,
       baseData.values.net_profit_margin || 0
     ] : [0, 0, 0, 0, 0, 0];
 
@@ -166,7 +167,7 @@ document.addEventListener('turbo:load', function initPyramidPage() {
         compareData.values.gross_margin || 0,
         compareData.values.asset_turnover_ratio || 0,
         compareData.values.eps || 0,
-        compareData.values.asset_liab_ratio || 0,
+        compareData.values.cash_to_assets_ratio || 0,
         compareData.values.net_profit_margin || 0
       ];
       datasets.push({
@@ -217,7 +218,7 @@ document.addEventListener('turbo:load', function initPyramidPage() {
         compareData.values.gross_margin || 0,
         compareData.values.asset_turnover_ratio || 0,
         compareData.values.eps || 0,
-        compareData.values.asset_liab_ratio || 0,
+        compareData.values.cash_to_assets_ratio || 0,
         compareData.values.net_profit_margin || 0
       ];
 
@@ -369,6 +370,10 @@ document.addEventListener('turbo:load', function initPyramidPage() {
       const html = await response.text();
       window.Turbo.renderStreamMessage(html);
 
+      // 重置滚动加载页码
+      scrollCurrentPage = 1;
+      scrollIsLoading = false;
+      
       setTimeout(() => {
         radarDataCache.clear();
         const newTopStock = document.querySelector('.stock-row');
@@ -406,11 +411,11 @@ document.addEventListener('turbo:load', function initPyramidPage() {
     updateList(market, '');
   });
 
-  // 无限滚动加载
+  // 无限滚动加载（v3 - 使用 JS 变量维护页码，避开 Turbo replace 不生效的 Bug）
+  console.log('[Scroll] 金字塔页面加载，使用 v3 滚动加载机制（JS 变量维护页码）');
   let scrollObserver = null;
-  let scrollCurrentPage = 1;
   let scrollIsLoading = false;
-  let scrollHasMore = <%= @total_pages > 1 ? 'true' : 'false' %>;
+  let scrollCurrentPage = 1;  // 用 JS 变量取代 DOM data 属性维护当前页码
 
   const setupScrollObserver = () => {
     if (scrollObserver) {
@@ -419,34 +424,52 @@ document.addEventListener('turbo:load', function initPyramidPage() {
     }
 
     const sentinel = document.getElementById('pyramid-scroll-sentinel');
-    if (!sentinel) return;
+    if (!sentinel) {
+      console.log('[Scroll] sentinel 元素未找到');
+      return;
+    }
 
-    scrollCurrentPage = 1;
-    scrollHasMore = parseInt(sentinel.dataset.totalPages || 1) > 1;
+    const totalPages = parseInt(sentinel.dataset.totalPages || 1);
+    const hasMore = scrollCurrentPage < totalPages;
+    console.log('[Scroll] setupScrollObserver: hasMore=' + hasMore + ', currentPage=' + scrollCurrentPage + ', totalPages=' + totalPages);
+    if (!hasMore) return;
 
     scrollObserver = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
-        if (!entry.isIntersecting || scrollIsLoading || !scrollHasMore) return;
+        console.log('[Scroll] Observer回调: isIntersecting=' + entry.isIntersecting + ', isLoading=' + scrollIsLoading);
+        if (!entry.isIntersecting || scrollIsLoading) return;
+        console.log('[Scroll] sentinel 进入视口，触发加载下一页');
         loadNextPage();
       });
-    }, { rootMargin: '200px' });
+    }, { rootMargin: '300px' });
 
     scrollObserver.observe(sentinel);
+    console.log('[Scroll] IntersectionObserver 已绑定到 sentinel');
   };
 
   const loadNextPage = async () => {
     const sentinel = document.getElementById('pyramid-scroll-sentinel');
-    if (!sentinel || scrollIsLoading) return;
-    if (!scrollHasMore) return;
+    if (!sentinel || scrollIsLoading) {
+      console.log('[Scroll] loadNextPage 跳过: sentinel=' + !!sentinel + ', isLoading=' + scrollIsLoading);
+      return;
+    }
 
-    const nextPage = parseInt(sentinel.dataset.nextPage || 2);
+    const totalPages = parseInt(sentinel.dataset.totalPages || 1);
+    const nextPage = scrollCurrentPage + 1;
+    
+    if (nextPage > totalPages) {
+      console.log('[Scroll] loadNextPage 跳过: nextPage=' + nextPage + ' > totalPages=' + totalPages);
+      sentinel.dataset.scrollHasMore = 'false';
+      sentinel.innerHTML = '<span>— 已全部加载 —</span>';
+      return;
+    }
+
     const market = sentinel.dataset.market || 'CN';
     const sector = sentinel.dataset.sector || '';
+    console.log('[Scroll] loadNextPage: 开始加载 page=' + nextPage + ', market=' + market + ', sector=' + sector);
 
     scrollIsLoading = true;
-    sentinel.style.opacity = '0.5';
-    sentinel.innerHTML = '<span class="flex items-center space-x-2 transition-opacity duration-300"><svg class="animate-spin h-4 w-4 text-gray-400" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg><span>加载中...</span></span>';
-    setTimeout(() => { sentinel.style.opacity = '1'; }, 50);
+    sentinel.innerHTML = '<span class="flex items-center space-x-2"><svg class="animate-spin h-4 w-4 text-gray-400" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg><span>加载中...</span></span>';
 
     try {
       let url = `/pyramid/load_more?page=${nextPage}&market=${encodeURIComponent(market)}`;
@@ -464,35 +487,67 @@ document.addEventListener('turbo:load', function initPyramidPage() {
       if (!response.ok) throw new Error('请求失败');
 
       const html = await response.text();
+      console.log('[Scroll] 收到响应，长度=' + html.length + ' chars');
+      
       window.Turbo.renderStreamMessage(html);
+      
+      // 用 JS 变量更新页码，不依赖 Turbo replace 是否生效
+      scrollCurrentPage = nextPage;
       scrollIsLoading = false;
-
-      const newSentinel = document.getElementById('pyramid-scroll-sentinel');
-      if (newSentinel) {
-        const totalPages = parseInt(newSentinel.dataset.totalPages || 1);
-        const nextPg = parseInt(newSentinel.dataset.nextPage || 1);
-        scrollHasMore = nextPg <= totalPages;
-
-        if (scrollObserver && scrollHasMore) {
-          scrollObserver.unobserve(sentinel);
-          scrollObserver.observe(newSentinel);
+      
+      // 手动更新 sentinel 的 data 属性和文本
+      const updatedSentinel = document.getElementById('pyramid-scroll-sentinel');
+      if (updatedSentinel) {
+        const hasMore = scrollCurrentPage < parseInt(updatedSentinel.dataset.totalPages || 1);
+        updatedSentinel.dataset.scrollHasMore = hasMore ? 'true' : 'false';
+        updatedSentinel.dataset.nextPage = String(scrollCurrentPage + 1);
+        
+        if (hasMore) {
+          updatedSentinel.innerHTML = '<span>滚动加载更多...</span>';
+        } else {
+          updatedSentinel.innerHTML = '<span>— 已全部加载 —</span>';
         }
-
-        scrollCurrentPage = nextPg - 1;
-
-        setTimeout(() => {
-          addRowEventListeners();
-        }, 50);
+        
+        console.log('[Scroll] 手动更新 sentinel: currentPage=' + scrollCurrentPage + 
+          ', hasMore=' + hasMore + ', nextPage=' + updatedSentinel.dataset.nextPage);
       }
+
+      console.log('[Scroll] Turbo渲染完成，重新配置观察器');
+      setupScrollObserver();
+
+      // 主动检查：Turbo 异步 append 后，sentinel 可能已被推出视口
+      // IntersectionObserver 不会对已在视口外的元素触发，需手动检测
+      setTimeout(() => {
+        const checkSentinel = document.getElementById('pyramid-scroll-sentinel');
+        if (checkSentinel && !scrollIsLoading && scrollCurrentPage < parseInt(checkSentinel.dataset.totalPages || 1)) {
+          const rect = checkSentinel.getBoundingClientRect();
+          const windowHeight = window.innerHeight || document.documentElement.clientHeight;
+          const isVisible = rect.top < windowHeight + 300 && rect.bottom > 0;
+          console.log('[Scroll] 主动检查: rect.top=' + rect.top + ', windowHeight=' + windowHeight + ', isVisible=' + isVisible);
+          if (isVisible) {
+            console.log('[Scroll] sentinel 仍在视口内，自动触发下一页');
+            loadNextPage();
+            return;
+          }
+        }
+        addRowEventListeners();
+      }, 200);
     } catch (e) {
       scrollIsLoading = false;
-      sentinel.innerHTML = '<div class="flex flex-col items-center space-y-2"><span class="text-red-500">加载失败</span><button onclick="retryLoadMore()" class="px-3 py-1 text-sm bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">点击重试</button></div>';
+      const currentSentinel = document.getElementById('pyramid-scroll-sentinel');
+      if (currentSentinel) {
+        currentSentinel.innerHTML = '<div class="flex flex-col items-center space-y-2 py-4"><span class="text-red-500">加载失败</span></div>';
+        setTimeout(() => {
+          const retrySentinel = document.getElementById('pyramid-scroll-sentinel');
+          if (retrySentinel && scrollCurrentPage < parseInt(retrySentinel.dataset.totalPages || 1)) {
+            setupScrollObserver();
+            loadNextPage();
+          }
+        }, 3000);
+      } else {
+        setTimeout(setupScrollObserver, 1000);
+      }
     }
-  };
-
-  window.retryLoadMore = function() {
-    scrollIsLoading = false;
-    loadNextPage();
   };
 
   setupScrollObserver();
@@ -566,15 +621,21 @@ document.addEventListener('turbo:load', function initPyramidPage() {
 
   initRadarFixed();
 
-  document.addEventListener('turbo:before-render', function cleanup() {
+  function cleanupBeforeCache() {
+    // 移除初始化标记，确保 Turbo 恢复缓存页面时能重新初始化
+    pyramidPage.removeAttribute('data-_initialized');
+    if (scrollObserver) {
+      scrollObserver.disconnect();
+      scrollObserver = null;
+    }
     if (radarScrollHandler) {
       document.removeEventListener('scroll', radarScrollHandler);
     }
     if (radarResizeHandler) {
       window.removeEventListener('resize', radarResizeHandler);
     }
-    document.removeEventListener('turbo:before-render', cleanup);
-  }, { once: true });
+  }
+  document.addEventListener('turbo:before-cache', cleanupBeforeCache);
 
   setupSectorListener();
   addRowEventListeners();

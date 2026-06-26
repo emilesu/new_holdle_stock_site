@@ -24,20 +24,4 @@
   <% end %>
 <% end %>
 
-<%= turbo_stream.replace 'pyramid-scroll-sentinel' do %>
-  <% if @page < @total_pages %>
-    <div id="pyramid-scroll-sentinel"
-         class="flex justify-center py-4 text-hl-13 text-muted-4"
-         data-next-page="<%= @page + 1 %>"
-         data-total-pages="<%= @total_pages %>"
-         data-market="<%= @market %>"
-         data-sector="<%= @sector || '' %>">
-      <span>滚动加载更多...</span>
-    </div>
-  <% else %>
-    <div id="pyramid-scroll-sentinel"
-         class="flex justify-center py-4 text-hl-13 text-muted-4">
-      <span>— 已全部加载 —</span>
-    </div>
-  <% end %>
-<% end %>
+<%# sentinel 由前端 JS 手动管理，不在 Turbo Stream 中 replace，避免观察器绑定到旧 DOM 元素 %>
