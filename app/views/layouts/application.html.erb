@@ -96,6 +96,8 @@
             suggestionsList.innerHTML = results.map(function(stock, index) {
               var marketClass = stock.market === 'CN'
                 ? 'bg-green-100 text-green-700'
+                : stock.market === 'HK'
+                ? 'bg-amber-100 text-amber-700'
                 : 'bg-blue-100 text-blue-700';
 
               return '<div class="suggestion-item px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors" data-index="' + index + '" data-url="' + stock.url + '" data-symbol="' + stock.symbol + '">' +

@@ -24,8 +24,8 @@
         <p class="text-hl-12 font-medium text-muted-3">港股股票</p>
         <p class="mt-1 text-hl-22 font-bold text-ink"><%= @hk_stock_count %></p>
       </div>
-      <div class="w-10 h-10 bg-indigo-50 rounded-md flex items-center justify-center">
-        <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div class="w-10 h-10 bg-amber-50 rounded-md flex items-center justify-center">
+        <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
         </svg>
       </div>
@@ -225,7 +225,7 @@
             <p class="text-hl-12 text-muted-3"><%= stock.name %></p>
           </div>
           <span class="inline-flex items-center px-2 py-0.5 rounded text-hl-12 font-medium
-            <%= stock.market == 'CN' ? 'bg-green-50 text-green-700' : stock.market == 'HK' ? 'bg-indigo-50 text-indigo-700' : 'bg-blue-50 text-blue-700' %>">
+            <%= stock.market == 'CN' ? 'bg-green-50 text-green-700' : stock.market == 'HK' ? 'bg-amber-50 text-amber-700' : 'bg-blue-50 text-blue-700' %>">
             <%= stock.market == 'CN' ? 'A股' : stock.market == 'HK' ? '港股' : '美股' %>
           </span>
         </div>

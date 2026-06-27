@@ -133,7 +133,7 @@ class Stock < ApplicationRecord
       financing_cash_flow: cash&.financing_cash_flow,
       net_cash_change: cash&.net_cash_change,
       roe: indicator&.roe_avg,
-      roa: calculate_roa(income, balance),
+      roa: indicator&.net_interest_of_ta,
       eps: indicator&.basic_eps,
       cash_flow_ps: indicator&.ncf_from_oa_ps,
       operating_margin: indicator&.operating_margin

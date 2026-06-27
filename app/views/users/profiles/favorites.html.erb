@@ -42,7 +42,7 @@
                         <span class="hl-tag shrink-0"><%= stock.symbol %></span>
                       </div>
                       <div class="flex items-center gap-3 mt-2">
-                        <span class="hl-tag"><%= stock.market == 'CN' ? 'A股' : stock.market == 'US' ? '美股' : stock.market %></span>
+                        <span class="px-2 py-0.5 text-xs font-medium rounded whitespace-nowrap <%= stock.market == 'CN' ? 'bg-green-100 text-green-700' : stock.market == 'HK' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700' %>"><%= stock.market == 'CN' ? 'A股' : stock.market == 'HK' ? '港股' : '美股' %></span>
                         <span class="text-hl-12 text-muted-4"><%= stock.sector.presence || stock.industry.presence || '-' %></span>
                       </div>
                       <% if current_user.is_member? && stock.pyramid_total_score > 0 %>

@@ -51,6 +51,7 @@ module DataSources
         "预付款按金及其他应收款"   => :accounts_receivable,
         "存货"                     => :inventory,
         "物业厂房及设备"           => :property_plant_equipment,
+        "固定资产"                 => :property_plant_equipment,  # 别名
         "无形资产"                 => :intangible_assets,
         "商誉"                     => :goodwill,
         "短期贷款"                 => :short_term_debt,

@@ -225,16 +225,28 @@ module DataSources
             financial_data[:net_sales_rate] = (parent_netprofit / total_revenue_val * 100).round(2)
           end
 
-          # 资产负债率 = 总负债 / 总资产（从已保存的 BalanceSheet 中获取）
-          # 速动比率 = (流动资产 - 存货) / 流动负债（从已保存的 BalanceSheet 中获取）
+          # 总资产净利率(ROA) = 净利润 / 总资产
+          # 资产负债率 = 总负债 / 总资产
+          # 速动比率 = (流动资产 - 存货) / 流动负债
+          # 以上指标均从已保存的 BalanceSheet + IncomeStatement 中获取
           balance_record = BalanceSheet.find_by(stock_id: stock.id, report_date: report_date, market: market)
           if balance_record
+            # ROA
+            if balance_record.total_assets && balance_record.total_assets > 0
+              income_record = IncomeStatement.find_by(stock_id: stock.id, report_date: report_date, market: market)
+              if income_record && income_record.net_income
+                financial_data[:net_interest_of_ta] = (income_record.net_income / balance_record.total_assets * 100).round(2)
+              end
+            end
+
+            # 资产负债率
             ta = balance_record.total_assets
             tl = balance_record.total_liabilities
             if ta && tl && ta > 0
               financial_data[:asset_liab_ratio] = (tl / ta * 100).round(2)
             end
 
+            # 速动比率
             ca = balance_record.current_assets
             inv = balance_record.inventory
             cl = balance_record.current_liabilities

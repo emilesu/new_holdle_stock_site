@@ -68,6 +68,18 @@ class StocksController < ApplicationController
 
     @user_favorite = current_user&.user_favorites&.find_by(stock_id: @stock.id)
 
+    # 市场主题色
+    @market_text_color = case @stock.market
+                         when 'CN' then 'text-green-600'
+                         when 'HK' then 'text-amber-600'
+                         else 'text-blue-600'
+                         end
+    @market_badge_bg = case @stock.market
+                       when 'CN' then 'bg-green-100 text-green-800'
+                       when 'HK' then 'bg-amber-100 text-amber-800'
+                       else 'bg-blue-100 text-blue-800'
+                       end
+
     preformat_financial_data
   end
 
