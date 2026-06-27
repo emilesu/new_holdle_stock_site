@@ -54,6 +54,7 @@
               <label class="text-hl-13 font-medium text-muted-2 w-12 shrink-0">市场</label>
               <select name="market" id="pyramid-market" class="px-3 py-2 text-hl-13 border border-line rounded focus:border-link w-28 bg-white">
                 <option value="CN" <%= 'selected' if @market == 'CN' %>>A股</option>
+                <option value="HK" <%= 'selected' if @market == 'HK' %>>港股</option>
                 <option value="US" <%= 'selected' if @market == 'US' %>>美股</option>
               </select>
             </div>
