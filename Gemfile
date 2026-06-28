@@ -47,6 +47,14 @@ gem 'omniauth-wechat-oauth2'
 # 谷歌全球登录
 gem 'omniauth-google-oauth2'
 
+# 部署核心
+gem 'capistrano', '~> 3.19'
+gem 'capistrano-rails'
+gem 'capistrano-puma'
+gem 'capistrano-nvm'
+gem 'capistrano-bundler'
+gem 'capistrano-rbenv'
+
 # Use Redis adapter to run Action Cable in production
 # gem "redis", ">= 4.0.1"
 
