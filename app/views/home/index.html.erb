@@ -20,7 +20,7 @@
     </p>
     <div class="flex flex-wrap gap-3">
       <a href="#" class="hl-btn hl-btn-primary">看我的回归视频</a>
-      <a href="#" class="hl-btn hl-btn-line">读老文章 / 课程</a>
+      <%= link_to "读老文章 / 课程", courses_path, class: "hl-btn hl-btn-line" %>
       <a href="#" class="hl-btn hl-btn-line">用 HOLD LE 工具</a>
       <a href="#" class="hl-btn hl-btn-line">给大苏写信</a>
     </div>
@@ -40,11 +40,11 @@
 
 我是大苏。
 
-七年没更新，网站没死，但数据源崩了三次（疫情三年，每个数据源都关停换人）。小瓶姐和黄同学扛着这事儿，头发白了不少。
+七年没更新，但「HOLDLE」一直都在。早前数据源崩了三次（疫情三年，每个数据源都关停换人），是瓶姐和黄同学扛着这事儿，头发白了不少。
 
 这七年间我干嘛去了，你们大概也听说过一些。简单说：早年在 P2P 公司做技术和企划，老板 2016 年卷款跑路。我作为打工人，法律责任由法院判定——<strong class="text-ink">7 年 9 个月</strong>。
 
-人生给我安排了一段"强制飞行模式"，作息规律但没有行情，七年九个月。
+人生给我安排了一段"强制飞行模式"，作息规律但没有行情的七年。
 
 回来一看：
 - 老粉还在催更（感动）
@@ -147,7 +147,7 @@
 
     <div class="hl-quote">
       <strong>先选对股票，再选对时机。</strong><br>
-      <span class="text-muted-3 text-hl-13">工具会变，K 线会变，但人性贪婪和恐惧的比例，从来没变过。</span>
+      <span class="text-muted-3 text-hl-13">这样你才会有足够的底气、信心，不会怀疑自己的决定，坚持到最后。</span>
     </div>
   </div>
 </section>
@@ -212,8 +212,8 @@
 <section class="py-16">
   <div class="container-hl">
     <div class="label-en">ABOUT THE AUTHOR</div>
-    <h2 class="text-hl-22 font-semibold text-ink mb-2">关于大苏（Emile Su）</h2>
-    <p class="text-hl-13 text-muted-3 mb-7">一个程序员 + 十七年交易史</p>
+    <h2 class="text-hl-22 font-semibold text-ink mb-2">关于我</h2>
+    <p class="text-hl-13 text-muted-3 mb-7">一个业余程序员 + 十七年交易史 + 一段“黑”历史</p>
 
     <div class="hl-card p-8 grid grid-cols-1 md:grid-cols-[200px_1fr] gap-8">
       <div class="w-full md:w-50 h-60 bg-linear-to-br from-bg-mute to-line rounded flex items-center justify-center text-muted-6 text-5xl">
@@ -221,20 +221,20 @@
       </div>
       <div>
         <div class="text-hl-11 text-muted-5 tracking-wide-2 mb-2">FOUNDER · BUILDER</div>
-        <div class="text-hl-22 font-semibold mb-1">大苏</div>
+        <div class="text-hl-22 font-semibold mb-1">大苏（Emile Su）</div>
         <div class="text-hl-13 text-muted-3 mb-5">HOLD LE 站长 / 程序员 / 文案作者</div>
         <div class="flex flex-wrap gap-1.5 mb-5">
           <span class="hl-tag">17 年交易史</span>
           <span class="hl-tag">股票 / 外汇 / 数字货币</span>
-          <span class="hl-tag">一人 + AI 创业</span>
+          <span class="hl-tag">一人公司 + AI 创业</span>
           <span class="hl-tag">（曾经的）德扑 / LOL / PUBG 高段位</span>
           <span class="hl-tag">Xdite 的新生大学 Ruby 全栈营编程设计大赛一等奖、最佳个人奖（MVP）</span>
         </div>
         <p class="text-hl-13 text-muted leading-relaxed mb-5">
-          我几乎不间断地做了<strong class="text-ink">十多年交易</strong><strong class="text-ink">，前五年</strong>基本是<strong class="text-ink">亏多赢少</strong>，始终跨不过那个坎。和所有人一样，开始时我把所有时间和精力用来学习"如何判断正确"，并用钱去验证每一个想法。
+          几乎不间断地<strong class="text-ink">十多年交易生涯中</strong><strong class="text-ink">，前五年</strong>基本是<strong class="text-ink">亏多赢少</strong>，始终跨不过那个坎。和所有人一样，开始时我把所有时间和精力用来学习"如何判断正确"，并用钱去验证每一个想法。
         </p>
         <p class="text-hl-13 text-muted leading-relaxed mb-5">
-          但恰恰相反，这几年我开始能持续稳定获利，<strong class="text-ink">并不是因为我彻底解决了"如何判断正确"</strong>，而是对交易这件事在认知上的各方面转变。
+          但恰恰相反，之后几年我开始能持续稳定获利，<strong class="text-ink">并不是因为我彻底解决了"如何判断正确"</strong>，而是对交易这件事在认知上的各方面转变。
         </p>
         <div class="hl-callout">
           我可以告诉你：<br>
@@ -244,7 +244,7 @@
         </div>
         <div class="hl-callout-dashed">
           <h4 class="text-hl-12 text-muted-3 font-medium mb-2 tracking-wide-2">关于 7 年断更这件事</h4>
-          <p class="text-hl-13 text-muted leading-relaxed">早年在 P2P 公司做技术，老板 2016 年跑路。我作为打工人的法律责任由法院判定——<strong class="text-ink">7 年 9 个月</strong>。这事我不展开讲，以后有空再说。这次回来是想告诉你：判完了，人还在，方法还在，工具还在修。</p>
+          <p class="text-hl-13 text-muted leading-relaxed">早年在 P2P 公司做技术，老板 2016 年跑路，一直没抓到。作为打工人的我，法律责任由法院判定——<strong class="text-ink">7 年 9 个月</strong>。这事我不展开讲，以后有空再说。这次回来是想告诉你：判完了，人还在，方法还在，工具还能打。</p>
         </div>
       </div>
     </div>
