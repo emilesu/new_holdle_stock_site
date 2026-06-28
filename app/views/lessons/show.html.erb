@@ -43,7 +43,7 @@
         prose-ul:text-muted prose-ol:text-muted
         prose-li:text-hl-14
         prose-hr:border-line-soft">
-        <%= raw @lesson.markdown_html %>
+        <%= sanitize @lesson.markdown_html, tags: %w[p a img ul ol li h1 h2 h3 h4 h5 h6 pre code blockquote table thead tbody tr th td strong em br hr span div], attributes: %w[href src alt class id target rel width height] %>
       </article>
     </div>
 

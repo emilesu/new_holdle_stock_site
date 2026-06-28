@@ -81,6 +81,7 @@ module Admin
     end
 
     def user_params
+      # 管理员后台：允许更新角色/会员到期时间等敏感字段（安全通过 Pundit 鉴权）
       params.require(:user).permit(:email, :nickname, :role, :member_expire_at, :bio)
     end
   end

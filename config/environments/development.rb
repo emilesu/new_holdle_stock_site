@@ -73,4 +73,7 @@ Rails.application.configure do
 
   # Raise error when a before_action's only/except options reference missing actions
   config.action_controller.raise_on_missing_callback_actions = true
+
+  # 允许通过公网 IP 访问开发服务器
+  config.hosts << "8.210.33.72"
 end
