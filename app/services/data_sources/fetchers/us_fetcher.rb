@@ -126,16 +126,28 @@ module DataSources
       private
 
       # 通过查询组织信息获取美股 SECUCODE
+      # 注意：东财 API 要求 SECURITY_CODE 不含点（如 BRK_B 而非 BRK.B）
       def resolve_secucode(symbol)
+        # 将 BRK.B → BRK_B，东财 API 对含点代码不识别
+        clean_symbol = symbol.tr('.', '_')
+
         params = {
           reportName: "RPT_USF10_INFO_ORGPROFILE",
           columns: "SECUCODE,SECURITY_CODE,SECURITY_NAME_ABBR",
-          filter: %((SECURITY_CODE="#{symbol}")),
+          filter: %((SECURITY_CODE="#{clean_symbol}")),
           source: "SECURITIES", client: "PC"
         }
 
         response = http_get(BASE_URL, params: params)
         data = extract_data_list(response)
+
+        # 若转换后未找到，尝试原始符号（兼容普通不含点的代码）
+        if data.empty? && clean_symbol != symbol
+          params[:filter] = %((SECURITY_CODE="#{symbol}"))
+          response = http_get(BASE_URL, params: params)
+          data = extract_data_list(response)
+        end
+
         data.first&.dig("SECUCODE")
       end
 
