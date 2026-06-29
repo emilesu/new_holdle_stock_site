@@ -76,4 +76,5 @@ Rails.application.configure do
 
   # 允许通过公网 IP 访问开发服务器
   config.hosts << "8.210.33.72"
+  config.hosts << "test.holdle.com"
 end
