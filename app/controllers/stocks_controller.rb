@@ -437,7 +437,11 @@ class StocksController < ApplicationController
       parts = param.split('-', 2)
       exchange = parts[0]
       symbol = parts[1]
-      @stock = Stock.find_by(exchange: exchange, symbol: symbol) || Stock.find_by(symbol: symbol)
+      # 支持 BRK_B → BRK.B 等含点代码的转换
+      @stock = Stock.find_by(exchange: exchange, symbol: symbol) ||
+               Stock.find_by(exchange: exchange, symbol: symbol.tr('_', '.')) ||
+               Stock.find_by(symbol: symbol) ||
+               Stock.find_by(symbol: symbol.tr('_', '.'))
     else
       @stock = Stock.find_by(symbol: param)
     end

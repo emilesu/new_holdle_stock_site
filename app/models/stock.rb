@@ -22,7 +22,8 @@ class Stock < ApplicationRecord
       "HK#{symbol.sub(/\.HK\z/, '')}"
     else
       exchange_name = exchange.present? ? exchange.gsub('证券交易所', '').strip.upcase : 'NASDAQ'
-      "#{exchange_name}-#{symbol}"
+      # 将 BRK.B → BRK_B，避免 URL 中点被 Rails 解释为格式后缀
+      "#{exchange_name}-#{symbol.tr('.', '_')}"
     end
   end
 

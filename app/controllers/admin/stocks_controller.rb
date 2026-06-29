@@ -182,7 +182,11 @@ module Admin
         parts = param.split('-', 2)
         exchange = parts[0].gsub('证券交易所', '').strip.upcase
         symbol = parts[1]
-        Stock.find_by(exchange: exchange, symbol: symbol) || Stock.find_by(symbol: symbol)
+        # 支持 BRK_B → BRK.B 等含点代码的转换
+        Stock.find_by(exchange: exchange, symbol: symbol) ||
+          Stock.find_by(exchange: exchange, symbol: symbol.tr('_', '.')) ||
+          Stock.find_by(symbol: symbol) ||
+          Stock.find_by(symbol: symbol.tr('_', '.'))
       else
         # 兼容数字 ID 和直接 symbol
         Stock.find_by(id: param) || Stock.find_by(symbol: param)
