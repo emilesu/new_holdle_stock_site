@@ -2,6 +2,8 @@ module DataSources
   class UsStockBasicInfoService
     # 雪球API获取中文名
     XUEQIU_QUOTE_URL = "https://stock.xueqiu.com/v5/stock/quote.json".freeze
+    # 东方财富搜索API获取中文名（备用，无需Cookie）
+    EASTMONEY_SEARCH_URL = "https://searchadapter.eastmoney.com/api/suggest/get".freeze
     # Yahoo Finance API获取行业信息
     YAHOO_SEARCH_URL = "https://query1.finance.yahoo.com/v1/finance/search".freeze
 
@@ -307,12 +309,24 @@ module DataSources
       end
 
       def fetch_chinese_name(ticker)
-        puts "\n[1/2] 正在从雪球获取中文名..."
+        puts "\n[中文名] 正在从雪球获取中文名..."
 
         if ENV["XUEQIU_COOKIE"].blank?
           puts "⚠️  警告：未配置雪球Cookie (XUEQIU_COOKIE)，可能无法获取中文名"
         end
 
+        name = fetch_chinese_name_from_xueqiu(ticker)
+
+        # 雪球失败时，降级到东方财富搜索
+        if name.blank?
+          puts "\n⚠️  雪球获取失败，降级到东方财富搜索..."
+          name = fetch_chinese_name_from_eastmoney(ticker)
+        end
+
+        name
+      end
+
+      def fetch_chinese_name_from_xueqiu(ticker)
         begin
           response = Faraday.get(XUEQIU_QUOTE_URL) do |req|
             req.headers["User-Agent"] = USER_AGENT
@@ -326,27 +340,64 @@ module DataSources
           if response.success?
             data = JSON.parse(response.body)
             name = data.dig("data", "quote", "name")
-            
+
             if name.blank?
               puts "⚠️  雪球返回的name字段为空，尝试其他字段路径..."
               name = data.dig("data", "basic", "name") || data.dig("quote", "name") || data["name"]
               puts "  备用字段尝试结果: #{name}"
             end
-            
-            puts "✅ 雪球返回中文名: #{name}"
-            return name
+
+            puts "✅ 雪球返回中文名: #{name}" if name.present?
+            return name if name.present?
           else
             puts "❌ 雪球请求失败，状态码: #{response.status}, 响应摘要: #{response.body.to_s[0..200]}"
-            return nil
           end
         rescue JSON::ParserError => e
           puts "❌ 雪球响应解析失败: #{e.message}, 响应: #{response&.body&.to_s[0..200]}"
-          return nil
         rescue => e
           puts "❌ 雪球请求异常: #{e.message}"
           puts "  异常堆栈: #{e.backtrace.take(3).join("\n")}"
-          return nil
         end
+        nil
+      end
+
+      def fetch_chinese_name_from_eastmoney(ticker)
+        puts "\n[中文名-备用] 正在从东方财富搜索中文名..."
+
+        # 处理 BRK.B → BRK_B 等含点的代码
+        search_query = ticker.include?(".") ? ticker.tr(".", "_") : ticker
+
+        begin
+          response = Faraday.get(EASTMONEY_SEARCH_URL) do |req|
+            req.headers["User-Agent"] = USER_AGENT
+            req.headers["Referer"] = "https://emweb.securities.eastmoney.com/"
+            req.params['input'] = search_query
+            req.params['type'] = 14
+            req.params['count'] = 5
+            req.options.timeout = TIMEOUT
+          end
+
+          if response.success?
+            data = JSON.parse(response.body)
+            stocks_list = data.dig("QuotationCodeTable", "Data") || []
+
+            # 精确匹配 Code 字段（若原始 ticker 含点，也匹配转换后的 search_query）
+            stock = stocks_list.find { |s| s["Code"] == ticker || s["Code"] == search_query }
+            name = stock&.dig("Name")
+
+            if name.present?
+              puts "✅ 东方财富返回中文名: #{name}"
+            else
+              puts "⚠️  东方财富未找到匹配的中文名 (搜索: #{search_query})"
+            end
+            return name
+          else
+            puts "⚠️  东方财富请求失败，状态码: #{response.status}"
+          end
+        rescue => e
+          puts "⚠️  东方财富请求异常: #{e.message}"
+        end
+        nil
       end
 
       def fetch_industry_info(ticker)
