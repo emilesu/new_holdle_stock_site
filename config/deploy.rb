@@ -24,8 +24,16 @@ namespace :deploy do
 end
 
 # 资产预编译时跳过 yarn install（已在前面完成），内部 system() 找不到 yarn 路径
-set :yarn_skip_install, true
-SSHKit.config.default_env.merge!(SKIP_YARN_INSTALL: 'true')
+Rake::Task['deploy:assets:precompile'].clear_actions
+Rake::Task['deploy:assets:precompile'].enhance do
+  on release_roles(fetch(:assets_roles)) do
+    within release_path do
+      with rails_env: fetch(:rails_env), rails_groups: fetch(:rails_assets_groups), 'SKIP_YARN_INSTALL' => 'true' do
+        execute :rake, "assets:precompile"
+      end
+    end
+  end
+end
 
 # 共享目录（持久化：环境变量、日志、上传文件、puma sock）
 append :linked_dirs, 'log', 'tmp/pids', 'tmp/cache', 'tmp/sockets', 'vendor/bundle', 'public/system'
