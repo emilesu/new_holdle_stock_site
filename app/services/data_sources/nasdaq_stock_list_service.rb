@@ -98,10 +98,11 @@ module DataSources
 
         existing = existing_stocks[symbol]
         if existing
-          if existing.name == name && existing.exchange == market
+          # 不覆盖 name 字段，保留已有的中文名/组合名
+          # 仅更新 exchange 和 status
+          if existing.exchange == market
             return :skipped
           end
-          existing.name = name
           existing.exchange = market
           existing.status = "listed"
           existing.save!
