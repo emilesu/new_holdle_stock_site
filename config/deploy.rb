@@ -14,7 +14,7 @@ set :nvm_node, 'v20.20.2'
 
 # 共享目录（持久化：环境变量、日志、上传文件、puma sock）
 append :linked_dirs, 'log', 'tmp/pids', 'tmp/cache', 'tmp/sockets', 'vendor/bundle', 'public/system'
-append :linked_files, '.env.production', 'config/database.yml'
+append :linked_files, '.env.production', 'config/database.yml', 'config/master.key'
 
 # 保留最近5个发布版本用于回滚
 set :keep_releases, 5
