@@ -4,8 +4,8 @@ lock "~> 3.20.1"
 set :application, "holdle_stock"
 set :repo_url, "git@github.com:emilesu/new_holdle_stock_site.git"
 
-# 默认不使用分支，生产强制使用Git Tag部署
-set :branch, -> { fetch(:tag) }
+# 生产强制使用Git Tag部署（通过 BRANCH=v1.0.0 传入）
+set :branch, ENV.fetch('BRANCH', 'main')
 set :deploy_to, '/var/www/holdle_stock_prod'
 
 # rbenv、node版本
