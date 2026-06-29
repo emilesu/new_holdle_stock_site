@@ -36,7 +36,7 @@ port ENV.fetch("PORT") { 3000 }
 
 # 生产环境绑定 Unix socket（用于 Nginx 反向代理）
 if rails_env == "production"
-  bind "unix://#{File.expand_path("tmp/sockets/puma.sock", __dir__)}"
+  bind "unix://#{File.expand_path("../tmp/sockets/puma.sock", __dir__)}"
 end
 
 # Specifies the `environment` that Puma will run in.
