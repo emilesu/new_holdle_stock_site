@@ -13,8 +13,6 @@ require "capistrano/rbenv"
 require "capistrano/bundler"
 require "capistrano/rails/assets"
 require "capistrano/rails/migrations"
-require 'capistrano/puma'
-install_plugin Capistrano::Puma
 require 'capistrano/nvm'
 
 # Load custom tasks from `lib/capistrano/tasks` if you have any defined

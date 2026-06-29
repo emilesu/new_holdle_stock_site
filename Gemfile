@@ -50,10 +50,9 @@ gem 'omniauth-google-oauth2'
 # 部署核心
 gem 'capistrano', '~> 3.19'
 gem 'capistrano-rails'
-gem 'capistrano-puma'
-gem 'capistrano-nvm'
 gem 'capistrano-bundler'
 gem 'capistrano-rbenv'
+gem 'capistrano-nvm'
 
 # Use Redis adapter to run Action Cable in production
 # gem "redis", ">= 4.0.1"

@@ -19,11 +19,13 @@ append :linked_files, '.env.production', 'config/database.yml'
 # 保留最近5个发布版本用于回滚
 set :keep_releases, 5
 
-# 部署完成后重启puma
+# 部署完成后重启 Puma（通过 systemd 服务）
 after 'deploy:publishing', 'deploy:restart'
 namespace :deploy do
   task :restart do
-    invoke 'puma:restart'
+    on roles(:web) do
+      sudo :systemctl, :restart, 'holdle-puma'
+    end
   end
 end
 
