@@ -12,10 +12,20 @@ set :deploy_to, '/var/www/holdle_stock_prod'
 set :rbenv_ruby, '3.2.4'
 set :nvm_node, 'v20.20.2'
 
-# 确保 assets:precompile 内部能调用 node/yarn（通过 rake 系统调用）
-SSHKit.config.default_env.merge!({
-  path: "/home/emilesu/.nvm/versions/node/v20.20.2/bin:$PATH"
-})
+# 资产预编译前确保 node_modules 已安装
+namespace :deploy do
+  before 'deploy:assets:precompile', :install_yarn do
+    on roles(:web) do
+      within release_path do
+        execute :yarn, "install", "--frozen-lockfile"
+      end
+    end
+  end
+end
+
+# 资产预编译时跳过 yarn install（已在前面完成），内部 system() 找不到 yarn 路径
+set :yarn_skip_install, true
+SSHKit.config.default_env.merge!(SKIP_YARN_INSTALL: 'true')
 
 # 共享目录（持久化：环境变量、日志、上传文件、puma sock）
 append :linked_dirs, 'log', 'tmp/pids', 'tmp/cache', 'tmp/sockets', 'vendor/bundle', 'public/system'
