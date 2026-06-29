@@ -12,6 +12,11 @@ set :deploy_to, '/var/www/holdle_stock_prod'
 set :rbenv_ruby, '3.2.4'
 set :nvm_node, 'v20.20.2'
 
+# 确保 assets:precompile 内部能调用 node/yarn（通过 rake 系统调用）
+SSHKit.config.default_env.merge!({
+  path: "/home/emilesu/.nvm/versions/node/v20.20.2/bin:$PATH"
+})
+
 # 共享目录（持久化：环境变量、日志、上传文件、puma sock）
 append :linked_dirs, 'log', 'tmp/pids', 'tmp/cache', 'tmp/sockets', 'vendor/bundle', 'public/system'
 append :linked_files, '.env.production', 'config/database.yml', 'config/master.key'
