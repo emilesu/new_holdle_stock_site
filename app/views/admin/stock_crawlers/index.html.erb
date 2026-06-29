@@ -134,7 +134,7 @@
       <% @results.each do |result| %>
         <div class="px-5 py-4 flex items-center space-x-4 hover:bg-bg-mute transition-colors">
           <div class="w-3 h-3 rounded-full flex-shrink-0 
-            <%= result.status == 'success' ? 'bg-green-500' : 'bg-red-500' %>">
+            <%= result.status == 'success' ? 'bg-green-500' : result.status == 'running' ? 'bg-yellow-500' : 'bg-red-500' %>">
           </div>
           <div class="flex-1 min-w-0">
             <div class="text-hl-13 font-medium text-ink truncate"><%= result.task_name %></div>

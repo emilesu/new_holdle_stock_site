@@ -12,10 +12,18 @@ module Admin
     end
 
     def us_stock_basic
-      execute_crawler("爬取美股名称&行业") do
-        DataSources::UsStockBasicInfoService.call
-        "美股名称&行业信息爬取完成"
-      end
+      UsStockBasicInfoJob.perform_later
+
+      # 记录一个"执行中"的状态记录
+      CrawlerExecution.create!(
+        task_name: "爬取美股名称&行业",
+        status: "running",
+        message: "任务已提交，正在后台异步执行中...（请等待数小时完成）",
+        duration: 0,
+        executed_at: Time.current
+      )
+
+      redirect_to admin_stock_crawlers_path, notice: "爬取任务已提交后台异步执行，请稍后在执行结果中查看状态"
     end
 
     def us_finance
