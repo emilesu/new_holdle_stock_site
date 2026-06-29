@@ -27,13 +27,16 @@ namespace :deploy do
   end
 end
 
-# 资产预编译时跳过 yarn install，使用 nvm wrapper 确保 node/yarn 在 PATH 中
+# 资产预编译时跳过 yarn install（已在前面完成）
 Rake::Task['deploy:assets:precompile'].clear_actions
 Rake::Task['deploy:assets:precompile'].enhance do
   on release_roles(fetch(:assets_roles)) do
     within release_path do
-      with rails_env: fetch(:rails_env), rails_groups: fetch(:rails_assets_groups), 'SKIP_YARN_INSTALL' => 'true' do
-        execute "/tmp/holdle_stock/nvm-exec.sh", "bundle", "exec", "rake", "assets:precompile"
+      with rails_env: fetch(:rails_env),
+          rails_groups: fetch(:rails_assets_groups),
+          'SKIP_YARN_INSTALL' => 'true',
+          'PATH' => "/home/emilesu/.nvm/versions/node/v20.20.2/bin:/home/emilesu/.rbenv/shims:/home/emilesu/.rbenv/bin:$PATH" do
+        execute :rake, "assets:precompile"
       end
     end
   end
