@@ -10,7 +10,7 @@ set :deploy_to, '/var/www/holdle_stock_prod'
 
 # rbenv、node版本
 set :rbenv_ruby, '3.2.4'
-set :nvm_node, '20.20.2'
+set :nvm_node, 'v20.20.2'
 
 # 共享目录（持久化：环境变量、日志、上传文件、puma sock）
 append :linked_dirs, 'log', 'tmp/pids', 'tmp/cache', 'tmp/sockets', 'vendor/bundle', 'public/system'
