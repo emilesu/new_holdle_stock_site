@@ -254,7 +254,8 @@ module DataSources
 
           financial_data = {}
           field_mapping.each do |cn_name, model_field|
-            financial_data[model_field] = parse_decimal(field_values[cn_name]&.dig(:amount))
+            value = parse_decimal(field_values[cn_name]&.dig(:amount))
+            financial_data[model_field] = value if value
           end
 
           # 处理净值字段：若股东权益合计缺失则用 总资产 - 总负债 推算

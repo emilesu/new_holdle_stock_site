@@ -203,7 +203,8 @@ module DataSources
 
           financial_data = {}
           INCOME_MAPPING.each do |cn_name, model_field|
-            financial_data[model_field] = parse_decimal(field_values[cn_name])
+            value = parse_decimal(field_values[cn_name])
+            financial_data[model_field] = value if value
           end
 
           result = save_model_record(
@@ -244,7 +245,8 @@ module DataSources
 
           financial_data = {}
           BALANCE_MAPPING.each do |cn_name, model_field|
-            financial_data[model_field] = parse_decimal(field_values[cn_name])
+            value = parse_decimal(field_values[cn_name])
+            financial_data[model_field] = value if value
           end
 
           # 若 API 未返回净资产，用总资产 - 总负债 推算
@@ -292,7 +294,8 @@ module DataSources
 
           financial_data = {}
           CASHFLOW_MAPPING.each do |cn_name, model_field|
-            financial_data[model_field] = parse_decimal(field_values[cn_name])
+            value = parse_decimal(field_values[cn_name])
+            financial_data[model_field] = value if value
           end
 
           # 若 API 未返回现金净额，用 经营+投资+融资 推算
