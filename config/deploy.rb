@@ -12,6 +12,10 @@ set :deploy_to, '/var/www/holdle_stock_prod'
 set :rbenv_ruby, '3.2.4'
 set :nvm_node, 'v20.20.2'
 
+# 确保 node/yarn 在 PATH 中（assets:precompile 内部通过 system() 调用）
+SSHKit.config.default_env = {} if SSHKit.config.default_env.nil?
+SSHKit.config.default_env[:path] = "/home/emilesu/.nvm/versions/node/v20.20.2/bin:$PATH"
+
 # 资产预编译前确保 node_modules 已安装
 namespace :deploy do
   before 'deploy:assets:precompile', :install_yarn do
@@ -23,7 +27,7 @@ namespace :deploy do
   end
 end
 
-# 资产预编译时跳过 yarn install（已在前面完成），内部 system() 找不到 yarn 路径
+# 资产预编译时跳过 yarn install（已在前面完成）
 Rake::Task['deploy:assets:precompile'].clear_actions
 Rake::Task['deploy:assets:precompile'].enhance do
   on release_roles(fetch(:assets_roles)) do
