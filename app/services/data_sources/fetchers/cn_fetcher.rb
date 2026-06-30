@@ -53,7 +53,7 @@ module DataSources
       def fetch_all(stock)
         symbol = stock.symbol
         market = stock.market
-        secucode = symbol.sub(/^(SH|SZ)(.+)/, '\2.\1')
+        secucode = symbol.sub(/^(SH|SZ|BJ)(.+)/, '\2.\1')
 
         results = []
         results << fetch_income(stock, secucode, market)
