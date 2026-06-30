@@ -12,7 +12,7 @@ class Users::OmniauthCallbacksController < Devise::OmniauthCallbacksController
 
     open_id = auth.uid
     union_id = auth.extra.raw_info["unionid"]
-    wx_nickname = auth.info.nickname&.truncate(30)
+    wx_nickname = auth.info.nickname&.truncate(20)
     wx_avatar = auth.info.image
 
     Rails.logger.info "[OmniAuth WeChat] open_id=#{open_id} union_id=#{union_id}"
@@ -65,7 +65,7 @@ class Users::OmniauthCallbacksController < Devise::OmniauthCallbacksController
     end
 
     email = auth.info.email
-    g_name = auth.info.name&.truncate(30)
+    g_name = auth.info.name&.truncate(20)
     g_avatar = auth.info.image
 
     Rails.logger.info "[OmniAuth Google] email=#{email} name=#{g_name}"
