@@ -40,10 +40,10 @@ class StocksController < ApplicationController
     @financial_years = @financial_data_by_year.keys.sort
     
     @industry_comparison_data = Rails.cache.fetch(
-      [:industry_comparison, @stock.sector, Date.current].join('/'),
+      [:industry_comparison, @stock.sector, @stock.market, Date.current].join('/'),
       expires_in: INDUSTRY_CACHE_EXPIRES_IN
     ) do
-      sector_stocks = Stock.where(sector: @stock.sector)
+      sector_stocks = Stock.where(sector: @stock.sector, market: @stock.market)
         .where.not(radar_dim_scores: nil)
         .where('pyramid_total_score > 560')
         .select(:id, :symbol, :name, :market, :exchange, :radar_dim_scores)
