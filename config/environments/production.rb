@@ -51,6 +51,10 @@ Rails.application.configure do
   # 由 Nginx 处理 HTTPS 强制跳转，不依赖 Rails 的 force_ssl
   config.force_ssl = false
 
+  # Google OAuth 回调是跨站请求，需将 session cookie 设为 SameSite=None
+  # 才能正常保存。require.assume_ssl=true 确保 Secure 标志已启用。
+  config.action_dispatch.cookies_same_site_protection = :none
+
   # Log to STDOUT by default
   config.logger = ActiveSupport::Logger.new(STDOUT)
     .tap  { |logger| logger.formatter = ::Logger::Formatter.new }
