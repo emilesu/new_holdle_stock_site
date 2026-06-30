@@ -27,6 +27,7 @@ module ApplicationHelper
     sector  = stock.sector.presence
     desc    = "查看#{name}(#{stock.symbol})的完整财务数据、#{sector}行业对比、金字塔评分及智能投资分析。#{market}股票实时数据。"
     set_page_title "#{name}(#{stock.symbol}) - #{market} - #{SITE_NAME}"
+    set_page_description desc
     set_page_keywords "#{stock.symbol},#{name},#{market},#{sector},股票分析,财务数据,金字塔评分"
   end
 
