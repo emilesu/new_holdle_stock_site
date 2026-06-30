@@ -1,10 +1,21 @@
 class Users::OmniauthCallbacksController < Devise::OmniauthCallbacksController
+  # 跳过 CSRF 验证（OAuth 回调由外部服务发起，无法携带 CSRF token）
+  skip_before_action :verify_authenticity_token, only: [:google_oauth2, :wechat]
+
   def wechat
     auth = request.env["omniauth.auth"]
+    unless auth
+      Rails.logger.error "[OmniAuth WeChat] auth hash is nil"
+      redirect_to new_user_session_path, alert: "微信授权失败：未获取到认证信息"
+      return
+    end
+
     open_id = auth.uid
     union_id = auth.extra.raw_info["unionid"]
     wx_nickname = auth.info.nickname&.truncate(30)
     wx_avatar = auth.info.image
+
+    Rails.logger.info "[OmniAuth WeChat] open_id=#{open_id} union_id=#{union_id}"
 
     # 1. 查找迁移过来的老用户（用openid匹配weixin_web_openid）
     user = User.find_by(weixin_web_openid: open_id)
@@ -34,40 +45,73 @@ class Users::OmniauthCallbacksController < Devise::OmniauthCallbacksController
       weixin_unionid: union_id,
       weixin_app_openid: nil
     )
+
+    unless user.persisted?
+      Rails.logger.error "[OmniAuth WeChat] user creation failed: #{user.errors.full_messages}"
+      redirect_to new_user_session_path, alert: "微信注册失败：#{user.errors.full_messages.first}"
+      return
+    end
+
     sign_in user
     redirect_to root_path, notice: "微信注册并登录成功"
   end
 
   def google_oauth2
     auth = request.env["omniauth.auth"]
+    unless auth
+      Rails.logger.error "[OmniAuth Google] auth hash is nil"
+      redirect_to new_user_session_path, alert: "Google授权失败：未获取到认证信息"
+      return
+    end
+
     email = auth.info.email
     g_name = auth.info.name&.truncate(30)
     g_avatar = auth.info.image
+
+    Rails.logger.info "[OmniAuth Google] email=#{email} name=#{g_name}"
 
     # 用邮箱匹配老用户（本次迁移有email的用户直接绑定）
     user = User.find_by(email: email)
 
     if user.present?
-      user.update(nickname: g_name, avatar: g_avatar)
-      sign_in user
-      redirect_to root_path, notice: "Google登录成功"
-      return
-    end
+      Rails.logger.info "[OmniAuth Google] existing user found id=#{user.id}"
+      # update 可能因 nickname 验证失败而返回 false，不影响 sign_in
+      result = user.update(nickname: g_name, avatar: g_avatar)
+      Rails.logger.info "[OmniAuth Google] user update result=#{result} errors=#{user.errors.full_messages}" unless result
 
-    # 无邮箱匹配则新建账号
-    random_pw = Devise.friendly_token(20)
-    user = User.create(
-      email: email,
-      password: random_pw,
-      nickname: g_name.presence || "Google用户",
-      role: "user",
-      avatar: g_avatar
-    )
-    sign_in user
-    redirect_to root_path, notice: "Google注册登录成功"
+      # sign_in 后验证 session 是否已正确设置
+      sign_in user
+      Rails.logger.info "[OmniAuth Google] sign_in completed, session user_id=#{session['warden.user.user.key']&.first&.first}"
+      redirect_to root_path, notice: "Google登录成功"
+    else
+      # 无邮箱匹配则新建账号
+      random_pw = Devise.friendly_token(20)
+      user = User.create(
+        email: email,
+        password: random_pw,
+        nickname: g_name.presence || "Google用户",
+        role: "user",
+        avatar: g_avatar
+      )
+
+      unless user.persisted?
+        Rails.logger.error "[OmniAuth Google] user creation failed: #{user.errors.full_messages}"
+        redirect_to new_user_session_path, alert: "Google注册失败：#{user.errors.full_messages.first}"
+        return
+      end
+
+      Rails.logger.info "[OmniAuth Google] new user created id=#{user.id}"
+      sign_in user
+      Rails.logger.info "[OmniAuth Google] sign_in completed, session user_id=#{session['warden.user.user.key']&.first&.first}"
+      redirect_to root_path, notice: "Google注册登录成功"
+    end
   end
 
   def failure
-    redirect_to new_user_session_path, alert: "微信授权失败，请重试"
+    strategy_name = request.env["omniauth.error.strategy"]&.name || "unknown"
+    error_type = request.env["omniauth.error.type"]
+    error_message = request.env["omniauth.error"]&.message
+    Rails.logger.error "[OmniAuth Failure] strategy=#{strategy_name} type=#{error_type} error=#{error_message}"
+    redirect_to new_user_session_path, alert: "授权失败（#{strategy_name}），请重试"
   end
 end
