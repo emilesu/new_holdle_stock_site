@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>管理后台 - StockWebsite</title>
+    <title><%= content_for?(:admin_title) ? content_for(:admin_title) : "管理后台" %> - Holdle</title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
