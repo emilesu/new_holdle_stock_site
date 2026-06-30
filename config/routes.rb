@@ -61,6 +61,7 @@ Rails.application.routes.draw do
     get "stock_crawlers/a_finance_em_single", to: "stock_crawlers#a_finance_em_single"
     get "stock_crawlers/update_all_pyramid", to: "stock_crawlers#update_all_pyramid"
     get "stock_crawlers/refresh_all_radar", to: "stock_crawlers#refresh_all_radar"
+    get "stock_crawlers/refresh_all_radar_full", to: "stock_crawlers#refresh_all_radar_full"
     get "stock_crawlers/hk_stock_list", to: "stock_crawlers#hk_stock_list"
     get "stock_crawlers/hk_finance", to: "stock_crawlers#hk_finance"
     get "stock_crawlers/hk_finance_em", to: "stock_crawlers#hk_finance_em"

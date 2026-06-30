@@ -83,7 +83,11 @@ module Admin
     end
 
     def refresh_all_radar
-      enqueue_crawler("全局刷新雷达维度缓存", "DataSources::StockRadarBatchService", kwargs: { full_recalc: false })
+      enqueue_crawler("全局刷新雷达维度缓存(增量)", "DataSources::StockRadarBatchService", kwargs: { full_recalc: false })
+    end
+
+    def refresh_all_radar_full
+      enqueue_crawler("全局刷新雷达维度缓存(全量)", "DataSources::StockRadarBatchService", kwargs: { full_recalc: true })
     end
 
     private
