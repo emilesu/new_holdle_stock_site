@@ -323,5 +323,6 @@ Devise.setup do |config|
   ENV['GOOGLE_CLIENT_ID'], 
   ENV['GOOGLE_CLIENT_SECRET'],
   scope: 'email,profile', 
-  access_type: 'online'
+  access_type: 'online',
+  provider_ignores_state: true
 end
