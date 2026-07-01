@@ -45,13 +45,18 @@
             </div>
             <% if chapter.summary.present? %>
               <div class="mt-3 prose prose-gray max-w-none
-                prose-p:text-hl-13 prose-p:text-muted-4 prose-p:leading-relaxed prose-p:my-0
+                prose-headings:font-semibold prose-headings:text-ink
+                prose-h2:text-hl-18 prose-h3:text-hl-16
+                prose-p:text-hl-14 prose-p:text-muted prose-p:leading-relaxed
                 prose-a:text-link prose-a:no-underline hover:prose-a:text-link-hover
-                prose-strong:text-muted-3 prose-strong:font-semibold
-                prose-code:text-hl-12 prose-code:bg-bg-mute prose-code:px-1 prose-code:py-0.5 prose-code:rounded
-                prose-ul:my-0 prose-ol:my-0 prose-li:text-hl-13 prose-li:text-muted-4
-                prose-blockquote:my-2 prose-blockquote:border-l-link prose-blockquote:text-muted-4 prose-blockquote:not-italic
-                prose-hr:my-2">
+                prose-strong:text-ink prose-strong:font-semibold
+                prose-code:text-hl-13 prose-code:bg-bg-mute prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded
+                prose-pre:bg-ink prose-pre:text-white prose-pre:rounded
+                prose-img:rounded prose-img:border prose-img:border-line-soft
+                prose-blockquote:border-l-link prose-blockquote:text-muted-3 prose-blockquote:not-italic
+                prose-ul:text-muted prose-ol:text-muted
+                prose-li:text-hl-14
+                prose-hr:border-line-soft">
                 <%= sanitize chapter.summary_html, tags: %w[p a img ul ol li h1 h2 h3 h4 h5 h6 pre code blockquote table thead tbody tr th td strong em br hr span div], attributes: %w[href src alt class id target rel width height] %>
               </div>
             <% end %>
