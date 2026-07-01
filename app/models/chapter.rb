@@ -28,4 +28,12 @@ class Chapter < ApplicationRecord
     return true if public?
     member_only? && user&.is_member?
   end
+
+  def summary_html
+    return '' if summary.blank?
+    Commonmarker.to_html(summary, options: { unsafe: true })
+  rescue => e
+    Rails.logger.error "Chapter markdown rendering error: #{e.message}"
+    summary
+  end
 end
