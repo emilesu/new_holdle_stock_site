@@ -66,6 +66,17 @@ class StocksController < ApplicationController
       item.merge(is_current_stock: item[:stock].id == @stock.id)
     end
 
+    unless @industry_comparison_data.any? { |item| item[:is_current_stock] }
+      current_roe = @stock.radar_dim_scores&.dig('roe')
+      if current_roe && current_roe > 0
+        @industry_comparison_data << {
+          stock: @stock,
+          roe_average: current_roe,
+          is_current_stock: true
+        }
+      end
+    end
+
     @radar_data = build_radar_data(@stock)
     @comparison_radar_data = build_comparison_radar_data
 
