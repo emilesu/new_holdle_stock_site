@@ -90,6 +90,7 @@ module DataSources
 
       # 计算ROE分数（权重最高，0-550分）
       # 近5年ROE平均值，任一为负则得0分
+      # 新增规则：均值>=20%但最大值超过最小值4倍时，一律计400分（不少于3年数据即执行）
       def calculate_roe_score(all_data)
         roe_values = all_data.map { |d| d[:roe] }.compact.map(&:to_f)
         return 0 if roe_values.size < 3
@@ -99,15 +100,26 @@ module DataSources
 
         avg_roe = roe_values.sum / roe_values.size
 
-        case
-        when avg_roe >= 35 then 550  # 卓越：ROE >= 35%
-        when avg_roe >= 30 then 500  # 优秀：ROE >= 30%
-        when avg_roe >= 25 then 450  # 良好：ROE >= 25%
-        when avg_roe >= 20 then 400  # 中等偏上：ROE >= 20%
-        when avg_roe >= 15 then 350  # 中等：ROE >= 15%
-        when avg_roe >= 10 then 300  # 及格：ROE >= 10%
-        else 0
+        score = case
+                when avg_roe >= 35 then 550  # 卓越：ROE >= 35%
+                when avg_roe >= 30 then 500  # 优秀：ROE >= 30%
+                when avg_roe >= 25 then 450  # 良好：ROE >= 25%
+                when avg_roe >= 20 then 400  # 中等偏上：ROE >= 20%
+                when avg_roe >= 15 then 350  # 中等：ROE >= 15%
+                when avg_roe >= 10 then 300  # 及格：ROE >= 10%
+                else 0
+                end
+
+        recent_roe = roe_values.last(5)
+        if avg_roe >= 20 && recent_roe.size >= 3
+          max_roe = recent_roe.max
+          min_roe = recent_roe.min
+          if min_roe > 0 && max_roe / min_roe > 4
+            score = 400
+          end
         end
+
+        score
       end
 
       # 计算ROA分数（0-100分）
