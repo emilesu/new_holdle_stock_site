@@ -39,7 +39,7 @@ class StocksController < ApplicationController
     @financial_data_by_year = @stock.cached_financial_data
     @financial_years = @financial_data_by_year.keys.sort
     
-    @industry_comparison_data = Rails.cache.fetch(
+    cached_comparison_data = Rails.cache.fetch(
       [:industry_comparison, @stock.sector, @stock.market, Date.current].join('/'),
       expires_in: INDUSTRY_CACHE_EXPIRES_IN
     ) do
@@ -55,12 +55,15 @@ class StocksController < ApplicationController
 
         {
           stock: stock,
-          roe_average: roe_score,
-          is_current_stock: stock.id == @stock.id
+          roe_average: roe_score
         }
       end.compact
          .sort_by { |item| -item[:roe_average] }
          .first(INDUSTRY_COMPARISON_LIMIT)
+    end
+
+    @industry_comparison_data = cached_comparison_data.map do |item|
+      item.merge(is_current_stock: item[:stock].id == @stock.id)
     end
 
     @radar_data = build_radar_data(@stock)
