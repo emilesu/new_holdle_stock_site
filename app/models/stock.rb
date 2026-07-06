@@ -55,6 +55,25 @@ class Stock < ApplicationRecord
     (income_statement.net_income_to_shareholders.to_f / balance_sheet.total_assets.to_f) * 100
   end
 
+  # ROE(净资产收益率)：归母净利润 / 平均股东权益 * 100
+  # 使用平均股东权益（期初+期末/2）计算，更符合行业标准
+  def calculate_roe(income_statement, balance_sheet)
+    return nil unless income_statement && balance_sheet
+    return nil unless income_statement.net_income_to_shareholders.present?
+    return nil unless balance_sheet.total_equity.present? && balance_sheet.total_equity != 0
+
+    current_year = balance_sheet.report_date.year
+    prev_balance = balance_sheets.select { |bs| bs.report_date.year == current_year - 1 }.first
+    
+    if prev_balance && prev_balance.total_equity.present? && prev_balance.total_equity != 0
+      avg_equity = (balance_sheet.total_equity.to_f + prev_balance.total_equity.to_f) / 2
+    else
+      avg_equity = balance_sheet.total_equity.to_f
+    end
+
+    (income_statement.net_income_to_shareholders.to_f / avg_equity) * 100
+  end
+
   def calculate_asset_turnover_ratio(income_statement, balance_sheet)
     return nil unless income_statement && balance_sheet
     return nil unless balance_sheet.total_assets.present? && balance_sheet.total_assets != 0
@@ -133,8 +152,8 @@ class Stock < ApplicationRecord
       investing_cash_flow: cash&.investing_cash_flow,
       financing_cash_flow: cash&.financing_cash_flow,
       net_cash_change: cash&.net_cash_change,
-      roe: indicator&.roe_avg,
-      roa: indicator&.net_interest_of_ta,
+      roe: calculate_roe(income, balance),
+      roa: calculate_roa(income, balance),
       eps: indicator&.basic_eps,
       cash_flow_ps: indicator&.ncf_from_oa_ps,
       operating_margin: indicator&.operating_margin

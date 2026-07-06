@@ -310,7 +310,7 @@ module DataSources
 
         cutoff_date = MAX_YEARS_BACK.years.ago.to_date
 
-        # 按日期分组，每天取 BASIC_EPS 最大的记录（合并报表级别）
+        # 按日期分组，优先选择 REPORT 含"FY"的合并数据
         grouped = {}
         items.each do |item|
           report_date_str = item["REPORT_DATE"].to_s.split(" ").first
@@ -319,10 +319,23 @@ module DataSources
           next if report_date < cutoff_date
           next if year_dates.any? && !year_dates.include?(report_date_str)
 
+          report = item["REPORT"] || ""
           basic_eps = parse_decimal(item["BASIC_EPS"]) || BigDecimal("0")
-          grouped[report_date_str] ||= { item: nil, max_eps: BigDecimal("-1") }
-          if basic_eps > grouped[report_date_str][:max_eps]
-            grouped[report_date_str] = { item: item, max_eps: basic_eps }
+          abs_eps = basic_eps.abs
+
+          if grouped[report_date_str].nil?
+            grouped[report_date_str] = { item: item, report: report, abs_eps: abs_eps }
+          else
+            existing = grouped[report_date_str]
+            existing_is_fy = existing[:report].include?("FY")
+            current_is_fy = report.include?("FY")
+
+            # 优先级：FY > 非FY；同级别选绝对值大的（合并数据 > 分部数据）
+            if current_is_fy && !existing_is_fy
+              grouped[report_date_str] = { item: item, report: report, abs_eps: abs_eps }
+            elsif current_is_fy == existing_is_fy && abs_eps > existing[:abs_eps]
+              grouped[report_date_str] = { item: item, report: report, abs_eps: abs_eps }
+            end
           end
         end
 
