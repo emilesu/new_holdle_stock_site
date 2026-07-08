@@ -32,6 +32,7 @@ Rails.application.routes.draw do
   resources :lessons, only: [:show]
 
   get "join", to: "pages#join"
+  get "video", to: "pages#video"
 
   # 前台登录用户留言
   resources :message_boards, only: [:create] do
