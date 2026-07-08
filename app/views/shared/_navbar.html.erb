@@ -41,8 +41,9 @@
       <%= link_to "#", class: "hl-nav-link" do %>
         关于
       <% end %>
-      <%= link_to "#", class: "hl-nav-link hl-nav-link-new flex items-center" do %>
+      <%= link_to video_path, class: "hl-nav-link hl-nav-link-new flex items-center #{'hl-nav-link-active' if controller_name == 'pages' && action_name == 'video'}" do %>
         <span>视频</span>
+        <%= tag.span class: "hl-nav-link-active-dot", aria: { hidden: "true" } if controller_name == 'pages' && action_name == 'video' %>
       <% end %>
     </div>
 
@@ -142,10 +143,10 @@
         <%= link_to "交易课", courses_path, class: "block px-4 py-2 text-hl-14 rounded #{controller_name == 'courses' ? 'bg-bg-mute text-ink font-medium border-l-2 border-profit' : 'text-muted hover:text-ink hover:bg-bg-mute'}" %>
         <%= link_to "加入我们", join_path, class: "block px-4 py-2 text-hl-14 rounded #{controller_name == 'pages' ? 'bg-bg-mute text-ink font-medium border-l-2 border-profit' : 'text-muted hover:text-ink hover:bg-bg-mute'}" %>
         <%= link_to "关于", "#", class: "block px-4 py-2 text-hl-14 text-muted hover:text-ink hover:bg-bg-mute rounded" %>
-        <a href="#" class="block px-4 py-2 text-hl-14 text-muted hover:text-ink hover:bg-bg-mute rounded flex items-center">
+        <%= link_to "视频", video_path, class: "block px-4 py-2 text-hl-14 rounded #{controller_name == 'pages' && action_name == 'video' ? 'bg-bg-mute text-ink font-medium border-l-2 border-profit' : 'text-muted hover:text-ink hover:bg-bg-mute'} flex items-center" do %>
           视频分享
           <span class="ml-2 w-2 h-2 bg-profit rounded-full"></span>
-        </a>
+        <% end %>
       </div>
       <div class="pt-4 border-t border-line-soft">
         <% if user_signed_in? %>
