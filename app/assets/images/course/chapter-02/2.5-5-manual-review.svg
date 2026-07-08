@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 420" width="480" height="420">
+  <defs>
+    <filter id="sh2" x="-5%" y="-5%" width="110%" height="110%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#000" flood-opacity="0.06"/>
+    </filter>
+  </defs>
+  <rect width="480" height="420" rx="8" fill="#FAFAFA" filter="url(#sh2)"/>
+
+  <text x="240" y="35" font-family="PingFang SC, sans-serif" font-size="15" font-weight="700" fill="#2C3E50" text-anchor="middle">第4步：人工复核——问自己三个问题</text>
+
+  <!-- 问题1：行业前景 -->
+  <rect x="40" y="65" width="400" height="90" rx="8" fill="#EBF5FB" stroke="#3498DB" stroke-width="1.5"/>
+  <circle cx="70" cy="90" r="14" fill="#3498DB"/>
+  <text x="70" y="95" font-family="PingFang SC, sans-serif" font-size="14" font-weight="700" fill="#FFF" text-anchor="middle">1</text>
+  <text x="95" y="95" font-family="PingFang SC, sans-serif" font-size="14" font-weight="700" fill="#2C3E50">这个行业前景怎么样？</text>
+  <text x="95" y="118" font-family="PingFang SC, sans-serif" font-size="11" fill="#666">→ 是朝阳行业，还是夕阳行业？</text>
+  <text x="95" y="138" font-family="PingFang SC, sans-serif" font-size="11" fill="#666">→ 未来3-5年有没有增长空间？</text>
+
+  <!-- 箭头1 -->
+  <line x1="240" y1="155" x2="240" y2="175" stroke="#DDD" stroke-width="2"/>
+  <polygon points="233,173 240,185 247,173" fill="#DDD"/>
+
+  <!-- 问题2：竞争地位 -->
+  <rect x="40" y="190" width="400" height="90" rx="8" fill="#FEF5E7" stroke="#F39C12" stroke-width="1.5"/>
+  <circle cx="70" cy="215" r="14" fill="#F39C12"/>
+  <text x="70" y="220" font-family="PingFang SC, sans-serif" font-size="14" font-weight="700" fill="#FFF" text-anchor="middle">2</text>
+  <text x="95" y="220" font-family="PingFang SC, sans-serif" font-size="14" font-weight="700" fill="#2C3E50">这家公司地位如何？</text>
+  <text x="95" y="243" font-family="PingFang SC, sans-serif" font-size="11" fill="#666">→ 是行业龙头，还是跟风者？</text>
+  <text x="95" y="263" font-family="PingFang SC, sans-serif" font-size="11" fill="#666">→ 有没有护城河（品牌/技术/渠道）？</text>
+
+  <!-- 箭头2 -->
+  <line x1="240" y1="280" x2="240" y2="300" stroke="#DDD" stroke-width="2"/>
+  <polygon points="233,298 240,310 247,298" fill="#DDD"/>
+
+  <!-- 问题3：风险点 -->
+  <rect x="40" y="315" width="400" height="85" rx="8" fill="#FCECEB" stroke="#E74C3C" stroke-width="1.5"/>
+  <circle cx="70" cy="340" r="14" fill="#E74C3C"/>
+  <text x="70" y="345" font-family="PingFang SC, sans-serif" font-size="14" font-weight="700" fill="#FFF" text-anchor="middle">3</text>
+  <text x="95" y="345" font-family="PingFang SC, sans-serif" font-size="14" font-weight="700" fill="#2C3E50">有没有明显的风险？</text>
+  <text x="95" y="368" font-family="PingFang SC, sans-serif" font-size="11" fill="#666">→ 商誉过高？大股东减持？政策风险？</text>
+  <text x="95" y="388" font-family="PingFang SC, sans-serif" font-size="11" fill="#666">→ 这钱亏了能不能睡得着？</text>
+</svg>

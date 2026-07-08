@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="360" viewBox="0 0 600 360">
+  <defs>
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="110%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#000" flood-opacity="0.06"/>
+    </filter>
+  </defs>
+  <rect width="600" height="360" rx="8" fill="#FAFAFA" filter="url(#shadow)"/>
+
+  <text x="300" y="28" font-family="Noto Sans CJK SC, PingFang SC, sans-serif" font-size="16" font-weight="700" fill="#2C3E50" text-anchor="middle">场景二：柱子由短变长，再次确认强势</text>
+
+  <!-- 0轴 -->
+  <line x1="80" y1="200" x2="560" y2="200" stroke="#333" stroke-width="2"/>
+  <text x="70" y="204" font-family="Noto Sans CJK SC, PingFang SC, sans-serif" font-size="11" font-weight="700" fill="#333" text-anchor="end">0轴</text>
+
+  <!-- 两条线（始终在0轴上方） -->
+  <path d="M 80 140 L 120 130 L 160 120 L 200 115 L 240 110 L 280 108 L 320 115 L 360 120 L 400 110 L 440 100 L 480 90 L 520 85"
+        fill="none" stroke="#3498DB" stroke-width="2.5"/>
+  <path d="M 80 145 L 120 138 L 160 128 L 200 125 L 240 120 L 280 118 L 320 120 L 360 125 L 400 120 L 440 112 L 480 105 L 520 100"
+        fill="none" stroke="#E67E22" stroke-width="2" stroke-dasharray="6,3"/>
+
+  <!-- 柱子（颜色修正：全部在0轴上方，全部为红柱） -->
+  <rect x="95" y="150" width="8" height="50" fill="#E74C3C" opacity="0.7"/>
+  <rect x="115" y="155" width="8" height="45" fill="#E74C3C" opacity="0.7"/>
+  <rect x="135" y="160" width="8" height="40" fill="#E74C3C" opacity="0.7"/>
+  <rect x="155" y="165" width="8" height="35" fill="#E74C3C" opacity="0.7"/>
+  <rect x="175" y="170" width="8" height="30" fill="#E74C3C" opacity="0.7"/>
+  <rect x="195" y="175" width="8" height="25" fill="#E74C3C" opacity="0.7"/>
+  <rect x="215" y="180" width="8" height="20" fill="#E74C3C" opacity="0.7"/>
+  <rect x="235" y="185" width="8" height="15" fill="#E74C3C" opacity="0.7"/>
+  <rect x="255" y="190" width="8" height="10" fill="#E74C3C" opacity="0.7"/>
+  <rect x="275" y="193" width="8" height="7" fill="#E74C3C" opacity="0.7"/>
+  <rect x="295" y="195" width="8" height="5" fill="#E74C3C" opacity="0.7"/>
+  <rect x="315" y="192" width="8" height="8" fill="#E74C3C" opacity="0.7"/>
+  <rect x="335" y="188" width="8" height="12" fill="#E74C3C" opacity="0.7"/>
+  <rect x="355" y="180" width="8" height="20" fill="#E74C3C" opacity="0.7"/>
+  <rect x="375" y="170" width="8" height="30" fill="#E74C3C" opacity="0.7"/>
+  <rect x="395" y="158" width="8" height="42" fill="#E74C3C" opacity="0.7"/>
+  <rect x="415" y="150" width="8" height="50" fill="#E74C3C" opacity="0.7"/>
+  <rect x="435" y="145" width="8" height="55" fill="#E74C3C" opacity="0.7"/>
+  <rect x="455" y="142" width="8" height="58" fill="#E74C3C" opacity="0.7"/>
+  <rect x="475" y="145" width="8" height="55" fill="#E74C3C" opacity="0.7"/>
+  <rect x="495" y="150" width="8" height="50" fill="#E74C3C" opacity="0.7"/>
+  <rect x="515" y="155" width="8" height="45" fill="#E74C3C" opacity="0.7"/>
+
+  <!-- 标注 -->
+  <g transform="translate(140, 115)">
+    <text x="10" y="30" font-family="Noto Sans CJK SC, PingFang SC, sans-serif" font-size="11" fill="#999" text-anchor="middle">柱子越来越短</text>
+    <text x="10" y="45" font-family="Noto Sans CJK SC, PingFang SC, sans-serif" font-size="10" fill="#999" text-anchor="middle">上涨动力减弱</text>
+  </g>
+
+  <g transform="translate(350, 110)">
+    <text x="-10" y="40" font-family="Noto Sans CJK SC, PingFang SC, sans-serif" font-size="11" fill="#E74C3C" text-anchor="middle">柱子又变长了</text>
+    <text x="-10" y="55" font-family="Noto Sans CJK SC, PingFang SC, sans-serif" font-size="10" fill="#E74C3C" text-anchor="middle">上涨动力再次确认</text>
+  </g>
+
+  <!-- 标注：首次变长（引线从框顶出发，避开框体） -->
+  <g transform="translate(315, 255)">
+    <rect x="-40" y="-18" width="90" height="36" rx="4" fill="#E74C3C" opacity="0.1"/>
+    <rect x="-40" y="-18" width="90" height="36" rx="4" fill="none" stroke="#E74C3C" stroke-width="1"/>
+    <text x="5" y="-3" font-family="Noto Sans CJK SC, PingFang SC, sans-serif" font-size="10" font-weight="700" fill="#E74C3C" text-anchor="middle">柱子由短变长</text>
+    <text x="5" y="12" font-family="Noto Sans CJK SC, PingFang SC, sans-serif" font-size="10" font-weight="700" fill="#E74C3C" text-anchor="middle">首次确认信号</text>
+    <line x1="5" y1="-18" x2="5" y2="-60" stroke="#E74C3C" stroke-width="1"/>
+  </g>
+
+  <text x="300" y="350" font-family="Noto Sans CJK SC, PingFang SC, sans-serif" font-size="11" fill="#999" text-anchor="middle">柱子从最短变长的那个拐点，就是状态A的起涨信号</text>
+</svg>

@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400" width="600" height="400">
+  <defs>
+    <style>
+      text { font-family: "Noto Sans CJK SC", "WenQuanYi Micro Hei", sans-serif; }
+    </style>
+  </defs>
+  <rect width="600" height="400" fill="#FAFAFA" rx="8"/>
+  <text x="300" y="32" text-anchor="middle" font-size="15" font-weight="bold" fill="#333">定投和HOLDLE，差别有多大？</text>
+  
+  <!-- 坐标轴 -->
+  <line x1="60" y1="340" x2="560" y2="340" stroke="#666" stroke-width="1.5"/>
+  <line x1="60" y1="340" x2="60" y2="50" stroke="#666" stroke-width="1.5"/>
+  
+  <!-- X轴（时间标签） -->
+  <text x="100" y="362" text-anchor="middle" font-size="10" fill="#999">T1</text>
+  <text x="180" y="362" text-anchor="middle" font-size="10" fill="#999">T2</text>
+  <text x="260" y="362" text-anchor="middle" font-size="10" fill="#999">T3</text>
+  <text x="340" y="362" text-anchor="middle" font-size="10" fill="#999">T4</text>
+  <text x="420" y="362" text-anchor="middle" font-size="10" fill="#999">T5</text>
+  <text x="500" y="362" text-anchor="middle" font-size="10" fill="#999">T6</text>
+  
+  <!-- Y轴 -->
+  <text x="55" y="80" text-anchor="end" font-size="10" fill="#666">+80%</text>
+  <text x="55" y="140" text-anchor="end" font-size="10" fill="#666">+60%</text>
+  <text x="55" y="200" text-anchor="end" font-size="10" fill="#666">+40%</text>
+  <text x="55" y="260" text-anchor="end" font-size="10" fill="#666">+20%</text>
+  <text x="55" y="340" text-anchor="end" font-size="10" fill="#666">0%</text>
+  
+  <!-- 零线 -->
+  <line x1="60" y1="340" x2="560" y2="340" stroke="#ccc" stroke-width="1" stroke-dasharray="4,3"/>
+  
+  <!-- 定投曲线（平缓，波动小，收益低） -->
+  <path d="M 80 340 L 140 330 L 200 320 L 260 315 L 320 310 L 380 305 L 440 300 L 500 295 L 540 292"
+        fill="none" stroke="#E74C3C" stroke-width="2.5"/>
+  
+  <!-- HOLDLE规则交易曲线（阶梯式上升） -->
+  <path d="M 80 340 L 140 335 L 180 310 L 220 300 L 260 250 L 280 240 L 320 180 L 340 170 L 380 120 L 420 115 L 460 100 L 500 90 L 540 85"
+        fill="none" stroke="#27AE60" stroke-width="2.5"/>
+  
+  <!-- 标注 -->
+  <text x="350" y="295" text-anchor="start" font-size="11" fill="#E74C3C">定投：平缓但低效</text>
+  <line x1="350" y1="298" x2="370" y2="300" stroke="#E74C3C" stroke-width="1"/>
+  
+  <text x="310" y="160" text-anchor="start" font-size="11" fill="#27AE60">HOLDLE：阶梯式上升</text>
+  <line x1="310" y1="163" x2="340" y2="172" stroke="#27AE60" stroke-width="1"/>
+  
+  <text x="300" y="390" text-anchor="middle" font-size="11" fill="#999">同一只股票、同一段时间，两种玩法效果完全不同</text>
+</svg>

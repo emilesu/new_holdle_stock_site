@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="360" viewBox="0 0 600 360">
+  <defs>
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="110%"><feDropShadow dx="1" dy="2" stdDeviation="3" flood-opacity="0.12"/></filter>
+    <marker id="arrowUp" markerWidth="8" markerHeight="6" refX="4" refY="6" orient="auto"><path d="M0,6 L4,0 L8,6 Z" fill="#27AE60"/></marker>
+  </defs>
+  <rect width="600" height="360" rx="8" fill="#FAFAFA" filter="url(#shadow)"/>
+  <text x="300" y="28" text-anchor="middle" font-family="PingFang SC, sans-serif" font-size="15" fill="#333" font-weight="bold">一次到位 vs 分批加仓——成本对比</text>
+
+  <!-- === Scenario A: 一次到位 (left side) === -->
+  <rect x="20" y="45" width="270" height="260" rx="6" fill="#27AE60" opacity="0.04" stroke="#27AE60" stroke-width="1" stroke-dasharray="4,4"/>
+  <text x="155" y="65" text-anchor="middle" font-family="PingFang SC, sans-serif" font-size="14" fill="#27AE60" font-weight="bold">方案A：一次到位</text>
+
+  <!-- chart area: 230x160 at (40,75) -->
+  <rect x="40" y="75" width="230" height="160" fill="none" stroke="#ddd" stroke-width="1"/>
+  <line x1="40" y1="215" x2="270" y2="215" stroke="#ddd" stroke-width="1" stroke-dasharray="3,3"/>
+
+  <!-- price line going up from entry -->
+  <polyline points="60,215 100,200 140,185 180,170 210,155 240,140 260,130"
+    fill="none" stroke="#27AE60" stroke-width="2" stroke-linejoin="round"/>
+
+  <!-- entry point -->
+  <circle cx="60" cy="215" r="5" fill="#27AE60" stroke="white" stroke-width="2"/>
+  <text x="60" y="232" text-anchor="middle" font-family="PingFang SC, sans-serif" font-size="10" fill="#27AE60">10万买入</text>
+
+  <text x="155" y="255" text-anchor="middle" font-family="PingFang SC, sans-serif" font-size="11" fill="#333">10万一次性买入 → 成本最低</text>
+
+  <!-- === Scenario B: 分批加仓 (right side) === -->
+  <rect x="310" y="45" width="270" height="260" rx="6" fill="#E74C3C" opacity="0.04" stroke="#E74C3C" stroke-width="1" stroke-dasharray="4,4"/>
+  <text x="445" y="65" text-anchor="middle" font-family="PingFang SC, sans-serif" font-size="14" fill="#E74C3C" font-weight="bold">方案B：分批加仓</text>
+
+  <!-- chart area: 230x160 at (330,75) -->
+  <rect x="330" y="75" width="230" height="160" fill="none" stroke="#ddd" stroke-width="1"/>
+  <line x1="330" y1="215" x2="560" y2="215" stroke="#ddd" stroke-width="1" stroke-dasharray="3,3"/>
+
+  <!-- price line -->
+  <polyline points="350,215 390,200 430,175 470,165 510,155 540,145"
+    fill="none" stroke="#E74C3C" stroke-width="2" stroke-linejoin="round"/>
+
+  <!-- first purchase (lower price) -->
+  <circle cx="350" cy="215" r="5" fill="#E74C3C" stroke="white" stroke-width="2"/>
+  <text x="350" y="232" text-anchor="middle" font-family="PingFang SC, sans-serif" font-size="10" fill="#E74C3C">5万买入</text>
+
+  <!-- second purchase (higher price, after 20% gain) -->
+  <circle cx="430" cy="175" r="5" fill="#E74C3C" stroke="white" stroke-width="2"/>
+  <text x="445" y="180" font-family="PingFang SC, sans-serif" font-size="10" fill="#E74C3C">涨超20%再补5万</text>
+
+  <!-- bracket showing gap -->
+  <line x1="430" y1="215" x2="430" y2="175" stroke="#E74C3C" stroke-width="1" stroke-dasharray="3,3"/>
+
+  <text x="445" y="255" text-anchor="middle" font-family="PingFang SC, sans-serif" font-size="11" fill="#333">先买5万，涨20%补5万 → 成本更高</text>
+
+  <!-- bottom text -->
+  <text x="300" y="335" text-anchor="middle" font-family="PingFang SC, sans-serif" font-size="13" fill="#666">第一次状态A就是概率最高的时候</text>
+</svg>

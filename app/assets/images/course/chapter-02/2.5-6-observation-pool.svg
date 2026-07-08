@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 470" width="500" height="470">
+  <defs>
+    <filter id="sh2" x="-5%" y="-5%" width="110%" height="110%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#000" flood-opacity="0.06"/>
+    </filter>
+    <marker id="arr" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6" fill="#999"/>
+    </marker>
+  </defs>
+  <rect width="500" height="470" rx="8" fill="#FAFAFA" filter="url(#sh2)"/>
+
+  <text x="250" y="32" font-family="PingFang SC, sans-serif" font-size="15" font-weight="700" fill="#2C3E50" text-anchor="middle">第5步：加入观察池，等待状态A</text>
+
+  <!-- 顶部：通过前4步的股票 -->
+  <rect x="120" y="55" width="260" height="36" rx="18" fill="#27AE60"/>
+  <text x="250" y="78" font-family="PingFang SC, sans-serif" font-size="13" font-weight="700" fill="#FFF" text-anchor="middle">通过前4步的候选股票</text>
+
+  <!-- 箭头 -->
+  <line x1="250" y1="91" x2="250" y2="113" stroke="#999" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <!-- 观察池 -->
+  <rect x="80" y="115" width="340" height="50" rx="8" fill="#EBF5FB" stroke="#3498DB" stroke-width="1.5" stroke-dasharray="5,3"/>
+  <text x="250" y="138" font-family="PingFang SC, sans-serif" font-size="14" font-weight="700" fill="#2980B9" text-anchor="middle">📋 观察池（候选池）</text>
+  <text x="250" y="156" font-family="PingFang SC, sans-serif" font-size="11" fill="#666" text-anchor="middle">5-8只不同行业基本面优良的公司</text>
+
+  <!-- 观察池内的股票：上行4只 -->
+  <!-- 贵州茅台（白酒·A股） -->
+  <rect x="52" y="182" width="88" height="30" rx="15" fill="#3498DB" opacity="0.25"/>
+  <text x="96" y="197" font-family="PingFang SC, sans-serif" font-size="11" font-weight="700" fill="#2980B9" text-anchor="middle">茅台</text>
+  <text x="96" y="208" font-family="PingFang SC, sans-serif" font-size="8" fill="#888" text-anchor="middle">白酒·A股</text>
+
+  <!-- 腾讯控股（互联网·港股） -->
+  <rect x="155" y="182" width="88" height="30" rx="15" fill="#3498DB" opacity="0.25"/>
+  <text x="199" y="197" font-family="PingFang SC, sans-serif" font-size="11" font-weight="700" fill="#2980B9" text-anchor="middle">腾讯</text>
+  <text x="199" y="208" font-family="PingFang SC, sans-serif" font-size="8" fill="#888" text-anchor="middle">互联网·港股</text>
+
+  <!-- 宁德时代（新能源·A股） -->
+  <rect x="258" y="182" width="88" height="30" rx="15" fill="#3498DB" opacity="0.25"/>
+  <text x="302" y="197" font-family="PingFang SC, sans-serif" font-size="11" font-weight="700" fill="#2980B9" text-anchor="middle">宁王</text>
+  <text x="302" y="208" font-family="PingFang SC, sans-serif" font-size="8" fill="#888" text-anchor="middle">新能源·A股</text>
+
+  <!-- 恒瑞医药（医药·A股） -->
+  <rect x="361" y="182" width="88" height="30" rx="15" fill="#3498DB" opacity="0.25"/>
+  <text x="405" y="197" font-family="PingFang SC, sans-serif" font-size="11" font-weight="700" fill="#2980B9" text-anchor="middle">恒瑞</text>
+  <text x="405" y="208" font-family="PingFang SC, sans-serif" font-size="8" fill="#888" text-anchor="middle">医药·A股</text>
+
+  <!-- 观察池内的股票：下行3只 -->
+  <!-- 美的集团（家电·A股） -->
+  <rect x="76" y="232" width="88" height="30" rx="15" fill="#3498DB" opacity="0.25"/>
+  <text x="120" y="247" font-family="PingFang SC, sans-serif" font-size="11" font-weight="700" fill="#2980B9" text-anchor="middle">美的</text>
+  <text x="120" y="258" font-family="PingFang SC, sans-serif" font-size="8" fill="#888" text-anchor="middle">家电·A股</text>
+
+  <!-- 可口可乐（消费·美股） -->
+  <rect x="206" y="232" width="88" height="30" rx="15" fill="#3498DB" opacity="0.25"/>
+  <text x="250" y="247" font-family="PingFang SC, sans-serif" font-size="11" font-weight="700" fill="#2980B9" text-anchor="middle">可乐</text>
+  <text x="250" y="258" font-family="PingFang SC, sans-serif" font-size="8" fill="#888" text-anchor="middle">消费·美股</text>
+
+  <!-- 英伟达（半导体·美股） -->
+  <rect x="336" y="232" width="88" height="30" rx="15" fill="#3498DB" opacity="0.25"/>
+  <text x="380" y="247" font-family="PingFang SC, sans-serif" font-size="11" font-weight="700" fill="#2980B9" text-anchor="middle">英伟达</text>
+  <text x="380" y="258" font-family="PingFang SC, sans-serif" font-size="8" fill="#888" text-anchor="middle">半导体·美股</text>
+
+  <text x="250" y="290" font-family="PingFang SC, sans-serif" font-size="11" fill="#999" text-anchor="middle">每个月看一眼它们的月线MACD</text>
+
+  <!-- 箭头 -->
+  <line x1="250" y1="298" x2="250" y2="322" stroke="#999" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <!-- 等待状态A -->
+  <rect x="130" y="328" width="240" height="50" rx="8" fill="#FEF5E7" stroke="#E67E22" stroke-width="1.5"/>
+  <text x="250" y="350" font-family="PingFang SC, sans-serif" font-size="14" font-weight="700" fill="#D35400" text-anchor="middle">⏳ 等待状态A出现</text>
+  <text x="250" y="368" font-family="PingFang SC, sans-serif" font-size="10" fill="#666" text-anchor="middle">月K线MACD第一根红柱</text>
+
+  <!-- 箭头 -->
+  <line x1="250" y1="378" x2="250" y2="400" stroke="#999" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <!-- 底部：买入 -->
+  <rect x="180" y="408" width="140" height="38" rx="19" fill="#E74C3C"/>
+  <text x="250" y="433" font-family="PingFang SC, sans-serif" font-size="14" font-weight="700" fill="#FFF" text-anchor="middle">按规则买入</text>
+</svg>

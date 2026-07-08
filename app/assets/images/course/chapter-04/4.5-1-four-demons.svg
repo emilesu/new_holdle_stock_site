@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="400" viewBox="0 0 600 400">
+  <defs>
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="110%"><feDropShadow dx="1" dy="2" stdDeviation="3" flood-opacity="0.12"/></filter>
+  </defs>
+  <rect width="600" height="400" rx="8" fill="#FAFAFA" filter="url(#shadow)"/>
+  <text x="300" y="28" text-anchor="middle" font-family="PingFang SC, sans-serif" font-size="15" fill="#333" font-weight="bold">四心魔——交易中的四大心理陷阱</text>
+
+  <!-- Card 1: 贪 (red) - Top-Left -->
+  <rect x="20" y="50" width="270" height="150" rx="8" fill="white" stroke="#E74C3C" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="20" y="50" width="270" height="32" rx="8" fill="#E74C3C" opacity="0.08"/>
+  <text x="48" y="72" font-family="PingFang SC, sans-serif" font-size="18" fill="#E74C3C" font-weight="bold">贪</text>
+  <!-- 新图标：不断堆高的钱袋，表示永不满足 -->
+  <g transform="translate(220,55)">
+    <circle cx="12" cy="18" r="8" fill="#F1C40F" opacity="0.5" stroke="#E67E22" stroke-width="0.5"/>
+    <circle cx="12" cy="10" r="6" fill="#F1C40F" opacity="0.6" stroke="#E67E22" stroke-width="0.5"/>
+    <circle cx="12" cy="4" r="4" fill="#F1C40F" opacity="0.7" stroke="#E67E22" stroke-width="0.5"/>
+    <text x="12" y="2" text-anchor="middle" font-family="PingFang SC, sans-serif" font-size="8" fill="#E67E22">+</text>
+  </g>
+  <text x="40" y="150" font-family="PingFang SC, sans-serif" font-size="13" fill="#333">赚了还想赚更多</text>
+  <text x="40" y="175" font-family="PingFang SC, sans-serif" font-size="13" fill="#666">→ 不舍得卖</text>
+
+  <!-- Card 2: 怕 (blue) - Top-Right -->
+  <rect x="310" y="50" width="270" height="150" rx="8" fill="white" stroke="#3498DB" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="310" y="50" width="270" height="32" rx="8" fill="#3498DB" opacity="0.08"/>
+  <text x="338" y="72" font-family="PingFang SC, sans-serif" font-size="18" fill="#3498DB" font-weight="bold">怕</text>
+  <!-- 新图标：盾牌裂开，表示害怕损失 -->
+  <g transform="translate(530,55)">
+    <path d="M10,2 L2,6 L2,14 Q2,22 10,26 Q18,22 18,14 L18,6 Z" fill="none" stroke="#3498DB" stroke-width="2" stroke-linecap="round"/>
+    <line x1="10" y1="8" x2="10" y2="18" stroke="#3498DB" stroke-width="1.5"/>
+    <line x1="6" y1="12" x2="14" y2="12" stroke="#3498DB" stroke-width="1.5"/>
+  </g>
+  <text x="330" y="150" font-family="PingFang SC, sans-serif" font-size="13" fill="#333">刚买就开始跌</text>
+  <text x="330" y="175" font-family="PingFang SC, sans-serif" font-size="13" fill="#666">→ 提前止损</text>
+
+  <!-- Card 3: 悔 (orange) - Bottom-Left -->
+  <rect x="20" y="220" width="270" height="150" rx="8" fill="white" stroke="#E67E22" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="20" y="220" width="270" height="32" rx="8" fill="#E67E22" opacity="0.08"/>
+  <text x="48" y="242" font-family="PingFang SC, sans-serif" font-size="18" fill="#E67E22" font-weight="bold">悔</text>
+  <!-- 新图标：回头看的箭头，表示回头看追悔 -->
+  <g transform="translate(230,235)">
+    <path d="M2,14 L14,14 Q18,14 18,10 Q18,6 14,6 L6,6" fill="none" stroke="#E67E22" stroke-width="2.5" stroke-linecap="round"/>
+    <polyline points="6,2 2,6 6,10" fill="none" stroke="#E67E22" stroke-width="2" stroke-linecap="round"/>
+  </g>
+  <text x="40" y="320" font-family="PingFang SC, sans-serif" font-size="13" fill="#333">卖飞了又追高</text>
+  <text x="40" y="345" font-family="PingFang SC, sans-serif" font-size="13" fill="#666">→ 被套</text>
+
+  <!-- Card 4: 急 (gray) - Bottom-Right -->
+  <rect x="310" y="220" width="270" height="150" rx="8" fill="white" stroke="#666" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="310" y="220" width="270" height="32" rx="8" fill="#666" opacity="0.06"/>
+  <text x="338" y="242" font-family="PingFang SC, sans-serif" font-size="18" fill="#666" font-weight="bold">急</text>
+  <!-- 新图标：闹钟+感叹号，表示时间紧迫等不及 -->
+  <g transform="translate(540,235)">
+    <circle cx="10" cy="12" r="10" fill="none" stroke="#666" stroke-width="1.5"/>
+    <line x1="10" y1="12" x2="10" y2="6" stroke="#666" stroke-width="1.5"/>
+    <line x1="10" y1="12" x2="14" y2="12" stroke="#666" stroke-width="1.5"/>
+    <circle cx="10" cy="12" r="1.5" fill="#666"/>
+    <text x="10" y="26" text-anchor="middle" font-family="PingFang SC, sans-serif" font-size="8" fill="#666">!</text>
+  </g>
+  <text x="330" y="320" font-family="PingFang SC, sans-serif" font-size="13" fill="#333">看别人赚钱着急</text>
+  <text x="330" y="345" font-family="PingFang SC, sans-serif" font-size="13" fill="#666">→ 不等状态A</text>
+</svg>

@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="620" viewBox="0 0 600 620">
+  <defs>
+    <filter id="sh2" x="-5%" y="-5%" width="110%" height="110%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#000" flood-opacity="0.06"/>
+    </filter>
+  </defs>
+  <rect width="600" height="620" rx="8" fill="#FAFAFA" filter="url(#sh2)"/>
+
+  <text x="300" y="32" font-family="PingFang SC, sans-serif" font-size="16" font-weight="700" fill="#2C3E50" text-anchor="middle">HOLDLE三层架构全景图</text>
+
+  <!-- 顶部：验证+规则清单 -->
+  <rect x="100" y="55" width="400" height="55" rx="8" fill="#2C3E50"/>
+  <text x="300" y="78" font-family="PingFang SC, sans-serif" font-size="14" font-weight="700" fill="#FFF" text-anchor="middle">实战验证 · 规则清单</text>
+  <text x="300" y="98" font-family="PingFang SC, sans-serif" font-size="10" fill="#BBB" text-anchor="middle">第5章 实战案例 · 第6章 体系规则</text>
+
+  <!-- 中间三层 -->
+  <!-- 第三层：管理 -->
+  <rect x="100" y="135" width="400" height="90" rx="8" fill="#FEF5E7" stroke="#F39C12" stroke-width="1.5"/>
+  <text x="300" y="162" font-family="PingFang SC, sans-serif" font-size="15" font-weight="700" fill="#D35400" text-anchor="middle">第三层：管好仓</text>
+  <text x="300" y="185" font-family="PingFang SC, sans-serif" font-size="11" fill="#666" text-anchor="middle">分散 → 一次性建仓 → 止损 → 周K低点管理</text>
+  <text x="300" y="205" font-family="PingFang SC, sans-serif" font-size="10" fill="#999" text-anchor="middle">买入之后怎么办？分散风险，机械执行出场规则</text>
+
+  <!-- 箭头 -->
+  <line x1="300" y1="225" x2="300" y2="262" stroke="#DDD" stroke-width="2"/>
+  <polygon points="293,258 300,272 307,258" fill="#DDD"/>
+
+  <!-- 第二层：择时 -->
+  <rect x="100" y="280" width="400" height="90" rx="8" fill="#EBF5FB" stroke="#3498DB" stroke-width="1.5"/>
+  <text x="300" y="307" font-family="PingFang SC, sans-serif" font-size="15" font-weight="700" fill="#2980B9" text-anchor="middle">第二层：等好价</text>
+  <text x="300" y="330" font-family="PingFang SC, sans-serif" font-size="11" fill="#666" text-anchor="middle">月K状态A确认 → 切日K → 回撤 → 突破前高买入</text>
+  <text x="300" y="350" font-family="PingFang SC, sans-serif" font-size="10" fill="#999" text-anchor="middle">现在是不是买的好时机？等状态A，不追高</text>
+
+  <!-- 箭头 -->
+  <line x1="300" y1="370" x2="300" y2="407" stroke="#DDD" stroke-width="2"/>
+  <polygon points="293,403 300,417 307,403" fill="#DDD"/>
+
+  <!-- 第一层：选股 -->
+  <rect x="100" y="425" width="400" height="90" rx="8" fill="#E8F8F5" stroke="#27AE60" stroke-width="1.5"/>
+  <text x="300" y="452" font-family="PingFang SC, sans-serif" font-size="15" font-weight="700" fill="#1E8449" text-anchor="middle">第一层：选好股</text>
+  <text x="300" y="475" font-family="PingFang SC, sans-serif" font-size="11" fill="#666" text-anchor="middle">金字塔初筛 → 雷达图对比 → 五年趋势 → 人工复核</text>
+  <text x="300" y="495" font-family="PingFang SC, sans-serif" font-size="10" fill="#999" text-anchor="middle">这家公司值不值得买？基本面优秀，同行业领先</text>
+
+  <!-- 底部：认知地基 -->
+  <rect x="150" y="545" width="300" height="55" rx="8" fill="#F0F0F0" stroke="#BBB" stroke-width="1" stroke-dasharray="5,3"/>
+  <text x="300" y="568" font-family="PingFang SC, sans-serif" font-size="13" font-weight="700" fill="#666" text-anchor="middle">认知地基（第1章）</text>
+  <text x="300" y="586" font-family="PingFang SC, sans-serif" font-size="10" fill="#999" text-anchor="middle">好股票长期涨多跌少 · 不预测，只识别</text>
+
+  <!-- 连接线：地基到第一层 -->
+  <line x1="300" y1="545" x2="300" y2="515" stroke="#CCC" stroke-width="1.5" stroke-dasharray="4,3"/>
+</svg>

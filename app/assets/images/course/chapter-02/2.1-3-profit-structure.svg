@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 380" width="600" height="380">
+  <defs>
+    <style>
+      text { font-family: "Noto Sans CJK SC", "WenQuanYi Micro Hei", sans-serif; }
+    </style>
+  </defs>
+  <rect width="600" height="380" fill="#FAFAFA" rx="8"/>
+  <text x="300" y="30" text-anchor="middle" font-size="15" font-weight="bold" fill="#333">利润表就是"收入减成本，层层剥到净利"</text>
+
+  <!-- 卖苹果示例：层层剥开 -->
+  <!-- 第1层：营业收入 -->
+  <rect x="100" y="55" width="400" height="40" fill="#3498DB" opacity="0.15" rx="6"/>
+  <rect x="100" y="55" width="400" height="40" fill="none" stroke="#3498DB" stroke-width="1.5" rx="6"/>
+  <text x="300" y="80" text-anchor="middle" font-size="13" font-weight="bold" fill="#3498DB">营业收入（卖苹果共得 1,600 元）</text>
+
+  <!-- 减号 -->
+  <text x="300" y="112" text-anchor="middle" font-size="16" font-weight="bold" fill="#999">↓</text>
+
+  <!-- 第2层：减去成本 -->
+  <rect x="100" y="120" width="400" height="40" fill="#E67E22" opacity="0.15" rx="6"/>
+  <rect x="100" y="120" width="400" height="40" fill="none" stroke="#E67E22" stroke-width="1.5" rx="6"/>
+  <text x="300" y="145" text-anchor="middle" font-size="13" fill="#E67E22">− 进货成本（买苹果花了 1,000 元）</text>
+
+  <!-- 减号 -->
+  <text x="300" y="177" text-anchor="middle" font-size="16" font-weight="bold" fill="#999">↓</text>
+
+  <!-- 第3层：毛利 -->
+  <rect x="100" y="185" width="400" height="40" fill="#8E44AD" opacity="0.12" rx="6"/>
+  <rect x="100" y="185" width="400" height="40" fill="none" stroke="#8E44AD" stroke-width="1.5" stroke-dasharray="4,2" rx="6"/>
+  <text x="300" y="210" text-anchor="middle" font-size="13" fill="#8E44AD">＝ 毛利润 600 元</text>
+
+  <!-- 减号 -->
+  <text x="300" y="240" text-anchor="middle" font-size="16" font-weight="bold" fill="#999">↓</text>
+
+  <!-- 第4层：减去其他费用 -->
+  <rect x="100" y="248" width="400" height="40" fill="#E74C3C" opacity="0.12" rx="6"/>
+  <rect x="100" y="248" width="400" height="40" fill="none" stroke="#E74C3C" stroke-width="1.5" rx="6"/>
+  <text x="300" y="273" text-anchor="middle" font-size="13" fill="#E74C3C">− 运费、摊位费、税费等（共 180 元）</text>
+
+  <!-- 减号 -->
+  <text x="300" y="305" text-anchor="middle" font-size="16" font-weight="bold" fill="#999">↓</text>
+
+  <!-- 第5层：净利润 -->
+  <rect x="120" y="313" width="360" height="45" fill="#27AE60" opacity="0.15" rx="8"/>
+  <rect x="120" y="313" width="360" height="45" fill="none" stroke="#27AE60" stroke-width="2.5" rx="8"/>
+  <text x="300" y="341" text-anchor="middle" font-size="14" font-weight="bold" fill="#27AE60">＝ 净利润 420 元（真正落袋的）</text>
+</svg>

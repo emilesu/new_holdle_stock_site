@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 650 270" width="650" height="270">
+  <defs>
+    <filter id="sh2"><feDropShadow dx="1" dy="2" stdDeviation="3" flood-opacity="0.12"/></filter>
+  </defs>
+  <rect width="650" height="270" rx="8" fill="#FAFAFA" filter="url(#sh2)"/>
+  
+  <!-- 主标题 -->
+  <text x="325" y="32" text-anchor="middle" font-family="PingFang SC, Microsoft YaHei, sans-serif" font-size="16" font-weight="bold" fill="#333">HOLDLE 方法论 — 四根柱子</text>
+
+  <!-- 四根柱子 -->
+  <!-- 1. 低频量化 -->
+  <rect x="25" y="55" width="140" height="175" rx="6" fill="#EBF5FB" stroke="#AED6F1" stroke-width="1"/>
+  <rect x="25" y="55" width="140" height="48" rx="6" fill="#3498DB"/>
+  <rect x="25" y="97" width="140" height="6" fill="#3498DB"/>
+  <text x="95" y="83" text-anchor="middle" font-family="PingFang SC, Microsoft YaHei, sans-serif" font-size="15" font-weight="bold" fill="#FFF">低频量化</text>
+  <text x="95" y="135" text-anchor="middle" font-family="PingFang SC, Microsoft YaHei, sans-serif" font-size="12" fill="#666">不频繁操作</text>
+  <text x="95" y="158" text-anchor="middle" font-family="PingFang SC, Microsoft YaHei, sans-serif" font-size="11" fill="#999">不看分时线</text>
+  <text x="95" y="178" text-anchor="middle" font-family="PingFang SC, Microsoft YaHei, sans-serif" font-size="11" fill="#999">只关注月线趋势</text>
+  <text x="95" y="212" text-anchor="middle" font-family="PingFang SC, Microsoft YaHei, sans-serif" font-size="10" fill="#3498DB" font-weight="bold">不做短线</text>
+
+  <!-- 2. 规则化交易 -->
+  <rect x="180" y="55" width="140" height="175" rx="6" fill="#E8F8F5" stroke="#A3E4D7" stroke-width="1"/>
+  <rect x="180" y="55" width="140" height="48" rx="6" fill="#27AE60"/>
+  <rect x="180" y="97" width="140" height="6" fill="#27AE60"/>
+  <text x="250" y="83" text-anchor="middle" font-family="PingFang SC, Microsoft YaHei, sans-serif" font-size="15" font-weight="bold" fill="#FFF">规则化交易</text>
+  <text x="250" y="135" text-anchor="middle" font-family="PingFang SC, Microsoft YaHei, sans-serif" font-size="12" fill="#666">不主观判断</text>
+  <text x="250" y="158" text-anchor="middle" font-family="PingFang SC, Microsoft YaHei, sans-serif" font-size="11" fill="#999">按规则入场</text>
+  <text x="250" y="178" text-anchor="middle" font-family="PingFang SC, Microsoft YaHei, sans-serif" font-size="11" fill="#999">按规则出场</text>
+  <text x="250" y="212" text-anchor="middle" font-family="PingFang SC, Microsoft YaHei, sans-serif" font-size="10" fill="#27AE60" font-weight="bold">不临时拍脑袋</text>
+
+  <!-- 3. 分散持仓 -->
+  <rect x="335" y="55" width="140" height="175" rx="6" fill="#FEF5E7" stroke="#F5CBA7" stroke-width="1"/>
+  <rect x="335" y="55" width="140" height="48" rx="6" fill="#E67E22"/>
+  <rect x="335" y="97" width="140" height="6" fill="#E67E22"/>
+  <text x="405" y="83" text-anchor="middle" font-family="PingFang SC, Microsoft YaHei, sans-serif" font-size="15" font-weight="bold" fill="#FFF">分散持仓</text>
+  <text x="405" y="135" text-anchor="middle" font-family="PingFang SC, Microsoft YaHei, sans-serif" font-size="12" fill="#666">不押注单只</text>
+  <text x="405" y="158" text-anchor="middle" font-family="PingFang SC, Microsoft YaHei, sans-serif" font-size="11" fill="#999">5-8只不同行业</text>
+  <text x="405" y="178" text-anchor="middle" font-family="PingFang SC, Microsoft YaHei, sans-serif" font-size="11" fill="#999">等权重分配</text>
+  <text x="405" y="212" text-anchor="middle" font-family="PingFang SC, Microsoft YaHei, sans-serif" font-size="10" fill="#E67E22" font-weight="bold">不把鸡蛋放一个篮子</text>
+
+  <!-- 4. 机械风控 -->
+  <rect x="490" y="55" width="140" height="175" rx="6" fill="#FDEDEC" stroke="#F5B7B1" stroke-width="1"/>
+  <rect x="490" y="55" width="140" height="48" rx="6" fill="#E74C3C"/>
+  <rect x="490" y="97" width="140" height="6" fill="#E74C3C"/>
+  <text x="560" y="83" text-anchor="middle" font-family="PingFang SC, Microsoft YaHei, sans-serif" font-size="15" font-weight="bold" fill="#FFF">机械风控</text>
+  <text x="560" y="135" text-anchor="middle" font-family="PingFang SC, Microsoft YaHei, sans-serif" font-size="12" fill="#666">不设情绪</text>
+  <text x="560" y="158" text-anchor="middle" font-family="PingFang SC, Microsoft YaHei, sans-serif" font-size="11" fill="#999">止损到了就卖</text>
+  <text x="560" y="178" text-anchor="middle" font-family="PingFang SC, Microsoft YaHei, sans-serif" font-size="11" fill="#999">周K低点到了就出</text>
+  <text x="560" y="212" text-anchor="middle" font-family="PingFang SC, Microsoft YaHei, sans-serif" font-size="10" fill="#E74C3C" font-weight="bold">不找理由扛单</text>
+
+  <!-- 底部连接线/底座 -->
+  <rect x="25" y="233" width="605" height="18" rx="4" fill="#2C3E50" opacity="0.85"/>
+  <text x="327" y="246" text-anchor="middle" font-family="PingFang SC, Microsoft YaHei, sans-serif" font-size="11" fill="#FFF" font-weight="bold">四根柱子缺一不可，环环相扣</text>
+</svg>

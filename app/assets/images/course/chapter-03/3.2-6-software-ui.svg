@@ -1,0 +1,90 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="620" height="260" viewBox="0 0 620 260">
+  <defs>
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="110%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#000" flood-opacity="0.06"/>
+    </filter>
+  </defs>
+  <rect width="620" height="260" rx="8" fill="#FAFAFA" filter="url(#shadow)"/>
+
+  <text x="310" y="28" font-family="Noto Sans CJK SC, PingFang SC, sans-serif" font-size="16" font-weight="700" fill="#2C3E50" text-anchor="middle">股票软件月K线界面示例</text>
+
+  <!-- 模拟软件界面 -->
+  <rect x="30" y="45" width="560" height="175" rx="6" fill="#F0F2F5" stroke="#D0D5DD" stroke-width="1"/>
+
+  <!-- 顶部栏（用户信息区） -->
+  <rect x="30" y="45" width="560" height="36" rx="6" fill="#fff"/>
+  <rect x="30" y="63" width="560" height="18" fill="#fff"/>
+  <rect x="30" y="45" width="560" height="36" rx="6" fill="none" stroke="#E0E0E0" stroke-width="1"/>
+
+  <!-- 窗口控制按钮 -->
+  <circle cx="48" cy="63" r="6" fill="#FF5F57"/>
+  <circle cx="66" cy="63" r="6" fill="#FFBD2E"/>
+  <circle cx="84" cy="63" r="6" fill="#28C840"/>
+
+  <!-- 用户头像 -->
+  <circle cx="460" cy="63" r="12" fill="#3498DB" opacity="0.3"/>
+  <text x="460" y="67" font-family="Noto Sans CJK SC, PingFang SC, sans-serif" font-size="10" fill="#3498DB" text-anchor="middle">大苏</text>
+
+  <!-- 通知图标 -->
+  <rect x="485" y="56" width="14" height="14" rx="2" fill="none" stroke="#999" stroke-width="1.5"/>
+  <text x="492" y="66" font-family="sans-serif" font-size="8" fill="#999" text-anchor="middle">🔔</text>
+  <rect x="510" y="56" width="14" height="14" rx="2" fill="none" stroke="#999" stroke-width="1.5"/>
+  <text x="517" y="66" font-family="sans-serif" font-size="8" fill="#999" text-anchor="middle">🎧</text>
+
+  <!-- 股票代码区域 -->
+  <rect x="120" y="55" width="60" height="18" rx="3" fill="#3498DB" opacity="0.1"/>
+  <text x="150" y="68" font-family="Noto Sans CJK SC, PingFang SC, sans-serif" font-size="10" font-weight="700" fill="#3498DB" text-anchor="middle">002415</text>
+
+  <!-- 周期切换栏 -->
+  <g transform="translate(40, 100)">
+    <rect x="0" y="0" width="540" height="34" rx="4" fill="#fff" stroke="#E8E8E8" stroke-width="1"/>
+
+    <!-- 周期按钮 -->
+    <g font-family="Noto Sans CJK SC, PingFang SC, sans-serif" font-size="11">
+      <rect x="8" y="5" width="40" height="24" rx="3" fill="#F5F5F5"/>
+      <text x="28" y="21" fill="#666" text-anchor="middle">分时</text>
+
+      <rect x="52" y="5" width="40" height="24" rx="3" fill="#F5F5F5"/>
+      <text x="72" y="21" fill="#666" text-anchor="middle">多日</text>
+
+      <rect x="96" y="5" width="36" height="24" rx="3" fill="#F5F5F5"/>
+      <text x="114" y="21" fill="#666" text-anchor="middle">日K</text>
+
+      <rect x="136" y="5" width="36" height="24" rx="3" fill="#F5F5F5"/>
+      <text x="154" y="21" fill="#666" text-anchor="middle">周K</text>
+
+      <!-- 月K（高亮） -->
+      <rect x="176" y="5" width="36" height="24" rx="3" fill="#4A4A4A"/>
+      <text x="194" y="21" fill="#fff" font-weight="700" text-anchor="middle">月K</text>
+
+      <rect x="216" y="5" width="36" height="24" rx="3" fill="#F5F5F5"/>
+      <text x="234" y="21" fill="#666" text-anchor="middle">季K</text>
+
+      <rect x="256" y="5" width="36" height="24" rx="3" fill="#F5F5F5"/>
+      <text x="274" y="21" fill="#666" text-anchor="middle">年K</text>
+
+      <line x1="298" y1="8" x2="298" y2="26" stroke="#E0E0E0" stroke-width="1"/>
+
+      <text x="312" y="21" fill="#999" text-anchor="middle">1分</text>
+      <text x="340" y="21" fill="#999" text-anchor="middle">3分</text>
+      <text x="368" y="21" fill="#999" text-anchor="middle">5分</text>
+      <text x="396" y="21" fill="#999" text-anchor="middle">10分</text>
+      <text x="428" y="21" fill="#999" text-anchor="middle">15分</text>
+    </g>
+  </g>
+
+  <!-- 箭头标注 -> 月K -->
+  <g transform="translate(200, 150)">
+    <path d="M 0 0 L 0 15" fill="none" stroke="#E74C3C" stroke-width="1.5"/>
+    <polygon points="0,18 -4,12 4,12" fill="#E74C3C"/>
+    <text x="20" y="14" font-family="Noto Sans CJK SC, PingFang SC, sans-serif" font-size="11" font-weight="700" fill="#E74C3C" text-anchor="start">选中"月K"周期</text>
+  </g>
+
+  <!-- 底部说明 -->
+  <g transform="translate(40, 180)">
+    <rect x="0" y="0" width="540" height="28" rx="4" fill="#FFF3E0" stroke="#FFB74D" stroke-width="1"/>
+    <text x="270" y="19" font-family="Noto Sans CJK SC, PingFang SC, sans-serif" font-size="11" fill="#E65100" text-anchor="middle">💡 打开股票软件 → 找到周期切换按钮 → 点击"月K"</text>
+  </g>
+
+  <text x="310" y="248" font-family="Noto Sans CJK SC, PingFang SC, sans-serif" font-size="11" fill="#999" text-anchor="middle">常用软件：富途牛牛、同花顺、东方财富等，操作方式类似</text>
+</svg>

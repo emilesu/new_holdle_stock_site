@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 420" width="500" height="420">
+  <defs>
+    <style>
+      text { font-family: "Noto Sans CJK SC", "WenQuanYi Micro Hei", sans-serif; }
+    </style>
+  </defs>
+  <rect width="500" height="420" fill="#FAFAFA" rx="8"/>
+  <text x="250" y="30" text-anchor="middle" font-size="15" font-weight="bold" fill="#333">第1步：金字塔筛出行业前10%</text>
+
+  <!-- 顶部大圆圈：5000+只 -->
+  <ellipse cx="250" cy="90" rx="130" ry="40" fill="#3498DB" opacity="0.08"/>
+  <ellipse cx="250" cy="90" rx="130" ry="40" fill="none" stroke="#3498DB" stroke-width="2" stroke-dasharray="4,2"/>
+  <text x="250" y="85" text-anchor="middle" font-size="14" font-weight="bold" fill="#3498DB">15000+ 只股票</text>
+  <text x="250" y="105" text-anchor="middle" font-size="10" fill="#666">全市场</text>
+
+  <!-- 箭头 -->
+  <polygon points="250,133 240,125 260,125" fill="#999"/>
+  <text x="250" y="148" text-anchor="middle" font-size="10" fill="#999">选行业</text>
+  <polygon points="250,163 240,155 260,155" fill="#999"/>
+
+  <!-- 中间圆：行业前10% -->
+  <ellipse cx="250" cy="200" rx="90" ry="35" fill="#3498DB" opacity="0.15"/>
+  <ellipse cx="250" cy="200" rx="90" ry="35" fill="none" stroke="#3498DB" stroke-width="2"/>
+  <text x="250" y="195" text-anchor="middle" font-size="14" font-weight="bold" fill="#3498DB">行业前10%</text>
+  <text x="250" y="215" text-anchor="middle" font-size="10" fill="#666">同行业排名</text>
+
+  <!-- 漏斗继续收窄 -->
+  <polygon points="250,238 240,230 260,230" fill="#999"/>
+  <polygon points="250,253 240,245 260,245" fill="#999"/>
+
+  <!-- 底部小圈：候选列表 -->
+  <ellipse cx="250" cy="300" rx="60" ry="30" fill="#3498DB" opacity="0.2"/>
+  <ellipse cx="250" cy="300" rx="60" ry="30" fill="none" stroke="#3498DB" stroke-width="2"/>
+  <text x="250" y="297" text-anchor="middle" font-size="12" font-weight="bold" fill="#3498DB">候选列表</text>
+  <text x="250" y="315" text-anchor="middle" font-size="10" fill="#666">进入下一轮</text>
+
+  <!-- 底部分步说明 -->
+  <rect x="80" y="360" width="340" height="40" fill="#333" opacity="0.05" rx="6"/>
+  <text x="250" y="375" text-anchor="middle" font-size="11" fill="#666">先选市场 → 再选行业 → 看排名前10%</text>
+  <text x="250" y="392" text-anchor="middle" font-size="10" fill="#999">别只看总分，同行业排名才有意义</text>
+</svg>

@@ -1,0 +1,137 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="500" viewBox="0 0 600 500">
+  <defs>
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="110%"><feDropShadow dx="1" dy="2" stdDeviation="3" flood-opacity="0.12"/></filter>
+  </defs>
+  <rect width="600" height="500" rx="8" fill="#FAFAFA" filter="url(#shadow)"/>
+  <text x="300" y="28" text-anchor="middle" font-family="PingFang SC, sans-serif" font-size="15" fill="#333" font-weight="bold">周K低点出场规则示意图</text>
+
+  <!-- 图表区域 -->
+  <rect x="50" y="60" width="500" height="280" fill="none" stroke="#ddd" stroke-width="1"/>
+
+  <!-- 顶部序列标注 -->
+  <text x="70" y="78" text-anchor="middle" font-family="PingFang SC, sans-serif" font-size="9" fill="#999">起涨</text>
+  <text x="150" y="78" text-anchor="middle" font-family="PingFang SC, sans-serif" font-size="9" fill="#999">绿柱回撤·有效</text>
+  <text x="210" y="78" text-anchor="middle" font-family="PingFang SC, sans-serif" font-size="9" fill="#999">创新高</text>
+  <text x="270" y="78" text-anchor="middle" font-family="PingFang SC, sans-serif" font-size="9" fill="#CCC">浅调·无效</text>
+  <text x="325" y="78" text-anchor="middle" font-family="PingFang SC, sans-serif" font-size="9" fill="#999">再创新高</text>
+  <text x="360" y="98" text-anchor="middle" font-family="PingFang SC, sans-serif" font-size="9" fill="#999">绿柱回撤·有效</text>
+  <text x="400" y="78" text-anchor="middle" font-family="PingFang SC, sans-serif" font-size="9" fill="#999">再创新高</text>
+  <text x="450" y="78" text-anchor="middle" font-family="PingFang SC, sans-serif" font-size="9" fill="#27AE60" font-weight="bold">跌破→卖出</text>
+
+  <!-- 上涨阶段1 -->
+  <rect x="65" y="270" width="10" height="20" fill="#E74C3C" stroke="#E74C3C" stroke-width="0.5"/>
+  <line x1="70" y1="290" x2="70" y2="260" stroke="#E74C3C" stroke-width="1"/>
+  <rect x="85" y="260" width="10" height="22" fill="#E74C3C" stroke="#E74C3C" stroke-width="0.5"/>
+  <line x1="90" y1="282" x2="90" y2="250" stroke="#E74C3C" stroke-width="1"/>
+  <rect x="110" y="240" width="12" height="35" fill="#E74C3C" stroke="#E74C3C" stroke-width="0.5"/>
+  <line x1="116" y1="275" x2="116" y2="230" stroke="#E74C3C" stroke-width="1"/>
+
+  <!-- 低点①（有效） -->
+  <circle cx="170" cy="285" r="4" fill="#3498DB"/>
+  <text x="170" y="300" text-anchor="middle" font-family="PingFang SC, sans-serif" font-size="10" fill="#3498DB" font-weight="bold">有效①</text>
+  <line x1="170" y1="285" x2="540" y2="290" stroke="#3498DB" stroke-width="1" stroke-dasharray="6,4"/>
+  <text x="544" y="294" font-family="PingFang SC, sans-serif" font-size="9" fill="#3498DB">出场价①</text>
+
+  <!-- 回调阶段1（MACD出绿柱） -->
+  <rect x="140" y="255" width="12" height="20" fill="#27AE60" stroke="#27AE60" stroke-width="0.5"/>
+  <line x1="146" y1="275" x2="146" y2="245" stroke="#27AE60" stroke-width="1"/>
+  <rect x="165" y="265" width="12" height="15" fill="#27AE60" stroke="#27AE60" stroke-width="0.5"/>
+  <line x1="171" y1="280" x2="171" y2="258" stroke="#27AE60" stroke-width="1"/>
+
+  <!-- 上涨阶段2 -->
+  <rect x="190" y="220" width="12" height="40" fill="#E74C3C" stroke="#E74C3C" stroke-width="0.5"/>
+  <line x1="196" y1="260" x2="196" y2="210" stroke="#E74C3C" stroke-width="1"/>
+  <rect x="215" y="215" width="12" height="35" fill="#E74C3C" stroke="#E74C3C" stroke-width="0.5"/>
+  <line x1="221" y1="250" x2="221" y2="208" stroke="#E74C3C" stroke-width="1"/>
+
+  <!-- 回调阶段2（轻微回调，MACD无绿柱）— 低点无效 -->
+  <rect x="245" y="240" width="14" height="18" fill="#27AE60" stroke="#27AE60" stroke-width="0.5"/>
+  <line x1="252" y1="258" x2="252" y2="230" stroke="#27AE60" stroke-width="1"/>
+  <rect x="275" y="250" width="14" height="15" fill="#27AE60" stroke="#27AE60" stroke-width="0.5"/>
+  <line x1="282" y1="265" x2="282" y2="242" stroke="#27AE60" stroke-width="1"/>
+
+  <!-- 低点②（无效——无MACD绿柱确认） -->
+  <circle cx="282" cy="265" r="4" fill="#CCC" stroke="#BBB" stroke-width="0.5"/>
+  <line x1="276" y1="259" x2="288" y2="271" stroke="#CCC" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="276" y1="271" x2="288" y2="259" stroke="#CCC" stroke-width="1.5" stroke-linecap="round"/>
+  <text x="296" y="269" font-family="PingFang SC, sans-serif" font-size="10" fill="#AAA">无效（无绿柱）</text>
+
+  <!-- 上涨阶段3 -->
+  <rect x="305" y="185" width="14" height="45" fill="#E74C3C" stroke="#E74C3C" stroke-width="0.5"/>
+  <line x1="312" y1="230" x2="312" y2="175" stroke="#E74C3C" stroke-width="1"/>
+  <rect x="335" y="180" width="14" height="40" fill="#E74C3C" stroke="#E74C3C" stroke-width="0.5"/>
+  <line x1="342" y1="220" x2="342" y2="172" stroke="#E74C3C" stroke-width="1"/>
+
+  <!-- 回调阶段3（MACD出绿柱） -->
+  <rect x="365" y="190" width="14" height="25" fill="#27AE60" stroke="#27AE60" stroke-width="0.5"/>
+  <line x1="372" y1="215" x2="372" y2="180" stroke="#27AE60" stroke-width="1"/>
+
+  <!-- 低点③（有效） -->
+  <circle cx="372" cy="215" r="4" fill="#3498DB"/>
+  <text x="372" y="232" text-anchor="middle" font-family="PingFang SC, sans-serif" font-size="10" fill="#3498DB" font-weight="bold">有效③</text>
+  <line x1="372" y1="215" x2="540" y2="215" stroke="#3498DB" stroke-width="1" stroke-dasharray="6,4"/>
+  <text x="544" y="219" font-family="PingFang SC, sans-serif" font-size="9" fill="#3498DB">出场价③</text>
+
+  <!-- 上涨阶段4 -->
+  <rect x="395" y="145" width="14" height="45" fill="#E74C3C" stroke="#E74C3C" stroke-width="0.5"/>
+  <line x1="402" y1="190" x2="402" y2="135" stroke="#E74C3C" stroke-width="1"/>
+
+  <!-- 最后跌破出场价 -->
+  <rect x="430" y="190" width="14" height="30" fill="#27AE60" stroke="#27AE60" stroke-width="0.5"/>
+  <line x1="437" y1="220" x2="437" y2="180" stroke="#27AE60" stroke-width="1"/>
+  <rect x="460" y="210" width="14" height="25" fill="#27AE60" stroke="#27AE60" stroke-width="0.5"/>
+  <line x1="467" y1="235" x2="467" y2="200" stroke="#27AE60" stroke-width="1"/>
+
+  <!-- 跌破标记 -->
+  <line x1="436" y1="235" x2="436" y2="215" stroke="#27AE60" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <text x="436" y="250" text-anchor="middle" font-family="PingFang SC, sans-serif" font-size="11" fill="#27AE60" font-weight="bold">跌破</text>
+
+  <!-- ===== MACD 指标区 ===== -->
+  <rect x="50" y="355" width="500" height="50" fill="#F5F5F5" stroke="#ddd" stroke-width="0.5" rx="2"/>
+  <text x="300" y="370" text-anchor="middle" font-family="PingFang SC, sans-serif" font-size="9" fill="#999">MACD</text>
+
+  <!-- MACD零轴线 -->
+  <line x1="50" y1="380" x2="550" y2="380" stroke="#BBB" stroke-width="0.5"/>
+
+  <!-- 起涨阶段：红柱渐高 -->
+  <rect x="68" y="370" width="14" height="10" fill="#E74C3C" rx="1"/>
+  <rect x="88" y="364" width="14" height="16" fill="#E74C3C" rx="1"/>
+  <rect x="113" y="358" width="14" height="22" fill="#E74C3C" rx="1"/>
+
+  <!-- 回调阶段1：MACD绿柱出现 -->
+  <rect x="143" y="380" width="14" height="8" fill="#27AE60" rx="1"/>
+  <rect x="168" y="380" width="14" height="14" fill="#27AE60" rx="1"/>
+  <!-- 绿色向下箭头标注：MACD绿柱 → 有效 -->
+  <text x="155" y="405" text-anchor="middle" font-family="PingFang SC, sans-serif" font-size="8" fill="#27AE60" font-weight="bold">MACD出绿柱</text>
+  <text x="155" y="416" text-anchor="middle" font-family="PingFang SC, sans-serif" font-size="8" fill="#3498DB">→低点有效</text>
+
+  <!-- 上涨：红柱再起 -->
+  <rect x="193" y="362" width="14" height="18" fill="#E74C3C" rx="1"/>
+  <rect x="218" y="366" width="14" height="14" fill="#E74C3C" rx="1"/>
+
+  <!-- 回调阶段2：MACD几乎无绿柱 -->
+  <rect x="253" y="378" width="14" height="2" fill="#DDD" rx="1"/>
+  <rect x="278" y="379" width="14" height="1" fill="#DDD" rx="1"/>
+  <!-- 灰色标注 -->
+  <text x="270" y="395" text-anchor="middle" font-family="PingFang SC, sans-serif" font-size="8" fill="#AAA" font-weight="bold">MACD无绿柱</text>
+  <text x="270" y="406" text-anchor="middle" font-family="PingFang SC, sans-serif" font-size="8" fill="#AAA">→无效</text>
+
+  <!-- 上涨：红柱 -->
+  <rect x="308" y="360" width="14" height="20" fill="#E74C3C" rx="1"/>
+  <rect x="338" y="364" width="14" height="16" fill="#E74C3C" rx="1"/>
+
+  <!-- 回调阶段3：MACD绿柱出现 -->
+  <rect x="368" y="380" width="14" height="10" fill="#27AE60" rx="1"/>
+  <text x="370" y="405" text-anchor="middle" font-family="PingFang SC, sans-serif" font-size="8" fill="#27AE60" font-weight="bold">MACD出绿柱</text>
+  <text x="370" y="416" text-anchor="middle" font-family="PingFang SC, sans-serif" font-size="8" fill="#3498DB">→低点有效</text>
+
+  <!-- 最后冲刺：红柱减弱 -->
+  <rect x="398" y="374" width="14" height="6" fill="#E74C3C" rx="1"/>
+
+  <!-- 跌破：绿柱 -->
+  <rect x="433" y="380" width="14" height="8" fill="#27AE60" rx="1"/>
+  <rect x="463" y="380" width="14" height="14" fill="#27AE60" rx="1"/>
+
+  <!-- 底部规则说明 -->
+  <text x="300" y="445" text-anchor="middle" font-family="PingFang SC, sans-serif" font-size="11" fill="#666">MACD出绿柱确认回撤 → 有效低点 → 创新高 → 出场价上移 → 跌破就卖 · 无绿柱的回撤不作数</text>
+</svg>

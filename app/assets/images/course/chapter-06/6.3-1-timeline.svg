@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="680" height="320" viewBox="0 0 680 320">
+  <defs>
+    <filter id="sh2" x="-5%" y="-5%" width="110%" height="110%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#000" flood-opacity="0.06"/>
+    </filter>
+  </defs>
+  <rect width="680" height="320" rx="8" fill="#FAFAFA" filter="url(#sh2)"/>
+
+  <text x="340" y="32" font-family="PingFang SC, sans-serif" font-size="16" font-weight="700" fill="#2C3E50" text-anchor="middle">大苏的交易之路——2009 → 2026</text>
+
+  <!-- 时间轴线 -->
+  <line x1="60" y1="130" x2="640" y2="130" stroke="#DDD" stroke-width="3"/>
+
+  <!-- 2009 节点 -->
+  <circle cx="115" cy="130" r="16" fill="#E74C3C"/>
+  <text x="115" y="135" font-family="PingFang SC, sans-serif" font-size="13" font-weight="700" fill="#FFF" text-anchor="middle">09</text>
+  <text x="115" y="115" font-family="PingFang SC, sans-serif" font-size="14" font-weight="700" fill="#C0392B" text-anchor="middle">2009</text>
+  <rect x="40" y="155" width="150" height="80" rx="6" fill="#FCECEB" stroke="#E74C3C" stroke-width="1"/>
+  <text x="115" y="180" font-family="PingFang SC, sans-serif" font-size="12" font-weight="700" fill="#C0392B" text-anchor="middle">踩坑期</text>
+  <text x="115" y="200" font-family="PingFang SC, sans-serif" font-size="10" fill="#666" text-anchor="middle">入市炒股</text>
+  <text x="115" y="218" font-family="PingFang SC, sans-serif" font-size="10" fill="#666" text-anchor="middle">追涨杀跌，持续亏损</text>
+
+  <!-- 2013 节点 -->
+  <circle cx="267" cy="130" r="16" fill="#3498DB"/>
+  <text x="267" y="135" font-family="PingFang SC, sans-serif" font-size="13" font-weight="700" fill="#FFF" text-anchor="middle">13</text>
+  <text x="267" y="115" font-family="PingFang SC, sans-serif" font-size="14" font-weight="700" fill="#2980B9" text-anchor="middle">2013</text>
+  <rect x="192" y="155" width="150" height="80" rx="6" fill="#EBF5FB" stroke="#3498DB" stroke-width="1"/>
+  <text x="267" y="180" font-family="PingFang SC, sans-serif" font-size="12" font-weight="700" fill="#2980B9" text-anchor="middle">规则化</text>
+  <text x="267" y="200" font-family="PingFang SC, sans-serif" font-size="10" fill="#666" text-anchor="middle">开始用HOLDLE规则</text>
+  <text x="267" y="218" font-family="PingFang SC, sans-serif" font-size="10" fill="#666" text-anchor="middle">交易逐步稳定</text>
+
+  <!-- 2018 节点 -->
+  <circle cx="420" cy="130" r="16" fill="#F39C12"/>
+  <text x="420" y="135" font-family="PingFang SC, sans-serif" font-size="13" font-weight="700" fill="#FFF" text-anchor="middle">18</text>
+  <text x="420" y="115" font-family="PingFang SC, sans-serif" font-size="14" font-weight="700" fill="#D35400" text-anchor="middle">2018</text>
+  <rect x="345" y="155" width="150" height="80" rx="6" fill="#FEF5E7" stroke="#F39C12" stroke-width="1"/>
+  <text x="420" y="180" font-family="PingFang SC, sans-serif" font-size="12" font-weight="700" fill="#D35400" text-anchor="middle">第一版课程</text>
+  <text x="420" y="200" font-family="PingFang SC, sans-serif" font-size="10" fill="#666" text-anchor="middle">HOLDLE 1.0 课程</text>
+  <text x="420" y="218" font-family="PingFang SC, sans-serif" font-size="10" fill="#666" text-anchor="middle">系统内容输出</text>
+
+  <!-- 2026 节点 -->
+  <circle cx="585" cy="130" r="16" fill="#27AE60"/>
+  <text x="585" y="135" font-family="PingFang SC, sans-serif" font-size="13" font-weight="700" fill="#FFF" text-anchor="middle">26</text>
+  <text x="585" y="115" font-family="PingFang SC, sans-serif" font-size="14" font-weight="700" fill="#1E8449" text-anchor="middle">2026</text>
+  <rect x="510" y="155" width="150" height="80" rx="6" fill="#E8F8F5" stroke="#27AE60" stroke-width="1"/>
+  <text x="585" y="180" font-family="PingFang SC, sans-serif" font-size="12" font-weight="700" fill="#1E8449" text-anchor="middle">回归重写</text>
+  <text x="585" y="200" font-family="PingFang SC, sans-serif" font-size="10" fill="#666" text-anchor="middle">HOLDLE 2.0 课程</text>
+  <text x="585" y="218" font-family="PingFang SC, sans-serif" font-size="10" fill="#666" text-anchor="middle">回归重写</text>
+
+  <!-- 底部总结 -->
+  <rect x="60" y="260" width="560" height="40" rx="6" fill="#F0F0F0"/>
+  <text x="340" y="278" font-family="PingFang SC, sans-serif" font-size="12" font-weight="700" fill="#555" text-anchor="middle">不靠聪明，靠规则 — 不靠速度，靠耐心 — 不靠预测，靠识别</text>
+  <text x="340" y="294" font-family="PingFang SC, sans-serif" font-size="10" fill="#999" text-anchor="middle">从亏损到稳定，从1.0到2.0，方法论不变——结硬寨，打呆仗</text>
+</svg>

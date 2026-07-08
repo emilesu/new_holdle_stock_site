@@ -1,0 +1,90 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="580" height="480" viewBox="0 0 580 480">
+  <defs>
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="110%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#000" flood-opacity="0.06"/>
+    </filter>
+  </defs>
+  <rect width="580" height="480" rx="8" fill="#FAFAFA" filter="url(#shadow)"/>
+
+  <text x="290" y="28" font-family="Noto Sans CJK SC, PingFang SC, sans-serif" font-size="16" font-weight="700" fill="#2C3E50" text-anchor="middle">入场决策流程</text>
+
+  <!-- ==================== 步骤1：确认状态A ==================== -->
+  <rect x="145" y="48" width="260" height="40" rx="6" fill="#3498DB" opacity="0.12"/>
+  <rect x="145" y="48" width="260" height="40" rx="6" fill="none" stroke="#3498DB" stroke-width="1.5"/>
+  <circle cx="165" cy="68" r="10" fill="#3498DB"/>
+  <text x="165" y="72" font-family="Noto Sans CJK SC, PingFang SC, sans-serif" font-size="10" font-weight="700" fill="#fff" text-anchor="middle">1</text>
+  <text x="185" y="64" font-family="Noto Sans CJK SC, PingFang SC, sans-serif" font-size="12" font-weight="700" fill="#3498DB">确认状态A第一根红柱</text>
+  <text x="185" y="80" font-family="Noto Sans CJK SC, PingFang SC, sans-serif" font-size="9" fill="#666">月K线MACD双线和柱子都在0轴上方</text>
+  <polygon points="275,91 267,86 283,86" fill="#999"/>
+
+  <!-- ==================== 判断：在观察池里吗？ ==================== -->
+  <rect x="155" y="101" width="240" height="32" rx="6" fill="#E67E22" opacity="0.1"/>
+  <rect x="155" y="101" width="240" height="32" rx="6" fill="none" stroke="#E67E22" stroke-width="1.5" stroke-dasharray="4,2"/>
+  <text x="275" y="121" font-family="Noto Sans CJK SC, PingFang SC, sans-serif" font-size="11" fill="#E67E22" text-anchor="middle">这只股票在观察池里吗？</text>
+  <polygon points="275,136 267,131 283,131" fill="#999"/>
+
+  <!-- ==================== 步骤2：切换到日K线 ==================== -->
+  <rect x="145" y="146" width="260" height="40" rx="6" fill="#27AE60" opacity="0.12"/>
+  <rect x="145" y="146" width="260" height="40" rx="6" fill="none" stroke="#27AE60" stroke-width="1.5"/>
+  <circle cx="165" cy="166" r="10" fill="#27AE60"/>
+  <text x="165" y="170" font-family="Noto Sans CJK SC, PingFang SC, sans-serif" font-size="10" font-weight="700" fill="#fff" text-anchor="middle">2</text>
+  <text x="185" y="162" font-family="Noto Sans CJK SC, PingFang SC, sans-serif" font-size="12" font-weight="700" fill="#27AE60">切换到日K线</text>
+  <text x="185" y="178" font-family="Noto Sans CJK SC, PingFang SC, sans-serif" font-size="9" fill="#666">下个月切换，等待日K价格形成高点</text>
+  <polygon points="275,189 267,184 283,184" fill="#999"/>
+
+  <!-- ==================== 步骤3：等待价格形成高点并回撤 ==================== -->
+  <rect x="145" y="199" width="260" height="40" rx="6" fill="#3498DB" opacity="0.12"/>
+  <rect x="145" y="199" width="260" height="40" rx="6" fill="none" stroke="#3498DB" stroke-width="1.5"/>
+  <circle cx="165" cy="219" r="10" fill="#3498DB"/>
+  <text x="165" y="223" font-family="Noto Sans CJK SC, PingFang SC, sans-serif" font-size="10" font-weight="700" fill="#fff" text-anchor="middle">3</text>
+  <text x="185" y="215" font-family="Noto Sans CJK SC, PingFang SC, sans-serif" font-size="12" font-weight="700" fill="#3498DB">等待价格形成高点并回撤</text>
+  <text x="185" y="231" font-family="Noto Sans CJK SC, PingFang SC, sans-serif" font-size="9" fill="#666">日K冲高后出现回撤</text>
+  <polygon points="275,242 267,237 283,237" fill="#999"/>
+
+  <!-- ==================== 判断：回撤时MACD出现绿柱？ ==================== -->
+  <rect x="155" y="252" width="240" height="32" rx="6" fill="#E67E22" opacity="0.1"/>
+  <rect x="155" y="252" width="240" height="32" rx="6" fill="none" stroke="#E67E22" stroke-width="1.5" stroke-dasharray="4,2"/>
+  <text x="275" y="272" font-family="Noto Sans CJK SC, PingFang SC, sans-serif" font-size="11" fill="#E67E22" text-anchor="middle">回撤时MACD出现绿柱？</text>
+  <!-- 否分支：无绿柱 → 循环回步骤3 -->
+  <path d="M 395 268 Q 450 268 450 219 Q 450 219 405 219" fill="none" stroke="#E67E22" stroke-width="1.5" stroke-dasharray="3,2"/>
+  <polygon points="403,219 409,215 409,223" fill="#E67E22"/>
+  <text x="458" y="240" font-family="Noto Sans CJK SC, PingFang SC, sans-serif" font-size="9" fill="#E67E22">无绿柱：</text>
+  <text x="458" y="252" font-family="Noto Sans CJK SC, PingFang SC, sans-serif" font-size="9" fill="#E67E22">继续等待</text>
+  <text x="458" y="264" font-family="Noto Sans CJK SC, PingFang SC, sans-serif" font-size="9" fill="#E67E22">高点和回撤</text>
+  <!-- 是分支：向下 -->
+  <polygon points="275,287 267,282 283,282" fill="#999"/>
+
+  <!-- ==================== 步骤4：确定前高为入场参考价 ==================== -->
+  <rect x="145" y="297" width="260" height="40" rx="6" fill="#3498DB" opacity="0.12"/>
+  <rect x="145" y="297" width="260" height="40" rx="6" fill="none" stroke="#3498DB" stroke-width="1.5"/>
+  <circle cx="165" cy="317" r="10" fill="#3498DB"/>
+  <text x="165" y="321" font-family="Noto Sans CJK SC, PingFang SC, sans-serif" font-size="10" font-weight="700" fill="#fff" text-anchor="middle">4</text>
+  <text x="185" y="313" font-family="Noto Sans CJK SC, PingFang SC, sans-serif" font-size="12" font-weight="700" fill="#3498DB">确定前高为入场参考价</text>
+  <text x="185" y="329" font-family="Noto Sans CJK SC, PingFang SC, sans-serif" font-size="9" fill="#666">绿柱确认回撤有效，以前高点为突破参考</text>
+  <polygon points="275,340 267,335 283,335" fill="#999"/>
+
+  <!-- ==================== 步骤5：等待突破前高（从此分两支） ==================== -->
+  <rect x="145" y="350" width="260" height="40" rx="6" fill="#3498DB" opacity="0.12"/>
+  <rect x="145" y="350" width="260" height="40" rx="6" fill="none" stroke="#3498DB" stroke-width="1.5"/>
+  <circle cx="165" cy="370" r="10" fill="#3498DB"/>
+  <text x="165" y="374" font-family="Noto Sans CJK SC, PingFang SC, sans-serif" font-size="10" font-weight="700" fill="#fff" text-anchor="middle">5</text>
+  <text x="185" y="366" font-family="Noto Sans CJK SC, PingFang SC, sans-serif" font-size="12" font-weight="700" fill="#3498DB">等待突破前高</text>
+  <text x="185" y="382" font-family="Noto Sans CJK SC, PingFang SC, sans-serif" font-size="9" fill="#666">每天关注股价是否突破入场参考价</text>
+
+  <!-- 是分支：向右 → 买入（从步骤5右侧面中心水平引出） -->
+  <path d="M 405 370 L 455 370" fill="none" stroke="#27AE60" stroke-width="2"/>
+  <polygon points="450,365 458,370 450,375" fill="#27AE60"/>
+  <text x="418" y="366" font-family="Noto Sans CJK SC, PingFang SC, sans-serif" font-size="10" fill="#27AE60" font-weight="700">是</text>
+  <rect x="460" y="352" width="70" height="36" rx="6" fill="#27AE60" opacity="0.15"/>
+  <rect x="460" y="352" width="70" height="36" rx="6" fill="none" stroke="#27AE60" stroke-width="2"/>
+  <text x="495" y="374" font-family="Noto Sans CJK SC, PingFang SC, sans-serif" font-size="13" font-weight="700" fill="#27AE60" text-anchor="middle">买入</text>
+
+  <!-- 否分支：向下 → 入场失效（从步骤5底部中心引出，向下连接到入场失效框） -->
+  <polygon points="275,393 267,388 283,388" fill="#E74C3C"/>
+  <line x1="275" y1="388" x2="275" y2="424" stroke="#E74C3C" stroke-width="2"/>
+  <polygon points="275,427 268,422 282,422" fill="#E74C3C"/>
+  <text x="295" y="416" font-family="Noto Sans CJK SC, PingFang SC, sans-serif" font-size="10" fill="#E74C3C" font-weight="700">否（超过50-60天没突破）</text>
+  <rect x="155" y="432" width="240" height="32" rx="6" fill="#E74C3C" opacity="0.1"/>
+  <rect x="155" y="432" width="240" height="32" rx="6" fill="none" stroke="#E74C3C" stroke-width="2"/>
+  <text x="275" y="452" font-family="Noto Sans CJK SC, PingFang SC, sans-serif" font-size="12" font-weight="700" fill="#E74C3C" text-anchor="middle">入场失效，等下一次状态A</text>
+</svg>

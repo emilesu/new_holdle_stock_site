@@ -1,0 +1,133 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="780" height="470" viewBox="0 0 780 470">
+  <defs>
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="110%"><feDropShadow dx="1" dy="2" stdDeviation="3" flood-opacity="0.12"/></filter>
+  </defs>
+  <rect width="780" height="470" rx="8" fill="#FAFAFA" filter="url(#shadow)"/>
+  <text x="390" y="30" text-anchor="middle" font-family="PingFang SC, sans-serif" font-size="15" fill="#333" font-weight="bold">三级止损体系示意图</text>
+
+  <!-- 图例 -->
+  <g transform="translate(15, 44)">
+    <!-- <rect x="0" y="0" width="80" height="22" rx="4" fill="#EEE" stroke="#CCC" stroke-width="0.5"/> -->
+    <!-- <polygon points="8,14 12,8 16,14" fill="#E74C3C"/> -->
+    <rect x="110" y="8" width="8" height="10" fill="#E74C3C"/>
+    <text x="125" y="16" font-family="PingFang SC, sans-serif" font-size="11" fill="#333">入场点</text>
+
+    <!-- <rect x="90" y="0" width="80" height="22" rx="4" fill="white" stroke="#CCC" stroke-width="0.5"/> -->
+    <line x1="10" y1="6" x2="18" y2="16" stroke="#27AE60" stroke-width="2" stroke-linecap="round"/>
+    <line x1="18" y1="6" x2="10" y2="16" stroke="#27AE60" stroke-width="2" stroke-linecap="round"/>
+    <text x="28" y="16" font-family="PingFang SC, sans-serif" font-size="11" fill="#333">止损点</text>
+  </g>
+
+  <!-- ===== 栏1: 固定百分比止损 ===== -->
+  <g transform="translate(15, 74)">
+    <rect x="0" y="0" width="240" height="310" fill="none" stroke="#DDD" stroke-width="1" rx="3"/>
+
+    <text x="5" y="74" font-family="PingFang SC, sans-serif" font-size="9" fill="#999">14</text>
+    <text x="5" y="108" font-family="PingFang SC, sans-serif" font-size="9" fill="#999">13</text>
+    <text x="5" y="142" font-family="PingFang SC, sans-serif" font-size="9" fill="#999">12</text>
+    <text x="5" y="176" font-family="PingFang SC, sans-serif" font-size="9" fill="#999">11</text>
+    <text x="5" y="210" font-family="PingFang SC, sans-serif" font-size="9" fill="#999">10</text>
+    <text x="5" y="244" font-family="PingFang SC, sans-serif" font-size="9" fill="#999">9</text>
+    <text x="5" y="278" font-family="PingFang SC, sans-serif" font-size="9" fill="#999">8</text>
+
+    <line x1="18" y1="72" x2="235" y2="72" stroke="#EEE" stroke-width="0.5"/>
+    <line x1="18" y1="106" x2="235" y2="106" stroke="#EEE" stroke-width="0.5"/>
+    <line x1="18" y1="140" x2="235" y2="140" stroke="#EEE" stroke-width="0.5"/>
+    <line x1="18" y1="174" x2="235" y2="174" stroke="#EEE" stroke-width="0.5"/>
+    <line x1="18" y1="208" x2="235" y2="208" stroke="#333" stroke-width="2"/>
+    <line x1="18" y1="242" x2="235" y2="242" stroke="#EEE" stroke-width="0.5"/>
+    <line x1="18" y1="276" x2="235" y2="276" stroke="#EEE" stroke-width="0.5"/>
+
+    <path d="M 30,208 Q 75,162 120,174 Q 165,187 210,276" fill="none" stroke="#E67E22" stroke-width="2.5" stroke-linecap="round"/>
+
+    <g transform="translate(25, 208)">
+      <polygon points="-6,-8 0,-14 6,-8" fill="#E74C3C"/>
+      <rect x="-6" y="-8" width="12" height="8" fill="#E74C3C"/>
+    </g>
+    <g transform="translate(210, 276)">
+      <line x1="-6" y1="-6" x2="6" y2="6" stroke="#27AE60" stroke-width="2.5" stroke-linecap="round"/>
+      <line x1="-6" y1="6" x2="6" y2="-6" stroke="#27AE60" stroke-width="2.5" stroke-linecap="round"/>
+    </g>
+
+    <line x1="15" y1="290" x2="225" y2="290" stroke="#E0E0E0" stroke-width="0.5"/>
+    <text x="120" y="303" text-anchor="middle" font-family="PingFang SC, sans-serif" font-size="11" fill="#555">低于入场价20% → <tspan fill="#E74C3C" font-weight="bold">止损</tspan></text>
+  </g>
+
+  <!-- ===== 栏2: 上涨后放宽止损 ===== -->
+  <g transform="translate(270, 74)">
+    <rect x="0" y="0" width="240" height="310" fill="none" stroke="#DDD" stroke-width="1" rx="3"/>
+
+    <text x="5" y="74" font-family="PingFang SC, sans-serif" font-size="9" fill="#999">14</text>
+    <text x="5" y="108" font-family="PingFang SC, sans-serif" font-size="9" fill="#999">13</text>
+    <text x="5" y="142" font-family="PingFang SC, sans-serif" font-size="9" fill="#999">12</text>
+    <text x="5" y="176" font-family="PingFang SC, sans-serif" font-size="9" fill="#999">11</text>
+    <text x="5" y="210" font-family="PingFang SC, sans-serif" font-size="9" fill="#999">10</text>
+    <text x="5" y="244" font-family="PingFang SC, sans-serif" font-size="9" fill="#999">9</text>
+    <text x="5" y="278" font-family="PingFang SC, sans-serif" font-size="9" fill="#999">8</text>
+
+    <line x1="18" y1="72" x2="235" y2="72" stroke="#EEE" stroke-width="0.5"/>
+    <line x1="18" y1="106" x2="235" y2="106" stroke="#EEE" stroke-width="0.5"/>
+    <line x1="18" y1="140" x2="235" y2="140" stroke="#27AE60" stroke-width="0.5" stroke-dasharray="4,3" opacity="0.35"/>
+    <text x="225" y="143" font-family="PingFang SC, sans-serif" font-size="8" fill="#27AE60" opacity="0.5">+20%</text>
+    <line x1="18" y1="174" x2="235" y2="174" stroke="#E67E22" stroke-width="0.5" stroke-dasharray="4,3" opacity="0.5"/>
+    <text x="225" y="177" font-family="PingFang SC, sans-serif" font-size="8" fill="#E67E22" opacity="0.6">+10%</text>
+    <line x1="18" y1="208" x2="235" y2="208" stroke="#333" stroke-width="2"/>
+    <line x1="18" y1="242" x2="235" y2="242" stroke="#EEE" stroke-width="0.5"/>
+    <line x1="18" y1="276" x2="235" y2="276" stroke="#EEE" stroke-width="0.5"/>
+
+    <path d="M 30,208 Q 75,100 120,130 Q 165,152 210,242" fill="none" stroke="#E67E22" stroke-width="2.5" stroke-linecap="round"/>
+
+    <g transform="translate(25, 208)">
+      <polygon points="-6,-8 0,-14 6,-8" fill="#E74C3C"/>
+      <rect x="-6" y="-8" width="12" height="8" fill="#E74C3C"/>
+    </g>
+    <g transform="translate(210, 242)">
+      <line x1="-6" y1="-6" x2="6" y2="6" stroke="#27AE60" stroke-width="2.5" stroke-linecap="round"/>
+      <line x1="-6" y1="6" x2="6" y2="-6" stroke="#27AE60" stroke-width="2.5" stroke-linecap="round"/>
+    </g>
+
+    <line x1="15" y1="290" x2="225" y2="290" stroke="#E0E0E0" stroke-width="0.5"/>
+    <text x="120" y="303" text-anchor="middle" font-family="PingFang SC, sans-serif" font-size="11" fill="#555">涨超20%后 → <tspan fill="#E67E22" font-weight="bold">低于入场价10%止损</tspan></text>
+  </g>
+
+  <!-- ===== 栏3: 保本止损 ===== -->
+  <g transform="translate(525, 74)">
+    <rect x="0" y="0" width="240" height="310" fill="none" stroke="#DDD" stroke-width="1" rx="3"/>
+
+    <text x="5" y="74" font-family="PingFang SC, sans-serif" font-size="9" fill="#999">14</text>
+    <text x="5" y="108" font-family="PingFang SC, sans-serif" font-size="9" fill="#999">13</text>
+    <text x="5" y="142" font-family="PingFang SC, sans-serif" font-size="9" fill="#999">12</text>
+    <text x="5" y="176" font-family="PingFang SC, sans-serif" font-size="9" fill="#999">11</text>
+    <text x="5" y="210" font-family="PingFang SC, sans-serif" font-size="9" fill="#999">10</text>
+    <text x="5" y="244" font-family="PingFang SC, sans-serif" font-size="9" fill="#999">9</text>
+    <text x="5" y="278" font-family="PingFang SC, sans-serif" font-size="9" fill="#999">8</text>
+
+    <line x1="18" y1="72" x2="235" y2="72" stroke="#EEE" stroke-width="0.5"/>
+    <line x1="18" y1="106" x2="235" y2="106" stroke="#27AE60" stroke-width="0.5" stroke-dasharray="4,3" opacity="0.5"/>
+    <text x="225" y="109" font-family="PingFang SC, sans-serif" font-size="8" fill="#27AE60" opacity="0.6">+30%</text>
+    <line x1="18" y1="140" x2="235" y2="140" stroke="#E67E22" stroke-width="0.5" stroke-dasharray="4,3" opacity="0.35"/>
+    <line x1="18" y1="174" x2="235" y2="174" stroke="#EEE" stroke-width="0.5"/>
+    <line x1="18" y1="208" x2="235" y2="208" stroke="#333" stroke-width="2"/>
+    <line x1="18" y1="242" x2="235" y2="242" stroke="#EEE" stroke-width="0.5"/>
+    <line x1="18" y1="276" x2="235" y2="276" stroke="#EEE" stroke-width="0.5"/>
+
+    <path d="M 30,208 Q 75,78 120,93 Q 165,103 210,208" fill="none" stroke="#E67E22" stroke-width="2.5" stroke-linecap="round"/>
+
+    <g transform="translate(25, 208)">
+      <polygon points="-6,-8 0,-14 6,-8" fill="#E74C3C"/>
+      <rect x="-6" y="-8" width="12" height="8" fill="#E74C3C"/>
+    </g>
+    <g transform="translate(210, 208)">
+      <line x1="-6" y1="-6" x2="6" y2="6" stroke="#27AE60" stroke-width="2.5" stroke-linecap="round"/>
+      <line x1="-6" y1="6" x2="6" y2="-6" stroke="#27AE60" stroke-width="2.5" stroke-linecap="round"/>
+    </g>
+
+    <line x1="15" y1="290" x2="225" y2="290" stroke="#E0E0E0" stroke-width="0.5"/>
+    <text x="120" y="303" text-anchor="middle" font-family="PingFang SC, sans-serif" font-size="11" fill="#555">涨超30%后 → <tspan fill="#27AE60" font-weight="bold">以入场价止损（保本）</tspan></text>
+  </g>
+
+  <!-- 栏号标签 -->
+  <text x="135" y="405" text-anchor="middle" font-family="PingFang SC, sans-serif" font-size="11" fill="#999">① 固定百分比止损</text>
+  <text x="390" y="405" text-anchor="middle" font-family="PingFang SC, sans-serif" font-size="11" fill="#999">② 上涨后放宽止损</text>
+  <text x="645" y="405" text-anchor="middle" font-family="PingFang SC, sans-serif" font-size="11" fill="#999">③ 保本止损</text>
+</svg>

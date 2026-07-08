@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400" width="600" height="400">
+  <defs>
+    <style>
+      text { font-family: "Noto Sans CJK SC", "WenQuanYi Micro Hei", sans-serif; }
+    </style>
+  </defs>
+  <rect width="600" height="400" fill="#FAFAFA" rx="8"/>
+  <text x="300" y="28" text-anchor="middle" font-size="15" font-weight="bold" fill="#333">定投时间越长，摊低成本的效果越弱</text>
+  
+  <!-- 坐标轴 -->
+  <line x1="70" y1="340" x2="560" y2="340" stroke="#666" stroke-width="1.5"/>
+  <line x1="70" y1="340" x2="70" y2="50" stroke="#666" stroke-width="1.5"/>
+  
+  <!-- X轴（年份标签上移，轴标题右移拉开间距） -->
+  <text x="100" y="358" text-anchor="middle" font-size="10" fill="#999">第1年</text>
+  <text x="210" y="358" text-anchor="middle" font-size="10" fill="#999">第2年</text>
+  <text x="320" y="358" text-anchor="middle" font-size="10" fill="#999">第3年</text>
+  <text x="430" y="358" text-anchor="middle" font-size="10" fill="#999">第4年</text>
+  <text x="530" y="358" text-anchor="middle" font-size="10" fill="#999">第5年</text>
+  <text x="315" y="378" text-anchor="middle" font-size="11" fill="#666">定投时间 →</text>
+  
+  <!-- Y轴 -->
+  <text x="65" y="55" text-anchor="end" font-size="10" fill="#666">效果高</text>
+  <text x="65" y="340" text-anchor="end" font-size="10" fill="#666">效果低</text>
+  
+  <!-- 本金增长曲线（上升） -->
+  <path d="M 70 335 L 100 330 L 150 310 L 210 270 L 250 240 L 300 200 L 350 160 L 400 120 L 450 90 L 500 70 L 540 60"
+        fill="none" stroke="#3498DB" stroke-width="2.5"/>
+  
+  <!-- 摊低成本效果曲线（先快速下降后走平） -->
+  <path d="M 70 335 L 100 270 L 130 210 L 160 170 L 190 145 L 230 130 L 280 120 L 340 115 L 400 112 L 460 110 L 530 109"
+        fill="none" stroke="#E74C3C" stroke-width="2.5"/>
+
+  <!-- 红线标注 —— 放到左侧 -->
+  <text x="80" y="80" text-anchor="start" font-size="11" fill="#E74C3C">但摊成本的效果越来越弱</text>
+  <line x1="80" y1="84" x2="210" y2="142" stroke="#E74C3C" stroke-width="1"/>
+  <polygon points="210,142 204,134 204,150" fill="#E74C3C"/>
+  
+  <!-- 蓝线标注 —— 放到右侧 -->
+  <text x="410" y="130" text-anchor="start" font-size="11" fill="#3498DB">你投的钱一直在增加</text>
+  <line x1="410" y1="134" x2="370" y2="144" stroke="#3498DB" stroke-width="1"/>
+  <polygon points="370,144 376,136 376,152" fill="#3498DB"/>
+  
+  <!-- 底部提示 -->
+  <text x="300" y="395" text-anchor="middle" font-size="11" fill="#999">后期效果已经基本走平</text>
+</svg>

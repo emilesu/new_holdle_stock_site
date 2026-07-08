@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="360" viewBox="0 0 600 360">
+  <defs>
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="110%"><feDropShadow dx="1" dy="2" stdDeviation="3" flood-opacity="0.12"/></filter>
+  </defs>
+  <rect width="600" height="360" rx="8" fill="#FAFAFA" filter="url(#shadow)"/>
+  <text x="300" y="32" text-anchor="middle" font-family="PingFang SC, sans-serif" font-size="16" fill="#333" font-weight="bold">分散持仓示意图——5个行业各一只</text>
+
+  <!-- 1. 白酒 -->
+  <g transform="translate(30,55)">
+    <polygon points="0,110 10,35 50,35 60,110" fill="#D4A574" stroke="#8B6914" stroke-width="1.5"/>
+    <line x1="30" y1="35" x2="30" y2="15" stroke="#8B6914" stroke-width="2"/>
+    <path d="M20,15 Q20,5 25,5 L35,5 Q40,5 40,15 Z" fill="#D4A574" stroke="#8B6914" stroke-width="1"/>
+    <ellipse cx="30" cy="75" rx="12" ry="16" fill="#FFF8DC" stroke="#DAA520" stroke-width="1.5"/>
+    <rect x="18" y="10" width="24" height="10" rx="2" fill="#27AE60" opacity="0.6"/>
+  </g>
+  <text x="60" y="178" text-anchor="middle" font-family="PingFang SC, sans-serif" font-size="13" fill="#333">白酒</text>
+
+  <!-- 2. 科技 -->
+  <g transform="translate(145,55)">
+    <polygon points="0,110 10,35 50,35 60,110" fill="#D4A574" stroke="#8B6914" stroke-width="1.5"/>
+    <line x1="30" y1="35" x2="30" y2="15" stroke="#8B6914" stroke-width="2"/>
+    <path d="M20,15 Q20,5 25,5 L35,5 Q40,5 40,15 Z" fill="#D4A574" stroke="#8B6914" stroke-width="1"/>
+    <ellipse cx="30" cy="75" rx="12" ry="16" fill="#FFF8DC" stroke="#DAA520" stroke-width="1.5"/>
+    <rect x="18" y="10" width="24" height="10" rx="1" fill="#3498DB" opacity="0.6"/>
+    <rect x="22" y="12" width="16" height="6" rx="1" fill="#FAFAFA" opacity="0.5"/>
+  </g>
+  <text x="175" y="178" text-anchor="middle" font-family="PingFang SC, sans-serif" font-size="13" fill="#333">科技</text>
+
+  <!-- 3. 医药 -->
+  <g transform="translate(260,55)">
+    <polygon points="0,110 10,35 50,35 60,110" fill="#D4A574" stroke="#8B6914" stroke-width="1.5"/>
+    <line x1="30" y1="35" x2="30" y2="15" stroke="#8B6914" stroke-width="2"/>
+    <path d="M20,15 Q20,5 25,5 L35,5 Q40,5 40,15 Z" fill="#D4A574" stroke="#8B6914" stroke-width="1"/>
+    <ellipse cx="30" cy="75" rx="12" ry="16" fill="#FFF8DC" stroke="#DAA520" stroke-width="1.5"/>
+    <rect x="26" y="10" width="8" height="10" rx="1" fill="#E74C3C" opacity="0.6"/>
+    <rect x="22" y="13" width="16" height="4" rx="1" fill="#E74C3C" opacity="0.6"/>
+  </g>
+  <text x="290" y="178" text-anchor="middle" font-family="PingFang SC, sans-serif" font-size="13" fill="#333">医药</text>
+
+  <!-- 4. 家电 -->
+  <g transform="translate(375,55)">
+    <polygon points="0,110 10,35 50,35 60,110" fill="#D4A574" stroke="#8B6914" stroke-width="1.5"/>
+    <line x1="30" y1="35" x2="30" y2="15" stroke="#8B6914" stroke-width="2"/>
+    <path d="M20,15 Q20,5 25,5 L35,5 Q40,5 40,15 Z" fill="#D4A574" stroke="#8B6914" stroke-width="1"/>
+    <ellipse cx="30" cy="75" rx="12" ry="16" fill="#FFF8DC" stroke="#DAA520" stroke-width="1.5"/>
+    <rect x="20" y="10" width="20" height="4" rx="1" fill="#E67E22" opacity="0.6"/>
+    <rect x="27" y="14" width="6" height="6" rx="1" fill="#E67E22" opacity="0.6"/>
+  </g>
+  <text x="405" y="178" text-anchor="middle" font-family="PingFang SC, sans-serif" font-size="13" fill="#333">家电</text>
+
+  <!-- 5. 消费（原银行） -->
+  <g transform="translate(490,55)">
+    <polygon points="0,110 10,35 50,35 60,110" fill="#D4A574" stroke="#8B6914" stroke-width="1.5"/>
+    <line x1="30" y1="35" x2="30" y2="15" stroke="#8B6914" stroke-width="2"/>
+    <path d="M20,15 Q20,5 25,5 L35,5 Q40,5 40,15 Z" fill="#D4A574" stroke="#8B6914" stroke-width="1"/>
+    <ellipse cx="30" cy="75" rx="12" ry="16" fill="#FFF8DC" stroke="#DAA520" stroke-width="1.5"/>
+    <!-- shopping bag icon -->
+    <path d="M18,10 L22,5 L38,5 L42,10 L42,18 L18,18 Z" fill="#9B59B6" opacity="0.5"/>
+    <line x1="22" y1="5" x2="22" y2="10" stroke="#9B59B6" stroke-width="1" opacity="0.5"/>
+    <line x1="38" y1="5" x2="38" y2="10" stroke="#9B59B6" stroke-width="1" opacity="0.5"/>
+  </g>
+  <text x="520" y="178" text-anchor="middle" font-family="PingFang SC, sans-serif" font-size="13" fill="#333">消费</text>
+
+  <!-- bottom text -->
+  <text x="300" y="280" text-anchor="middle" font-family="PingFang SC, sans-serif" font-size="13" fill="#666">每个篮子代表一只股票，不同行业不同风险</text>
+</svg>

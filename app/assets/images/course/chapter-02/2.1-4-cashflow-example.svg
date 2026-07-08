@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400" width="600" height="400">
+  <defs>
+    <filter id="sh2"><feDropShadow dx="1" dy="2" stdDeviation="3" flood-opacity="0.12"/></filter>
+    <marker id="arr" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#999"/>
+    </marker>
+  </defs>
+
+  <!-- 背景 -->
+  <rect width="600" height="400" rx="8" fill="#FAFAFA" filter="url(#sh2)"/>
+
+  <!-- 标题 -->
+  <text x="300" y="30" text-anchor="middle" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="15" font-weight="bold" fill="#333">虚构案例：利润不等于现金</text>
+
+  <!-- 公司名 -->
+  <rect x="215" y="40" width="170" height="26" rx="4" fill="#2C3E50"/>
+  <text x="300" y="58" text-anchor="middle" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="13" font-weight="bold" fill="#FFF">鼎盛科技（虚构公司）</text>
+
+  <!-- ====== 左侧：利润表 ====== -->
+  <rect x="20" y="78" width="270" height="220" rx="6" fill="#E8F8F5" stroke="#A3E4D7" stroke-width="1"/>
+
+  <!-- 表头 -->
+  <rect x="20" y="78" width="270" height="34" rx="6" fill="#27AE60"/>
+  <rect x="20" y="106" width="270" height="6" fill="#27AE60"/>
+  <text x="155" y="100" text-anchor="middle" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="14" font-weight="bold" fill="#FFF">📋 利润表（2025年度）</text>
+
+  <!-- 行 -->
+  <text x="35" y="130" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="12" fill="#555">营业收入</text>
+  <text x="270" y="130" text-anchor="end" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="12" fill="#333" font-weight="bold">50.0亿</text>
+  <line x1="35" y1="138" x2="275" y2="138" stroke="#E0E0E0" stroke-width="0.5"/>
+
+  <text x="35" y="154" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="12" fill="#555">  营业成本</text>
+  <text x="270" y="154" text-anchor="end" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="12" fill="#333">- 32.0亿</text>
+  <line x1="35" y1="162" x2="275" y2="162" stroke="#E0E0E0" stroke-width="0.5"/>
+
+  <text x="35" y="178" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="12" fill="#555">毛利润</text>
+  <text x="270" y="178" text-anchor="end" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="12" fill="#333" font-weight="bold">18.0亿</text>
+  <!-- <text x="277" y="178" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="10" fill="#999">（36%）</text> -->
+  <line x1="35" y1="186" x2="275" y2="186" stroke="#E0E0E0" stroke-width="0.5"/>
+
+  <text x="35" y="202" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="12" fill="#555">  费用、税费等</text>
+  <text x="270" y="202" text-anchor="end" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="12" fill="#333">- 8.0亿</text>
+  <line x1="35" y1="210" x2="275" y2="210" stroke="#E0E0E0" stroke-width="0.5"/>
+
+  <!-- 净利润（高亮） -->
+  <rect x="35" y="218" width="240" height="28" rx="4" fill="#27AE60" opacity="0.12"/>
+  <text x="35" y="237" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="13" font-weight="bold" fill="#27AE60">净利润</text>
+  <text x="270" y="237" text-anchor="end" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="13" font-weight="bold" fill="#27AE60">10.0亿 ✅</text>
+
+  <!-- 虚转实箭头 -->
+  <!-- <line x1="300" y1="185" x2="320" y2="185" stroke="#999" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arr)"/>
+  <text x="310" y="178" text-anchor="middle" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="9" fill="#999">实收?</text> -->
+
+  <!-- ====== 右侧：现金流量表 ====== -->
+  <rect x="310" y="78" width="270" height="220" rx="6" fill="#FDEDEC" stroke="#F5B7B1" stroke-width="1"/>
+
+  <!-- 表头 -->
+  <rect x="310" y="78" width="270" height="34" rx="6" fill="#E74C3C"/>
+  <rect x="310" y="106" width="270" height="6" fill="#E74C3C"/>
+  <text x="445" y="100" text-anchor="middle" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="14" font-weight="bold" fill="#FFF">💰 现金流量表（2025年度）</text>
+
+  <!-- 行 -->
+  <text x="325" y="130" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="12" fill="#555">经营活动现金流</text>
+  <text x="560" y="130" text-anchor="end" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="12" fill="#E74C3C" font-weight="bold">- 2.0亿 ❌</text>
+  <line x1="325" y1="138" x2="565" y2="138" stroke="#E0E0E0" stroke-width="0.5"/>
+
+  <text x="325" y="154" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="11" fill="#999">  其中：销售回款</text>
+  <text x="560" y="154" text-anchor="end" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="11" fill="#999">35.0亿</text>
+  <line x1="325" y1="162" x2="565" y2="162" stroke="#E0E0E0" stroke-width="0.5"/>
+
+  <text x="325" y="178" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="11" fill="#999">  应收账款增加</text>
+  <text x="560" y="178" text-anchor="end" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="11" fill="#E74C3C">- 12.0亿 ⚠️</text>
+  <line x1="325" y1="186" x2="565" y2="186" stroke="#E0E0E0" stroke-width="0.5"/>
+
+  <text x="325" y="202" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="11" fill="#999">  支付供应商等</text>
+  <text x="560" y="202" text-anchor="end" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="11" fill="#999">- 25.0亿</text>
+  <line x1="325" y1="210" x2="565" y2="210" stroke="#E0E0E0" stroke-width="0.5"/>
+
+  <!-- 提示框 -->
+  <rect x="325" y="218" width="240" height="28" rx="4" fill="#E74C3C" opacity="0.12"/>
+  <text x="325" y="237" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="12" font-weight="bold" fill="#E74C3C">现金是负的，利润是假的</text>
+  <text x="560" y="237" text-anchor="end" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="13" font-weight="bold" fill="#E74C3C">-2.0亿 ❌</text>
+
+  <!-- ====== 底部警示 ====== -->
+  <rect x="20" y="310" width="560" height="72" rx="6" fill="#FEF9E7" stroke="#F9E79F" stroke-width="1"/>
+
+  <text x="40" y="334" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="13" font-weight="bold" fill="#D4AC0D">⚠️ 利润 vs 现金：差了 12 亿</text>
+
+  <text x="40" y="354" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="11" fill="#666">利润表说「赚了 10 亿」—— 但其中 12 亿是客户打了欠条，钱没到账。</text>
+  <text x="40" y="372" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="11" fill="#666" font-weight="bold">实际现金在流失。如果银行抽贷或供应商催款，公司撑不过 3 个月。</text>
+</svg>

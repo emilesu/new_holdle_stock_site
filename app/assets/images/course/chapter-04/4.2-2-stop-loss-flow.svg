@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="320" viewBox="0 0 600 320">
+  <defs>
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="110%"><feDropShadow dx="1" dy="2" stdDeviation="3" flood-opacity="0.12"/></filter>
+    <marker id="arrow" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><path d="M0,0 L10,3.5 L0,7 Z" fill="#666"/></marker>
+  </defs>
+  <rect width="600" height="320" rx="8" fill="#FAFAFA" filter="url(#shadow)"/>
+  <text x="300" y="28" text-anchor="middle" font-family="PingFang SC, sans-serif" font-size="15" fill="#333" font-weight="bold">止损规则切换流程</text>
+
+  <!-- Row 1: 买入 -->
+  <rect x="260" y="55" width="80" height="34" rx="6" fill="white" stroke="#3498DB" stroke-width="2" filter="url(#shadow)"/>
+  <text x="300" y="76" text-anchor="middle" font-family="PingFang SC, sans-serif" font-size="14" fill="#333" font-weight="bold">买入</text>
+
+  <!-- Arrow down from 买入 -->
+  <line x1="300" y1="89" x2="300" y2="115" stroke="#666" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Row 2: 分支点 -->
+  <rect x="230" y="118" width="140" height="28" rx="14" fill="#F0F0F0" stroke="#999" stroke-width="1"/>
+  <text x="300" y="136" text-anchor="middle" font-family="PingFang SC, sans-serif" font-size="11" fill="#666">持有中：走势判断</text>
+
+  <!-- 分支左：跌超20% -->
+  <line x1="230" y1="132" x2="120" y2="132" stroke="#666" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <!-- 分支右：涨超20% -->
+  <line x1="370" y1="132" x2="480" y2="132" stroke="#666" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Row 3 left: 跌超20% → 止损 -->
+  <rect x="20" y="110" width="180" height="44" rx="6" fill="white" stroke="#E74C3C" stroke-width="2" filter="url(#shadow)"/>
+  <text x="110" y="130" text-anchor="middle" font-family="PingFang SC, sans-serif" font-size="12" fill="#E74C3C" font-weight="bold">跌超20%</text>
+  <text x="110" y="146" text-anchor="middle" font-family="PingFang SC, sans-serif" font-size="11" fill="#E74C3C">→ 立即止损卖出</text>
+
+  <!-- Row 3 right: 涨超20% → 调至-10% -->
+  <rect x="400" y="110" width="180" height="44" rx="6" fill="white" stroke="#E67E22" stroke-width="2" filter="url(#shadow)"/>
+  <text x="490" y="130" text-anchor="middle" font-family="PingFang SC, sans-serif" font-size="12" fill="#E67E22" font-weight="bold">涨超20%</text>
+  <text x="490" y="146" text-anchor="middle" font-family="PingFang SC, sans-serif" font-size="11" fill="#E67E22">→ 止损调至-10%</text>
+
+  <!-- Right branch continues down -->
+  <line x1="490" y1="154" x2="490" y2="180" stroke="#666" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Row 4: 涨超30% → 保本 -->
+  <rect x="400" y="183" width="180" height="44" rx="6" fill="white" stroke="#27AE60" stroke-width="2" filter="url(#shadow)"/>
+  <text x="490" y="203" text-anchor="middle" font-family="PingFang SC, sans-serif" font-size="12" fill="#27AE60" font-weight="bold">涨超30%</text>
+  <text x="490" y="219" text-anchor="middle" font-family="PingFang SC, sans-serif" font-size="11" fill="#27AE60">→ 止损调至保本</text>
+
+  <!-- Continue down -->
+  <line x1="490" y1="227" x2="490" y2="253" stroke="#666" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Row 5: 周K低点出场 -->
+  <rect x="400" y="256" width="180" height="44" rx="6" fill="white" stroke="#3498DB" stroke-width="2" filter="url(#shadow)"/>
+  <text x="490" y="276" text-anchor="middle" font-family="PingFang SC, sans-serif" font-size="12" fill="#3498DB" font-weight="bold">周K低点出现</text>
+  <text x="490" y="292" text-anchor="middle" font-family="PingFang SC, sans-serif" font-size="11" fill="#3498DB">→ 按周K规则出场</text>
+</svg>

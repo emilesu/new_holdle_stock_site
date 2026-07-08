@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="360" viewBox="0 0 600 360">
+  <defs>
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="110%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#000" flood-opacity="0.06"/>
+    </filter>
+  </defs>
+  <rect width="600" height="360" rx="8" fill="#FAFAFA" filter="url(#shadow)"/>
+
+  <text x="300" y="28" font-family="Noto Sans CJK SC, PingFang SC, sans-serif" font-size="16" font-weight="700" fill="#2C3E50" text-anchor="middle">场景一：从0轴下面爬到0轴上面</text>
+
+  <!-- 0轴 -->
+  <line x1="80" y1="205" x2="560" y2="205" stroke="#333" stroke-width="2"/>
+  <text x="70" y="209" font-family="Noto Sans CJK SC, PingFang SC, sans-serif" font-size="11" font-weight="700" fill="#333" text-anchor="end">0轴</text>
+
+  <!-- 两条线（上移，在第一次红柱出现前穿越0轴） -->
+  <path d="M 80 235 L 120 226 L 150 215 L 190 202 L 220 190 L 260 180 L 300 172 L 330 168 L 400 165 L 440 178 L 480 192 L 520 205"
+        fill="none" stroke="#3498DB" stroke-width="2.5"/>
+  <path d="M 80 240 L 120 233 L 150 222 L 190 208 L 230 196 L 280 188 L 320 180 L 360 176 L 400 174 L 440 185 L 480 198 L 520 210"
+        fill="none" stroke="#E67E22" stroke-width="2" stroke-dasharray="6,3"/>
+
+  <!-- 柱子（根部对齐到0轴 y=205） -->
+  <!-- 0轴以下：绿柱 -->
+  <rect x="95" y="205" width="8" height="15" fill="#27AE60" opacity="0.7"/>
+  <rect x="115" y="205" width="8" height="20" fill="#27AE60" opacity="0.7"/>
+  <rect x="135" y="205" width="8" height="25" fill="#27AE60" opacity="0.7"/>
+  <rect x="155" y="205" width="8" height="18" fill="#27AE60" opacity="0.7"/>
+  <rect x="175" y="205" width="8" height="10" fill="#27AE60" opacity="0.7"/>
+  <rect x="195" y="205" width="8" height="5" fill="#27AE60" opacity="0.7"/>
+  <!-- 0轴以上：红柱 -->
+  <rect x="215" y="201" width="8" height="4" fill="#E74C3C" opacity="0.7"/>
+  <rect x="235" y="193" width="8" height="12" fill="#E74C3C" opacity="0.7"/>
+  <rect x="255" y="185" width="8" height="20" fill="#E74C3C" opacity="0.7"/>
+  <rect x="275" y="177" width="8" height="28" fill="#E74C3C" opacity="0.7"/>
+  <rect x="295" y="170" width="8" height="35" fill="#E74C3C" opacity="0.7"/>
+  <rect x="315" y="165" width="8" height="40" fill="#E74C3C" opacity="0.7"/>
+  <rect x="335" y="160" width="8" height="45" fill="#E74C3C" opacity="0.7"/>
+  <rect x="355" y="157" width="8" height="48" fill="#E74C3C" opacity="0.7"/>
+  <rect x="375" y="160" width="8" height="45" fill="#E74C3C" opacity="0.7"/>
+  <rect x="395" y="165" width="8" height="40" fill="#E74C3C" opacity="0.7"/>
+  <rect x="415" y="170" width="8" height="35" fill="#E74C3C" opacity="0.7"/>
+  <rect x="435" y="177" width="8" height="28" fill="#E74C3C" opacity="0.7"/>
+  <rect x="455" y="185" width="8" height="20" fill="#E74C3C" opacity="0.7"/>
+  <rect x="475" y="193" width="8" height="12" fill="#E74C3C" opacity="0.7"/>
+  <rect x="495" y="197" width="8" height="8" fill="#E74C3C" opacity="0.7"/>
+  <rect x="515" y="201" width="8" height="4" fill="#E74C3C" opacity="0.7"/>
+
+  <!-- 标注：绿柱区 -->
+  <g transform="translate(120, 245)">
+    <text x="0" y="0" font-family="Noto Sans CJK SC, PingFang SC, sans-serif" font-size="11" fill="#27AE60" text-anchor="middle">绿柱区（0轴以下）</text>
+    <text x="0" y="15" font-family="Noto Sans CJK SC, PingFang SC, sans-serif" font-size="10" fill="#999" text-anchor="middle">下跌趋势，不碰</text>
+  </g>
+
+  <!-- 标注：红柱区 -->
+  <g transform="translate(300, 145)">
+    <text x="0" y="0" font-family="Noto Sans CJK SC, PingFang SC, sans-serif" font-size="11" fill="#E74C3C" text-anchor="middle">红柱区（0轴以上）</text>
+    <text x="0" y="15" font-family="Noto Sans CJK SC, PingFang SC, sans-serif" font-size="10" fill="#999" text-anchor="middle">上涨趋势，关注</text>
+  </g>
+
+  <!-- 标注：第一次红柱 -->
+  <g transform="translate(215, 170)">
+    <rect x="-40" y="-18" width="80" height="36" rx="4" fill="#E74C3C" opacity="0.1"/>
+    <rect x="-40" y="-18" width="80" height="36" rx="4" fill="none" stroke="#E74C3C" stroke-width="1"/>
+    <text x="0" y="-3" font-family="Noto Sans CJK SC, PingFang SC, sans-serif" font-size="10" font-weight="700" fill="#E74C3C" text-anchor="middle">第一次</text>
+    <text x="0" y="12" font-family="Noto Sans CJK SC, PingFang SC, sans-serif" font-size="10" font-weight="700" fill="#E74C3C" text-anchor="middle">出现红柱</text>
+    <line x1="5" y1="18" x2="5" y2="36" stroke="#E74C3C" stroke-width="1"/>
+  </g>
+
+  <text x="300" y="350" font-family="Noto Sans CJK SC, PingFang SC, sans-serif" font-size="11" fill="#999" text-anchor="middle">第一次出现红柱，就是状态A的起点</text>
+</svg>

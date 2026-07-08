@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400" width="600" height="400">
+  <defs>
+    <style>
+      text { font-family: "Noto Sans CJK SC", "WenQuanYi Micro Hei", sans-serif; }
+    </style>
+  </defs>
+  <rect width="600" height="400" fill="#FAFAFA" rx="8"/>
+  <text x="300" y="28" text-anchor="middle" font-size="15" font-weight="bold" fill="#333">交易越频繁，收益越差</text>
+  
+  <!-- 坐标轴（整体上移20px，给底部留空间） -->
+  <line x1="80" y1="300" x2="560" y2="300" stroke="#666" stroke-width="1.5"/>
+  <line x1="80" y1="300" x2="80" y2="50" stroke="#666" stroke-width="1.5"/>
+  
+  <!-- X轴标签 -->
+  <text x="160" y="320" text-anchor="middle" font-size="11" fill="#666">低频</text>
+  <text x="320" y="320" text-anchor="middle" font-size="11" fill="#666">中频</text>
+  <text x="480" y="320" text-anchor="middle" font-size="11" fill="#666">高频</text>
+  <text x="320" y="340" text-anchor="middle" font-size="11" fill="#666">交易频率 →</text>
+  
+  <!-- Y轴标签 -->
+  <text x="75" y="65" text-anchor="end" font-size="11" fill="#666">+20%</text>
+  <text x="75" y="137" text-anchor="end" font-size="11" fill="#666">+10%</text>
+  <text x="75" y="215" text-anchor="end" font-size="11" fill="#666">0%</text>
+  <text x="75" y="296" text-anchor="end" font-size="11" fill="#666">-10%</text>
+  <text x="25" y="180" text-anchor="middle" font-size="11" fill="#666" transform="rotate(-90,25,180)">年化收益率</text>
+  
+  <!-- 零线 -->
+  <line x1="80" y1="217" x2="560" y2="217" stroke="#ccc" stroke-width="1" stroke-dasharray="4,3"/>
+  
+  <!-- 趋势线 -->
+  <path d="M 120 100 Q 200 125 280 170 Q 360 215 440 255 Q 480 275 530 290"
+        fill="none" stroke="#E74C3C" stroke-width="2" stroke-dasharray="6,3"/>
+  
+  <!-- 散点 -->
+  <circle cx="110" cy="110" r="4" fill="#3498DB" opacity="0.6"/>
+  <circle cx="130" cy="95" r="4" fill="#3498DB" opacity="0.6"/>
+  <circle cx="150" cy="120" r="4" fill="#3498DB" opacity="0.6"/>
+  <circle cx="140" cy="130" r="4" fill="#3498DB" opacity="0.6"/>
+  <circle cx="120" cy="140" r="4" fill="#3498DB" opacity="0.6"/>
+  <circle cx="170" cy="125" r="4" fill="#3498DB" opacity="0.6"/>
+  <circle cx="160" cy="150" r="4" fill="#3498DB" opacity="0.6"/>
+  <circle cx="190" cy="135" r="4" fill="#3498DB" opacity="0.6"/>
+  <circle cx="230" cy="160" r="4" fill="#3498DB" opacity="0.6"/>
+  <circle cx="250" cy="170" r="4" fill="#3498DB" opacity="0.6"/>
+  <circle cx="270" cy="180" r="4" fill="#3498DB" opacity="0.6"/>
+  <circle cx="260" cy="190" r="4" fill="#3498DB" opacity="0.6"/>
+  <circle cx="290" cy="195" r="4" fill="#3498DB" opacity="0.6"/>
+  <circle cx="300" cy="200" r="4" fill="#3498DB" opacity="0.6"/>
+  <circle cx="310" cy="210" r="4" fill="#3498DB" opacity="0.6"/>
+  <circle cx="370" cy="225" r="4" fill="#3498DB" opacity="0.6"/>
+  <circle cx="390" cy="235" r="4" fill="#3498DB" opacity="0.6"/>
+  <circle cx="410" cy="245" r="4" fill="#3498DB" opacity="0.6"/>
+  <circle cx="420" cy="255" r="4" fill="#3498DB" opacity="0.6"/>
+  <circle cx="440" cy="265" r="4" fill="#3498DB" opacity="0.6"/>
+  <circle cx="450" cy="275" r="4" fill="#3498DB" opacity="0.6"/>
+  <circle cx="470" cy="280" r="4" fill="#3498DB" opacity="0.6"/>
+  <circle cx="480" cy="285" r="4" fill="#3498DB" opacity="0.6"/>
+  <circle cx="490" cy="290" r="4" fill="#3498DB" opacity="0.6"/>
+  <circle cx="500" cy="295" r="4" fill="#3498DB" opacity="0.6"/>
+  
+  <!-- 标注 -->
+  <text x="140" y="88" text-anchor="middle" font-size="12" fill="#27AE60" font-weight="bold">操作少，反而赚得多</text>
+  <text x="440" y="298" text-anchor="middle" font-size="12" fill="#E74C3C" font-weight="bold">操作多，亏钱概率大</text>
+  
+  <text x="300" y="388" text-anchor="middle" font-size="11" fill="#999">数据来源：券商统计</text>
+</svg>

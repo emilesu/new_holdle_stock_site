@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="420" viewBox="0 0 600 420">
+  <defs>
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="110%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#000" flood-opacity="0.06"/>
+    </filter>
+  </defs>
+  <rect width="600" height="420" rx="8" fill="#FAFAFA" filter="url(#shadow)"/>
+
+  <!-- 标题 -->
+  <text x="300" y="30" font-family="Noto Sans CJK SC, PingFang SC, sans-serif" font-size="17" font-weight="700" fill="#2C3E50" text-anchor="middle">六个关键指标，一个雷达搞定</text>
+
+  <!-- 中心点 -->
+  <g transform="translate(300, 205)">
+
+    <!-- 网格线 - 5个同心六边形 -->
+    <g fill="none" stroke="#E8E8E8" stroke-width="1">
+      <polygon points="0,-28 24.25,-14 24.25,14 0,28 -24.25,14 -24.25,-14"/>
+      <polygon points="0,-56 48.5,-28 48.5,28 0,56 -48.5,28 -48.5,-28"/>
+      <polygon points="0,-84 72.75,-42 72.75,42 0,84 -72.75,42 -72.75,-42"/>
+      <polygon points="0,-112 97,-56 97,56 0,112 -97,56 -97,-56"/>
+      <polygon points="0,-140 121.24,-70 121.24,70 0,140 -121.24,70 -121.24,-70" stroke="#D0D0D0"/>
+    </g>
+
+    <!-- 坐标轴虚线 -->
+    <g stroke="#3498DB" stroke-width="1" stroke-dasharray="4,4" opacity="0.5">
+      <line x1="0" y1="0" x2="0" y2="-140"/>
+      <line x1="0" y1="0" x2="121.24" y2="-70"/>
+      <line x1="0" y1="0" x2="121.24" y2="70"/>
+      <line x1="0" y1="0" x2="0" y2="140"/>
+      <line x1="0" y1="0" x2="-121.24" y2="70"/>
+      <line x1="0" y1="0" x2="-121.24" y2="-70"/>
+    </g>
+
+    <!-- 数据区域 -->
+    <polygon points="0,-140 121.24,-70 121.24,70 0,140 -121.24,70 -121.24,-70" fill="#3498DB" fill-opacity="0.12" stroke="#3498DB" stroke-width="2.5" stroke-linejoin="round"/>
+
+    <!-- 顶点圆点 -->
+    <g fill="#3498DB">
+      <circle cx="0" cy="-140" r="4"/>
+      <circle cx="121.24" cy="-70" r="4"/>
+      <circle cx="121.24" cy="70" r="4"/>
+      <circle cx="0" cy="140" r="4"/>
+      <circle cx="-121.24" cy="70" r="4"/>
+      <circle cx="-121.24" cy="-70" r="4"/>
+    </g>
+  </g>
+
+  <!-- 标签按网站顺序：顺时针 ROE→毛利率→资产周转率→EPS→现金比率→净利率 -->
+
+  <!-- 上方：ROE -->
+  <text x="300" y="43" font-family="Noto Sans CJK SC, PingFang SC, sans-serif" font-size="14" font-weight="700" fill="#2C3E50" text-anchor="middle">ROE</text>
+  <text x="300" y="57" font-family="Noto Sans CJK SC, PingFang SC, sans-serif" font-size="10" fill="#7F8C8D" text-anchor="middle">净资产收益率</text>
+
+  <!-- 右上：毛利率 -->
+  <text x="433" y="118" font-family="Noto Sans CJK SC, PingFang SC, sans-serif" font-size="14" font-weight="700" fill="#2C3E50" text-anchor="start">毛利率</text>
+  <text x="433" y="134" font-family="Noto Sans CJK SC, PingFang SC, sans-serif" font-size="9" fill="#7F8C8D" text-anchor="start">Gross Profit Margin</text>
+
+  <!-- 右下：资产周转率（原为净利率） -->
+  <text x="433" y="268" font-family="Noto Sans CJK SC, PingFang SC, sans-serif" font-size="14" font-weight="700" fill="#2C3E50" text-anchor="start">资产周转率</text>
+  <text x="433" y="284" font-family="Noto Sans CJK SC, PingFang SC, sans-serif" font-size="9" fill="#7F8C8D" text-anchor="start">Total Asset Turnover</text>
+
+  <!-- 下方：EPS（原为现金占总资产比率） -->
+  <text x="300" y="362" font-family="Noto Sans CJK SC, PingFang SC, sans-serif" font-size="14" font-weight="700" fill="#2C3E50" text-anchor="middle">EPS</text>
+  <text x="300" y="378" font-family="Noto Sans CJK SC, PingFang SC, sans-serif" font-size="10" fill="#7F8C8D" text-anchor="middle">每股收益</text>
+
+  <!-- 左下：现金比率（原为总资产周转率） -->
+  <text x="167" y="268" font-family="Noto Sans CJK SC, PingFang SC, sans-serif" font-size="14" font-weight="700" fill="#2C3E50" text-anchor="end">现金比率</text>
+  <text x="167" y="284" font-family="Noto Sans CJK SC, PingFang SC, sans-serif" font-size="9" fill="#7F8C8D" text-anchor="end">Cash Ratio</text>
+
+  <!-- 左上：净利率（原为每股收益） -->
+  <text x="167" y="118" font-family="Noto Sans CJK SC, PingFang SC, sans-serif" font-size="14" font-weight="700" fill="#2C3E50" text-anchor="end">净利率</text>
+  <text x="167" y="134" font-family="Noto Sans CJK SC, PingFang SC, sans-serif" font-size="10" fill="#7F8C8D" text-anchor="end">Net Profit Margin</text>
+
+  <!-- 底部提示 -->
+  <text x="300" y="405" font-family="Noto Sans CJK SC, PingFang SC, sans-serif" font-size="12" fill="#95A5A6" text-anchor="middle" font-style="italic">同行业对比才有意义</text>
+</svg>

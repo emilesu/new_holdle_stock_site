@@ -1,0 +1,127 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="470" viewBox="0 0 600 470">
+  <defs>
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="110%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#000" flood-opacity="0.06"/>
+    </filter>
+  </defs>
+  <rect width="600" height="470" rx="8" fill="#FAFAFA" filter="url(#shadow)"/>
+
+  <text x="300" y="28" font-family="PingFang SC, sans-serif" font-size="16" font-weight="700" fill="#2C3E50" text-anchor="middle">日K线突破入场：三步走</text>
+
+  <!-- 坐标轴 -->
+  <line x1="80" y1="260" x2="560" y2="260" stroke="#666" stroke-width="1.5"/>
+  <line x1="80" y1="260" x2="80" y2="60" stroke="#666" stroke-width="1.5"/>
+
+  <!-- 模拟日K线走势 -->
+  <g transform="translate(80, 0)">
+    <!-- 上涨趋势 -->
+    <rect x="10" y="205" width="10" height="25" fill="#E74C3C" rx="2"/>
+    <line x1="15" y1="190" x2="15" y2="235" stroke="#E74C3C" stroke-width="1"/>
+    <rect x="30" y="190" width="10" height="35" fill="#E74C3C" rx="2"/>
+    <line x1="35" y1="182" x2="35" y2="230" stroke="#E74C3C" stroke-width="1"/>
+    <rect x="50" y="195" width="10" height="28" fill="#27AE60" rx="2"/>
+    <line x1="55" y1="185" x2="55" y2="235" stroke="#27AE60" stroke-width="1"/>
+    <rect x="70" y="185" width="10" height="40" fill="#E74C3C" rx="2"/>
+    <line x1="75" y1="172" x2="75" y2="235" stroke="#E74C3C" stroke-width="1"/>
+    <rect x="90" y="180" width="10" height="42" fill="#E74C3C" rx="2"/>
+    <line x1="95" y1="165" x2="95" y2="230" stroke="#E74C3C" stroke-width="1"/>
+    <rect x="110" y="182" width="10" height="35" fill="#27AE60" rx="2"/>
+    <line x1="115" y1="168" x2="115" y2="228" stroke="#27AE60" stroke-width="1"/>
+    <rect x="130" y="175" width="10" height="48" fill="#E74C3C" rx="2"/>
+    <line x1="135" y1="161" x2="135" y2="235" stroke="#E74C3C" stroke-width="1"/>
+
+    <!-- 前高线 -->
+    <line x1="10" y1="161" x2="145" y2="161" stroke="#E74C3C" stroke-width="1.5" stroke-dasharray="6,3"/>
+    <text x="148" y="158" font-family="PingFang SC, sans-serif" font-size="10" font-weight="700" fill="#E74C3C" text-anchor="start">前高</text>
+
+    <!-- 回撤 -->
+    <rect x="150" y="205" width="10" height="30" fill="#27AE60" rx="2"/>
+    <line x1="155" y1="195" x2="155" y2="242" stroke="#27AE60" stroke-width="1"/>
+    <rect x="170" y="215" width="10" height="22" fill="#27AE60" rx="2"/>
+    <line x1="175" y1="205" x2="175" y2="245" stroke="#27AE60" stroke-width="1"/>
+    <rect x="190" y="210" width="10" height="28" fill="#E74C3C" rx="2"/>
+    <line x1="195" y1="198" x2="195" y2="245" stroke="#E74C3C" stroke-width="1"/>
+    <rect x="210" y="220" width="10" height="20" fill="#27AE60" rx="2"/>
+    <line x1="215" y1="212" x2="215" y2="248" stroke="#27AE60" stroke-width="1"/>
+    <rect x="230" y="225" width="10" height="15" fill="#27AE60" rx="2"/>
+    <line x1="235" y1="218" x2="235" y2="250" stroke="#27AE60" stroke-width="1"/>
+
+    <text x="175" y="185" font-family="PingFang SC, sans-serif" font-size="12" font-weight="700" fill="#E67E22" text-anchor="middle">回撤</text>
+
+    <!-- 再次上涨突破 -->
+    <rect x="250" y="220" width="10" height="22" fill="#E74C3C" rx="2"/>
+    <line x1="255" y1="210" x2="255" y2="248" stroke="#E74C3C" stroke-width="1"/>
+    <rect x="270" y="215" width="10" height="28" fill="#E74C3C" rx="2"/>
+    <line x1="275" y1="205" x2="275" y2="248" stroke="#E74C3C" stroke-width="1"/>
+    <rect x="290" y="205" width="10" height="35" fill="#E74C3C" rx="2"/>
+    <line x1="295" y1="192" x2="295" y2="245" stroke="#E74C3C" stroke-width="1"/>
+    <rect x="310" y="195" width="10" height="42" fill="#E74C3C" rx="2"/>
+    <line x1="315" y1="180" x2="315" y2="245" stroke="#E74C3C" stroke-width="1"/>
+    <rect x="330" y="175" width="10" height="48" fill="#E74C3C" rx="2"/>
+    <line x1="335" y1="150" x2="335" y2="230" stroke="#E74C3C" stroke-width="1"/>
+    <rect x="350" y="158" width="10" height="52" fill="#E74C3C" rx="2"/>
+    <line x1="355" y1="132" x2="355" y2="218" stroke="#E74C3C" stroke-width="1"/>
+
+    <!-- 突破前高线 -->
+    <line x1="250" y1="161" x2="370" y2="161" stroke="#E74C3C" stroke-width="1.5" stroke-dasharray="6,3"/>
+
+    <!-- 买入点 -->
+    <circle cx="335" cy="160" r="8" fill="#27AE60" opacity="0.3"/>
+    <circle cx="335" cy="160" r="5" fill="#27AE60"/>
+    <text x="335" y="140" font-family="PingFang SC, sans-serif" font-size="12" font-weight="700" fill="#27AE60" text-anchor="middle">买入点</text>
+    <text x="335" y="125" font-family="PingFang SC, sans-serif" font-size="10" fill="#27AE60" text-anchor="middle">（突破前高）</text>
+  </g>
+
+  <!-- 分隔线：K线区与MACD区 -->
+  <line x1="80" y1="280" x2="560" y2="280" stroke="#DDD" stroke-width="1" stroke-dasharray="4,3"/>
+  <text x="70" y="278" font-family="PingFang SC, sans-serif" font-size="9" fill="#999" text-anchor="end">价格</text>
+  <text x="70" y="348" font-family="PingFang SC, sans-serif" font-size="9" fill="#999" text-anchor="end">MACD</text>
+
+  <!-- MACD指标区（柱子与上方K线中心对齐） -->
+  <!-- K线x=10→中心15, x=30→中心35... MACD宽6, x=中心-3 -->
+  <g transform="translate(80, 0)">
+    <!-- MACD零轴线 -->
+    <line x1="0" y1="310" x2="480" y2="310" stroke="#999" stroke-width="0.8"/>
+
+    <!-- 上涨阶段红柱（与K线x=10~130对齐：中心15,35,55,75,95,115,135） -->
+    <rect x="12" y="298" width="6" height="12" fill="#E74C3C" rx="1"/>
+    <rect x="32" y="292" width="6" height="18" fill="#E74C3C" rx="1"/>
+    <rect x="52" y="295" width="6" height="15" fill="#E74C3C" rx="1"/>
+    <rect x="72" y="290" width="6" height="20" fill="#E74C3C" rx="1"/>
+    <rect x="92" y="286" width="6" height="24" fill="#E74C3C" rx="1"/>
+    <rect x="112" y="288" width="6" height="22" fill="#E74C3C" rx="1"/>
+    <rect x="132" y="290" width="6" height="20" fill="#E74C3C" rx="1"/>
+
+    <!-- 回撤绿柱（与K线x=150~230对齐：中心155,175,195,215,235） -->
+    <rect x="152" y="310" width="6" height="10" fill="#27AE60" rx="1"/>
+    <rect x="172" y="310" width="6" height="16" fill="#27AE60" rx="1"/>
+    <rect x="192" y="310" width="6" height="18" fill="#27AE60" rx="1"/>
+    <rect x="212" y="310" width="6" height="12" fill="#27AE60" rx="1"/>
+    <rect x="232" y="310" width="6" height="6" fill="#27AE60" rx="1"/>
+
+    <!-- 突破上涨红柱（与K线x=250~350对齐：中心255,275,295,315,335,355） -->
+    <rect x="252" y="294" width="6" height="16" fill="#E74C3C" rx="1"/>
+    <rect x="272" y="290" width="6" height="20" fill="#E74C3C" rx="1"/>
+    <rect x="292" y="286" width="6" height="24" fill="#E74C3C" rx="1"/>
+    <rect x="312" y="282" width="6" height="28" fill="#E74C3C" rx="1"/>
+    <rect x="332" y="278" width="6" height="32" fill="#E74C3C" rx="1"/>
+    <rect x="352" y="276" width="6" height="34" fill="#E74C3C" rx="1"/>
+
+    <!-- DIF线和DEA线模拟 -->
+    <polyline points="12,303 32,298 52,300 72,294 92,288 112,291 132,294 152,302 172,308 192,310 212,307 232,304 252,298 272,294 292,288 312,282 332,276 352,272" fill="none" stroke="#3498DB" stroke-width="1.2"/>
+    <polyline points="12,306 32,303 52,304 72,300 92,295 112,296 132,298 152,304 172,309 192,310 212,309 232,306 252,302 272,298 292,293 312,287 332,282 352,278" fill="none" stroke="#E67E22" stroke-width="1.2"/>
+
+    <!-- 绿柱区域标注 -->
+    <text x="200" y="338" font-family="PingFang SC, sans-serif" font-size="11" font-weight="700" fill="#27AE60" text-anchor="middle">MACD绿柱 → 正常回撤确认</text>
+  </g>
+
+  <!-- 连接线：回撤 → MACD绿柱 -->
+  <line x1="235" y1="180" x2="235" y2="200" stroke="#27AE60" stroke-width="1" stroke-dasharray="3,2"/>
+  <circle cx="235" cy="180" r="2" fill="#27AE60"/>
+
+  <!-- 底部三步说明 -->
+  <rect x="60" y="400" width="480" height="40" fill="#333" opacity="0.04" rx="6"/>
+  <text x="120" y="425" font-family="PingFang SC, sans-serif" font-size="11" font-weight="700" fill="#3498DB" text-anchor="middle">① 前高</text>
+  <text x="300" y="425" font-family="PingFang SC, sans-serif" font-size="11" font-weight="700" fill="#27AE60" text-anchor="middle">② 回撤出现MACD绿柱</text>
+  <text x="480" y="425" font-family="PingFang SC, sans-serif" font-size="11" font-weight="700" fill="#E74C3C" text-anchor="middle">③ 突破前高买入</text>
+</svg>

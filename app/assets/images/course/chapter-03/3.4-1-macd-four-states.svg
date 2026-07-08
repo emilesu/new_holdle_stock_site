@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="420" viewBox="0 0 600 420">
+  <defs>
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="110%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#000" flood-opacity="0.06"/>
+    </filter>
+    <filter id="glow-a">
+      <feDropShadow dx="0" dy="0" stdDeviation="8" flood-color="#27AE60" flood-opacity="0.25"/>
+    </filter>
+  </defs>
+  <rect width="600" height="420" rx="8" fill="#FAFAFA" filter="url(#shadow)"/>
+
+  <text x="300" y="28" font-family="Noto Sans CJK SC, PingFang SC, sans-serif" font-size="16" font-weight="700" fill="#2C3E50" text-anchor="middle">四宫格：MACD的四种状态</text>
+
+  <!-- ===== 状态A（右上）= 凸显 ===== -->
+  <rect x="305" y="45" width="280" height="165" rx="8" fill="#27AE60" opacity="0.10"/>
+  <rect x="305" y="45" width="280" height="165" rx="8" fill="none" stroke="#27AE60" stroke-width="3" filter="url(#glow-a)"/>
+  <text x="445" y="72" font-family="Noto Sans CJK SC, PingFang SC, sans-serif" font-size="15" font-weight="700" fill="#27AE60" text-anchor="middle">★ 状态A（强势上涨期）</text>
+  <text x="445" y="96" font-family="Noto Sans CJK SC, PingFang SC, sans-serif" font-size="12" fill="#2C3E50" text-anchor="middle">双线在0轴上方</text>
+  <text x="445" y="118" font-family="Noto Sans CJK SC, PingFang SC, sans-serif" font-size="12" fill="#2C3E50" text-anchor="middle">柱子也在0轴上方</text>
+  <text x="445" y="148" font-family="Noto Sans CJK SC, PingFang SC, sans-serif" font-size="13" font-weight="700" fill="#27AE60" text-anchor="middle">← 我们要的！</text>
+  <text x="445" y="170" font-family="Noto Sans CJK SC, PingFang SC, sans-serif" font-size="10" fill="#999" text-anchor="middle">强势共振，准备入场</text>
+
+  <!-- ===== 状态B（左上）===== -->
+  <rect x="15" y="45" width="280" height="165" rx="8" fill="#E67E22" opacity="0.05"/>
+  <rect x="15" y="45" width="280" height="165" rx="8" fill="none" stroke="#E67E22" stroke-width="1.5" stroke-dasharray="4,2"/>
+  <text x="155" y="72" font-family="Noto Sans CJK SC, PingFang SC, sans-serif" font-size="14" font-weight="700" fill="#E67E22" text-anchor="middle">状态B（等待转强）</text>
+  <text x="155" y="96" font-family="Noto Sans CJK SC, PingFang SC, sans-serif" font-size="11" fill="#666" text-anchor="middle">双线在0轴上方</text>
+  <text x="155" y="118" font-family="Noto Sans CJK SC, PingFang SC, sans-serif" font-size="11" fill="#666" text-anchor="middle">柱子却在0轴下方</text>
+  <text x="155" y="148" font-family="Noto Sans CJK SC, PingFang SC, sans-serif" font-size="11" fill="#666" text-anchor="middle">说明：大趋势向好，但动能不足</text>
+  <text x="155" y="170" font-family="Noto Sans CJK SC, PingFang SC, sans-serif" font-size="10" fill="#999" text-anchor="middle">等柱子站上0轴再考虑</text>
+
+  <!-- ===== 状态C（左下）===== -->
+  <rect x="15" y="225" width="280" height="165" rx="8" fill="#E74C3C" opacity="0.05"/>
+  <rect x="15" y="225" width="280" height="165" rx="8" fill="none" stroke="#E74C3C" stroke-width="1.5" stroke-dasharray="4,2"/>
+  <text x="155" y="252" font-family="Noto Sans CJK SC, PingFang SC, sans-serif" font-size="14" font-weight="700" fill="#E74C3C" text-anchor="middle">状态C（反弹观察期）</text>
+  <text x="155" y="276" font-family="Noto Sans CJK SC, PingFang SC, sans-serif" font-size="11" fill="#666" text-anchor="middle">双线在0轴下方</text>
+  <text x="155" y="298" font-family="Noto Sans CJK SC, PingFang SC, sans-serif" font-size="11" fill="#666" text-anchor="middle">柱子却在0轴上方</text>
+  <text x="155" y="328" font-family="Noto Sans CJK SC, PingFang SC, sans-serif" font-size="11" fill="#666" text-anchor="middle">说明：短线反弹，大趋势未转强</text>
+  <text x="155" y="350" font-family="Noto Sans CJK SC, PingFang SC, sans-serif" font-size="10" fill="#999" text-anchor="middle">不碰，等双线也上来</text>
+
+  <!-- ===== 状态D（右下）===== -->
+  <rect x="305" y="225" width="280" height="165" rx="8" fill="#666" opacity="0.04"/>
+  <rect x="305" y="225" width="280" height="165" rx="8" fill="none" stroke="#666" stroke-width="1.5" stroke-dasharray="4,2"/>
+  <text x="445" y="252" font-family="Noto Sans CJK SC, PingFang SC, sans-serif" font-size="14" font-weight="700" fill="#666" text-anchor="middle">状态D（弱势下跌期）</text>
+  <text x="445" y="276" font-family="Noto Sans CJK SC, PingFang SC, sans-serif" font-size="11" fill="#666" text-anchor="middle">双线在0轴下方</text>
+  <text x="445" y="298" font-family="Noto Sans CJK SC, PingFang SC, sans-serif" font-size="11" fill="#666" text-anchor="middle">柱子也在0轴下方</text>
+  <text x="445" y="328" font-family="Noto Sans CJK SC, PingFang SC, sans-serif" font-size="11" fill="#666" text-anchor="middle">说明：双弱共振，不要碰</text>
+  <text x="445" y="350" font-family="Noto Sans CJK SC, PingFang SC, sans-serif" font-size="10" fill="#999" text-anchor="middle">等它慢慢走出弱势区</text>
+
+  <text x="300" y="410" font-family="Noto Sans CJK SC, PingFang SC, sans-serif" font-size="11" fill="#999" text-anchor="middle">只有状态A才是HOLDLE出手的信号，其他三种状态都不碰</text>
+</svg>

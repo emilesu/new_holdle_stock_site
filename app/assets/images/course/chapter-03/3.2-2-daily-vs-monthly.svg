@@ -1,0 +1,170 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="380" viewBox="0 0 600 380">
+  <defs>
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="110%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#000" flood-opacity="0.06"/>
+    </filter>
+  </defs>
+  <rect width="600" height="380" rx="8" fill="#FAFAFA" filter="url(#shadow)"/>
+
+  <text x="300" y="28" font-family="Noto Sans CJK SC, PingFang SC, sans-serif" font-size="16" font-weight="700" fill="#2C3E50" text-anchor="middle">同一只股票，日K和月K天差地别</text>
+
+  <!-- 上半：日K线 -->
+  <rect x="40" y="45" width="520" height="140" fill="#3498DB" opacity="0.03" rx="6"/>
+  <text x="60" y="65" font-family="Noto Sans CJK SC, PingFang SC, sans-serif" font-size="12" font-weight="700" fill="#3498DB" text-anchor="start">日K线</text>
+
+  <!-- 日K线模拟 - 密集杂乱 -->
+  <g transform="translate(60, 120)">
+    <rect x="0" y="-20" width="6" height="40" fill="#E74C3C" rx="1" opacity="0.6"/>
+    <line x1="3" y1="-30" x2="3" y2="22" stroke="#E74C3C" stroke-width="1" opacity="0.6"/>
+    <rect x="10" y="-10" width="6" height="30" fill="#27AE60" rx="1" opacity="0.6"/>
+    <line x1="13" y1="-25" x2="13" y2="22" stroke="#27AE60" stroke-width="1" opacity="0.6"/>
+    <rect x="20" y="-25" width="6" height="35" fill="#E74C3C" rx="1" opacity="0.6"/>
+    <line x1="23" y1="-30" x2="23" y2="10" stroke="#E74C3C" stroke-width="1" opacity="0.6"/>
+    <rect x="30" y="-5" width="6" height="25" fill="#27AE60" rx="1" opacity="0.6"/>
+    <line x1="33" y1="-20" x2="33" y2="22" stroke="#27AE60" stroke-width="1" opacity="0.6"/>
+    <rect x="40" y="-15" width="6" height="30" fill="#E74C3C" rx="1" opacity="0.6"/>
+    <line x1="43" y1="-28" x2="43" y2="18" stroke="#E74C3C" stroke-width="1" opacity="0.6"/>
+    <rect x="50" y="-8" width="6" height="28" fill="#27AE60" rx="1" opacity="0.6"/>
+    <line x1="53" y1="-22" x2="53" y2="22" stroke="#27AE60" stroke-width="1" opacity="0.6"/>
+    <rect x="60" y="-22" width="6" height="35" fill="#E74C3C" rx="1" opacity="0.6"/>
+    <line x1="63" y1="-30" x2="63" y2="15" stroke="#E74C3C" stroke-width="1" opacity="0.6"/>
+    <rect x="70" y="-12" width="6" height="30" fill="#27AE60" rx="1" opacity="0.6"/>
+    <line x1="73" y1="-25" x2="73" y2="20" stroke="#27AE60" stroke-width="1" opacity="0.6"/>
+    <rect x="80" y="-18" width="6" height="32" fill="#E74C3C" rx="1" opacity="0.6"/>
+    <line x1="83" y1="-28" x2="83" y2="16" stroke="#E74C3C" stroke-width="1" opacity="0.6"/>
+    <rect x="90" y="-3" width="6" height="22" fill="#27AE60" rx="1" opacity="0.6"/>
+    <line x1="93" y1="-18" x2="93" y2="22" stroke="#27AE60" stroke-width="1" opacity="0.6"/>
+    <rect x="100" y="-20" width="6" height="38" fill="#E74C3C" rx="1" opacity="0.6"/>
+    <line x1="103" y1="-30" x2="103" y2="20" stroke="#E74C3C" stroke-width="1" opacity="0.6"/>
+    <rect x="110" y="-10" width="6" height="28" fill="#27AE60" rx="1" opacity="0.6"/>
+    <line x1="113" y1="-22" x2="113" y2="20" stroke="#27AE60" stroke-width="1" opacity="0.6"/>
+    <rect x="120" y="-24" width="6" height="36" fill="#E74C3C" rx="1" opacity="0.6"/>
+    <line x1="123" y1="-32" x2="123" y2="14" stroke="#E74C3C" stroke-width="1" opacity="0.6"/>
+    <rect x="130" y="-6" width="6" height="24" fill="#27AE60" rx="1" opacity="0.6"/>
+    <line x1="133" y1="-20" x2="133" y2="22" stroke="#27AE60" stroke-width="1" opacity="0.6"/>
+    <rect x="140" y="-16" width="6" height="32" fill="#E74C3C" rx="1" opacity="0.6"/>
+    <line x1="143" y1="-28" x2="143" y2="18" stroke="#E74C3C" stroke-width="1" opacity="0.6"/>
+    <rect x="150" y="-8" width="6" height="26" fill="#27AE60" rx="1" opacity="0.6"/>
+    <line x1="153" y1="-20" x2="153" y2="20" stroke="#27AE60" stroke-width="1" opacity="0.6"/>
+    <rect x="160" y="-22" width="6" height="34" fill="#E74C3C" rx="1" opacity="0.6"/>
+    <line x1="163" y1="-30" x2="163" y2="14" stroke="#E74C3C" stroke-width="1" opacity="0.6"/>
+    <rect x="170" y="-5" width="6" height="22" fill="#27AE60" rx="1" opacity="0.6"/>
+    <line x1="173" y1="-18" x2="173" y2="22" stroke="#27AE60" stroke-width="1" opacity="0.6"/>
+    <rect x="180" y="-18" width="6" height="30" fill="#E74C3C" rx="1" opacity="0.6"/>
+    <line x1="183" y1="-28" x2="183" y2="14" stroke="#E74C3C" stroke-width="1" opacity="0.6"/>
+    <rect x="190" y="-10" width="6" height="28" fill="#27AE60" rx="1" opacity="0.6"/>
+    <line x1="193" y1="-22" x2="193" y2="20" stroke="#27AE60" stroke-width="1" opacity="0.6"/>
+    <rect x="200" y="-20" width="6" height="32" fill="#E74C3C" rx="1" opacity="0.6"/>
+    <line x1="203" y1="-30" x2="203" y2="12" stroke="#E74C3C" stroke-width="1" opacity="0.6"/>
+    <rect x="210" y="-3" width="6" height="20" fill="#27AE60" rx="1" opacity="0.6"/>
+    <line x1="213" y1="-18" x2="213" y2="22" stroke="#27AE60" stroke-width="1" opacity="0.6"/>
+    <rect x="220" y="-15" width="6" height="28" fill="#E74C3C" rx="1" opacity="0.6"/>
+    <line x1="223" y1="-25" x2="223" y2="16" stroke="#E74C3C" stroke-width="1" opacity="0.6"/>
+    <rect x="230" y="-8" width="6" height="24" fill="#27AE60" rx="1" opacity="0.6"/>
+    <line x1="233" y1="-20" x2="233" y2="20" stroke="#27AE60" stroke-width="1" opacity="0.6"/>
+    <rect x="240" y="-22" width="6" height="34" fill="#E74C3C" rx="1" opacity="0.6"/>
+    <line x1="243" y1="-30" x2="243" y2="14" stroke="#E74C3C" stroke-width="1" opacity="0.6"/>
+    <rect x="250" y="-5" width="6" height="22" fill="#27AE60" rx="1" opacity="0.6"/>
+    <line x1="253" y1="-18" x2="253" y2="20" stroke="#27AE60" stroke-width="1" opacity="0.6"/>
+    <rect x="260" y="-18" width="6" height="30" fill="#E74C3C" rx="1" opacity="0.6"/>
+    <line x1="263" y1="-28" x2="263" y2="14" stroke="#E74C3C" stroke-width="1" opacity="0.6"/>
+    <rect x="270" y="-10" width="6" height="26" fill="#27AE60" rx="1" opacity="0.6"/>
+    <line x1="273" y1="-22" x2="273" y2="20" stroke="#27AE60" stroke-width="1" opacity="0.6"/>
+    <rect x="280" y="-20" width="6" height="32" fill="#E74C3C" rx="1" opacity="0.6"/>
+    <line x1="283" y1="-30" x2="283" y2="12" stroke="#E74C3C" stroke-width="1" opacity="0.6"/>
+    <rect x="290" y="-3" width="6" height="20" fill="#27AE60" rx="1" opacity="0.6"/>
+    <line x1="293" y1="-18" x2="293" y2="22" stroke="#27AE60" stroke-width="1" opacity="0.6"/>
+    <rect x="300" y="-15" width="6" height="28" fill="#E74C3C" rx="1" opacity="0.6"/>
+    <line x1="303" y1="-25" x2="303" y2="16" stroke="#E74C3C" stroke-width="1" opacity="0.6"/>
+    <rect x="310" y="-8" width="6" height="24" fill="#27AE60" rx="1" opacity="0.6"/>
+    <line x1="313" y1="-20" x2="313" y2="20" stroke="#27AE60" stroke-width="1" opacity="0.6"/>
+    <rect x="320" y="-22" width="6" height="34" fill="#E74C3C" rx="1" opacity="0.6"/>
+    <line x1="323" y1="-30" x2="323" y2="14" stroke="#E74C3C" stroke-width="1" opacity="0.6"/>
+    <rect x="330" y="-5" width="6" height="22" fill="#27AE60" rx="1" opacity="0.6"/>
+    <line x1="333" y1="-18" x2="333" y2="20" stroke="#27AE60" stroke-width="1" opacity="0.6"/>
+    <rect x="340" y="-18" width="6" height="30" fill="#E74C3C" rx="1" opacity="0.6"/>
+    <line x1="343" y1="-28" x2="343" y2="14" stroke="#E74C3C" stroke-width="1" opacity="0.6"/>
+    <rect x="350" y="-10" width="6" height="28" fill="#27AE60" rx="1" opacity="0.6"/>
+    <line x1="353" y1="-22" x2="353" y2="20" stroke="#27AE60" stroke-width="1" opacity="0.6"/>
+    <rect x="360" y="-20" width="6" height="32" fill="#E74C3C" rx="1" opacity="0.6"/>
+    <line x1="363" y1="-30" x2="363" y2="12" stroke="#E74C3C" stroke-width="1" opacity="0.6"/>
+    <rect x="370" y="-3" width="6" height="20" fill="#27AE60" rx="1" opacity="0.6"/>
+    <line x1="373" y1="-18" x2="373" y2="22" stroke="#27AE60" stroke-width="1" opacity="0.6"/>
+    <rect x="380" y="-15" width="6" height="28" fill="#E74C3C" rx="1" opacity="0.6"/>
+    <line x1="383" y1="-25" x2="383" y2="16" stroke="#E74C3C" stroke-width="1" opacity="0.6"/>
+    <rect x="390" y="-8" width="6" height="24" fill="#27AE60" rx="1" opacity="0.6"/>
+    <line x1="393" y1="-20" x2="393" y2="20" stroke="#27AE60" stroke-width="1" opacity="0.6"/>
+    <rect x="400" y="-22" width="6" height="34" fill="#E74C3C" rx="1" opacity="0.6"/>
+    <line x1="403" y1="-30" x2="403" y2="14" stroke="#E74C3C" stroke-width="1" opacity="0.6"/>
+    <rect x="410" y="-5" width="6" height="22" fill="#27AE60" rx="1" opacity="0.6"/>
+    <line x1="413" y1="-18" x2="413" y2="20" stroke="#27AE60" stroke-width="1" opacity="0.6"/>
+    <rect x="420" y="-18" width="6" height="30" fill="#E74C3C" rx="1" opacity="0.6"/>
+    <line x1="423" y1="-28" x2="423" y2="14" stroke="#E74C3C" stroke-width="1" opacity="0.6"/>
+    <rect x="430" y="-10" width="6" height="26" fill="#27AE60" rx="1" opacity="0.6"/>
+    <line x1="433" y1="-22" x2="433" y2="20" stroke="#27AE60" stroke-width="1" opacity="0.6"/>
+    <rect x="440" y="-20" width="6" height="32" fill="#E74C3C" rx="1" opacity="0.6"/>
+    <line x1="443" y1="-30" x2="443" y2="12" stroke="#E74C3C" stroke-width="1" opacity="0.6"/>
+    <rect x="450" y="-3" width="6" height="20" fill="#27AE60" rx="1" opacity="0.6"/>
+    <line x1="453" y1="-18" x2="453" y2="22" stroke="#27AE60" stroke-width="1" opacity="0.6"/>
+  </g>
+  <text x="320" y="170" font-family="Noto Sans CJK SC, PingFang SC, sans-serif" font-size="10" fill="#999" text-anchor="middle">密密麻麻，涨跌1:1，看不清方向</text>
+
+  <!-- 分隔线 -->
+  <line x1="40" y1="190" x2="560" y2="190" stroke="#ddd" stroke-width="1" stroke-dasharray="4,2"/>
+
+  <!-- 下半：月K线 - 从左下到右上，上涨趋势 -->
+  <rect x="40" y="200" width="520" height="150" fill="#27AE60" opacity="0.03" rx="6"/>
+  <text x="60" y="220" font-family="Noto Sans CJK SC, PingFang SC, sans-serif" font-size="12" font-weight="700" fill="#27AE60" text-anchor="start">月K线</text>
+
+  <!-- 月K线 - 从左下到右上逐步攀升 -->
+  <g transform="translate(60, 310)">
+    <!-- 趋势参考线 -->
+    <line x1="10" y1="0" x2="450" y2="-145" stroke="#27AE60" stroke-width="1.5" stroke-dasharray="6,4" opacity="0.4"/>
+
+    <!-- 第1根月K -->
+    <rect x="0" y="-25" width="22" height="45" fill="#27AE60" rx="2" opacity="0.85"/>
+    <line x1="11" y1="-35" x2="11" y2="22" stroke="#27AE60" stroke-width="1.5"/>
+    <!-- 第2根月K -->
+    <rect x="35" y="-35" width="22" height="50" fill="#E74C3C" rx="2" opacity="0.85"/>
+    <line x1="46" y1="-48" x2="46" y2="18" stroke="#E74C3C" stroke-width="1.5"/>
+    <!-- 第3根月K -->
+    <rect x="70" y="-40" width="22" height="55" fill="#E74C3C" rx="2" opacity="0.85"/>
+    <line x1="81" y1="-55" x2="81" y2="18" stroke="#E74C3C" stroke-width="1.5"/>
+    <!-- 第4根月K（回调） -->
+    <rect x="105" y="-30" width="22" height="45" fill="#27AE60" rx="2" opacity="0.85"/>
+    <line x1="116" y1="-42" x2="116" y2="18" stroke="#27AE60" stroke-width="1.5"/>
+    <!-- 第5根月K -->
+    <rect x="140" y="-50" width="22" height="55" fill="#E74C3C" rx="2" opacity="0.85"/>
+    <line x1="151" y1="-65" x2="151" y2="8" stroke="#E74C3C" stroke-width="1.5"/>
+    <!-- 第6根月K -->
+    <rect x="175" y="-55" width="22" height="60" fill="#E74C3C" rx="2" opacity="0.85"/>
+    <line x1="186" y1="-72" x2="186" y2="8" stroke="#E74C3C" stroke-width="1.5"/>
+    <!-- 第7根月K（回调） -->
+    <rect x="210" y="-45" width="22" height="50" fill="#27AE60" rx="2" opacity="0.85"/>
+    <line x1="221" y1="-58" x2="221" y2="8" stroke="#27AE60" stroke-width="1.5"/>
+    <!-- 第8根月K -->
+    <rect x="245" y="-65" width="22" height="65" fill="#E74C3C" rx="2" opacity="0.85"/>
+    <line x1="256" y1="-82" x2="256" y2="2" stroke="#E74C3C" stroke-width="1.5"/>
+    <!-- 第9根月K -->
+    <rect x="280" y="-70" width="22" height="65" fill="#E74C3C" rx="2" opacity="0.85"/>
+    <line x1="291" y1="-88" x2="291" y2="-2" stroke="#E74C3C" stroke-width="1.5"/>
+    <!-- 第10根月K -->
+    <rect x="315" y="-80" width="22" height="70" fill="#E74C3C" rx="2" opacity="0.85"/>
+    <line x1="326" y1="-100" x2="326" y2="-8" stroke="#E74C3C" stroke-width="1.5"/>
+    <!-- 第11根月K -->
+    <rect x="350" y="-90" width="22" height="75" fill="#E74C3C" rx="2" opacity="0.85"/>
+    <line x1="361" y1="-112" x2="361" y2="-12" stroke="#E74C3C" stroke-width="1.5"/>
+    <!-- 第12根月K -->
+    <rect x="385" y="-100" width="22" height="80" fill="#E74C3C" rx="2" opacity="0.85"/>
+    <line x1="396" y1="-125" x2="396" y2="-18" stroke="#E74C3C" stroke-width="1.5"/>
+    <!-- 第13根月K -->
+    <rect x="420" y="-115" width="22" height="85" fill="#E74C3C" rx="2" opacity="0.85"/>
+    <line x1="431" y1="-140" x2="431" y2="-28" stroke="#E74C3C" stroke-width="1.5"/>
+  </g>
+  <text x="320" y="340" font-family="Noto Sans CJK SC, PingFang SC, sans-serif" font-size="10" fill="#999" text-anchor="middle">大方向清晰，上涨趋势一目了然</text>
+
+  <!-- 标注箭头 -->
+  <path d="M 480 150 Q 500 150 500 200" fill="none" stroke="#3498DB" stroke-width="1.5" stroke-dasharray="4,2"/>
+  <polygon points="500,205 495,198 505,198" fill="#3498DB"/>
+  <text x="515" y="180" font-family="Noto Sans CJK SC, PingFang SC, sans-serif" font-size="10" fill="#3498DB" text-anchor="start">切换到月K</text>
+</svg>
