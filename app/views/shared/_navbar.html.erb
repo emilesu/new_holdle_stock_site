@@ -34,9 +34,9 @@
         交易课
         <%= tag.span class: "hl-nav-link-active-dot", aria: { hidden: "true" } if controller_name == 'courses' %>
       <% end %>
-      <%= link_to join_path, class: "hl-nav-link #{'hl-nav-link-active' if controller_name == 'pages'}" do %>
+      <%= link_to join_path, class: "hl-nav-link #{'hl-nav-link-active' if controller_name == 'pages' && action_name == 'join'}" do %>
         加入我们
-        <%= tag.span class: "hl-nav-link-active-dot", aria: { hidden: "true" } if controller_name == 'pages' %>
+        <%= tag.span class: "hl-nav-link-active-dot", aria: { hidden: "true" } if controller_name == 'pages' && action_name == 'join' %>
       <% end %>
       <%= link_to "#", class: "hl-nav-link" do %>
         关于
@@ -141,7 +141,7 @@
       <div class="space-y-1">
         <%= link_to "金字塔", pyramid_path, class: "block px-4 py-2 text-hl-14 rounded #{controller_name == 'pyramids' ? 'bg-bg-mute text-ink font-medium border-l-2 border-profit' : 'text-muted hover:text-ink hover:bg-bg-mute'}" %>
         <%= link_to "交易课", courses_path, class: "block px-4 py-2 text-hl-14 rounded #{controller_name == 'courses' ? 'bg-bg-mute text-ink font-medium border-l-2 border-profit' : 'text-muted hover:text-ink hover:bg-bg-mute'}" %>
-        <%= link_to "加入我们", join_path, class: "block px-4 py-2 text-hl-14 rounded #{controller_name == 'pages' ? 'bg-bg-mute text-ink font-medium border-l-2 border-profit' : 'text-muted hover:text-ink hover:bg-bg-mute'}" %>
+        <%= link_to "加入我们", join_path, class: "block px-4 py-2 text-hl-14 rounded #{controller_name == 'pages' && action_name == 'join' ? 'bg-bg-mute text-ink font-medium border-l-2 border-profit' : 'text-muted hover:text-ink hover:bg-bg-mute'}" %>
         <%= link_to "关于", "#", class: "block px-4 py-2 text-hl-14 text-muted hover:text-ink hover:bg-bg-mute rounded" %>
         <%= link_to video_path, class: "block px-4 py-2 text-hl-14 rounded #{controller_name == 'pages' && action_name == 'video' ? 'bg-bg-mute text-ink font-medium border-l-2 border-profit' : 'text-muted hover:text-ink hover:bg-bg-mute'} flex items-center" do %>
           视频分享
