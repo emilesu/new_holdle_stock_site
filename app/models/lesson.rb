@@ -31,7 +31,18 @@ class Lesson < ApplicationRecord
 
   def markdown_html
     return '' if content.blank?
-    Commonmarker.to_html(content, options: { unsafe: true })
+    html = Commonmarker.to_html(content, options: { unsafe: true })
+    html.gsub!(/<img([^>]+)src="([^"]+)"/) do |match|
+      attrs = Regexp.last_match(1)
+      src = Regexp.last_match(2)
+      if src.start_with?('http://', 'https://', '/')
+        match
+      else
+        asset_path = ActionController::Base.helpers.image_path(src)
+        "<img#{attrs}src=\"#{asset_path}\""
+      end
+    end
+    html
   rescue => e
     Rails.logger.error "Markdown rendering error: #{e.message}"
     content
