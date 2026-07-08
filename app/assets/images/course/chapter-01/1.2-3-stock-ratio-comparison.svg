@@ -6,21 +6,21 @@
   </defs>
   <rect width="700" height="460" fill="#FAFAFA" rx="8"/>
   <text x="350" y="32" text-anchor="middle" font-size="15" font-weight="bold" fill="#333">四只股票在不同时间周期的涨跌比对比</text>
-  
+
   <!-- 坐标轴 -->
   <line x1="70" y1="400" x2="670" y2="400" stroke="#666" stroke-width="1.5"/>
   <line x1="70" y1="400" x2="70" y2="50" stroke="#666" stroke-width="1.5"/>
-  
+
   <!-- Y轴标签 -->
   <text x="65" y="400" text-anchor="end" font-size="10" fill="#666">0:1</text>
   <text x="65" y="325" text-anchor="end" font-size="10" fill="#666">1:1</text>
   <text x="65" y="250" text-anchor="end" font-size="10" fill="#666">2:1</text>
   <text x="65" y="175" text-anchor="end" font-size="10" fill="#666">3:1</text>
   <text x="65" y="100" text-anchor="end" font-size="10" fill="#666">4:1</text>
-  
+
   <!-- 分组柱状图 - 4组股票，每组4个周期 -->
   <!-- 日线 (浅蓝) 月线 (中蓝) 季线 (深蓝) 年线 (深绿)  比率<1用红色系 -->
-  
+
   <!-- 茅台组 x=100 -->
   <!-- 1:1 → y=325 h=75 -->
   <rect x="95" y="325" width="18" height="75" fill="#85C1E9" rx="2"/>
@@ -31,7 +31,7 @@
   <!-- 2.3:1 → y=227.5 h=172.5 -->
   <rect x="158" y="227.5" width="18" height="172.5" fill="#1E8449" rx="2"/>
   <text x="135" y="418" text-anchor="middle" font-size="11" fill="#333" font-weight="bold">茅台</text>
-  
+
   <!-- 苹果组 x=220 -->
   <!-- 1.1:1 → y=317.5 h=82.5 -->
   <rect x="215" y="317.5" width="18" height="82.5" fill="#85C1E9" rx="2"/>
@@ -42,7 +42,7 @@
   <!-- 3.7:1 → y=122.5 h=277.5 -->
   <rect x="278" y="122.5" width="18" height="277.5" fill="#1E8449" rx="2"/>
   <text x="255" y="418" text-anchor="middle" font-size="11" fill="#333" font-weight="bold">苹果</text>
-  
+
   <!-- 中石化组 x=370 -->
   <!-- 1:1 → y=325 h=75 -->
   <rect x="365" y="325" width="18" height="75" fill="#85C1E9" rx="2"/>
@@ -53,7 +53,7 @@
   <!-- 1:1 → y=325 h=75 -->
   <rect x="428" y="325" width="18" height="75" fill="#1E8449" rx="2"/>
   <text x="415" y="418" text-anchor="middle" font-size="11" fill="#333" font-weight="bold">中国石化</text>
-  
+
   <!-- 华阳新材组 x=520 -->
   <!-- 1.1:1 → y=317.5 h=82.5 -->
   <rect x="515" y="317.5" width="18" height="82.5" fill="#85C1E9" rx="2"/>
@@ -64,7 +64,7 @@
   <!-- 0.8:1 → y=340 h=60（比率<1，用红色标记） -->
   <rect x="578" y="340" width="18" height="60" fill="#E74C3C" rx="2"/>
   <text x="555" y="418" text-anchor="middle" font-size="11" fill="#333" font-weight="bold">华阳新材</text>
-  
+
   <!-- 图例 -->
   <rect x="90" y="435" width="10" height="10" fill="#85C1E9" rx="1"/>
   <text x="105" y="444" font-size="10" fill="#666">日线</text>
@@ -76,7 +76,7 @@
   <text x="265" y="444" font-size="10" fill="#666">年线</text>
   <rect x="330" y="435" width="10" height="10" fill="#F0B27A" rx="1"/>
   <text x="345" y="444" font-size="10" fill="#666">比率&lt;1（跌多涨少）</text>
-  
+
   <!-- 说明 -->
-  <text x="540" y="444" font-size="10" fill="#999">柱高=涨跌比，越高涨越占优，红色=跌多涨少</text>
+  <text x="460" y="444" font-size="10" fill="#999">柱高=涨跌比，越高涨越占优，红色=跌多涨少</text>
 </svg>
