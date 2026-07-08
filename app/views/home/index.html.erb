@@ -22,10 +22,10 @@
       答案没变，人胖了点。
     </p>
     <div class="flex flex-wrap gap-3">
-      <a href="#" class="hl-btn hl-btn-primary">看我的回归视频</a>
+      <%= link_to "看我的回归视频", video_path, class: "hl-btn hl-btn-primary" %>
       <%= link_to "读老文章 / 课程", courses_path, class: "hl-btn hl-btn-line" %>
-      <a href="#" class="hl-btn hl-btn-line">用 HOLD LE 工具</a>
-      <a href="#" class="hl-btn hl-btn-line">给大苏写信</a>
+      <%= link_to "用 HOLD LE 工具", pyramid_path, class: "hl-btn hl-btn-line" %>
+      <button data-action="click->message#open" class="hl-btn hl-btn-line">给大苏写信</button>
     </div>
   </div>
 </section>
@@ -180,20 +180,22 @@
           <tbody>
             <%# 数据硬编码，不依赖 controller 变量 %>
             <% cases = [
-              { name: "贵州茅台", code: "600519.SH", range: "2016.05 → 2018.08", ret: "+168.2%", note: '一笔最经典的"等状态A再买"' },
+              { name: "贵州茅台", code: "600519.SH", range: "2016.05 → 2018.08", ret: "+125.3%", note: '一笔最经典的"等状态A再买"' },
               { name: "海康威视", code: "002415.SZ", range: "2017.03 → 2018.02", ret: "+88.8%",  note: "得概率优势，守株待兔" },
-              { name: "伟星新材", code: "002372.SZ", range: "2016.07 → 2018.09", ret: "+69.5%",  note: "建材行业隐藏的优等生" },
-              { name: "爱尔眼科", code: "300015.SZ", range: "2017.11 → 已结案",   ret: "+52.3%",  note: '医疗器械的"长潜"样本' },
-              { name: "海天味业", code: "603288.SH", range: "2017.05 → 已结案",   ret: "+44.6%",  note: "食品消费类龙头" },
-              { name: "上海机场", code: "600009.SH", range: "2017.05 → 已结案",   ret: "+38.1%",  note: "现金流稳定的公用事业股" },
-              { name: "Apple 苹果", code: "AAPL",    range: "2017.03 → 2018.12", ret: "+15.0%",  note: "稳住不输 + 止损位控制" },
-              { name: "Apple 苹果", code: "AAPL",    range: "2014.05 → 2015.08", ret: "+23.4%",  note: "美股样本，按规则完整执行" }
+              { name: "伟星新材", code: "002372.SZ", range: "2016.07 → 2018.09", ret: "+64.5%",  note: "建材行业隐藏的优等生" },
+              { name: "爱尔眼科", code: "300015.SZ", range: "2017.11 → 2018.08", ret: "+52.3%",  note: '医疗器械的"长潜"样本' },
+              { name: "海天味业", code: "603288.SH", range: "2017.05 → 2020.02", ret: "+128.3%",  note: "食品消费类龙头" },
+              { name: "谷歌", code: "GOOG", range: "2020.07 → 2022.01",  ret: "+74.6%",  note: "科技巨头，盈利能力高" },
+              { name: "英伟达", code: "NVDA",    range: "2023.05 → 2025.01", ret: "+287.0%",  note: "全球市值最高的公司" },
+              { name: "台积电", code: "TSM",    range: "2023.11 → 2025.02", ret: "+62%",  note: "垄断芯片市场，每股收益极高" }
             ] %>
             <% cases.each do |c| %>
               <tr>
                 <td>
-                  <span class="font-semibold text-ink"><%= c[:name] %></span>
-                  <span class="text-muted-4 text-hl-12 ml-1.5"><%= c[:code] %></span>
+                  <%= link_to stock_path(c[:code]), class: "font-semibold text-ink hover:text-profit transition-colors" do %>
+                    <%= c[:name] %>
+                    <span class="text-muted-4 text-hl-12 ml-1.5"><%= c[:code] %></span>
+                  <% end %>
                 </td>
                 <td><%= c[:range] %></td>
                 <td><span class="profit-up profit-up-before"><%= c[:ret] %></span></td>
