@@ -69,8 +69,7 @@
           <div class="divide-y divide-line-soft">
             <% chapter.lessons.published.sorted.each do |lesson| %>
               <%= link_to lesson_path(lesson), class: 'flex items-center gap-3 px-6 sm:px-8 py-3 hover:bg-bg-soft transition-colors' do %>
-                <span class="w-5 text-hl-12 text-muted-4 font-mono text-right shrink-0"><%= lesson.sort_num %></span>
-                <span class="flex-1 text-hl-13 text-muted hover:text-ink transition-colors min-w-0"><%= lesson.title %></span>
+                <span class="flex-1 text-hl-13 text-muted hover:text-ink transition-colors min-w-0 font-semibold"><%= lesson.title %></span>
                 <% if lesson.member_only? %>
                   <span class="shrink-0 inline-flex px-2 py-0.5 text-hl-11 font-medium bg-bg-mute text-muted-3 border border-line-soft rounded">会员</span>
                 <% else %>
