@@ -15,7 +15,7 @@
             class="login-tab-btn login-tab-btn-active flex-1 py-3 text-hl-13 font-medium transition-colors"
             data-tab="quick"
             data-login-tabs-target="tab"
-            data-action="login-tabs#switch"
+            data-action="login-tabs#switchTab"
           >
             快捷登录
           </button>
@@ -23,7 +23,7 @@
             class="login-tab-btn flex-1 py-3 text-hl-13 font-medium transition-colors"
             data-tab="password"
             data-login-tabs-target="tab"
-            data-action="login-tabs#switch"
+            data-action="login-tabs#switchTab"
           >
             账号密码登录
           </button>
@@ -31,13 +31,13 @@
 
         <div class="login-tabs-content mt-6">
           <div id="tab-quick" class="login-tab-panel" data-login-tabs-target="panel">
-            <div class="flex justify-center gap-6">
+            <div class="flex justify-center gap-8">
               <%= button_to "", user_wechat_omniauth_authorize_path, data: { turbo: false },
                 class: "login-social-btn login-social-btn-square login-social-wechat" %>
               <%= button_to "", user_google_oauth2_omniauth_authorize_path, data: { turbo: false },
                 class: "login-social-btn login-social-btn-square login-social-google" %>
             </div>
-            <div class="flex justify-center gap-8 mt-3">
+            <div class="flex justify-center gap-8 mt-4">
               <span class="text-hl-13 text-muted-3">微信</span>
               <span class="text-hl-13 text-muted-3">Google</span>
             </div>

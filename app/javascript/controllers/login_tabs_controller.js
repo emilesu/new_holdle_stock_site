@@ -7,7 +7,7 @@ export default class extends Controller {
     this.showPanel(this.data.get("default") || "quick")
   }
 
-  switch(event) {
+  switchTab(event) {
     event.preventDefault()
     const tabId = event.currentTarget.dataset.tab
     if (tabId) {

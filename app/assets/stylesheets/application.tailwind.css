@@ -604,14 +604,14 @@
     border-radius: 1px;
   }
 
+  .login-tabs-content {
+    min-height: 220px;
+  }
   .login-tab-panel {
-    transition: opacity 0.25s ease, transform 0.25s ease;
+    transition: opacity 0.25s ease;
   }
   .login-tab-panel.hidden {
-    opacity: 0;
-    transform: translateY(-8px);
-    pointer-events: none;
-    position: absolute;
+    display: none;
   }
 
   /* ==================== 社交媒体登录按钮 ==================== */
@@ -635,20 +635,20 @@
   }
 
   .login-social-btn-square {
-    width: 80px;
-    height: 80px;
+    width: 160px;
+    height: 160px;
     padding: 0;
     border-radius: 10px;
   }
 
   .login-social-btn-square.login-social-wechat::before {
-    width: 44px;
-    height: 44px;
+    width: 88px;
+    height: 88px;
   }
 
   .login-social-btn-square.login-social-google::before {
-    width: 44px;
-    height: 44px;
+    width: 88px;
+    height: 88px;
   }
 
   .login-social-wechat::before {
