@@ -21,3 +21,6 @@ application.register("market-sector", MarketSectorController)
 
 import PyramidController from "./pyramid_controller"
 application.register("pyramid", PyramidController)
+
+import LoginTabsController from "./login_tabs_controller"
+application.register("login-tabs", LoginTabsController)
