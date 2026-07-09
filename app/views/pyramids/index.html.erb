@@ -65,12 +65,17 @@
             <div class="flex items-center gap-2">
               <label class="text-hl-13 font-medium text-muted-2 w-12 shrink-0">行业</label>
               <div id="sector-container">
-                <select name="sector" id="pyramid-sector" class="px-3 py-2 text-hl-13 border border-line rounded focus:border-link w-40 bg-white">
-                  <option value="">全部</option>
+                <select name="sector" id="pyramid-sector" class="px-3 py-2 text-hl-13 border border-line rounded focus:border-link w-40 bg-white" <%= 'disabled' unless @can_select_sector %>>
+                  <% if @can_select_sector %>
+                    <option value="">全部</option>
+                  <% end %>
                   <% @sectors.each do |sector| %>
                     <option value="<%= sector %>" <%= 'selected' if @sector == sector %>><%= sector %></option>
                   <% end %>
                 </select>
+                <% unless @can_select_sector %>
+                  <span class="text-hl-11 text-muted-3 ml-2">会员可查看其他行业</span>
+                <% end %>
               </div>
             </div>
           </div>
@@ -136,6 +141,7 @@ document.addEventListener('turbo:load', function initPyramidPage() {
   let lastHoveredStockId = null;
   let pendingRequestId = 0;
   let hoverDebounceTimer = null;
+  const canSelectSector = <%= @can_select_sector ? 'true' : 'false' %>;
 
   const initChart = (baseData, compareData = null) => {
     if (chartInstance) {
@@ -402,6 +408,10 @@ document.addEventListener('turbo:load', function initPyramidPage() {
   };
 
   const handleSectorChange = function() {
+    if (!canSelectSector) {
+      this.value = '公用事业';
+      return;
+    }
     const market = document.getElementById('pyramid-market').value;
     const sector = this.value;
     updateList(market, sector);
@@ -409,10 +419,17 @@ document.addEventListener('turbo:load', function initPyramidPage() {
 
   document.getElementById('pyramid-market').addEventListener('change', function() {
     const market = this.value;
-    document.getElementById('pyramid-sector').value = '';
+    if (!canSelectSector) {
+      setTimeout(() => {
+        const sectorSelect = document.getElementById('pyramid-sector');
+        if (sectorSelect) sectorSelect.value = '公用事业';
+      }, 50);
+    } else {
+      document.getElementById('pyramid-sector').value = '';
+    }
     pendingRequestId++;
     updateSectors(market);
-    updateList(market, '');
+    updateList(market, canSelectSector ? '' : '公用事业');
   });
 
   // 无限滚动加载（v3 - 使用 JS 变量维护页码，避开 Turbo replace 不生效的 Bug）

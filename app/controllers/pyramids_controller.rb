@@ -1,11 +1,10 @@
 class PyramidsController < ApplicationController
-  before_action :authenticate_user!
-
   PER_PAGE = 20
 
   def index
     @market = params[:market] || 'CN'
-    @sector = params[:sector]
+    @can_select_sector = user_signed_in? && current_user.is_member?
+    @sector = @can_select_sector ? (params[:sector] || '') : '公用事业'
     @page = params[:page] ? params[:page].to_i : 1
 
     stocks = Stock.where(market: @market)
@@ -42,6 +41,7 @@ class PyramidsController < ApplicationController
 
   def update_sectors
     @market = params[:market] || 'CN'
+    @can_select_sector = user_signed_in? && current_user.is_member?
     
     @sectors = Rails.cache.fetch("pyramid_sectors_#{@market}_#{Date.current}", expires_in: 1.hour) do
       Stock.where(market: @market).where.not(sector: nil).distinct.pluck(:sector).sort
@@ -54,7 +54,8 @@ class PyramidsController < ApplicationController
 
   def update_list
     @market = params[:market] || 'CN'
-    @sector = params[:sector]
+    @can_select_sector = user_signed_in? && current_user.is_member?
+    @sector = @can_select_sector ? (params[:sector] || '') : '公用事业'
     @page = 1
 
     stocks = Stock.where(market: @market)
@@ -94,11 +95,4 @@ class PyramidsController < ApplicationController
     end
   end
 
-  private
-
-  def authenticate_user!
-    unless user_signed_in?
-      redirect_to new_user_session_path, alert: '请先登录'
-    end
-  end
 end

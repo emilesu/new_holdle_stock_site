@@ -1,8 +1,10 @@
 <%= turbo_stream.replace 'pyramid-sector' do %>
-<select name="sector" id="pyramid-sector" class="px-3 py-2 text-hl-13 border border-line rounded focus:border-link w-40 bg-white">
-  <option value="">全部</option>
+<select name="sector" id="pyramid-sector" class="px-3 py-2 text-hl-13 border border-line rounded focus:border-link w-40 bg-white" <%= 'disabled' unless @can_select_sector %>>
+  <% if @can_select_sector %>
+    <option value="">全部</option>
+  <% end %>
   <% @sectors.each do |sector| %>
-    <option value="<%= sector %>"><%= sector %></option>
+    <option value="<%= sector %>" <%= 'selected' if !@can_select_sector && sector == '公用事业' %>><%= sector %></option>
   <% end %>
 </select>
 <% end %>
