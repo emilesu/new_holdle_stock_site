@@ -635,20 +635,20 @@
   }
 
   .login-social-btn-square {
-    width: 160px;
-    height: 160px;
+    width: 108px;
+    height: 108px;
     padding: 0;
     border-radius: 10px;
   }
 
   .login-social-btn-square.login-social-wechat::before {
-    width: 88px;
-    height: 88px;
+    width: 60px;
+    height: 60px;
   }
 
   .login-social-btn-square.login-social-google::before {
-    width: 88px;
-    height: 88px;
+    width: 60px;
+    height: 60px;
   }
 
   .login-social-wechat::before {
