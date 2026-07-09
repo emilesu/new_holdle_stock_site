@@ -38,8 +38,13 @@ class Lesson < ApplicationRecord
       if src.start_with?('http://', 'https://', '/')
         match
       else
-        asset_path = ActionController::Base.helpers.image_path(src)
-        "<img#{attrs}src=\"#{asset_path}\""
+        begin
+          asset_path = ActionController::Base.helpers.image_path(src)
+          "<img#{attrs}src=\"#{asset_path}\""
+        rescue
+          Rails.logger.warn "Missing asset: #{src}"
+          match
+        end
       end
     end
     html.gsub!(/<pre\s+style="[^"]*"/, '<pre')
