@@ -9,7 +9,7 @@ export default class extends Controller {
 
   switch(event) {
     event.preventDefault()
-    const tabId = event.target.dataset.tab
+    const tabId = event.currentTarget.dataset.tab
     if (tabId) {
       this.showPanel(tabId)
     }
