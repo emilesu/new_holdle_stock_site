@@ -121,7 +121,6 @@
         </div>
       <% else %>
         <%= link_to '登录', new_user_session_path, class: "hl-nav-link text-hl-13 hidden md:inline-flex" %>
-        <%= link_to '注册', new_user_registration_path, class: "hl-btn hl-btn-primary text-hl-13 !py-[6px] !px-[14px] hidden md:inline-flex" %>
       <% end %>
 
       <%# ----- 移动端菜单按钮 ----- %>
@@ -177,8 +176,7 @@
           </div>
         <% else %>
           <div class="flex gap-3">
-            <%= link_to '登录', new_user_session_path, class: "flex-1 px-4 py-2 text-center text-hl-13 text-muted border border-line rounded hover:bg-bg-mute" %>
-            <%= link_to '注册', new_user_registration_path, class: "flex-1 px-4 py-2 text-center text-hl-13 bg-ink text-white rounded hover:opacity-90" %>
+            <%= link_to '登录', new_user_session_path, class: "flex-1 px-4 py-2 text-center text-hl-13 bg-ink text-white rounded hover:opacity-90" %>
           </div>
         <% end %>
       </div>

@@ -7,59 +7,94 @@
         <span class="text-hl-11 text-muted-5 tracking-wide-2 font-medium block mb-3">HOLD LE</span>
         <h1 class="text-hl-22 font-semibold text-ink">欢迎回来</h1>
         <p class="mt-2 text-hl-13 text-muted-3">请登录您的账号</p>
-        <%= button_to "微信登录", user_wechat_omniauth_authorize_path, data: { turbo: false },
-        class: "text-link hover:text-link-hover font-medium transition-colors bg-transparent border-none cursor-pointer inline-block p-0" %>
-        <%= button_to "Google登录", user_google_oauth2_omniauth_authorize_path, data: { turbo: false },
-        class: "text-link hover:text-link-hover font-medium transition-colors bg-transparent border-none cursor-pointer inline-block p-0" %>
-
       </div>
 
-      <%= form_for(resource, as: resource_name, url: session_path(resource_name)) do |f| %>
-        <% if resource.errors.any? %>
-          <div class="mb-5 p-4 border border-line-soft rounded bg-bg-soft">
-            <p class="text-hl-13 font-medium text-profit mb-2"><%= pluralize(resource.errors.count, "个") %> 错误：</p>
-            <ul class="list-disc pl-5 text-hl-12 text-profit space-y-1">
-              <% resource.errors.full_messages.each do |msg| %>
-                <li><%= msg %></li>
-              <% end %>
-            </ul>
-          </div>
-        <% end %>
+      <div class="login-tabs" data-controller="login-tabs" data-login-tabs-default-value="quick">
+        <div class="login-tabs-header flex border-b border-line">
+          <button
+            class="login-tab-btn login-tab-btn-active flex-1 py-3 text-hl-13 font-medium transition-colors"
+            data-tab="quick"
+            data-login-tabs-target="tab"
+            data-action="login-tabs#switch"
+          >
+            快捷登录
+          </button>
+          <button
+            class="login-tab-btn flex-1 py-3 text-hl-13 font-medium transition-colors"
+            data-tab="password"
+            data-login-tabs-target="tab"
+            data-action="login-tabs#switch"
+          >
+            账号密码登录
+          </button>
+        </div>
 
-        <div class="space-y-4">
-          <div>
-            <%= f.label :email, class: "block text-hl-13 font-medium text-muted mb-1.5" %>
-            <%= f.email_field :email, autofocus: true, autocomplete: "email", placeholder: "your@email.com",
-              class: "w-full px-4 py-2.5 border border-line rounded text-hl-14 text-ink placeholder:text-muted-4 bg-white focus:outline-none focus:border-muted-3 transition-colors" %>
-          </div>
-
-          <div>
-            <%= f.label :password, class: "block text-hl-13 font-medium text-muted mb-1.5" %>
-            <%= f.password_field :password, autocomplete: "current-password", placeholder: "请输入密码",
-              class: "w-full px-4 py-2.5 border border-line rounded text-hl-14 text-ink placeholder:text-muted-4 bg-white focus:outline-none focus:border-muted-3 transition-colors" %>
-          </div>
-
-          <% if devise_mapping.rememberable? %>
-            <div class="flex items-center justify-between">
-              <label class="flex items-center gap-2 cursor-pointer">
-                <%= f.check_box :remember_me, class: "w-4 h-4 border border-line rounded text-ink focus:ring-0 focus:outline-none" %>
-                <span class="text-hl-13 text-muted-3">保持登录状态</span>
-              </label>
-              <%= link_to "忘记密码？", new_password_path(resource_name), class: "text-hl-13 text-link hover:text-link-hover transition-colors" %>
+        <div class="login-tabs-content mt-6">
+          <div id="tab-quick" class="login-tab-panel" data-login-tabs-target="panel">
+            <div class="space-y-3">
+              <%= button_to "微信登录", user_wechat_omniauth_authorize_path, data: { turbo: false },
+                class: "login-social-btn login-social-wechat flex items-center justify-center gap-3 w-full py-3 border border-line rounded text-hl-14 text-ink hover:bg-bg-mute transition-colors" %>
+              <%= button_to "Google登录", user_google_oauth2_omniauth_authorize_path, data: { turbo: false },
+                class: "login-social-btn login-social-google flex items-center justify-center gap-3 w-full py-3 border border-line rounded text-hl-14 text-ink hover:bg-bg-mute transition-colors" %>
             </div>
-          <% end %>
+            <div class="mt-6 pt-5 border-t border-line-soft text-center">
+              <p class="text-hl-13 text-muted-3">
+                没有账号？
+                <%= link_to "立即注册", new_registration_path(resource_name), class: "text-link hover:text-link-hover font-medium transition-colors" %>
+              </p>
+            </div>
+          </div>
 
-          <div class="pt-2">
-            <%= f.submit "登录", class: "hl-btn hl-btn-primary w-full text-center" %>
+          <div id="tab-password" class="login-tab-panel hidden" data-login-tabs-target="panel">
+            <%= form_for(resource, as: resource_name, url: session_path(resource_name)) do |f| %>
+              <% if resource.errors.any? %>
+                <div class="mb-5 p-4 border border-line-soft rounded bg-bg-soft">
+                  <p class="text-hl-13 font-medium text-profit mb-2"><%= pluralize(resource.errors.count, "个") %> 错误：</p>
+                  <ul class="list-disc pl-5 text-hl-12 text-profit space-y-1">
+                    <% resource.errors.full_messages.each do |msg| %>
+                      <li><%= msg %></li>
+                    <% end %>
+                  </ul>
+                </div>
+              <% end %>
+
+              <div class="space-y-4">
+                <div>
+                  <%= f.label :email, class: "block text-hl-13 font-medium text-muted mb-1.5" %>
+                  <%= f.email_field :email, autofocus: true, autocomplete: "email", placeholder: "your@email.com",
+                    class: "w-full px-4 py-2.5 border border-line rounded text-hl-14 text-ink placeholder:text-muted-4 bg-white focus:outline-none focus:border-muted-3 transition-colors" %>
+                </div>
+
+                <div>
+                  <%= f.label :password, class: "block text-hl-13 font-medium text-muted mb-1.5" %>
+                  <%= f.password_field :password, autocomplete: "current-password", placeholder: "请输入密码",
+                    class: "w-full px-4 py-2.5 border border-line rounded text-hl-14 text-ink placeholder:text-muted-4 bg-white focus:outline-none focus:border-muted-3 transition-colors" %>
+                </div>
+
+                <% if devise_mapping.rememberable? %>
+                  <div class="flex items-center justify-between">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                      <%= f.check_box :remember_me, class: "w-4 h-4 border border-line rounded text-ink focus:ring-0 focus:outline-none" %>
+                      <span class="text-hl-13 text-muted-3">保持登录状态</span>
+                    </label>
+                    <%= link_to "忘记密码？", new_password_path(resource_name), class: "text-hl-13 text-link hover:text-link-hover transition-colors" %>
+                  </div>
+                <% end %>
+
+                <div class="pt-2">
+                  <%= f.submit "登录", class: "hl-btn hl-btn-primary w-full text-center" %>
+                </div>
+              </div>
+            <% end %>
+
+            <div class="mt-6 pt-5 border-t border-line-soft text-center">
+              <p class="text-hl-13 text-muted-3">
+                还没有账号？
+                <%= link_to "立即注册", new_registration_path(resource_name), class: "text-link hover:text-link-hover font-medium transition-colors" %>
+              </p>
+            </div>
           </div>
         </div>
-      <% end %>
-
-      <div class="mt-7 pt-5 border-t border-line-soft text-center">
-        <p class="text-hl-13 text-muted-3">
-          还没有账号？
-          <%= link_to "立即注册", new_registration_path(resource_name), class: "text-link hover:text-link-hover font-medium transition-colors" %>
-        </p>
       </div>
 
     </div>
