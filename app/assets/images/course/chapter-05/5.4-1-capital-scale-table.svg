@@ -1,0 +1,106 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="620" height="420" viewBox="0 0 620 420">
+  <defs>
+    <filter id="shadow"><feDropShadow dx="1" dy="2" stdDeviation="3" flood-opacity="0.12"/></filter>
+  </defs>
+  <rect width="620" height="420" rx="8" fill="#FAFAFA" filter="url(#shadow)"/>
+  <text x="310" y="30" text-anchor="middle" font-family="PingFang SC,sans-serif" font-size="15" fill="#333" font-weight="bold">不同资金量级核心参数对比</text>
+
+  <!-- 表头 -->
+  <rect x="20" y="50" width="140" height="36" rx="4" fill="#2C3E50"/>
+  <text x="90" y="73" text-anchor="middle" font-family="PingFang SC,sans-serif" font-size="13" fill="#FFF" font-weight="bold">参数</text>
+
+  <rect x="160" y="50" width="140" height="36" rx="4" fill="#E74C3C" opacity="0.85"/>
+  <text x="230" y="73" text-anchor="middle" font-family="PingFang SC,sans-serif" font-size="13" fill="#FFF" font-weight="bold">&lt; 10万</text>
+
+  <rect x="300" y="50" width="140" height="36" rx="4" fill="#E67E22" opacity="0.85"/>
+  <text x="370" y="73" text-anchor="middle" font-family="PingFang SC,sans-serif" font-size="13" fill="#FFF" font-weight="bold">10万 - 100万</text>
+
+  <rect x="440" y="50" width="160" height="36" rx="4" fill="#27AE60" opacity="0.85"/>
+  <text x="520" y="73" text-anchor="middle" font-family="PingFang SC,sans-serif" font-size="13" fill="#FFF" font-weight="bold">&gt; 100万</text>
+
+  <!-- 第1行：持仓数量 -->
+  <rect x="20" y="90" width="140" height="44" fill="#F5F5F5" stroke="#EEE" stroke-width="0.5"/>
+  <text x="90" y="117" text-anchor="middle" font-family="PingFang SC,sans-serif" font-size="12" fill="#333" font-weight="bold">持仓数量</text>
+
+  <rect x="160" y="90" width="140" height="44" fill="#FFF" stroke="#EEE" stroke-width="0.5"/>
+  <text x="230" y="117" text-anchor="middle" font-family="PingFang SC,sans-serif" font-size="14" fill="#C0392B" font-weight="bold">2 - 3 只</text>
+
+  <rect x="300" y="90" width="140" height="44" fill="#FFF" stroke="#EEE" stroke-width="0.5"/>
+  <text x="370" y="117" text-anchor="middle" font-family="PingFang SC,sans-serif" font-size="14" fill="#E67E22" font-weight="bold">5 - 8 只</text>
+
+  <rect x="440" y="90" width="160" height="44" fill="#FFF" stroke="#EEE" stroke-width="0.5"/>
+  <text x="520" y="117" text-anchor="middle" font-family="PingFang SC,sans-serif" font-size="14" fill="#1E8449" font-weight="bold">8 - 10 只</text>
+
+  <!-- 第2行：覆盖行业 -->
+  <rect x="20" y="136" width="140" height="44" fill="#F5F5F5" stroke="#EEE" stroke-width="0.5"/>
+  <text x="90" y="163" text-anchor="middle" font-family="PingFang SC,sans-serif" font-size="12" fill="#333" font-weight="bold">覆盖行业</text>
+
+  <rect x="160" y="136" width="140" height="44" fill="#FFF" stroke="#EEE" stroke-width="0.5"/>
+  <text x="230" y="163" text-anchor="middle" font-family="PingFang SC,sans-serif" font-size="14" fill="#C0392B" font-weight="bold">1 - 2 个</text>
+
+  <rect x="300" y="136" width="140" height="44" fill="#FFF" stroke="#EEE" stroke-width="0.5"/>
+  <text x="370" y="163" text-anchor="middle" font-family="PingFang SC,sans-serif" font-size="14" fill="#E67E22" font-weight="bold">3 - 5 个</text>
+
+  <rect x="440" y="136" width="160" height="44" fill="#FFF" stroke="#EEE" stroke-width="0.5"/>
+  <text x="520" y="163" text-anchor="middle" font-family="PingFang SC,sans-serif" font-size="14" fill="#1E8449" font-weight="bold">5 - 6 个</text>
+
+  <!-- 第3行：单只上限 -->
+  <rect x="20" y="182" width="140" height="44" fill="#F5F5F5" stroke="#EEE" stroke-width="0.5"/>
+  <text x="90" y="209" text-anchor="middle" font-family="PingFang SC,sans-serif" font-size="12" fill="#333" font-weight="bold">单只上限</text>
+
+  <rect x="160" y="182" width="140" height="44" fill="#FFF" stroke="#EEE" stroke-width="0.5"/>
+  <text x="230" y="209" text-anchor="middle" font-family="PingFang SC,sans-serif" font-size="14" fill="#C0392B" font-weight="bold">50% - 30%</text>
+
+  <rect x="300" y="182" width="140" height="44" fill="#FFF" stroke="#EEE" stroke-width="0.5"/>
+  <text x="370" y="209" text-anchor="middle" font-family="PingFang SC,sans-serif" font-size="14" fill="#E67E22" font-weight="bold">12% - 20%</text>
+
+  <rect x="440" y="182" width="160" height="44" fill="#FFF" stroke="#EEE" stroke-width="0.5"/>
+  <text x="520" y="209" text-anchor="middle" font-family="PingFang SC,sans-serif" font-size="14" fill="#1E8449" font-weight="bold">10% - 12%</text>
+
+  <!-- 第4行：止损规则 -->
+  <rect x="20" y="228" width="140" height="44" fill="#F5F5F5" stroke="#EEE" stroke-width="0.5"/>
+  <text x="90" y="255" text-anchor="middle" font-family="PingFang SC,sans-serif" font-size="12" fill="#333" font-weight="bold">止损规则</text>
+
+  <rect x="160" y="228" width="140" height="44" fill="#FFF" stroke="#EEE" stroke-width="0.5"/>
+  <text x="230" y="249" text-anchor="middle" font-family="PingFang SC,sans-serif" font-size="12" fill="#C0392B" font-weight="bold">不变</text>
+  <text x="230" y="265" text-anchor="middle" font-family="PingFang SC,sans-serif" font-size="10" fill="#666">（钱少也要执行）</text>
+
+  <rect x="300" y="228" width="140" height="44" fill="#FFF" stroke="#EEE" stroke-width="0.5"/>
+  <text x="370" y="255" text-anchor="middle" font-family="PingFang SC,sans-serif" font-size="13" fill="#E67E22" font-weight="bold">三级止损不变</text>
+
+  <rect x="440" y="228" width="160" height="44" fill="#FFF" stroke="#EEE" stroke-width="0.5"/>
+  <text x="520" y="255" text-anchor="middle" font-family="PingFang SC,sans-serif" font-size="13" fill="#1E8449" font-weight="bold">三级止损不变</text>
+
+  <!-- 第5行：建仓方式 -->
+  <rect x="20" y="274" width="140" height="44" fill="#F5F5F5" stroke="#EEE" stroke-width="0.5"/>
+  <text x="90" y="301" text-anchor="middle" font-family="PingFang SC,sans-serif" font-size="12" fill="#333" font-weight="bold">建仓方式</text>
+
+  <rect x="160" y="274" width="140" height="44" fill="#FFF" stroke="#EEE" stroke-width="0.5"/>
+  <text x="230" y="301" text-anchor="middle" font-family="PingFang SC,sans-serif" font-size="13" fill="#C0392B" font-weight="bold">一次性到位</text>
+
+  <rect x="300" y="274" width="140" height="44" fill="#FFF" stroke="#EEE" stroke-width="0.5"/>
+  <text x="370" y="301" text-anchor="middle" font-family="PingFang SC,sans-serif" font-size="13" fill="#E67E22" font-weight="bold">一次性到位</text>
+
+  <rect x="440" y="274" width="160" height="44" fill="#FFF" stroke="#EEE" stroke-width="0.5"/>
+  <text x="520" y="301" text-anchor="middle" font-family="PingFang SC,sans-serif" font-size="13" fill="#1E8449" font-weight="bold">分批（2-3天）</text>
+
+  <!-- 第6行：特殊注意 -->
+  <rect x="20" y="320" width="140" height="44" fill="#F5F5F5" stroke="#EEE" stroke-width="0.5"/>
+  <text x="90" y="347" text-anchor="middle" font-family="PingFang SC,sans-serif" font-size="12" fill="#333" font-weight="bold">特殊注意</text>
+
+  <rect x="160" y="320" width="140" height="44" fill="#FFF" stroke="#EEE" stroke-width="0.5"/>
+  <text x="230" y="341" text-anchor="middle" font-family="PingFang SC,sans-serif" font-size="11" fill="#C0392B">控制交易频率</text>
+  <text x="230" y="357" text-anchor="middle" font-family="PingFang SC,sans-serif" font-size="10" fill="#666">避免手续费过高</text>
+
+  <rect x="300" y="320" width="140" height="44" fill="#FFF" stroke="#EEE" stroke-width="0.5"/>
+  <text x="370" y="341" text-anchor="middle" font-family="PingFang SC,sans-serif" font-size="11" fill="#E67E22">等权重分仓</text>
+  <text x="370" y="357" text-anchor="middle" font-family="PingFang SC,sans-serif" font-size="10" fill="#666">标准流程</text>
+
+  <rect x="440" y="320" width="160" height="44" fill="#FFF" stroke="#EEE" stroke-width="0.5"/>
+  <text x="520" y="341" text-anchor="middle" font-family="PingFang SC,sans-serif" font-size="11" fill="#1E8449">增加流动性筛选</text>
+  <text x="520" y="357" text-anchor="middle" font-family="PingFang SC,sans-serif" font-size="10" fill="#666">优先行业龙头</text>
+
+  <!-- 底部核心理念 -->
+  <rect x="20" y="375" width="580" height="32" rx="4" fill="#EBF5FB" stroke="#AED6F1" stroke-width="0.5"/>
+  <text x="310" y="395" text-anchor="middle" font-family="PingFang SC,sans-serif" font-size="12" fill="#2E86C1" font-weight="bold">核心不变：选好 → 等好 → 管好 · 止损和规则纪律不可妥协</text>
+</svg>

@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="620" height="450" viewBox="0 0 620 450">
+  <defs>
+    <filter id="shadow"><feDropShadow dx="1" dy="2" stdDeviation="3" flood-opacity="0.12"/></filter>
+  </defs>
+  <rect width="620" height="450" rx="8" fill="#FAFAFA" filter="url(#shadow)"/>
+  <text x="310" y="30" text-anchor="middle" font-family="PingFang SC,sans-serif" font-size="15" fill="#333" font-weight="bold">错误操作 vs HOLDLE规则 — 对照</text>
+
+  <!-- 左侧标题 -->
+  <rect x="20" y="50" width="270" height="36" rx="6" fill="#E74C3C" opacity="0.9"/>
+  <text x="155" y="74" text-anchor="middle" font-family="PingFang SC,sans-serif" font-size="14" fill="#FFF" font-weight="bold">✗ 2009年当时的做法</text>
+
+  <!-- 右侧标题 -->
+  <rect x="330" y="50" width="270" height="36" rx="6" fill="#27AE60" opacity="0.9"/>
+  <text x="465" y="74" text-anchor="middle" font-family="PingFang SC,sans-serif" font-size="14" fill="#FFF" font-weight="bold">✓ HOLDLE规则</text>
+
+  <!-- 行1 -->
+  <rect x="20" y="100" width="270" height="55" rx="4" fill="#FDEDEC" stroke="#F5B7B1" stroke-width="0.5"/>
+  <text x="35" y="122" font-family="PingFang SC,sans-serif" font-size="12" fill="#C0392B" font-weight="bold">没有选股</text>
+  <text x="35" y="142" font-family="PingFang SC,sans-serif" font-size="11" fill="#666">连财务数据都没查过，看帖就买</text>
+
+  <rect x="330" y="100" width="270" height="55" rx="4" fill="#E8F8F5" stroke="#A3E4D7" stroke-width="0.5"/>
+  <text x="345" y="122" font-family="PingFang SC,sans-serif" font-size="12" fill="#1E8449" font-weight="bold">金字塔选股</text>
+  <text x="345" y="142" font-family="PingFang SC,sans-serif" font-size="11" fill="#666">ROE≥25% · 毛利率≥30% · 现金占比≥10%</text>
+
+  <!-- 箭头1 -->
+  <line x1="290" y1="127" x2="328" y2="127" stroke="#E74C3C" stroke-width="1.5" marker-end="url(#arrowR)"/>
+
+  <!-- 行2 -->
+  <rect x="20" y="165" width="270" height="55" rx="4" fill="#FDEDEC" stroke="#F5B7B1" stroke-width="0.5"/>
+  <text x="35" y="187" font-family="PingFang SC,sans-serif" font-size="12" fill="#C0392B" font-weight="bold">没有择时</text>
+  <text x="35" y="207" font-family="PingFang SC,sans-serif" font-size="11" fill="#666">看到涨了就冲，没有等待信号</text>
+
+  <rect x="330" y="165" width="270" height="55" rx="4" fill="#E8F8F5" stroke="#A3E4D7" stroke-width="0.5"/>
+  <text x="345" y="187" font-family="PingFang SC,sans-serif" font-size="12" fill="#1E8449" font-weight="bold">等状态A</text>
+  <text x="345" y="207" font-family="PingFang SC,sans-serif" font-size="11" fill="#666">月K MACD双线和柱子全部站上0轴</text>
+
+  <line x1="290" y1="192" x2="328" y2="192" stroke="#E74C3C" stroke-width="1.5" marker-end="url(#arrowR)"/>
+
+  <!-- 行3 -->
+  <rect x="20" y="230" width="270" height="55" rx="4" fill="#FDEDEC" stroke="#F5B7B1" stroke-width="0.5"/>
+  <text x="35" y="252" font-family="PingFang SC,sans-serif" font-size="12" fill="#C0392B" font-weight="bold">没有风控</text>
+  <text x="35" y="272" font-family="PingFang SC,sans-serif" font-size="11" fill="#666">全仓买入 · 没有止损 · 没有分散</text>
+
+  <rect x="330" y="230" width="270" height="55" rx="4" fill="#E8F8F5" stroke="#A3E4D7" stroke-width="0.5"/>
+  <text x="345" y="252" font-family="PingFang SC,sans-serif" font-size="12" fill="#1E8449" font-weight="bold">分散+止损</text>
+  <text x="345" y="272" font-family="PingFang SC,sans-serif" font-size="11" fill="#666">5-8只跨行业 · 入场-20%止损 · 动态调整</text>
+
+  <line x1="290" y1="257" x2="328" y2="257" stroke="#E74C3C" stroke-width="1.5" marker-end="url(#arrowR)"/>
+
+  <!-- 行4 -->
+  <rect x="20" y="295" width="270" height="55" rx="4" fill="#FDEDEC" stroke="#F5B7B1" stroke-width="0.5"/>
+  <text x="35" y="317" font-family="PingFang SC,sans-serif" font-size="12" fill="#C0392B" font-weight="bold">没有规则</text>
+  <text x="35" y="337" font-family="PingFang SC,sans-serif" font-size="11" fill="#666">凭"感觉"和"别人说"做决策</text>
+
+  <rect x="330" y="295" width="270" height="55" rx="4" fill="#E8F8F5" stroke="#A3E4D7" stroke-width="0.5"/>
+  <text x="345" y="317" font-family="PingFang SC,sans-serif" font-size="12" fill="#1E8449" font-weight="bold">机械执行</text>
+  <text x="345" y="337" font-family="PingFang SC,sans-serif" font-size="11" fill="#666">规则触发什么就做什么 · 不主观判断</text>
+
+  <line x1="290" y1="322" x2="328" y2="322" stroke="#E74C3C" stroke-width="1.5" marker-end="url(#arrowR)"/>
+
+  <!-- 底部结论 -->
+  <rect x="20" y="370" width="580" height="60" rx="6" fill="#FEF9E7" stroke="#F9E79F" stroke-width="0.5"/>
+  <text x="310" y="394" text-anchor="middle" font-family="PingFang SC,sans-serif" font-size="12" fill="#856404" font-weight="bold">结果对比</text>
+  <text x="310" y="416" text-anchor="middle" font-family="PingFang SC,sans-serif" font-size="11" fill="#666">左侧：亏损60%+，持有两年割肉离场 ｜ 右侧：按规则操作，明白每一笔交易为什么买、为什么卖</text>
+</svg>
