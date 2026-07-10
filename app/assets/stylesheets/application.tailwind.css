@@ -225,6 +225,12 @@
     font-size: 12px;
     white-space: nowrap;
   }
+  @media (max-width: 640px) {
+    .hl-tag {
+      white-space: normal;
+      word-break: break-word;
+    }
+  }
 
   /* 列表项（方法论卡片里的虚线分隔） */
   .hl-list-item {
