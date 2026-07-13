@@ -39,7 +39,7 @@
         <%= tag.span class: "hl-nav-link-active-dot", aria: { hidden: "true" } if controller_name == 'pages' && action_name == 'video' %>
       <% end %>
       <%= link_to join_path, class: "hl-nav-link #{'hl-nav-link-active' if controller_name == 'pages' && action_name == 'join'}" do %>
-        加入我们
+        加入会员
         <%= tag.span class: "hl-nav-link-active-dot", aria: { hidden: "true" } if controller_name == 'pages' && action_name == 'join' %>
       <% end %>
       <%= link_to "#", class: "hl-nav-link" do %>
@@ -144,7 +144,7 @@
           视频分享
           <span class="ml-2 w-2 h-2 bg-profit rounded-full"></span>
         <% end %>
-        <%= link_to "加入我们", join_path, class: "block px-4 py-2 text-hl-14 rounded #{controller_name == 'pages' && action_name == 'join' ? 'bg-bg-mute text-ink font-medium border-l-2 border-profit' : 'text-muted hover:text-ink hover:bg-bg-mute'}" %>
+        <%= link_to "加入会员", join_path, class: "block px-4 py-2 text-hl-14 rounded #{controller_name == 'pages' && action_name == 'join' ? 'bg-bg-mute text-ink font-medium border-l-2 border-profit' : 'text-muted hover:text-ink hover:bg-bg-mute'}" %>
         <%= link_to "关于", "#", class: "block px-4 py-2 text-hl-14 text-muted hover:text-ink hover:bg-bg-mute rounded" %>
       </div>
       <div class="pt-4 border-t border-line-soft">

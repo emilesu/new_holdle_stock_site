@@ -1,4 +1,4 @@
-<% set_page_title "Holdle - 股票分析平台" %>
+<% set_page_title "HOLDLE — 概率交易系统与长期投资学习社区" %>
 <% set_page_description "Holdle 提供港股、美股、A股财务数据深度分析，金字塔评分系统、行业对比与智能选股工具，助力投资者做出更明智的决策。" %>
 <% set_page_keywords "股票分析,港股,美股,A股,财务数据,金字塔评分,智能选股,行业对比,投资分析" %>
 <%# ========== 1. Hero ========== %>
@@ -17,13 +17,13 @@
     <p class="text-hl-18 text-muted-2 mb-7 leading-snug">老地方，老规矩，只是主人回来了。</p>
     <p class="text-hl-14 text-muted max-w-160 leading-relaxed mb-8">
       我是大苏，Hold Le的站长！<br>
-      七年没更，没倒闭；这次回来，连数据源都重新接好了。<br>
+      七年没更新，人也还在，站也还在；这次回来，数据源重新接好了。<br>
       还是那个老问题：怎么等、怎么买、怎么拿。<br>
       答案没变，人胖了点。
     </p>
     <div class="flex flex-wrap gap-3">
       <%= link_to "看我的回归视频", video_path, class: "hl-btn hl-btn-primary" %>
-      <%= link_to "读老文章 / 课程", courses_path, class: "hl-btn hl-btn-line" %>
+      <%= link_to "开始学习", courses_path, class: "hl-btn hl-btn-line" %>
       <%= link_to "用 HOLD LE 工具", pyramid_path, class: "hl-btn hl-btn-line" %>
       <button data-action="click->message#open" class="hl-btn hl-btn-line">给大苏写信</button>
     </div>
@@ -37,9 +37,18 @@
     <h2 class="text-hl-22 font-semibold text-ink mb-2">致七年前认识我的老朋友</h2>
     <p class="text-hl-13 text-muted-3 mb-7">一封迟了七年的短信</p>
 
-    <div class="hl-card p-10">
-      <div class="text-hl-12 text-muted-4 mb-4 tracking-wide-2">2026.07 · REUNION LETTER</div>
-      <div class="text-hl-14 text-muted leading-loose whitespace-pre-line">各位 holdle 的老朋友：
+    <details class="group">
+      <summary class="flex items-center justify-between px-6 py-4
+                      bg-bg-mute rounded cursor-pointer list-none
+                      transition-colors duration-150 hover:bg-bg-mute
+                      [&::-webkit-details-marker]:hidden
+                      group-open:rounded-b-none">
+        <span class="text-hl-13 text-muted">阅读全文</span>
+        <span class="text-hl-15 text-muted-3 transition-transform duration-200 group-open:rotate-45">+</span>
+      </summary>
+      <div class="hl-card p-10 border-t-0 rounded-t-none">
+        <div class="text-hl-12 text-muted-4 mb-4 tracking-wide-2">2026.07 · REUNION LETTER</div>
+        <div class="text-hl-14 text-muted leading-loose whitespace-pre-line">各位 holdle 的老朋友：
 
 我是大苏。
 
@@ -63,8 +72,9 @@
 老规矩还是老规矩：<strong class="text-ink">不荐股，不开群，每个月只想让你看一次盘。</strong>
 
 老朋友们，欢迎回家。</div>
-      <div class="mt-6 text-right text-hl-13 text-muted-3">大苏 字　·　2026 年 7 月</div>
-    </div>
+        <div class="mt-6 text-right text-hl-13 text-muted-3">大苏 字　·　2026 年 7 月</div>
+      </div>
+    </details>
   </div>
 </section>
 
@@ -150,7 +160,7 @@
 
     <div class="hl-quote">
       <strong>先选对股票，再选对时机。</strong><br>
-      <span class="text-muted-3 text-hl-13">这样你才会有足够的底气、信心，不会怀疑自己的决定，坚持到最后。</span>
+      <span class="text-muted-3 text-hl-13">这样你才会有足够的底气、信心，有了这层逻辑打底，你不会轻易怀疑自己的判断。</span>
     </div>
   </div>
 </section>
@@ -160,7 +170,7 @@
   <div class="container-hl">
     <div class="label-en">CASE CLOSED · 已结案案例</div>
     <h2 class="text-hl-22 font-semibold text-ink mb-2">历史战绩</h2>
-    <p class="text-hl-13 text-muted-3 mb-7">按 HOLD LE 策略完整执行，每笔都有明确的入场规则和出场规则</p>
+    <p class="text-hl-13 text-muted-3 mb-7">以下案例均为按 HOLDLE 方法论完整执行并已结案的盈利案例</p>
 
     <div class="hl-card overflow-hidden">
       <div class="px-6 py-4 border-b border-line-soft flex justify-between items-center text-hl-12 text-muted-3">
@@ -206,7 +216,7 @@
         </table>
       </div>
       <div class="px-6 py-4 bg-bg-soft border-t border-line-soft text-hl-12 text-muted-3 leading-relaxed">
-        ※ 有我做的，但更多的是 HOLDLE 的会员朋友做的。<br>
+        ※ 这些案例里，有些是我自己操作的，有些是会员朋友按方法做的。来源不同，但方法论是同一套。<br>
         ※ 过去的战绩不代表未来，但方法论的有效性是长期可复现的。<br>
         ※ 我希望这套方法能成为你长期使用的工具，而不是短期暴富的承诺。
       </div>

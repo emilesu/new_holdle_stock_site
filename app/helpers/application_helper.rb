@@ -32,7 +32,7 @@ module ApplicationHelper
   end
 
   # 页面 title（带站点名称后缀）
-  def page_title(default_title = "股票分析平台")
+  def page_title(default_title = "概率交易系统与长期投资学习社区")
     t = content_for(:page_title)
     t.present? ? "#{t}" : "#{SITE_NAME} - #{default_title}"
   end
