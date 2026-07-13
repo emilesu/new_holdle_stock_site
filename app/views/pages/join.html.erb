@@ -1,13 +1,13 @@
 <% set_page_title "加入会员 - HOLDLE" %>
 <% set_page_description "加入Holdle，获取港股、美股、A股深度财务数据分析工具与金字塔评分系统。" %>
 <%# ========== Hero ========== %>
-<section class="border-b border-line">
+<section class="border-b border-line  bg-white">
   <div class="container-hl py-24 text-center">
     <div class="mb-8">
       <span class="inline-block border-2 border-profit text-profit px-4 py-1.5 -rotate-3 text-hl-14 font-medium">JOIN US</span>
     </div>
     <h1 class="text-hl-22 md:text-hl-40 font-bold leading-tight text-ink mb-8">
-      一杯咖啡的钱，<br class="block md:hidden" />
+      一顿火锅的钱，<br class="block md:hidden" />
       换一段<span class="text-profit">有人陪你</span>的交易之路
     </h1>
     <p class="text-hl-14 text-muted max-w-2xl mx-auto leading-relaxed mb-10">
@@ -22,48 +22,89 @@
   </div>
 </section>
 
-<%# ========== 01 我为什么做这件事 ========== %>
-<section class="border-b border-line">
+<%# ========== 01 先说说实话 ========== %>
+<section class="border-b border-line ">
+  <div class="container-narrow py-16">
+    <div class="label-en">HONEST TALK</div>
+    <div class="flex items-baseline gap-4 mb-2">
+      <span class="inline-flex items-center justify-center w-7 h-7 rounded text-hl-13 font-medium bg-bg-mute text-muted-2 shrink-0">01</span>
+      <h2 class="text-hl-22 font-bold text-ink">先说说实！关于我，你要知道的几件事</h2>
+    </div>
+    <p class="text-hl-13 text-muted mb-12">先把丑话说在前头，比事后解释更体面</p>
+
+    <div class="space-y-8">
+      <div class="hl-card p-7">
+        <h3 class="text-hl-16 font-semibold text-ink mb-3">我不是神，我不是"老师"</h3>
+        <p class="text-hl-13 text-muted leading-relaxed">
+          我不知道，也告诉不了你"明天会涨还是会跌"；我也不会带盘、喊单、推荐具体买卖点。<br />
+          我做的事，是给你一套<span class="text-ink font-medium">经过验证的交易规则、工具和视角</span>——能不能赚到钱，最终还是看你的选择和执行。
+        </p>
+      </div>
+
+      <div class="hl-card p-7">
+        <h3 class="text-hl-16 font-semibold text-ink mb-3">这是知识付费，不是投资回报承诺</h3>
+        <p class="text-hl-13 text-muted leading-relaxed">
+          <span class="text-ink font-medium">468 元（CNY）/ 72 美元（USD）</span> 换来的是知识、工具、陪伴、提问的资格，不是任何形式的"带单分成"或"保本收益"。<br />
+          投资有风险，决策请独立思考。
+        </p>
+      </div>
+
+      <div class="hl-card p-7">
+        <h3 class="text-hl-16 font-semibold text-ink mb-3">沟通主要靠微信或留言</h3>
+        <p class="text-hl-13 text-muted leading-relaxed">
+          我一个人维护这个社群，回复可能不是秒回（白天常在做开发、晚上和周末回复更稳定）。但<span class="text-ink font-medium">几乎每个工作日 24 小时内都会有回应</span>。<br />
+          火急的事请可以直接微信电话我。
+        </p>
+      </div>
+
+      <div class="hl-card p-7">
+        <h3 class="text-hl-16 font-semibold text-ink mb-3">网站持续更新中……</h3>
+        <p class="text-hl-13 text-muted leading-relaxed">
+          你看到的这个网站，正从老系统整体迁移到新的技术栈。核心功能已可正常使用，其他模块会持续更新。<br />
+          <span class="text-ink font-medium">遇到小 bug 我会第一时间手动处理。</span>
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<%# ========== 02 我为什么做这件事 ========== %>
+<section class="border-b border-line  bg-white">
   <div class="container-narrow py-16">
     <div class="label-en">WHY I DO THIS</div>
     <div class="flex items-baseline gap-4 mb-2">
-      <span class="inline-flex items-center justify-center w-7 h-7 rounded text-hl-13 font-medium bg-bg-mute text-muted-2 shrink-0">01</span>
-      <h2 class="text-hl-22 font-bold text-ink">我为什么做这件事</h2>
+      <span class="inline-flex items-center justify-center w-7 h-7 rounded text-hl-13 font-medium bg-bg-mute text-muted-2 shrink-0">02</span>
+      <h2 class="text-hl-22 font-bold text-ink">为什么做这件事</h2>
     </div>
-    <p class="text-hl-13 text-muted mb-12">写给还在犹豫要不要加入的你</p>
+    <p class="text-hl-13 text-muted mb-12">写给还在犹豫的你</p>
 
     <div class="text-ink text-hl-14 leading-loose space-y-6">
       <p>你好，我是<span class="font-semibold">大苏 EmileSu</span>。</p>
 
       <p>
         2009 年第一次开股票账户，算下来摸盘整整<span class="text-profit font-semibold">十七年</span>。<br />
-        入行赶上四万亿行情，全场普涨，热闹得不行。但前五年纯纯交学费，踩坑踩麻了：熬夜复盘、看好的牛股踏空、亏到忍痛割肉。
-        现在你在股市经历的焦虑、亏损、纠结，我当年全都体验过。
+        入市之后，和很多人一样，经历了漫长的摸索阶段：熬夜复盘、看好的牛股踏空、亏到忍痛割肉。你现在在股市经历的焦虑和纠结，我当年全都体验过。
       </p>
 
       <p>
-        亏怕了之后，我慢慢搭出自己的交易规则。
-        学会规划，学会精简，学会耐心等待。
+        亏怕了之后，我慢慢搭出自己的交易规则。学会规划，学会精简，学会耐心等待。
       </p>
 
       <p>
-        有了规则，拒绝“情绪干扰”之后，<span class="text-profit font-semibold">一切都变得简单、可预期！</span>。<br />
-        「15 年杠杆牛与股灾、18 年全年阴跌、20 年白酒大牛市、21 年抱团赛道集体崩盘、22 年白马股深度回调、 
-        23–24 年漫长熊市、还有 2025 年 9 月大起大落的 924 过山车行情...」，等这些大家看到的市场情绪，再也没有影响过我。    
+        有了规则，<span class="text-profit font-semibold">一切都变得简单、可预期！</span>。<br />
+        「15 年杠杆牛与股灾、18 年全年阴跌、20 年白酒大牛市、21 年抱团赛道集体崩盘、22 年白马股深度回调、23–24 年漫长熊市、还有 2025 年 9 月大起大落的行情……」这些大家看到的市场情绪，再也没有影响过我。    
       </p>
 
       <p>
-        2019 到 2025 这七年，人生直接开启<span class="text-ink font-semibold">强制离线模式</span>，彻底远离股市。 <br />
-        时隔多年再回来，和预想中一样：当年打磨的交易规则，依旧好用。
+        <span class="text-ink font-semibold">2019年到2025年，HOLDLE停止了公开更新。</span>人生给我安排了一段强制离线模式。 <br />
+        时隔多年再回来，当年分享的这套方法，依旧好用。
       </p>
 
       <div class="hl-callout">
-        股市最爽的瞬间是什么？清仓离场，账户满屏红色盈利。<br />
-        但很多人（包括曾经的我）都付出过无数时间和精力去追求，却不可得。
+        说实话，股市最踏实的瞬间是什么？不是猜对涨跌，而是不论涨跌，你的规则都提前想好了怎么应对。<br />
       </div>
 
       <p>
-        经济环境？行情？价值分析？技术指标？运气？—— 其实这些都需要一个 <span class="text-ink font-medium">稳健、务实的交易规则</span> 去理解和执行。<br />
         <span class="text-profit font-semibold">这个道理，是用真金白银换来的。</span>
       </p>
 
@@ -73,23 +114,22 @@
 
       <p>
         2017 至今，第一期、第二期、第三期、第四期陆续招募，前前后后有 <span class="text-ink font-semibold">4,120+</span> 位朋友付费加入。
-        <span class="text-profit font-semibold">（你会问，「这么好的交易规则，你怎么会分享给人？」其实分享文字、工具本身并不重要，读懂、坚持执行才是核心。没有行动，这些分享就都是nothing。）</span>
+        <span class="text-profit font-semibold">（你会问，「这么好的交易规则，你怎么会分享给人？」其实分享文字、工具本身并不重要，读懂、坚持执行才是核心。没有行动，再好的方法也没意义。）</span>
       </p>
 
       <p>
-        停笔七年后，2026 年<span class="text-ink font-semibold">HOLD LE 2.0 回归</span> —— 全部文章重写、全套工具迭代、网站整体升级。十七年做交易、九年做社群... <br />
-        —— 这些数字加在一起，才是你今天看到的这个版本。
+        2026 年<span class="text-ink font-semibold">HOLD LE 2.0 回归</span> —— 文章重写、工具迭代、网站升级 <br />
       </p>
     </div>
   </div>
 </section>
 
-<%# ========== 02 成为会员后你将拥有（双列四格卡片版） ========== %>
-<section class="border-b border-line bg-white">
+<%# ========== 03 成为会员后你将拥有（双列四格卡片版） ========== %>
+<section class="border-b border-line">
   <div class="container-hl py-16">
     <div class="label-en">WHAT YOU GET</div>
     <div class="flex items-baseline gap-4 mb-2">
-      <span class="inline-flex items-center justify-center w-7 h-7 rounded text-hl-13 font-medium bg-bg-mute text-muted-2 shrink-0">02</span>
+      <span class="inline-flex items-center justify-center w-7 h-7 rounded text-hl-13 font-medium bg-bg-mute text-muted-2 shrink-0">03</span>
       <h2 class="text-hl-22 font-bold text-ink">成为会员后，你将拥有</h2>
     </div>
     <p class="text-hl-13 text-muted mb-12">不是付费解锁一个功能，而是结识一个<span class="text-ink font-medium">值得信任的同行人</span></p>
@@ -118,7 +158,7 @@
               在"选股策略"、"交易时机"两门基础课之外，<span class="text-ink font-medium">完整解锁"交易管理"</span>——这是大多数散户永远不会告诉你、也不知道的关键环节。
             </p>
             <p class="text-hl-12 text-muted-4 leading-relaxed pt-3 mt-3 border-t border-line">
-              选对股只占三成，剩下七成是：什么时候买卖、什么价格买卖、什么时候离开。
+              <span class="text-ink font-medium">选对股只占三成，剩下七成是：什么时候买卖、什么价格买卖、什么时候离开。</span>
             </p>
           </div>
         </div>
@@ -127,7 +167,7 @@
         <div class="flex gap-4">
           <span class="text-hl-22 font-bold text-profit shrink-0">③</span>
           <div class="min-w-0">
-            <h3 class="text-hl-16 font-semibold text-ink pb-3 mb-3" style="border-bottom: 1px dashed var(--color-line-soft);">上涨潜力股 · 金字塔工具</h3>
+            <h3 class="text-hl-16 font-semibold text-ink pb-3 mb-3" style="border-bottom: 1px dashed var(--color-line-soft);">金字塔工具 · 股票筛选算法</h3>
             <p class="text-hl-13 text-muted leading-relaxed mb-3">
               我把多年验证的选股规则，做成了算法模型，对<span class="text-ink font-medium">上万只 A 股、港股和美股</span>进行智能筛选和排序，帮你快速圈定最具长期上涨潜力的股票池范围。
             </p>
@@ -141,9 +181,9 @@
         <div class="flex gap-4">
           <span class="text-hl-22 font-bold text-profit shrink-0">④</span>
           <div class="min-w-0">
-            <h3 class="text-hl-16 font-semibold text-ink pb-3 mb-3" style="border-bottom: 1px dashed var(--color-line-soft);">陪你走过牛熊 · 不只是一年</h3>
+            <h3 class="text-hl-16 font-semibold text-ink pb-3 mb-3" style="border-bottom: 1px dashed var(--color-line-soft);">⚡ 一次加入 · 永久使用</h3>
             <p class="text-hl-13 text-muted leading-relaxed mb-3">
-              我的目标是做成<span class="text-ink font-medium">中国最好的股票投资入门和分享社群</span>，让大家摒弃浮躁，用正确的交易意识在投资市场里赚到钱。
+              我的目标，是做一个真正能帮到新手投资者的社群，不浮躁、不套路、不卖梦。
             </p>
             <p class="text-hl-12 text-muted-4 leading-relaxed pt-3 mt-3 border-t border-line">
               永久会员制，不涨价、不催续费、不绑你做任何事。
@@ -153,53 +193,6 @@
       </div>
     </div>
 
-  </div>
-</section>
-
-<%# ========== 03 关于我，你要知道的几件事 ========== %>
-<section class="border-b border-line">
-  <div class="container-narrow py-16">
-    <div class="label-en">HONEST TALK</div>
-    <div class="flex items-baseline gap-4 mb-2">
-      <span class="inline-flex items-center justify-center w-7 h-7 rounded text-hl-13 font-medium bg-bg-mute text-muted-2 shrink-0">03</span>
-      <h2 class="text-hl-22 font-bold text-ink">关于我，你要知道的几件事</h2>
-    </div>
-    <p class="text-hl-13 text-muted mb-12">先把丑话说在前头，比事后解释更体面</p>
-
-    <div class="space-y-8">
-      <div class="hl-card p-7">
-        <h3 class="text-hl-16 font-semibold text-ink mb-3">网站还在重建中</h3>
-        <p class="text-hl-13 text-muted leading-relaxed">
-          你看到的这个网站，正从老系统整体迁移到新的技术栈。
-          8,094 位老用户的数据已完整备份并准备陆续导入，部分页面还在打磨中。
-          <span class="text-ink font-medium">加入会员后，你能体验到新站的所有功能，可能遇到小bug，但我会第一时间手动处理。</span>
-        </p>
-      </div>
-
-      <div class="hl-card p-7">
-        <h3 class="text-hl-16 font-semibold text-ink mb-3">我不是神，我不是"老师"</h3>
-        <p class="text-hl-13 text-muted leading-relaxed">
-          我不知道，也告诉不了你"明天会涨还是会跌"；我也不会带盘、喊单、推荐具体买卖点。
-          我做的事，是<span class="text-ink font-medium">给你一套经过验证的交易规则、工具和视角</span>——能不能赚到钱，最终还是看你的选择和执行。
-        </p>
-      </div>
-
-      <div class="hl-card p-7">
-        <h3 class="text-hl-16 font-semibold text-ink mb-3">沟通主要靠微信或留言</h3>
-        <p class="text-hl-13 text-muted leading-relaxed">
-          我一个人维护这个社群，回复可能不是秒回（白天常在做开发、晚上和周末回复更稳定），
-          但<span class="text-ink font-medium">几乎每个工作日 24 小时内都会有回应</span>。火急的事请可以直接微信电话我。
-        </p>
-      </div>
-
-      <div class="hl-card p-7">
-        <h3 class="text-hl-16 font-semibold text-ink mb-3">这是知识付费，不是投资回报承诺</h3>
-        <p class="text-hl-13 text-muted leading-relaxed">
-          468 元（CNY）/ 72 美元（USD）换来的是<span class="text-ink font-medium">知识、工具、陪伴、提问的资格</span>，不是任何形式的"带单分成"或"保本收益"。
-          投资有风险，决策请独立思考。
-        </p>
-      </div>
-    </div>
   </div>
 </section>
 
@@ -220,11 +213,11 @@
           <span class="inline-block border border-profit text-profit px-2 py-0.5 text-hl-11 font-medium">第五期</span>
           <span class="text-hl-12 text-muted">2026 年 7 月起 · 永久会员</span>
         </div>
-        <h3 class="text-hl-16 font-semibold text-ink mb-2">HOLD LE 2.0 永久会员</h3>
-        <p class="text-hl-13 text-muted mb-4">一次加入，永久使用。不涨价、不催续费、不绑你做任何事。</p>
+        <h3 class="text-hl-16 font-semibold text-ink mb-2">HOLD LE 2.0 永久会员 · 一次付费终身使用</h3>
+        <p class="text-hl-13 text-muted mb-4">⚡ 一次付费 · 永久使用 · 不涨价 · 不续费</p>
         <div class="w-full h-px bg-line mb-4"></div>
         <div class="flex items-end justify-between">
-          <div class="text-hl-12 text-muted-3">约合 72 USD</div>
+          <div class="text-hl-12 text-muted-3"> 72 USD</div>
           <div class="text-right">
             <span class="text-hl-40 font-bold text-ink leading-none">468</span>
             <span class="text-hl-14 text-muted ml-1 align-baseline">CNY</span>
@@ -254,7 +247,7 @@
             </p>
             <p class="text-hl-13 text-muted flex gap-3">
               <span class="text-profit font-medium shrink-0">③</span>
-              <span>把你在本站<span class="text-ink font-medium">注册的用户名</span>，用支付宝或留言发给我。</span>
+              <span><span class="text-ink font-medium">用户名 + 支付宝账号后4位</span>在留言处发送。</span>
             </p>
           </div>
 
@@ -273,7 +266,7 @@
               <p class="text-ink font-mono">EmileSu</p>
             </div>
           </div>
-          <p class="text-profit text-hl-12 leading-relaxed mt-4 pt-4 border-t border-line">⚠️ 支付后请将用户名附在留言处，24 小时内确认开通。</p>
+          <p class="text-profit text-hl-12 leading-relaxed mt-4 pt-4 border-t border-line">收款确认后 即刻开通认</p>
         </div>
 
         <div class="hl-card p-7">
@@ -296,7 +289,7 @@
             </p>
             <p class="text-hl-13 text-muted flex gap-3">
               <span class="text-profit font-medium shrink-0">③</span>
-              <span>把你在本站<span class="text-ink font-medium">注册的用户名</span>附在留言处发送即可。</span>
+              <span><span class="text-ink font-medium">用户名 + PayPal 账号后4位</span>在留言处发送。</span>
             </p>
           </div>
 
@@ -320,7 +313,7 @@
             <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
             </svg>
-            <span>PayPal 支付后请将用户名附在留言处，24 小时内确认开通</span>
+            <span>收款确认后 即刻开通</span>
           </div>
         </div>
       </div>
@@ -337,7 +330,7 @@
       <span class="inline-flex items-center justify-center w-7 h-7 rounded text-hl-13 font-medium bg-bg-mute text-muted-2 shrink-0">05</span>
       <h2 class="text-hl-22 font-bold text-ink">历期价格一览</h2>
     </div>
-    <p class="text-hl-13 text-muted mb-10">价格每年微涨，<span class="text-ink font-medium">老会员价格永远锁定</span></p>
+    <p class="text-hl-13 text-muted mb-10">价格每年微涨，<span class="text-ink font-medium">已加入的老会员价格永远锁定。</span></p>
 
     <div class="overflow-x-auto hl-card">
       <table class="hl-table">
@@ -377,7 +370,7 @@
             <td>368 CNY / 60 USD</td>
             <td>2019.06 — 2026.06</td>
             <td>永久</td>
-            <td><span class="inline-block border border-muted-5 text-muted-4 px-2 py-0.5 text-hl-11">已结束</span></td>
+            <td><span class="inline-block border border-muted-5 text-muted-4 px-2 py-0.5 text-hl-11">已结束（跨越7年）</span></td>
           </tr>
           <tr class="hl-active">
             <td><span class="font-semibold text-ink">第五期</span></td>
@@ -397,9 +390,9 @@
       </table>
     </div>
 
-    <p class="text-hl-12 text-muted-3 text-center mt-6">
+    <%# <p class="text-hl-12 text-muted-3 text-center mt-6">
       第四期跨越七年（2019.6 — 2026.6），<span class="text-ink font-medium">期间招募暂停</span>，已加入的会员永久保护价。
-    </p>
+    </p> %>
   </div>
 </section>
 
@@ -412,6 +405,18 @@
       <h2 class="text-hl-22 font-bold text-ink">常见问题</h2>
     </div>
     <p class="text-hl-13 text-muted mb-12">其他没写到的，可直接留言问我</p>
+
+    <div class="hl-card overflow-hidden hl-faq">
+      <details class="hl-faq-item">
+        <summary>
+          <span class="hl-q-badge">Q</span>
+          <span>我是零基础，适合加入吗？</span>
+          <span class="hl-faq-icon">+</span>
+        </summary>
+        <div class="hl-faq-content">
+          适合。HOLDLE 课程的设计就是从认知打底开始的——先理解什么是投资、怎么分析企业、怎么看价格，再到完整的交易规则建立。零基础反而没有"错误的习惯"需要纠正。
+        </div>
+      </details>
 
     <div class="hl-card overflow-hidden hl-faq">
       <details class="hl-faq-item">
@@ -433,6 +438,17 @@
         </summary>
         <div class="hl-faq-content">
           目前不提供发票（个人小社群没有这个能力），但支付宝/PayPal 交易记录本身就可以作为凭证。如果公司报销需要特殊处理，可以微信沟通。
+        </div>
+      </details>
+
+      <details class="hl-faq-item">
+        <summary>
+          <span class="hl-q-badge">Q</span>
+          <span>买了不满意能退款吗？</span>
+          <span class="hl-faq-icon">+</span>
+        </summary>
+        <div class="hl-faq-content">
+          知识付费类产品，原则上不提供无理由退款。但如果你付款后发现不适合——比如我们承诺的内容没做到，或者你根本没有收到——可以直接联系我。<strong class="text-ink">我会实事求是地处理。</strong>
         </div>
       </details>
 
@@ -479,6 +495,39 @@
           不用。你 1.0 时期付过的价格，<span class="text-ink font-medium">永远是你这个账号的价格</span>。七年没更新的歉意，让我更不能让你为回归再掏一次钱。2.0 的新内容、新工具，你直接用就行。
         </div>
       </details>
+
+      <details class="hl-faq-item">
+        <summary>
+          <span class="hl-q-badge">Q</span>
+          <span>永久会员 = 现在买了以后永远不用再付费？内容会更新吗？</span>
+          <span class="hl-faq-icon">+</span>
+        </summary>
+        <div class="hl-faq-content">
+          对。一次付费，永久使用。所有课程、工具、数据查询功能都是终身权限。内容会持续更新（新课程、新工具功能），不额外收费。
+        </div>
+      </details>
+
+      <details class="hl-faq-item">
+        <summary>
+          <span class="hl-q-badge">Q</span>
+          <span>已经有网站账号了，还需要单独注册会员吗？</span>
+          <span class="hl-faq-icon">+</span>
+        </summary>
+        <div class="hl-faq-content">
+          不需要。注册后直接用现有账号登录开通会员即可。老会员（1.0-4.0期）同样直接登录即可。
+        </div>
+      </details>
+
+      <details class="hl-faq-item">
+        <summary>
+          <span class="hl-q-badge">Q</span>
+          <span>工作比较忙，没时间学怎么办？</span>
+          <span class="hl-faq-icon">+</span>
+        </summary>
+        <div class="hl-faq-content">
+          课程是视频 + 文字 + 工具自助使用的模式，你可以在自己的节奏下学。有问题随时留言或微信问我。不是"必须跟上大部队"的模式。
+        </div>
+      </details>
     </div>
   </div>
 </section>
@@ -493,8 +542,7 @@
     </h2>
     <div class="w-60 h-px mx-auto my-10 bg-line"></div>
     <p class="text-ink leading-relaxed max-w-xl mx-auto text-hl-13">
-      这一定是你今年 <span class="font-semibold">最值得</span>、<span class="font-semibold">最便宜</span>、<span class="font-semibold">最划算</span><br />
-      的一笔知识投资。
+      如果你觉得适合，这会是<span class="font-semibold">性价比很高</span>的一笔知识投入。
     </p>
     <p class="text-muted mt-12 text-hl-12">— 大苏 EmileSu，写于 2026 年 7 月，南宁</p>
   </div>

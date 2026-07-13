@@ -8,6 +8,7 @@
       <div>
         <div class="hl-footer-brand">HOLD LE</div>
         <p class="hl-footer-tagline">
+          欢迎留下。欢迎思考。欢迎在股市里做一个清醒的人。<br><br>
           投资最终不是找到一个答案<br>
           而是建立面对未知的方法
         </p>
@@ -19,9 +20,9 @@
         <ul>
           <li><%= link_to "首页", root_path, class: "hl-footer-link" %></li>
           <li><%= link_to "金字塔", pyramid_path, class: "hl-footer-link" %></li>
-          <li><a href="#" class="hl-footer-link">交易课</a></li>
+          <li><%= link_to "交易课", courses_path, class: "hl-footer-link" %></li>
           <li><%= link_to "加入会员", join_path, class: "hl-footer-link" %></li>
-          <li><%= link_to "关于", "#", class: "hl-footer-link" %></li>
+          <li><%= link_to "关于", root_path, class: "hl-footer-link" %></li>
         </ul>
       </div>
 

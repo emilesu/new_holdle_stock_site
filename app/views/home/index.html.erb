@@ -1,5 +1,5 @@
 <% set_page_title "HOLDLE — 概率交易系统与长期投资学习社区" %>
-<% set_page_description "Holdle 提供港股、美股、A股财务数据深度分析，金字塔评分系统、行业对比与智能选股工具，助力投资者做出更明智的决策。" %>
+<% set_page_description "十七年交易经验沉淀。不荐股，不开群，不预测。这里只有一套可重复执行的投资方法和一个陪你成长的投资者社区。" %>
 <% set_page_keywords "股票分析,港股,美股,A股,财务数据,金字塔评分,智能选股,行业对比,投资分析" %>
 <%# ========== 1. Hero ========== %>
 <section class="py-hl-hero bg-white border-b border-line relative overflow-hidden">
@@ -17,7 +17,7 @@
     <p class="text-hl-18 text-muted-2 mb-7 leading-snug">老地方，老规矩，只是主人回来了。</p>
     <p class="text-hl-14 text-muted max-w-160 leading-relaxed mb-8">
       我是大苏，Hold Le的站长！<br>
-      七年没更新，人也还在，站也还在；这次回来，数据源重新接好了。<br>
+      七年没更新，人也还在，站也还在。数据源重新接好了，工具链重新打磨了。<br>
       还是那个老问题：怎么等、怎么买、怎么拿。<br>
       答案没变，人胖了点。
     </p>
@@ -95,7 +95,7 @@
           <li class="py-1 text-hl-13 text-muted relative pl-3.5 list-dot-link">精准交易提高赢面</li>
           <li class="py-1 text-hl-13 text-muted relative pl-3.5 list-dot-link">规则化的入场与出场</li>
         </ul>
-        <a href="#" class="text-hl-13 text-link inline-block link-shift">进入课程 →</a>
+        <%= link_to "进入课程 →", courses_path, class: "text-hl-13 text-link inline-block link-shift" %>
       </div>
 
       <div class="hl-card hl-card-hover p-7">
@@ -107,7 +107,7 @@
           <li class="py-1 text-hl-13 text-muted relative pl-3.5 list-dot-link">多维雷达图评估</li>
           <li class="py-1 text-hl-13 text-muted relative pl-3.5 list-dot-link">科技 / 消费行业排行榜</li>
         </ul>
-        <a href="#" class="text-hl-13 text-link inline-block link-shift">体验工具 →</a>
+        <%= link_to "体验工具 →", pyramid_path, class: "text-hl-13 text-link inline-block link-shift" %>
       </div>
 
       <div class="hl-card hl-card-hover p-7">
@@ -119,7 +119,7 @@
           <li class="py-1 text-hl-13 text-muted relative pl-3.5 list-dot-link">实盘案例拆解</li>
           <li class="py-1 text-hl-13 text-muted relative pl-3.5 list-dot-link">学会用规则做交易管理</li>
         </ul>
-        <a href="#" class="text-hl-13 text-link inline-block link-shift">进入频道 →</a>
+        <%= link_to "进入频道 →", video_path, class: "text-hl-13 text-link inline-block link-shift" %>
       </div>
     </div>
   </div>
@@ -160,7 +160,7 @@
 
     <div class="hl-quote">
       <strong>先选对股票，再选对时机。</strong><br>
-      <span class="text-muted-3 text-hl-13">这样你才会有足够的底气、信心，有了这层逻辑打底，你不会轻易怀疑自己的判断。</span>
+      <span class="text-muted-3 text-hl-13">有了这层逻辑打底，你不会轻易怀疑自己的判断，也更容易拿得住。</span>
     </div>
   </div>
 </section>
@@ -170,7 +170,7 @@
   <div class="container-hl">
     <div class="label-en">CASE CLOSED · 已结案案例</div>
     <h2 class="text-hl-22 font-semibold text-ink mb-2">历史战绩</h2>
-    <p class="text-hl-13 text-muted-3 mb-7">以下案例均为按 HOLDLE 方法论完整执行并已结案的盈利案例</p>
+    <p class="text-hl-13 text-muted-3 mb-7">按 HOLD LE 策略完整执行的公开案例。每笔都有明确的入场规则和出场规则。</p>
 
     <div class="hl-card overflow-hidden">
       <div class="px-6 py-4 border-b border-line-soft flex justify-between items-center text-hl-12 text-muted-3">
@@ -215,9 +215,10 @@
           </tbody>
         </table>
       </div>
-      <div class="px-6 py-4 bg-bg-soft border-t border-line-soft text-hl-12 text-muted-3 leading-relaxed">
-        ※ 这些案例里，有些是我自己操作的，有些是会员朋友按方法做的。来源不同，但方法论是同一套。<br>
-        ※ 过去的战绩不代表未来，但方法论的有效性是长期可复现的。<br>
+      <div class="px-6 py-4 bg-bg-soft border-t border-line-soft text-hl-12 text-muted-3 leading-relaxed">       
+        ※ 以上案例均为按 HOLDLE 方法论完整执行并已结案的盈利案例。</br>
+        ※ 这些案例里，有些是我自己操作的，有些是会员朋友按方法做的。来源不同，但方法论是同一套。</br>
+        ※ 过去的战绩不代表未来。但方法论的有效性是长期可复现的。</br>
         ※ 我希望这套方法能成为你长期使用的工具，而不是短期暴富的承诺。
       </div>
     </div>
@@ -253,14 +254,14 @@
           但恰恰相反，之后几年我开始能持续稳定获利，<strong class="text-ink">并不是因为我彻底解决了"如何判断正确"</strong>，而是对交易这件事在认知上的各方面转变。
         </p>
         <div class="hl-callout">
-          我可以告诉你：<br>
+          说实话：<br>
           <strong class="text-ink">判断正确有多简单，以至于没有复杂的技巧可言。</strong><br>
           <strong class="text-ink">在交易中更困难的，是学会静静地等待，</strong><br>
           <strong class="text-ink">等待计划中的事情自己出现，自己去发展。</strong>
         </div>
         <div class="hl-callout-dashed">
           <h4 class="text-hl-12 text-muted-3 font-medium mb-2 tracking-wide-2">关于 7 年断更这件事</h4>
-          <p class="text-hl-13 text-muted leading-relaxed">早年在 P2P 公司做技术，老板 2016 年跑路，一直没抓到。作为打工人的我，法律责任由法院判定——<strong class="text-ink">7 年 9 个月</strong>。这事我不展开讲，以后有空再说。这次回来是想告诉你：判完了，人还在，方法还在，工具还能打。</p>
+          <p class="text-hl-13 text-muted leading-relaxed">早年在 P2P 公司做技术，老板 2016 年跑路。作为打工人，法律责任由法院判定。这事不展开讲了，以后有机会再说。这次回来是想告诉你：<strong class="text-ink">人还在，方法还在，工具还能打。</strong>
         </div>
       </div>
     </div>
@@ -335,6 +336,50 @@
         </summary>
         <div class="hl-faq-content">
           <strong class="text-ink">并没有！！！</strong><br>HOLD LE 不会开任何"每日荐股""牛股推荐"群。目的是<strong class="text-ink">授人以渔</strong>，让你自己能学会一套<strong class="text-ink">长期经过实践检验</strong>的交易方法。<br><br>荐股群容易被不良股票诈骗者利用，用来发布广告，散布错误的短线交易观念。轻信的话，很可能会造成经济损失。
+        </div>
+      </details>
+
+      <details class="hl-faq-item">
+        <summary>
+          <span class="hl-q-badge">Q</span>
+          <span>课程怎么收费？有免费内容先看吗？</span>
+          <span class="hl-faq-icon">+</span>
+        </summary>
+        <div class="hl-faq-content">
+          课程是付费内容，但我们有大量免费的內容供你了解 HOLDLE 的方法论——包括视频、文章和一些在线工具。建议你先看免费内容，确认这套方法适合你，再考虑是否进入系统课程。
+        </div>
+      </details>
+
+      <details class="hl-faq-item">
+        <summary>
+          <span class="hl-q-badge">Q</span>
+          <span>状态 A 是什么意思？看不懂</span>
+          <span class="hl-faq-icon">+</span>
+        </summary>
+        <div class="hl-faq-content">
+          状态 A 是我们的分析框架中的一类价格信号——简单说就是一支股票进入长期上涨周期时的初步特征。它是"状态 A / B / C / D"四类判断中最值得关注的一种。课程中有完整的识别方法。
+        </div>
+      </details>
+
+      <details class="hl-faq-item">
+        <summary>
+          <span class="hl-q-badge">Q</span>
+          <span>跟其他投资课程有什么不同？</span>
+          <span class="hl-faq-icon">+</span>
+        </summary>
+        <div class="hl-faq-content">
+          这里不推荐股票、不搞短线交易、不承诺收益。我们的目标不是"让你在下一笔交易里赚钱"，而是帮你建立一套可以自己用的投资体系——从分析企业到判断价格到管理风险，每一步走明白。
+        </div>
+      </details>
+
+      <details class="hl-faq-item">
+        <summary>
+          <span class="hl-q-badge">Q</span>
+          <span>网站重新上线后，老会员还能用之前的账号吗？</span>
+          <span class="hl-faq-icon">+</span>
+        </summary>
+        <div class="hl-faq-content">
+          可以。老数据都在。直接用原有账号登录即可。如果有问题，可以联系我。
         </div>
       </details>
     </div>
