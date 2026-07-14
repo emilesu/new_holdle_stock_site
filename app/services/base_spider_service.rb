@@ -1,8 +1,8 @@
 # 爬虫基础父类，封装通用HTTP请求、重试、请求头、数据清洗、异常处理
 class BaseSpiderService
-  # 从环境变量读取配置
-  USER_AGENT = ENV.fetch("XUEQIU_USER_AGENT")
-  REFERER = ENV.fetch("XUEQIU_REFERER")
+  # 从环境变量读取配置（已停用雪球，设默认值避免加载崩溃）
+  USER_AGENT = ENV.fetch("XUEQIU_USER_AGENT", "")
+  REFERER = ENV.fetch("XUEQIU_REFERER", "")
   COOKIE = ENV.fetch("XUEQIU_COOKIE", "")
   TIMEOUT = ENV.fetch("SPIDER_TIMEOUT", 30).to_i
   RETRY_TIMES = ENV.fetch("SPIDER_RETRY_TIMES", 2).to_i
