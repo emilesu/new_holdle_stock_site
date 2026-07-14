@@ -49,6 +49,7 @@ class OrdersController < ApplicationController
     if result.success?
       if payment_method == "wechat_jsapi"
         order.update(prepay_id: result["prepay_id"])
+        @order = order
         @pay_params = WxPay::Service.generate_js_pay_req(
           prepayid: result["prepay_id"],
           noncestr: SecureRandom.hex(16)
