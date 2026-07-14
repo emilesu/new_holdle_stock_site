@@ -11,7 +11,7 @@
   </head>
 
   <body class="bg-bg-soft min-h-screen">
-    <nav class="bg-ink text-white">
+    <nav class="bg-ink text-white" data-controller="mobile-menu">
       <div class="container-hl">
         <div class="flex justify-between items-center h-14">
           <div class="flex items-center space-x-6">
@@ -34,7 +34,39 @@
                 <p class="text-hl-12 text-muted-5"><%= human_role(current_user.role) %></p>
               </div>
             </div>
-            <%= link_to "退出", destroy_user_session_path, method: :delete, class: "text-muted-4 hover:text-white px-3 py-1.5 text-hl-13 transition-colors rounded" %>
+            <div class="hidden md:block">
+              <%= link_to "退出", destroy_user_session_path, method: :delete, class: "text-muted-4 hover:text-white px-3 py-1.5 text-hl-13 transition-colors rounded" %>
+            </div>
+            <button data-action="click->mobile-menu#toggle"
+                    class="md:hidden p-2 hover:bg-white/10 rounded" aria-label="切换菜单">
+              <svg data-mobile-menu-target="buttonIcon" class="w-[18px] h-[18px] text-muted-4 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <%# 移动端菜单 %>
+      <div id="mobile-menu" data-mobile-menu-target="menu"
+           class="hidden md:hidden bg-ink border-t border-white/10 overflow-hidden transition-[max-height] duration-200 ease-out">
+        <div class="px-4 py-4 space-y-2">
+          <a href="<%= admin_root_path %>" class="block px-3 py-2 text-hl-13 text-muted-4 hover:text-white hover:bg-white/10 rounded transition-colors">仪表盘</a>
+          <a href="<%= admin_message_boards_path %>" class="block px-3 py-2 text-hl-13 text-muted-4 hover:text-white hover:bg-white/10 rounded transition-colors">留言管理</a>
+          <a href="<%= admin_users_path %>" class="block px-3 py-2 text-hl-13 text-muted-4 hover:text-white hover:bg-white/10 rounded transition-colors">用户管理</a>
+          <a href="<%= admin_stocks_path %>" class="block px-3 py-2 text-hl-13 text-muted-4 hover:text-white hover:bg-white/10 rounded transition-colors">股票管理</a>
+          <a href="<%= admin_courses_path %>" class="block px-3 py-2 text-hl-13 text-muted-4 hover:text-white hover:bg-white/10 rounded transition-colors">课程管理</a>
+          <a href="<%= admin_stock_crawlers_path %>" class="block px-3 py-2 text-hl-13 text-muted-4 hover:text-white hover:bg-white/10 rounded transition-colors">爬虫管理</a>
+          <div class="pt-3 mt-3 border-t border-white/10">
+            <div class="flex items-center gap-3 px-3 py-2">
+              <%= user_avatar_tag(current_user, size: "w-9 h-9") %>
+              <div>
+                <p class="text-hl-13 font-medium"><%= current_user.nickname %></p>
+                <p class="text-hl-12 text-muted-5"><%= human_role(current_user.role) %></p>
+              </div>
+            </div>
+            <%= link_to "退出", destroy_user_session_path, method: :delete,
+                class: "block w-full text-left px-3 py-2 text-hl-13 text-muted-4 hover:text-white hover:bg-white/10 rounded transition-colors mt-1" %>
           </div>
         </div>
       </div>

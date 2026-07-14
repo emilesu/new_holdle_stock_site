@@ -12,7 +12,7 @@
           <div class="min-w-0">
             <h1 class="text-hl-18 font-semibold text-white"><%= @user.nickname %></h1>
             <div class="flex flex-wrap gap-2 mt-3">
-              <span class="inline-flex px-2.5 py-0.5 text-hl-11 font-medium bg-white/10 text-white/80 border border-white/20 rounded"><%= @user.member_status %></span>
+              <span class="inline-flex px-2.5 py-0.5 text-hl-11 font-medium bg-white/10 text-white/80 border border-white/20 rounded"><%= human_role(@user.role) %></span>
             </div>
           </div>
         </div>
@@ -41,17 +41,9 @@
           </span>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div class="bg-bg-soft rounded p-4 sm:p-5">
-            <span class="text-hl-12 text-muted-4 block mb-1">会员到期时间</span>
-            <span class="text-hl-14 text-ink font-medium">
-              <%= @user.member_expire_at.present? ? l(@user.member_expire_at, format: :long) : "<span class='text-muted-4'>未开通会员</span>".html_safe %>
-            </span>
-          </div>
-          <div class="bg-bg-soft rounded p-4 sm:p-5">
-            <span class="text-hl-12 text-muted-4 block mb-1">角色权限</span>
-            <span class="text-hl-14 text-ink font-medium"><%= human_role(@user.role) %></span>
-          </div>
+        <div class="bg-bg-soft rounded p-4 sm:p-5">
+          <span class="text-hl-12 text-muted-4 block mb-1">角色权限</span>
+          <span class="text-hl-14 text-ink font-medium"><%= human_role(@user.role) %></span>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
