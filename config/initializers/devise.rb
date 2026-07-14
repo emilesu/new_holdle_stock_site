@@ -321,7 +321,17 @@ Devise.setup do |config|
   scope: 'snsapi_login'
 
   # 手机端 - 微信APP确认登录
-  require File.expand_path('../../lib/omniauth/strategies/wechat_mobile', __dir__)
+  # 自定义策略：使用 connect/oauth2/authorize 端点，snsapi_userinfo scope
+  class ::OmniAuth::Strategies::WechatMobile < ::OmniAuth::Strategies::Wechat
+    option :name, "wechat_mobile"
+    option :client_options, {
+      site:          "https://api.weixin.qq.com",
+      authorize_url: "https://open.weixin.qq.com/connect/oauth2/authorize?#wechat_redirect",
+      token_url:     "/sns/oauth2/access_token",
+      token_method:  :get
+    }
+    option :authorize_params, {scope: "snsapi_userinfo"}
+  end
   config.omniauth :wechat_mobile,
   ENV['WECHAT_APP_ID'],
   ENV['WECHAT_APP_SECRET']
