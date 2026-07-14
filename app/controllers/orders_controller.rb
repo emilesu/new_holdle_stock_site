@@ -50,7 +50,13 @@ class OrdersController < ApplicationController
       wx_params[:openid] = openid
     end
 
-    result = WxPay::Service.invoke_unifiedorder(wx_params)
+    begin
+      result = WxPay::Service.invoke_unifiedorder(wx_params)
+    rescue => e
+      Rails.logger.error "[WxPay] order #{order.order_no} API error: #{e.class} #{e.message}"
+      redirect_to new_order_path, alert: "微信支付服务暂时不可用，请稍后重试"
+      return
+    end
 
     if result.success?
       if payment_method == "wechat_jsapi"

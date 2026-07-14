@@ -40,8 +40,13 @@
             if (!btn) return;
 
             var payParams = JSON.parse(btn.dataset.payParams);
+            var orderId = <%= @order.id %>;
+            var invokedKey = 'hl_wxpay_' + orderId;
 
             function invokeWechatPay() {
+              // 标记已调用，防止刷新页面重复触发
+              try { sessionStorage.setItem(invokedKey, '1'); } catch(e) {}
+
               if (typeof WeixinJSBridge === 'undefined') {
                 document.addEventListener('WeixinJSBridgeReady', function() {
                   WeixinJSBridge.invoke('getBrandWCPayRequest', payParams, function(res) {
@@ -60,8 +65,13 @@
             }
 
             btn.addEventListener('click', invokeWechatPay);
-            // 页面加载后自动拉起
-            setTimeout(invokeWechatPay, 500);
+
+            // 仅首次加载时自动拉起，刷新页面不重复触发
+            var alreadyInvoked = false;
+            try { alreadyInvoked = sessionStorage.getItem(invokedKey) === '1'; } catch(e) {}
+            if (!alreadyInvoked) {
+              setTimeout(invokeWechatPay, 500);
+            }
           });
         <% end %>
       <% else %>
