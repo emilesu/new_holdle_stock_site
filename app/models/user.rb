@@ -16,6 +16,7 @@ class User < ApplicationRecord
   has_many :user_favorites, dependent: :destroy
   has_many :favorite_stocks, through: :user_favorites, source: :stock
   has_many :message_boards, dependent: :destroy
+  has_many :orders, dependent: :destroy
 
   # 微信三字段匹配优先级：unionid > web_openid（兼容旧用户）
   def self.find_for_wechat_oauth(auth)
