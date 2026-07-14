@@ -12,10 +12,10 @@ class OrdersController < ApplicationController
 
     # JSAPI 支付需要 openid，优先公众号，回退到开放平台
     if payment_method == "wechat_jsapi"
-      openid = current_user.weixin_web_openid || current_user.weixin_app_openid
+      openid = current_user.weixin_app_openid || current_user.weixin_web_openid
       unless openid
         session[:after_wechat_auth] = "new_order"
-        auth_url = user_wechat_omniauth_authorize_path
+        auth_url = user_wechat_mobile_omniauth_authorize_path
         render html: auto_auth_form(auth_url), layout: false
         return
       end
