@@ -33,6 +33,12 @@ class Users::OmniauthCallbacksController < Devise::OmniauthCallbacksController
     if union_id.present?
       user = User.find_by(weixin_unionid: union_id)
       if user.present?
+        # 如果 openid 已被其他用户占用，先释放（兼容同一人分别在扫码和公众号各有一个账号的情况）
+        other = User.find_by(openid_field => open_id)
+        if other && other.id != user.id
+          other.update(openid_field => nil)
+          Rails.logger.info "[OmniAuth WeChat] released #{openid_field}=#{open_id} from user #{other.id} to user #{user.id}"
+        end
         updates = { nickname: wx_nickname, avatar: wx_avatar, openid_field => open_id }
         user.update(updates)
         sign_in user
@@ -45,6 +51,14 @@ class Users::OmniauthCallbacksController < Devise::OmniauthCallbacksController
     user = User.find_by(openid_field => open_id)
 
     if user.present?
+      # 如果 unionid 已被其他用户占用，先释放
+      if union_id.present?
+        other = User.find_by(weixin_unionid: union_id)
+        if other && other.id != user.id
+          other.update(weixin_unionid: nil)
+          Rails.logger.info "[OmniAuth WeChat] released unionid=#{union_id} from user #{other.id} to user #{user.id}"
+        end
+      end
       user.update(
         weixin_unionid: union_id,
         nickname: wx_nickname,
