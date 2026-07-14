@@ -85,8 +85,6 @@ class Users::OmniauthCallbacksController < Devise::OmniauthCallbacksController
   public
 
   def google_oauth2
-
-  def google_oauth2
     auth = request.env["omniauth.auth"]
     unless auth
       Rails.logger.error "[OmniAuth Google] auth hash is nil"
