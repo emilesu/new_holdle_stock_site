@@ -86,7 +86,7 @@ class OrdersController < ApplicationController
   private
 
   def detect_payment_method
-    wechat_browser? ? "wechat_jsapi" : "wechat_native"
+    request.user_agent.to_s.include?("MicroMessenger") ? "wechat_jsapi" : "wechat_native"
   end
 
   def redirect_if_already_member
