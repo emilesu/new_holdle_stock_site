@@ -1,6 +1,6 @@
 <div class="mb-8">
-  <h1 class="text-2xl font-bold text-gray-900">订单详情</h1>
-  <p class="mt-2 text-gray-600">订单号：<span class="font-mono"><%= @order.order_no %></span></p>
+  <h1 class="text-hl-22 font-bold text-ink">订单详情</h1>
+  <p class="mt-2 text-muted">订单号：<span class="font-mono"><%= @order.order_no %></span></p>
 </div>
 
 <div class="hl-card">
@@ -9,23 +9,23 @@
   </div>
   <div class="px-6 py-6">
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <div class="bg-gray-50 rounded-md p-5">
-        <h3 class="text-sm font-medium text-gray-500 mb-4">基础信息</h3>
+      <div class="bg-bg-soft rounded p-5">
+        <h3 class="text-hl-13 font-medium text-muted mb-4">基础信息</h3>
         <div class="space-y-3">
           <div class="flex justify-between">
-            <span class="text-gray-500">用户</span>
-            <span class="font-medium text-gray-900"><%= @order.user.nickname %> (#<%= @order.user_id %>)</span>
+            <span class="text-muted">用户</span>
+            <span class="font-medium text-ink"><%= @order.user.nickname %> (#<%= @order.user_id %>)</span>
           </div>
           <div class="flex justify-between">
-            <span class="text-gray-500">商品</span>
-            <span class="font-medium text-gray-900"><%= @order.title %></span>
+            <span class="text-muted">商品</span>
+            <span class="font-medium text-ink"><%= @order.title %></span>
           </div>
           <div class="flex justify-between">
-            <span class="text-gray-500">金额</span>
-            <span class="font-medium text-gray-900">¥<%= @order.amount_yuan %></span>
+            <span class="text-muted">金额</span>
+            <span class="font-medium text-ink">¥<%= @order.amount_yuan %></span>
           </div>
           <div class="flex justify-between">
-            <span class="text-gray-500">状态</span>
+            <span class="text-muted">状态</span>
             <span class="font-medium">
               <span class="inline-flex px-2 py-0.5 text-hl-11 font-medium rounded
                 <%= @order.paid? ? 'bg-green-100 text-green-700' : 'bg-bg-mute text-muted' %>">
@@ -36,36 +36,36 @@
         </div>
       </div>
 
-      <div class="bg-gray-50 rounded-md p-5">
-        <h3 class="text-sm font-medium text-gray-500 mb-4">支付信息</h3>
+      <div class="bg-bg-soft rounded p-5">
+        <h3 class="text-hl-13 font-medium text-muted mb-4">支付信息</h3>
         <div class="space-y-3">
           <div class="flex justify-between">
-            <span class="text-gray-500">支付方式</span>
-            <span class="font-medium text-gray-900"><%= @order.payment_method %></span>
+            <span class="text-muted">支付方式</span>
+            <span class="font-medium text-ink"><%= @order.payment_method %></span>
           </div>
           <div class="flex justify-between">
-            <span class="text-gray-500">微信单号</span>
-            <span class="font-medium text-gray-900 font-mono text-hl-12">
+            <span class="text-muted">微信单号</span>
+            <span class="font-medium text-ink font-mono text-hl-12">
               <%= @order.wechat_transaction_id || "-" %>
             </span>
           </div>
           <div class="flex justify-between">
-            <span class="text-gray-500">支付时间</span>
-            <span class="font-medium text-gray-900">
+            <span class="text-muted">支付时间</span>
+            <span class="font-medium text-ink">
               <%= @order.paid_at ? l(@order.paid_at, format: :long) : "-" %>
             </span>
           </div>
           <div class="flex justify-between">
-            <span class="text-gray-500">创建时间</span>
-            <span class="font-medium text-gray-900"><%= l(@order.created_at, format: :long) %></span>
+            <span class="text-muted">创建时间</span>
+            <span class="font-medium text-ink"><%= l(@order.created_at, format: :long) %></span>
           </div>
         </div>
       </div>
     </div>
 
     <% if @order.notify_raw.present? %>
-    <div class="mt-6 bg-gray-50 rounded-md p-5">
-      <h3 class="text-sm font-medium text-gray-500 mb-3">微信回调原始数据</h3>
+    <div class="mt-6 bg-bg-soft rounded p-5">
+      <h3 class="text-hl-13 font-medium text-muted mb-3">微信回调原始数据</h3>
       <pre class="text-hl-12 text-muted-3 overflow-x-auto max-h-48"><%= JSON.pretty_generate(@order.notify_raw) %></pre>
     </div>
     <% end %>

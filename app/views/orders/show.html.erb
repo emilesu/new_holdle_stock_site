@@ -71,7 +71,8 @@
           <div class="flex justify-center mb-6">
             <div id="qrcode-container" data-controller="qrcode"
                  data-qrcode-url="<%= @order.code_url %>"
-                 class="w-48 h-48 bg-white border border-line p-3">
+                 class="inline-block bg-white border border-line p-3">
+              <canvas data-qrcode-target="canvas"></canvas>
             </div>
           </div>
           <p class="text-hl-13 text-muted">订单金额：<span class="text-profit font-semibold">¥<%= @order.amount_yuan %></span></p>
@@ -86,20 +87,34 @@
 
 <% unless @order.paid? || @order.payment_method == "wechat_jsapi" %>
   <%= javascript_tag nonce: true do %>
-    document.addEventListener('turbo:load', function pollOrderStatus() {
+    document.addEventListener('turbo:load', function() {
+      if (window._orderPollTimer) {
+        clearInterval(window._orderPollTimer);
+        window._orderPollTimer = null;
+      }
+
+      var orderId = <%= @order.id %>;
       var paid = <%= @order.paid? %>;
       if (paid) return;
 
-      var interval = setInterval(function() {
+      window._orderPollTimer = setInterval(function() {
         fetch('<%= status_order_path(@order) %>')
           .then(function(r) { return r.json(); })
           .then(function(data) {
             if (data.paid) {
-              clearInterval(interval);
+              clearInterval(window._orderPollTimer);
+              window._orderPollTimer = null;
               window.location.reload();
             }
           });
       }, 3000);
+    });
+
+    document.addEventListener('turbo:before-cache', function() {
+      if (window._orderPollTimer) {
+        clearInterval(window._orderPollTimer);
+        window._orderPollTimer = null;
+      }
     });
   <% end %>
 <% end %>

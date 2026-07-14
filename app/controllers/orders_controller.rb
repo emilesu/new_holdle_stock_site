@@ -10,12 +10,18 @@ class OrdersController < ApplicationController
   def create
     payment_method = detect_payment_method
 
-    order = current_user.orders.create!(
-      product_code: "member_permanent",
-      title: Order::PRODUCTS["member_permanent"][:title],
-      amount_cents: Order::PRODUCTS["member_permanent"][:amount_cents],
-      payment_method: payment_method
-    )
+    begin
+      order = current_user.orders.create!(
+        product_code: "member_permanent",
+        title: Order::PRODUCTS["member_permanent"][:title],
+        amount_cents: Order::PRODUCTS["member_permanent"][:amount_cents],
+        payment_method: payment_method
+      )
+    rescue ActiveRecord::RecordInvalid => e
+      Rails.logger.error "[WxPay] Order creation failed: #{e.message}"
+      redirect_to new_order_path, alert: "订单创建失败，请重试"
+      return
+    end
 
     notify_url = wechat_pay_notify_url
     spbill_create_ip = request.remote_ip

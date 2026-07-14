@@ -1,6 +1,4 @@
-class Admin::OrdersController < ApplicationController
-  before_action :authenticate_user!
-  before_action :authorize_admin!
+class Admin::OrdersController < Admin::BaseController
 
   def index
     @orders = Order.includes(:user).order(created_at: :desc).page(params[:page]).per(50)
