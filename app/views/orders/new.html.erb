@@ -25,11 +25,12 @@
           </div>
         </div>
 
-        <%= form_tag orders_path, data: { turbo: false } do %>
+        <form action="<%= orders_path %>" method="post" data-turbo="false">
+          <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
           <button type="submit" class="hl-btn hl-btn-primary block w-full text-center py-3">
             确认支付 ¥<%= @product[:amount_cents] / 100 %>
           </button>
-        <% end %>
+        </form>
 
         <p class="text-hl-12 text-muted-4 text-center mt-4">
           支付即表示同意会员条款
