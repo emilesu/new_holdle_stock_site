@@ -49,6 +49,8 @@ gem 'omniauth-google-oauth2'
 
 # 微信支付
 gem 'wx_pay'
+# wx_pay 依赖 rexml 解析 XML（Rails 7.1+ 不再默认包含）
+gem 'rexml'
 
 # 部署核心
 gem 'capistrano', '~> 3.19'
