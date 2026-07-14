@@ -38,7 +38,7 @@ class OrdersController < ApplicationController
     if payment_method == "wechat_jsapi"
       openid = current_user.weixin_web_openid
       unless openid
-        redirect_to new_order_path, alert: "请先在微信中授权登录后再支付"
+        render html: auto_auth_form(user_wechat_omniauth_authorize_path, request.session_options[:id]), layout: false
         return
       end
       wx_params[:openid] = openid
@@ -99,5 +99,21 @@ class OrdersController < ApplicationController
   def wechat_pay_notify_url
     base = Rails.env.production? ? "https://www.holdle.com" : "http://8.210.33.72:3001"
     "#{base}/wechat/pay_callbacks"
+  end
+
+  def auto_auth_form(auth_path, csrf_token)
+    <<~HTML.html_safe
+      <!DOCTYPE html>
+      <html>
+      <head><meta charset="utf-8"><title>授权中...</title></head>
+      <body>
+        <p style="text-align:center;margin-top:40px;font-size:16px;color:#555;">正在跳转微信授权...</p>
+        <form id="auth-form" action="#{auth_path}" method="post">
+          <input type="hidden" name="authenticity_token" value="#{form_authenticity_token}">
+        </form>
+        <script>document.getElementById('auth-form').submit();</script>
+      </body>
+      </html>
+    HTML
   end
 end
