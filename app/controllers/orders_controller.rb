@@ -38,7 +38,7 @@ class OrdersController < ApplicationController
     if payment_method == "wechat_jsapi"
       openid = current_user.weixin_web_openid
       unless openid
-        redirect_to user_wechat_omniauth_authorize_path(state: "pay_order_#{order.order_no}")
+        redirect_to new_order_path, alert: "请先在微信中授权登录后再支付"
         return
       end
       wx_params[:openid] = openid
