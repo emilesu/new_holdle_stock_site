@@ -10,6 +10,17 @@ class OrdersController < ApplicationController
   def create
     payment_method = detect_payment_method
 
+    # JSAPI 支付需要先确认有公众号 openid，否则不创建订单
+    if payment_method == "wechat_jsapi"
+      openid = current_user.weixin_web_openid
+      unless openid
+        session[:after_wechat_auth] = "new_order"
+        auth_url = user_wechat_omniauth_authorize_path
+        render html: auto_auth_form(auth_url), layout: false
+        return
+      end
+    end
+
     begin
       order = current_user.orders.create!(
         product_code: "member_permanent",
@@ -36,13 +47,6 @@ class OrdersController < ApplicationController
     }
 
     if payment_method == "wechat_jsapi"
-      openid = current_user.weixin_web_openid
-      unless openid
-        session[:after_wechat_auth] = "new_order"
-        auth_url = user_wechat_omniauth_authorize_path
-        render html: auto_auth_form(auth_url), layout: false
-        return
-      end
       wx_params[:openid] = openid
     end
 
