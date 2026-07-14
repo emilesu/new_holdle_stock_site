@@ -314,10 +314,21 @@ Devise.setup do |config|
   # changed. Defaults to true, so a user is signed in automatically after changing a password.
   # config.sign_in_after_change_password = true
   # 
+  # 桌面端 - 微信扫码登录
   config.omniauth :wechat,
   ENV['WECHAT_APP_ID'],
   ENV['WECHAT_APP_SECRET'],
   scope: 'snsapi_login'
+
+  # 手机端 - 微信APP确认登录
+  config.omniauth :wechat_mobile,
+  ENV['WECHAT_APP_ID'],
+  ENV['WECHAT_APP_SECRET'],
+  strategy_class: OmniAuth::Strategies::Wechat,
+  scope: 'snsapi_userinfo',
+  client_options: {
+    authorize_url: 'https://open.weixin.qq.com/connect/oauth2/authorize?#wechat_redirect'
+  }
 
   config.omniauth :google_oauth2, 
   ENV['GOOGLE_CLIENT_ID'], 

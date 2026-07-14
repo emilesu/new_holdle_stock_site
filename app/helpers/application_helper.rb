@@ -57,6 +57,12 @@ module ApplicationHelper
     end
   end
 
+  # ── 设备检测 ─────────────────────────────────────
+
+  def mobile_device?
+    request.user_agent =~ /Mobile|webOS|iPhone|iPad|Android|BlackBerry|Windows Phone|Opera Mini|IEMobile/i
+  end
+
   # ── 原有方法 ─────────────────────────────────────
 
   def human_role(role)

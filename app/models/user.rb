@@ -1,7 +1,7 @@
 class User < ApplicationRecord
   devise :database_authenticatable, :registerable,
          :recoverable, :rememberable, :validatable,
-         :omniauthable, omniauth_providers: [:wechat, :google_oauth2]
+         :omniauthable, omniauth_providers: [:wechat, :wechat_mobile, :google_oauth2]
 
   enum role: {
     user: "user",

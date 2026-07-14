@@ -1,6 +1,6 @@
 class Users::OmniauthCallbacksController < Devise::OmniauthCallbacksController
   # 跳过 CSRF 验证（OAuth 回调由外部服务发起，无法携带 CSRF token）
-  skip_before_action :verify_authenticity_token, only: [:google_oauth2, :wechat]
+  skip_before_action :verify_authenticity_token, only: [:google_oauth2, :wechat, :wechat_mobile]
 
   def wechat
     auth = request.env["omniauth.auth"]
@@ -54,6 +54,11 @@ class Users::OmniauthCallbacksController < Devise::OmniauthCallbacksController
 
     sign_in user
     redirect_to root_path, notice: "微信注册并登录成功"
+  end
+
+  # 手机端微信APP确认登录回调 — 与桌面端共用同一处理逻辑（同一 App ID，unionid 一致）
+  def wechat_mobile
+    wechat
   end
 
   def google_oauth2
