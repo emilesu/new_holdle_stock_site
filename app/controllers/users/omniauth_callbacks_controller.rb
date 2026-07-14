@@ -42,7 +42,7 @@ class Users::OmniauthCallbacksController < Devise::OmniauthCallbacksController
         updates = { nickname: wx_nickname, avatar: wx_avatar, openid_field => open_id }
         user.update(updates)
         sign_in user
-        redirect_to root_path, notice: "微信登录成功"
+        redirect_after_wechat_auth("微信登录成功")
         return
       end
     end
@@ -65,7 +65,7 @@ class Users::OmniauthCallbacksController < Devise::OmniauthCallbacksController
         avatar: wx_avatar
       )
       sign_in user
-      redirect_to root_path, notice: "微信登录成功，已同步账号信息"
+      redirect_after_wechat_auth("微信登录成功，已同步账号信息")
       return
     end
 
@@ -93,7 +93,16 @@ class Users::OmniauthCallbacksController < Devise::OmniauthCallbacksController
     end
 
     sign_in user
-    redirect_to root_path, notice: "微信注册并登录成功"
+    redirect_after_wechat_auth("微信注册并登录成功")
+  end
+
+  def redirect_after_wechat_auth(notice)
+    if session[:after_wechat_auth] == "new_order"
+      session.delete(:after_wechat_auth)
+      redirect_to new_order_path, notice: "已授权，请重新点击微信支付"
+    else
+      redirect_to root_path, notice: notice
+    end
   end
 
   public

@@ -38,7 +38,9 @@ class OrdersController < ApplicationController
     if payment_method == "wechat_jsapi"
       openid = current_user.weixin_web_openid
       unless openid
-        render html: auto_auth_form(user_wechat_omniauth_authorize_path, request.session_options[:id]), layout: false
+        session[:after_wechat_auth] = "new_order"
+        auth_url = user_wechat_omniauth_authorize_path
+        render html: auto_auth_form(auth_url), layout: false
         return
       end
       wx_params[:openid] = openid
@@ -101,14 +103,14 @@ class OrdersController < ApplicationController
     "#{base}/wechat/pay_callbacks"
   end
 
-  def auto_auth_form(auth_path, csrf_token)
+  def auto_auth_form(auth_url)
     <<~HTML.html_safe
       <!DOCTYPE html>
       <html>
       <head><meta charset="utf-8"><title>授权中...</title></head>
       <body>
         <p style="text-align:center;margin-top:40px;font-size:16px;color:#555;">正在跳转微信授权...</p>
-        <form id="auth-form" action="#{auth_path}" method="post">
+        <form id="auth-form" action="#{auth_url}" method="post">
           <input type="hidden" name="authenticity_token" value="#{form_authenticity_token}">
         </form>
         <script>document.getElementById('auth-form').submit();</script>
