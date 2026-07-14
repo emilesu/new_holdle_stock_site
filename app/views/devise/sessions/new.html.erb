@@ -32,7 +32,7 @@
         <div class="login-tabs-content mt-6">
           <div id="tab-quick" class="login-tab-panel" data-login-tabs-target="panel">
             <div class="flex justify-center gap-8">
-              <%= button_to "", (mobile_device? ? user_wechat_mobile_omniauth_authorize_path : user_wechat_omniauth_authorize_path),
+              <%= button_to "", (wechat_browser? ? user_wechat_mobile_omniauth_authorize_path : user_wechat_omniauth_authorize_path),
                 data: { turbo: false }, class: "login-social-btn login-social-btn-square login-social-wechat" %>
               <%= button_to "", user_google_oauth2_omniauth_authorize_path, data: { turbo: false },
                 class: "login-social-btn login-social-btn-square login-social-google" %>

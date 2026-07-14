@@ -63,6 +63,10 @@ module ApplicationHelper
     request.user_agent =~ /Mobile|webOS|iPhone|iPad|Android|BlackBerry|Windows Phone|Opera Mini|IEMobile/i
   end
 
+  def wechat_browser?
+    request.user_agent.to_s.include?("MicroMessenger")
+  end
+
   # ── 原有方法 ─────────────────────────────────────
 
   def human_role(role)

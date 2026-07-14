@@ -320,7 +320,7 @@ Devise.setup do |config|
   ENV['WECHAT_APP_SECRET'],
   scope: 'snsapi_login'
 
-  # 手机端 - 微信APP确认登录
+  # 手机端（微信客户端内） - 公众号 OAuth 授权登录
   # 自定义策略：使用 connect/oauth2/authorize 端点，snsapi_userinfo scope
   class ::OmniAuth::Strategies::WechatMobile < ::OmniAuth::Strategies::Wechat
     option :name, "wechat_mobile"
@@ -333,8 +333,8 @@ Devise.setup do |config|
     option :authorize_params, {scope: "snsapi_userinfo"}
   end
   config.omniauth :wechat_mobile,
-  ENV['WECHAT_APP_ID'],
-  ENV['WECHAT_APP_SECRET']
+  ENV['WECHAT_MOBILE_APP_ID'],
+  ENV['WECHAT_MOBILE_APP_SECRET']
 
   config.omniauth :google_oauth2, 
   ENV['GOOGLE_CLIENT_ID'], 
