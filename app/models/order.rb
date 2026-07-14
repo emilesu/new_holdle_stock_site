@@ -8,7 +8,7 @@ class Order < ApplicationRecord
   scope :paid, -> { where(status: "paid") }
 
   PRODUCTS = {
-    "member_permanent" => { title: "HOLD LE 永久会员", amount_cents: 100 }
+    "member_permanent" => { title: "HOLD LE 永久会员", amount_cents: 46800 }
   }.freeze
 
   before_validation :generate_order_no, on: :create
