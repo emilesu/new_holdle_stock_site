@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_06_23_083729) do
+ActiveRecord::Schema[7.1].define(version: 2026_07_14_100746) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -223,6 +223,28 @@ ActiveRecord::Schema[7.1].define(version: 2026_06_23_083729) do
     t.index ["user_id"], name: "index_message_boards_on_user_id"
   end
 
+  create_table "orders", force: :cascade do |t|
+    t.string "order_no", null: false
+    t.bigint "user_id", null: false
+    t.string "product_code", default: "member_permanent", null: false
+    t.string "title", default: "HOLD LE 永久会员", null: false
+    t.integer "amount_cents", default: 46800, null: false
+    t.string "currency", default: "cny"
+    t.string "payment_method"
+    t.string "status", default: "pending", null: false
+    t.string "prepay_id"
+    t.string "code_url"
+    t.string "wechat_transaction_id"
+    t.datetime "paid_at"
+    t.jsonb "notify_raw"
+    t.datetime "expire_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["order_no"], name: "index_orders_on_order_no", unique: true
+    t.index ["status"], name: "index_orders_on_status"
+    t.index ["user_id"], name: "index_orders_on_user_id"
+  end
+
   create_table "stocks", force: :cascade do |t|
     t.string "symbol"
     t.string "name"
@@ -292,6 +314,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_06_23_083729) do
   add_foreign_key "income_statements", "stocks"
   add_foreign_key "lessons", "chapters"
   add_foreign_key "message_boards", "users", on_delete: :cascade
+  add_foreign_key "orders", "users"
   add_foreign_key "user_favorites", "stocks"
   add_foreign_key "user_favorites", "users"
 end

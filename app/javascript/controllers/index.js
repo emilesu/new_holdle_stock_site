@@ -24,3 +24,6 @@ application.register("pyramid", PyramidController)
 
 import LoginTabsController from "./login_tabs_controller"
 application.register("login-tabs", LoginTabsController)
+
+import QrcodeController from "./qrcode_controller"
+application.register("qrcode", QrcodeController)

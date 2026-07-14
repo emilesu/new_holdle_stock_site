@@ -1,0 +1,105 @@
+<% set_page_title "支付中 - HOLD LE" %>
+
+<section class="bg-bg-soft min-h-screen">
+  <div class="container-hl py-12">
+    <div class="max-w-lg mx-auto text-center">
+      <% if @order.paid? %>
+        <%# 支付成功 %>
+        <div class="hl-card p-7 mb-6">
+          <div class="w-16 h-16 mx-auto mb-4 bg-green-100 text-green-600 rounded-full flex items-center justify-center">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            </svg>
+          </div>
+          <h2 class="text-hl-22 font-bold text-ink mb-2">支付成功！</h2>
+          <p class="text-hl-13 text-muted mb-4">欢迎加入 HOLD LE，你现在已拥有所有会员权限。</p>
+          <%= link_to "进入首页", root_path, class: "hl-btn hl-btn-primary inline-block px-8 py-3" %>
+        </div>
+      <% elsif @order.payment_method == "wechat_jsapi" %>
+        <%# 微信内 JSAPI 支付 %>
+        <div class="hl-card p-7 mb-6">
+          <div class="mb-6">
+            <div class="w-16 h-16 mx-auto mb-4 bg-bg-mute rounded-full flex items-center justify-center">
+              <svg class="w-8 h-8 text-muted-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+            </div>
+            <h2 class="text-hl-18 font-bold text-ink mb-2">正在拉起微信支付...</h2>
+            <p class="text-hl-13 text-muted">如果未自动弹出，请点击下方按钮</p>
+          </div>
+
+          <button id="wx-pay-btn" data-pay-params="<%= @pay_params.to_json %>"
+                  class="hl-btn hl-btn-primary block w-full text-center py-3">
+            立即支付 ¥<%= @order.amount_yuan %>
+          </button>
+        </div>
+
+        <%= javascript_tag nonce: true do %>
+          document.addEventListener('turbo:load', function() {
+            var btn = document.getElementById('wx-pay-btn');
+            if (!btn) return;
+
+            var payParams = JSON.parse(btn.dataset.payParams);
+
+            function invokeWechatPay() {
+              if (typeof WeixinJSBridge === 'undefined') {
+                document.addEventListener('WeixinJSBridgeReady', function() {
+                  WeixinJSBridge.invoke('getBrandWCPayRequest', payParams, function(res) {
+                    if (res.err_msg === 'get_brand_wcpay_request:ok') {
+                      window.location.href = '<%= order_path(@order) %>';
+                    }
+                  });
+                });
+              } else {
+                WeixinJSBridge.invoke('getBrandWCPayRequest', payParams, function(res) {
+                  if (res.err_msg === 'get_brand_wcpay_request:ok') {
+                    window.location.href = '<%= order_path(@order) %>';
+                  }
+                });
+              }
+            }
+
+            btn.addEventListener('click', invokeWechatPay);
+            // 页面加载后自动拉起
+            setTimeout(invokeWechatPay, 500);
+          });
+        <% end %>
+      <% else %>
+        <%# Native 扫码支付 %>
+        <div class="hl-card p-7 mb-6">
+          <h2 class="text-hl-18 font-bold text-ink mb-4">请使用微信扫码支付</h2>
+          <div class="flex justify-center mb-6">
+            <div id="qrcode-container" data-controller="qrcode"
+                 data-qrcode-url="<%= @order.code_url %>"
+                 class="w-48 h-48 bg-white border border-line p-3">
+            </div>
+          </div>
+          <p class="text-hl-13 text-muted">订单金额：<span class="text-profit font-semibold">¥<%= @order.amount_yuan %></span></p>
+          <p class="text-hl-12 text-muted-4 mt-2">二维码有效期 30 分钟，过期后需重新下单</p>
+        </div>
+
+        <p class="text-hl-12 text-muted-4">支付成功后将自动跳转</p>
+      <% end %>
+    </div>
+  </div>
+</section>
+
+<% unless @order.paid? || @order.payment_method == "wechat_jsapi" %>
+  <%= javascript_tag nonce: true do %>
+    document.addEventListener('turbo:load', function pollOrderStatus() {
+      var paid = <%= @order.paid? %>;
+      if (paid) return;
+
+      var interval = setInterval(function() {
+        fetch('<%= status_order_path(@order) %>')
+          .then(function(r) { return r.json(); })
+          .then(function(data) {
+            if (data.paid) {
+              clearInterval(interval);
+              window.location.reload();
+            }
+          });
+      }, 3000);
+    });
+  <% end %>
+<% end %>

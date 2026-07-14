@@ -1,0 +1,46 @@
+<div class="mb-8">
+  <h1 class="text-2xl font-bold text-gray-900">订单管理</h1>
+  <p class="mt-2 text-gray-600">查看所有微信支付订单</p>
+</div>
+
+<div class="hl-card overflow-hidden">
+  <table class="hl-table">
+    <thead>
+      <tr>
+        <th>订单号</th>
+        <th>用户</th>
+        <th>商品</th>
+        <th>金额</th>
+        <th>状态</th>
+        <th>支付方式</th>
+        <th>支付时间</th>
+        <th class="text-right">操作</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @orders.each do |order| %>
+        <tr>
+          <td class="font-mono text-hl-12"><%= order.order_no %></td>
+          <td><%= order.user.nickname %></td>
+          <td><%= order.title %></td>
+          <td class="font-mono">¥<%= order.amount_yuan %></td>
+          <td>
+            <span class="inline-flex px-2 py-0.5 text-hl-11 font-medium rounded
+              <%= order.paid? ? 'bg-green-100 text-green-700' : 'bg-bg-mute text-muted' %>">
+              <%= order.paid? ? "已支付" : "待支付" %>
+            </span>
+          </td>
+          <td class="text-hl-12"><%= order.payment_method == "wechat_jsapi" ? "JSAPI" : "Native" %></td>
+          <td class="text-hl-12"><%= order.paid_at ? l(order.paid_at, format: :long) : "-" %></td>
+          <td class="text-right">
+            <%= link_to "详情", admin_order_path(order), class: "text-link text-hl-13 hover:underline" %>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>
+
+<div class="mt-6">
+  <%= paginate @orders %>
+</div>

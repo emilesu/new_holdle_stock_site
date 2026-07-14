@@ -234,39 +234,31 @@
             <span class="text-hl-22 font-bold text-profit">方法一</span>
             <span class="inline-block border border-profit text-profit px-2 py-0.5 text-hl-11 font-medium ml-2">推荐</span>
           </div>
-          <h3 class="text-hl-16 font-semibold text-ink mb-4">通过 「支付宝」 支付</h3>
+          <h3 class="text-hl-16 font-semibold text-ink mb-4">通过 「微信支付」 自动开通</h3>
 
           <div class="space-y-3 mb-6">
             <p class="text-hl-13 text-muted flex gap-3">
               <span class="text-profit font-medium shrink-0">①</span>
-              <span>用支付宝扫一扫下方二维码</span>
+              <span>登录后点击下方按钮</span>
             </p>
             <p class="text-hl-13 text-muted flex gap-3">
               <span class="text-profit font-medium shrink-0">②</span>
-              <span>通过支付宝支付 <span class="text-ink font-semibold">¥468</span>（CNY）</span>
+              <span>微信支付 <span class="text-ink font-semibold">¥468</span>（CNY）</span>
             </p>
             <p class="text-hl-13 text-muted flex gap-3">
               <span class="text-profit font-medium shrink-0">③</span>
-              <span><span class="text-ink font-medium">用户名 + 支付宝账号后4位</span>在留言处发送。</span>
+              <span>支付成功 <span class="text-ink font-medium">自动开通会员</span>，无需人工确认</span>
             </p>
           </div>
 
           <div class="w-full h-px bg-line mb-5"></div>
 
-          <div class="flex items-start gap-4">
-            <img
-              src="https://video.holdle.com/image/default/3BA817C7E76E43FB95242112394BBB31-6-2.jpg"
-              alt="大苏 EmileSu 微信好友二维码 - 广西南宁"
-              class="w-40 h-40 border border-line object-cover shrink-0"
-              onerror="this.outerHTML='<div class=&quot;w-40 h-40 border border-line bg-bg-soft flex flex-col items-center justify-center text-hl-12 text-muted-3 p-2 text-center shrink-0&quot;><div class=&quot;text-hl-16 mb-1&quot;>📱</div>微信：emilesu<br/>(二维码加载失败)</div>'"
-            />
-            <div class="text-hl-12 text-muted-3 leading-loose flex-1 min-w-0">
-              <p class="text-hl-13 text-ink font-medium mb-2">支付宝 收款</p>
-              <p>📍 广西 · 南宁</p>
-              <p class="text-ink font-mono">EmileSu</p>
-            </div>
-          </div>
-          <p class="text-profit text-hl-12 leading-relaxed mt-4 pt-4 border-t border-line">收款确认后 即刻开通认</p>
+          <% if user_signed_in? %>
+            <%= link_to "微信支付 ¥468", new_order_path, class: "hl-btn hl-btn-primary w-full text-center block" %>
+          <% else %>
+            <%= link_to "请先登录", new_user_session_path, class: "hl-btn hl-btn-line w-full text-center block", data: { turbo: false } %>
+            <p class="text-hl-12 text-muted-4 text-center mt-2">登录后可使用微信支付自动开通</p>
+          <% end %>
         </div>
 
         <div class="hl-card p-7">

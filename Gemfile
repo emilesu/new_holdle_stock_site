@@ -47,6 +47,9 @@ gem 'omniauth-wechat-oauth2'
 # 谷歌全球登录
 gem 'omniauth-google-oauth2'
 
+# 微信支付
+gem 'wx_pay'
+
 # 部署核心
 gem 'capistrano', '~> 3.19'
 gem 'capistrano-rails'

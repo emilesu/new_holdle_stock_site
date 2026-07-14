@@ -34,6 +34,18 @@ Rails.application.routes.draw do
   get "join", to: "pages#join"
   get "video", to: "pages#video"
 
+  # 微信支付订单
+  resources :orders, only: [:new, :create, :show] do
+    member do
+      get :status
+    end
+  end
+
+  # 微信支付回调
+  namespace :wechat do
+    post "pay_callbacks", to: "pay_callbacks#create"
+  end
+
   # 前台登录用户留言
   resources :message_boards, only: [:create] do
     get :my, on: :collection
@@ -89,6 +101,9 @@ Rails.application.routes.draw do
         resources :lessons
       end
     end
+    # 后台订单管理
+    resources :orders, only: [:index, :show]
+
     # resources :payment_records, only: [:index, :show]  # 待开发
   end
 end

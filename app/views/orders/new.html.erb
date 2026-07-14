@@ -1,0 +1,46 @@
+<% set_page_title "开通会员 - HOLD LE" %>
+
+<section class="bg-bg-soft min-h-screen">
+  <div class="container-hl py-12">
+    <div class="max-w-lg mx-auto">
+      <h1 class="text-hl-22 font-bold text-ink mb-2">开通会员</h1>
+      <p class="text-hl-13 text-muted mb-8">确认以下信息并完成支付</p>
+
+      <div class="hl-card p-7 mb-6">
+        <h2 class="text-hl-16 font-semibold text-ink mb-4"><%= @product[:title] %></h2>
+
+        <div class="space-y-3 mb-6">
+          <div class="flex justify-between text-hl-13">
+            <span class="text-muted">会员类型</span>
+            <span class="text-ink font-medium">永久会员</span>
+          </div>
+          <div class="flex justify-between text-hl-13">
+            <span class="text-muted">支付方式</span>
+            <span class="text-ink font-medium">微信支付</span>
+          </div>
+          <div class="w-full h-px bg-line"></div>
+          <div class="flex justify-between text-hl-16">
+            <span class="text-ink font-semibold">合计</span>
+            <span class="text-profit font-bold">¥<%= @product[:amount_cents] / 100 %></span>
+          </div>
+        </div>
+
+        <%= form_tag orders_path, data: { turbo: false } do %>
+          <button type="submit" class="hl-btn hl-btn-primary block w-full text-center py-3">
+            确认支付 ¥<%= @product[:amount_cents] / 100 %>
+          </button>
+        <% end %>
+
+        <p class="text-hl-12 text-muted-4 text-center mt-4">
+          支付即表示同意
+          <a href="#" class="text-link underline underline-offset-2">会员条款</a>
+        </p>
+      </div>
+
+      <p class="text-hl-12 text-muted-4 text-center">
+        遇到问题？请
+        <%= link_to "联系客服", new_message_board_path, class: "text-link underline underline-offset-2" %>
+      </p>
+    </div>
+  </div>
+</section>
