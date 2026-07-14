@@ -88,7 +88,9 @@ class User < ApplicationRecord
   end
 
   def is_member?
-    role == "member" || role == "admin" || role == "super_admin" || (member_expire_at.present? && member_expire_at > Time.current)
+    return true if role == "admin" || role == "super_admin"
+    return false unless role == "member"
+    member_expire_at.present? && member_expire_at > Time.current
   end
 
   def is_user?
