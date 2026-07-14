@@ -3,6 +3,16 @@ class Users::OmniauthCallbacksController < Devise::OmniauthCallbacksController
   skip_before_action :verify_authenticity_token, only: [:google_oauth2, :wechat, :wechat_mobile]
 
   def wechat
+    process_wechat_oauth(:web)
+  end
+
+  def wechat_mobile
+    process_wechat_oauth(:app)
+  end
+
+  private
+
+  def process_wechat_oauth(platform)
     auth = request.env["omniauth.auth"]
     unless auth
       Rails.logger.error "[OmniAuth WeChat] auth hash is nil"
@@ -15,13 +25,26 @@ class Users::OmniauthCallbacksController < Devise::OmniauthCallbacksController
     wx_nickname = auth.info.nickname&.truncate(20)
     wx_avatar = auth.info.image
 
-    Rails.logger.info "[OmniAuth WeChat] open_id=#{open_id} union_id=#{union_id}"
+    openid_field = (platform == :app) ? :weixin_app_openid : :weixin_web_openid
 
-    # 1. 查找迁移过来的老用户（用openid匹配weixin_web_openid）
-    user = User.find_by(weixin_web_openid: open_id)
+    Rails.logger.info "[OmniAuth WeChat] platform=#{platform} open_id=#{open_id} union_id=#{union_id}"
+
+    # 1. 优先用 unionid 匹配（跨平台统一识别，公众号+开放平台共享同一 unionid）
+    if union_id.present?
+      user = User.find_by(weixin_unionid: union_id)
+      if user.present?
+        updates = { nickname: wx_nickname, avatar: wx_avatar, openid_field => open_id }
+        user.update(updates)
+        sign_in user
+        redirect_to root_path, notice: "微信登录成功"
+        return
+      end
+    end
+
+    # 2. 用对应平台的 openid 匹配（兼容已有用户）
+    user = User.find_by(openid_field => open_id)
 
     if user.present?
-      # 老用户：回填unionid，更新最新头像昵称
       user.update(
         weixin_unionid: union_id,
         nickname: wx_nickname,
@@ -32,19 +55,22 @@ class Users::OmniauthCallbacksController < Devise::OmniauthCallbacksController
       return
     end
 
-    # 2. 无匹配老用户 → 新建微信账号
+    # 3. 无匹配 → 新建微信账号
     temp_email = "wx_#{open_id}@wechat-auto.local"
     random_pw = Devise.friendly_token(20)
-    user = User.create(
+    create_attrs = {
       email: temp_email,
       password: random_pw,
       nickname: wx_nickname.presence || "微信用户",
       role: "user",
       avatar: wx_avatar,
-      weixin_web_openid: open_id,
-      weixin_unionid: union_id,
-      weixin_app_openid: nil
-    )
+      openid_field => open_id,
+      weixin_unionid: union_id
+    }
+    create_attrs[:weixin_app_openid] = nil if platform == :web
+    create_attrs[:weixin_web_openid] = nil if platform == :app
+
+    user = User.create(create_attrs)
 
     unless user.persisted?
       Rails.logger.error "[OmniAuth WeChat] user creation failed: #{user.errors.full_messages}"
@@ -56,10 +82,9 @@ class Users::OmniauthCallbacksController < Devise::OmniauthCallbacksController
     redirect_to root_path, notice: "微信注册并登录成功"
   end
 
-  # 手机端微信APP确认登录回调 — 与桌面端共用同一处理逻辑（同一 App ID，unionid 一致）
-  def wechat_mobile
-    wechat
-  end
+  public
+
+  def google_oauth2
 
   def google_oauth2
     auth = request.env["omniauth.auth"]
