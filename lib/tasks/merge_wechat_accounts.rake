@@ -82,29 +82,37 @@ namespace :users do
       # === 执行合并 ===
       begin
         ActiveRecord::Base.transaction do
-          # 1. 将新账号的 WeChat 凭据转移到旧账号
-          updates = {
+          # 1. 收集要转移的 WeChat 凭据
+          transfer_updates = {
             weixin_unionid: new_acct.weixin_unionid,
             weixin_web_openid: new_acct.weixin_web_openid,
             weixin_app_openid: new_acct.weixin_app_openid,
             avatar: new_acct.avatar
           }.compact  # 移除 nil 值，只更新实际有值的字段
 
-          target_old.update!(updates)
+          # 2. 先清除新账号的 WeChat 字段（释放唯一约束，避免与旧账号冲突）
+          clear_fields = {}
+          clear_fields[:weixin_unionid] = nil if new_acct.weixin_unionid.present?
+          clear_fields[:weixin_web_openid] = nil if new_acct.weixin_web_openid.present?
+          clear_fields[:weixin_app_openid] = nil if new_acct.weixin_app_openid.present?
+          new_acct.update!(clear_fields) if clear_fields.any?
 
-          # 2. 记录旧账号的会员信息（日志用）
+          # 3. 将凭据写入旧账号
+          target_old.update!(transfer_updates)
+
+          # 4. 记录旧账号的会员信息（日志用）
           member_info = if target_old.is_admin?
                           "管理员/永久会员"
                         else
                           "会员(到期日:#{target_old.member_expire_at&.to_date})"
                         end
 
-          # 3. 删除新账号（级联删除关联的 favorites 等）
+          # 5. 删除新账号（级联删除关联的 favorites 等）
           new_acct.destroy!
 
           merged_count += 1
           puts "  ✅ [合并成功] 新账号 ##{new_acct.id} '#{wx_nickname}' → 旧账号 ##{target_old.id} '#{target_old.nickname}' (#{member_info})"
-          puts "             写入: #{updates.keys.join(', ')}"
+          puts "             写入: #{transfer_updates.keys.join(', ')}"
         end
       rescue => e
         errors_list << "新账号 ##{new_acct.id} '#{wx_nickname}' → 旧账号 ##{target_old.id}: #{e.message}"
