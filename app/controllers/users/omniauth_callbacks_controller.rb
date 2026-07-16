@@ -80,10 +80,9 @@ class Users::OmniauthCallbacksController < Devise::OmniauthCallbacksController
       if old_accounts.count == 1
         old_account = old_accounts.first
         Rails.logger.info "[WeChat Merge] heuristic match by nickname: user #{old_account.id} (nickname=#{wx_nickname})"
-        old_account.update!(
+        old_account.update(
           weixin_unionid: union_id,
           weixin_app_openid: open_id,
-          nickname: wx_nickname,
           avatar: wx_avatar
         )
         sign_in old_account
