@@ -10,6 +10,8 @@ export default class extends Controller {
   }
 
   disconnect() {
+    // 由 layout 中 turbo:before-cache handler 负责关闭菜单，这里只清理全局状态
+    this.open = false
     this.removeGlobalListeners()
   }
 

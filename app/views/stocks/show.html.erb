@@ -914,43 +914,43 @@ document.addEventListener('turbo:load', function() {
 </script>
 
 <!-- 指标弹窗 -->
-<div id="indicator-modal" class="fixed inset-0 z-50 flex items-center justify-center p-6 hidden">
+<div id="indicator-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-6 hidden">
   <div id="modal-backdrop" class="fixed inset-0 bg-black/40"></div>
-  <div id="modal-content" class="relative bg-white rounded w-[896px] min-w-[896px] max-w-[896px] max-h-[85vh] overflow-hidden">
-    <div class="px-6 py-4 border-b border-line-soft flex justify-between items-center overflow-hidden">
-      <h3 id="modal-title" class="text-base font-semibold text-ink-soft truncate mr-4"></h3>
-      <button id="modal-close" class="p-1.5 hover:bg-bg-mute rounded transition-colors ml-4">
+  <div id="modal-content" class="relative bg-white rounded w-full min-w-0 max-w-full lg:w-[896px] max-h-[90vh] lg:max-h-[85vh] overflow-hidden">
+    <div class="px-4 md:px-6 py-3 md:py-4 border-b border-line-soft flex justify-between items-center overflow-hidden">
+      <h3 id="modal-title" class="text-hl-14 md:text-base font-semibold text-ink-soft truncate mr-4"></h3>
+      <button id="modal-close" class="p-1.5 hover:bg-bg-mute rounded transition-colors ml-4 shrink-0">
         <svg class="w-4 h-4 text-muted-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
         </svg>
       </button>
     </div>
-    <div class="p-5 overflow-y-auto max-h-[calc(85vh-70px)] overflow-x-hidden">
+    <div class="p-4 md:p-5 overflow-y-auto max-h-[calc(90vh-62px)] lg:max-h-[calc(85vh-70px)] overflow-x-hidden">
       <div id="error-container" class="hidden"></div>
       
-      <div id="chart-container" class="mb-6 overflow-hidden">
-        <div style="height: 256px; overflow: hidden;">
+      <div id="chart-container" class="mb-4 md:mb-6 overflow-hidden">
+        <div class="w-full" style="height: 180px; overflow: hidden;">
           <canvas id="indicator-chart"></canvas>
         </div>
       </div>
       
       <div id="content-container" class="overflow-hidden">
-        <div class="mb-6">
-          <h4 class="font-semibold text-muted text-hl-13 mb-3 truncate">指标定义</h4>
+        <div class="mb-4 md:mb-6">
+          <h4 class="font-semibold text-muted text-hl-13 mb-2 md:mb-3 truncate">指标定义</h4>
           <p id="indicator-description" class="text-muted-2 text-hl-11 leading-relaxed" style="word-break: break-word; hyphens: auto;"></p>
         </div>
         
-        <div class="h-px bg-line-soft mb-6"></div>
+        <div class="h-px bg-line-soft mb-4 md:mb-6"></div>
         
-        <div class="mb-6">
-          <h4 class="font-semibold text-muted text-hl-13 mb-3 truncate">计算公式</h4>
+        <div class="mb-4 md:mb-6">
+          <h4 class="font-semibold text-muted text-hl-13 mb-2 md:mb-3 truncate">计算公式</h4>
           <div id="indicator-formula" class="text-muted-2 text-hl-11 font-mono p-3 bg-bg-mute rounded overflow-x-auto break-all overflow-y-hidden"></div>
         </div>
         
-        <div class="h-px bg-line-soft mb-6"></div>
+        <div class="h-px bg-line-soft mb-4 md:mb-6"></div>
         
         <div>
-          <h4 class="font-semibold text-muted text-hl-13 mb-3 truncate">解读标准</h4>
+          <h4 class="font-semibold text-muted text-hl-13 mb-2 md:mb-3 truncate">解读标准</h4>
           <div id="indicator-interpretation" class="space-y-3 overflow-hidden"></div>
         </div>
       </div>
