@@ -83,6 +83,7 @@ class Users::OmniauthCallbacksController < Devise::OmniauthCallbacksController
         old_account.update(
           weixin_unionid: union_id,
           openid_field => open_id,
+          nickname: wx_nickname,
           avatar: wx_avatar
         )
         sign_in old_account
@@ -99,6 +100,7 @@ class Users::OmniauthCallbacksController < Devise::OmniauthCallbacksController
             old_account.update(
               weixin_unionid: union_id,
               openid_field => open_id,
+              nickname: wx_nickname,
               avatar: wx_avatar
             )
             sign_in old_account
