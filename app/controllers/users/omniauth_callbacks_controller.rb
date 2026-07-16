@@ -75,7 +75,8 @@ class Users::OmniauthCallbacksController < Devise::OmniauthCallbacksController
       old_accounts = User.where(weixin_unionid: nil)
                          .where.not(weixin_web_openid: nil)
                          .where(weixin_app_openid: nil)
-                         .where(nickname: wx_nickname)
+                         .where("nickname = ? OR nickname LIKE ? ESCAPE '\\'",
+                                wx_nickname, "#{wx_nickname}\\_%")
       if old_accounts.count == 1
         old_account = old_accounts.first
         Rails.logger.info "[WeChat Merge] heuristic match by nickname: user #{old_account.id} (nickname=#{wx_nickname})"
