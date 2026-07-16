@@ -63,8 +63,13 @@ class Stock < ApplicationRecord
     return nil unless balance_sheet.total_equity.present? && balance_sheet.total_equity != 0
 
     current_year = balance_sheet.report_date.year
-    prev_balance = balance_sheets.select { |bs| bs.report_date.year == current_year - 1 }.first
-    
+    # 优先使用预加载集合，避免不必要的 DB 查询；按 report_date 排序取最新一条
+    balance_collection = (preloaded_balance_sheets.presence || balance_sheets).to_a
+    prev_balance = balance_collection
+      .select { |bs| bs.report_date.year == current_year - 1 }
+      .sort_by(&:report_date)
+      .last
+
     if prev_balance && prev_balance.total_equity.present? && prev_balance.total_equity != 0
       avg_equity = (balance_sheet.total_equity.to_f + prev_balance.total_equity.to_f) / 2
     else
@@ -152,7 +157,7 @@ class Stock < ApplicationRecord
       investing_cash_flow: cash&.investing_cash_flow,
       financing_cash_flow: cash&.financing_cash_flow,
       net_cash_change: cash&.net_cash_change,
-      roe: calculate_roe(income, balance),
+      roe: indicator&.roe_avg || calculate_roe(income, balance),
       roa: calculate_roa(income, balance),
       eps: indicator&.basic_eps,
       cash_flow_ps: indicator&.ncf_from_oa_ps,
