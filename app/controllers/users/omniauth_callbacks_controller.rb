@@ -89,7 +89,25 @@ class Users::OmniauthCallbacksController < Devise::OmniauthCallbacksController
         redirect_after_wechat_auth("微信登录成功，已合并账号")
         return
       elsif old_accounts.count > 1
-        Rails.logger.warn "[WeChat Merge] #{old_accounts.count} matches for nickname '#{wx_nickname}', heuristic skipped"
+        # 尝试用归一化头像 URL 做 tiebreaker
+        norm_wx_avatar = normalize_wechat_avatar(wx_avatar)
+        if norm_wx_avatar.present?
+          avatar_match = old_accounts.select { |u| normalize_wechat_avatar(u.avatar) == norm_wx_avatar }
+          if avatar_match.size == 1
+            old_account = avatar_match.first
+            Rails.logger.info "[WeChat Merge] avatar tiebreaker: user #{old_account.id} (nickname=#{wx_nickname})"
+            old_account.update(
+              weixin_unionid: union_id,
+              weixin_app_openid: open_id,
+              avatar: wx_avatar
+            )
+            sign_in old_account
+            redirect_after_wechat_auth("微信登录成功，已合并账号")
+            return
+          end
+        end
+        Rails.logger.warn "[WeChat Merge] #{old_accounts.count} matches for nickname '#{wx_nickname}', heuristic skipped" +
+                          (norm_wx_avatar.present? ? " (avatar tiebreaker: #{avatar_match&.size || 0} matches)" : " (no avatar)")
       end
     end
 
@@ -127,6 +145,12 @@ class Users::OmniauthCallbacksController < Devise::OmniauthCallbacksController
     else
       redirect_to root_path, notice: notice
     end
+  end
+
+  # 归一化微信头像 URL：统一 https、去除尾部尺寸参数（如 /132、/0、/64）
+  def normalize_wechat_avatar(url)
+    return nil if url.blank?
+    url.sub(/\Ahttp:/i, "https:").sub(%r{/\d+\z}, "")
   end
 
   public
