@@ -69,9 +69,9 @@ class Users::OmniauthCallbacksController < Devise::OmniauthCallbacksController
       return
     end
 
-    # 2.5 启发式合并：手机端登录时，unionid 未匹配到旧账号，
-    #      按昵称尝试匹配唯一持有 web_openid 但无 unionid/app_openid 的老账号
-    if platform == :app && union_id.present?
+    # 2.5 启发式合并：unionid 未匹配到旧账号时，按昵称尝试匹配
+    #      唯一持有 web_openid 但无 unionid/app_openid 的老账号
+    if union_id.present?
       old_accounts = User.where(weixin_unionid: nil)
                          .where.not(weixin_web_openid: nil)
                          .where(weixin_app_openid: nil)
@@ -82,7 +82,7 @@ class Users::OmniauthCallbacksController < Devise::OmniauthCallbacksController
         Rails.logger.info "[WeChat Merge] heuristic match by nickname: user #{old_account.id} (nickname=#{wx_nickname})"
         old_account.update(
           weixin_unionid: union_id,
-          weixin_app_openid: open_id,
+          openid_field => open_id,
           avatar: wx_avatar
         )
         sign_in old_account
@@ -98,7 +98,7 @@ class Users::OmniauthCallbacksController < Devise::OmniauthCallbacksController
             Rails.logger.info "[WeChat Merge] avatar tiebreaker: user #{old_account.id} (nickname=#{wx_nickname})"
             old_account.update(
               weixin_unionid: union_id,
-              weixin_app_openid: open_id,
+              openid_field => open_id,
               avatar: wx_avatar
             )
             sign_in old_account
