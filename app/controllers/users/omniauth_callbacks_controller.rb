@@ -117,7 +117,7 @@ class Users::OmniauthCallbacksController < Devise::OmniauthCallbacksController
     create_attrs = {
       email: temp_email,
       password: random_pw,
-      nickname: wx_nickname.presence || "微信用户",
+      nickname: wx_nickname.to_s.length >= 2 ? wx_nickname : "微信用户",
       role: "user",
       avatar: wx_avatar,
       openid_field => open_id,
