@@ -69,6 +69,30 @@ class Users::OmniauthCallbacksController < Devise::OmniauthCallbacksController
       return
     end
 
+    # 2.5 启发式合并：手机端登录时，unionid 未匹配到旧账号，
+    #      按昵称尝试匹配唯一持有 web_openid 但无 unionid/app_openid 的老账号
+    if platform == :app && union_id.present?
+      old_accounts = User.where(weixin_unionid: nil)
+                         .where.not(weixin_web_openid: nil)
+                         .where(weixin_app_openid: nil)
+                         .where(nickname: wx_nickname)
+      if old_accounts.count == 1
+        old_account = old_accounts.first
+        Rails.logger.info "[WeChat Merge] heuristic match by nickname: user #{old_account.id} (nickname=#{wx_nickname})"
+        old_account.update!(
+          weixin_unionid: union_id,
+          weixin_app_openid: open_id,
+          nickname: wx_nickname,
+          avatar: wx_avatar
+        )
+        sign_in old_account
+        redirect_after_wechat_auth("微信登录成功，已合并账号")
+        return
+      elsif old_accounts.count > 1
+        Rails.logger.warn "[WeChat Merge] #{old_accounts.count} matches for nickname '#{wx_nickname}', heuristic skipped"
+      end
+    end
+
     # 3. 无匹配 → 新建微信账号
     temp_email = "wx_#{open_id}@wechat-auto.local"
     random_pw = Devise.friendly_token(20)
