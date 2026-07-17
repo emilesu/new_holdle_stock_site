@@ -26,9 +26,9 @@ class ConditionalSessionStripper
 
         unless excluded
             unless has_cookie
-                headers.delete("set-cookie")
-                headers.delete("Set-Cookie")
-                headers["X-Debug-Stripped"] = "yes"
+                # Rack 3 headers 不支持 delete，使用 reject! 
+                headers.reject! { |k, _| k.downcase == "set-cookie" }
+                headers["x-debug-stripped"] = "yes"
             end
         end
 
