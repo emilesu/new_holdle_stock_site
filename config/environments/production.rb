@@ -1,10 +1,15 @@
 require "active_support/core_ext/integer/time"
+require_relative "../../lib/conditional_session_stripper"
 
 Rails.application.configure do
   # Settings specified here will take precedence over those in config/application.rb.
 
   # Code is not reloaded between requests.
   config.enable_reloading = false
+
+  # 匿名用户访问公共页面时删除 Set-Cookie，使 CDN 能缓存页面
+  # 登录/注册/OAuth 页面保留 Set-Cookie（需要 CSRF token）
+  config.middleware.use ConditionalSessionStripper
 
   # Eager load code on boot. This eager loads most of Rails and
   # your application in memory, allowing both threaded web servers

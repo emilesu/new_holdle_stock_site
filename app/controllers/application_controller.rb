@@ -3,30 +3,11 @@ class ApplicationController < ActionController::Base
     include Pundit::Authorization
     rescue_from Pundit::NotAuthorizedError, with: :user_not_authorized
 
-    # 匿名用户访问公共页面时跳过 session，使 CDN 能缓存页面
-    # 解决移动网络（联通 5G）对 www.holdle.com SNI 的 DPI 拦截问题
-    # 登录/注册页面保留 session（需要 CSRF token 提交表单）
-    before_action :skip_session_for_anonymous_public_pages
-
-    EXCLUDED_SESSION_PATHS = %w[
-        /users/sign_in
-        /users/sign_up
-        /users/password
-    ].freeze
+    # 清除浏览器 HSTS 缓存（具体策略见 config/initializers/clear_hsts.rb）
+    # 生产环境 Nginx 处理 SSL 终结，内部 Puma 始终使用 HTTP
 
     def user_not_authorized
         flash[:alert] = "您暂无权限访问该页面"
         redirect_to request.referer || root_path
-    end
-
-    private
-
-    def skip_session_for_anonymous_public_pages
-        return unless request.get?
-        return if EXCLUDED_SESSION_PATHS.any? { |p| request.path.start_with?(p) }
-        # 已持有 session cookie 的用户（已登录）不跳过，保留状态
-        return if request.cookies[Rails.application.config.session_options[:key]].present?
-
-        request.session_options[:skip] = true
     end
 end
