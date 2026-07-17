@@ -388,12 +388,12 @@
       
       <!-- 右列：20% -->
       <div class="lg:col-span-1">
-        <div class="sticky top-24 bg-white hl-card overflow-hidden">
-          <div class="px-4 py-4 border-b border-line bg-bg-mute">
+        <div class="sticky top-24 bg-white hl-card flex flex-col max-h-[calc(100vh-7.5rem)]">
+          <div class="px-4 py-4 border-b border-line bg-bg-mute shrink-0">
             <span class="text-link font-semibold"><%= @stock.sector.presence || '-' %></span>
             <span class="text-muted-3 items-center justify-right text-hl-11"> - 近五年ROE对比</span>
           </div>
-          <div class="p-4">
+          <div class="p-4 flex-1 min-h-0 hover-scroll">
             
             <div class="border-t border-line-soft">
               <% if @industry_comparison_data.present? %>
