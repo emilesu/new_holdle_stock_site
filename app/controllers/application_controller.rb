@@ -23,8 +23,9 @@ class ApplicationController < ActionController::Base
 
     def skip_session_for_anonymous_public_pages
         return unless request.get?
-        return if user_signed_in?
         return if EXCLUDED_SESSION_PATHS.any? { |p| request.path.start_with?(p) }
+        # 已持有 session cookie 的用户（已登录）不跳过，保留状态
+        return if request.cookies[Rails.application.config.session_options[:key]].present?
 
         request.session_options[:skip] = true
     end
