@@ -26,9 +26,10 @@ class ConditionalSessionStripper
 
         unless excluded
             unless has_cookie
-                # Rack 3 headers 不支持 delete，使用 reject! 
-                headers.reject! { |k, _| k.downcase == "set-cookie" }
-                headers["x-debug-stripped"] = "yes"
+                # Rack 3 的 headers 对象不支持直接修改，构造新 hash 替换
+                filtered = {}
+                headers.each { |k, v| filtered[k] = v unless k.downcase == "set-cookie" }
+                headers = filtered
             end
         end
 
