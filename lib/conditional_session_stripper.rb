@@ -16,13 +16,19 @@ class ConditionalSessionStripper
     def call(env)
         status, headers, response = @app.call(env)
 
+        path = env["PATH_INFO"]
+        has_cookie = env["HTTP_COOKIE"].to_s.include?(SESSION_KEY)
+
         # 登录/注册/OAuth 页面保留 Set-Cookie（需要 CSRF token）
-        unless EXCLUDED_PATHS.any? { |p| env["PATH_INFO"].start_with?(p) }
-            cookie_header = env["HTTP_COOKIE"].to_s
-            if cookie_header.empty? || !cookie_header.include?(SESSION_KEY)
-                # Rack 3 使用小写 header key
-                headers.delete("Set-Cookie")
+        excluded = EXCLUDED_PATHS.any? { |p| path.start_with?(p) }
+
+        headers["X-Debug-Stripper"] = "path=#{path} excluded=#{excluded} has_cookie=#{has_cookie}"
+
+        unless excluded
+            unless has_cookie
                 headers.delete("set-cookie")
+                headers.delete("Set-Cookie")
+                headers["X-Debug-Stripped"] = "yes"
             end
         end
 
