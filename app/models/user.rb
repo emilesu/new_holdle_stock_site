@@ -18,42 +18,6 @@ class User < ApplicationRecord
   has_many :message_boards, dependent: :destroy
   has_many :orders, dependent: :destroy
 
-  # 微信三字段匹配优先级：unionid > web_openid（兼容旧用户）
-  def self.find_for_wechat_oauth(auth)
-    unionid = auth.extra.raw_info['unionid']
-    web_openid = auth.uid
-
-    # 1. 优先通过UnionID匹配已有账号
-    if unionid.present?
-      user = find_by(weixin_unionid: unionid)
-      if user
-        # 旧用户仅存web_openid，自动补齐unionid
-        if user.weixin_web_openid != web_openid
-          user.update(weixin_web_openid: web_openid, weixin_unionid: unionid)
-        end
-        return user
-      end
-    end
-
-    # 2. UnionID为空/无匹配，用旧web_openid兼容历史迁移用户
-    user = find_by(weixin_web_openid: web_openid)
-    if user && unionid.present?
-      # 登录自动补齐unionid，完成账号打通
-      user.update(weixin_unionid: unionid)
-      return user
-    end
-
-    # 3. 全新微信用户，创建账号
-    create!(
-      email: "#{web_openid}@wx-auto.auto",
-      password: Devise.friendly_token[0, 20],
-      nickname: auth.info.nickname,
-      weixin_unionid: unionid,
-      weixin_web_openid: web_openid,
-      role: 'user'
-    )
-  end
-
   # 谷歌登录账号匹配创建
   def self.find_for_google_oauth(auth)
     user = find_by(email: auth.info.email)

@@ -70,24 +70,16 @@ class Users::OmniauthCallbacksController < Devise::OmniauthCallbacksController
     end
 
     # 2.5 启发式合并：unionid 未匹配到旧账号时，按昵称尝试匹配
-    #      唯一持有 web_openid 但无 unionid/app_openid 的老账号
+    #      放宽条件：不再要求 web_openid，覆盖邮箱注册的旧账号
     if union_id.present?
       old_accounts = User.where(weixin_unionid: nil)
-                         .where.not(weixin_web_openid: nil)
                          .where(weixin_app_openid: nil)
                          .where("nickname = ? OR nickname LIKE ? ESCAPE '\\'",
                                 wx_nickname, "#{wx_nickname}\\_%")
       if old_accounts.count == 1
         old_account = old_accounts.first
         Rails.logger.info "[WeChat Merge] heuristic match by nickname: user #{old_account.id} (nickname=#{wx_nickname})"
-        old_account.update(
-          weixin_unionid: union_id,
-          openid_field => open_id,
-          nickname: wx_nickname,
-          avatar: wx_avatar
-        )
-        sign_in old_account
-        redirect_after_wechat_auth("微信登录成功，已合并账号")
+        merge_wechat_into_account(old_account, platform, open_id, union_id, wx_nickname, wx_avatar)
         return
       elsif old_accounts.count > 1
         # 尝试用归一化头像 URL 做 tiebreaker
@@ -97,14 +89,7 @@ class Users::OmniauthCallbacksController < Devise::OmniauthCallbacksController
           if avatar_match.size == 1
             old_account = avatar_match.first
             Rails.logger.info "[WeChat Merge] avatar tiebreaker: user #{old_account.id} (nickname=#{wx_nickname})"
-            old_account.update(
-              weixin_unionid: union_id,
-              openid_field => open_id,
-              nickname: wx_nickname,
-              avatar: wx_avatar
-            )
-            sign_in old_account
-            redirect_after_wechat_auth("微信登录成功，已合并账号")
+            merge_wechat_into_account(old_account, platform, open_id, union_id, wx_nickname, wx_avatar)
             return
           end
         end
@@ -138,6 +123,60 @@ class Users::OmniauthCallbacksController < Devise::OmniauthCallbacksController
 
     sign_in user
     redirect_after_wechat_auth("微信注册并登录成功")
+  end
+
+  # 合并微信凭据到旧账号，若旧账号为会员则转移至新微信账号
+  def merge_wechat_into_account(old_account, platform, open_id, union_id, wx_nickname, wx_avatar)
+    openid_field = (platform == :app) ? :weixin_app_openid : :weixin_web_openid
+
+    if old_account.is_member? || old_account.is_admin?
+      # === 会员/管理员转移：创建新微信账号，继承会员资格和注册时间 ===
+      temp_email = "wx_#{open_id}@wechat-auto.local"
+      random_pw = Devise.friendly_token(20)
+      create_attrs = {
+        email: temp_email,
+        password: random_pw,
+        nickname: wx_nickname.to_s.length >= 2 ? wx_nickname : "微信用户",
+        role: old_account.role,
+        member_expire_at: old_account.member_expire_at,
+        created_at: old_account.created_at,
+        avatar: wx_avatar,
+        openid_field => open_id,
+        weixin_unionid: union_id
+      }
+      create_attrs[:weixin_app_openid] = nil if platform == :web
+      create_attrs[:weixin_web_openid] = nil if platform == :app
+
+      user = User.create(create_attrs)
+      unless user.persisted?
+        Rails.logger.error "[WeChat Merge] member transfer failed for old user #{old_account.id}: #{user.errors.full_messages}"
+        # 回退：合并到旧账号
+        old_account.update(
+          weixin_unionid: union_id,
+          openid_field => open_id,
+          nickname: wx_nickname,
+          avatar: wx_avatar
+        )
+        sign_in old_account
+        redirect_after_wechat_auth("微信登录成功，已合并账号（会员转移失败）")
+        return
+      end
+
+      old_account.destroy!
+      Rails.logger.info "[WeChat Merge] member transfer: new user #{user.id} inherits role=#{user.role} from old user #{old_account.id}"
+      sign_in user
+      redirect_after_wechat_auth("微信登录成功，会员资格已转移")
+    else
+      # === 非会员：合并凭据到旧账号 ===
+      old_account.update(
+        weixin_unionid: union_id,
+        openid_field => open_id,
+        nickname: wx_nickname,
+        avatar: wx_avatar
+      )
+      sign_in old_account
+      redirect_after_wechat_auth("微信登录成功，已合并账号")
+    end
   end
 
   def redirect_after_wechat_auth(notice)
