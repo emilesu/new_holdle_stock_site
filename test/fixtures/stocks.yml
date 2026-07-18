@@ -34,3 +34,12 @@ four:
   exchange: HKEX
   status: active
   pinyin_initials: TXKG
+
+five:
+  symbol: MSFT
+  name: 微软 | Microsoft Corporation Common Stock
+  market: US
+  industry: Technology
+  exchange: NASDAQ
+  status: active
+  pinyin_initials: WR

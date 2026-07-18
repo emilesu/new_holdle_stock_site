@@ -17,9 +17,8 @@ class StocksController < ApplicationController
     end
 
     stocks = Stock.where(
-      "(symbol ILIKE :q OR name ILIKE :q) OR (market IN (:markets) AND pinyin_initials LIKE :prefix)",
+      "(symbol ILIKE :q OR name ILIKE :q) OR pinyin_initials LIKE :prefix",
       q: "%#{Stock.sanitize_sql_like(query)}%",
-      markets: %w[CN HK],
       prefix: "#{Stock.sanitize_sql_like(query.upcase)}%"
     ).limit(AUTOCOMPLETE_LIMIT)
      .select(:id, :symbol, :name, :market, :exchange)

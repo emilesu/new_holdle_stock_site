@@ -93,15 +93,25 @@ class StocksAutocompleteTest < ActionDispatch::IntegrationTest
     assert_equal "腾讯控股", tencent["name"]
   end
 
-  test "autocomplete does not match pinyin for US stocks" do
-    # US 股票的 pinyin_initials 为 nil，不应通过拼音匹配
-    # 搜索 'pa' 能匹配 PAYH（平安银行），但不应该通过拼音匹配到 AAPL
+  test "autocomplete does not match pinyin for US stocks without Chinese name" do
+    # AAPL 没有中文名（pinyin_initials 为 nil），不应通过拼音匹配
+    # 搜索 'pa' 按拼音匹配 PAYH（平安银行），但不应匹配到 AAPL
     get autocomplete_stocks_path(q: "pa"), as: :json
     assert_response :success
 
     data = response.parsed_body
     no_apple = data.find { |s| s["symbol"] == "AAPL" }
-    assert_nil no_apple, "US 股票（Apple）的 pinyin_initials 为 nil，不应通过拼音匹配 'pa'"
+    assert_nil no_apple, "无中文名的 US 股票（AAPL）不应通过拼音匹配"
+  end
+
+  test "autocomplete matches pinyin initials for US stocks with Chinese name" do
+    get autocomplete_stocks_path(q: "wr"), as: :json
+    assert_response :success
+
+    data = response.parsed_body
+    msft = data.find { |s| s["symbol"] == "MSFT" }
+    assert msft, "搜索 'wr' 应匹配美股微软（中文名拼音 WR）"
+    assert_equal "微软 | Microsoft Corporation Common Stock", msft["name"]
   end
 
   test "autocomplete pinyin search is case insensitive" do

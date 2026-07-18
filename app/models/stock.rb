@@ -222,6 +222,9 @@ class Stock < ApplicationRecord
   def set_pinyin_initials
     self.pinyin_initials = if market.in?(%w[CN HK]) && name.present?
                              Pinyin.t(name).split.map(&:first).join.upcase
+                           elsif market == 'US' && name.present? && name.include?('|')
+                             chinese_part = name.split('|').first.strip
+                             Pinyin.t(chinese_part).split.map(&:first).join.upcase
                            end
   end
 end
