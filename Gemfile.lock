@@ -126,6 +126,7 @@ GEM
       regexp_parser (>= 1.5, < 3.0)
       xpath (~> 3.2)
     cgi (0.5.1)
+    chinese_pinyin (1.1.0)
     commonmarker (2.8.2-aarch64-linux)
     commonmarker (2.8.2-aarch64-linux-musl)
     commonmarker (2.8.2-arm-linux)
@@ -444,6 +445,7 @@ DEPENDENCIES
   capistrano-rails
   capistrano-rbenv
   capybara
+  chinese_pinyin
   commonmarker
   cssbundling-rails
   debug
@@ -507,6 +509,7 @@ CHECKSUMS
   capistrano-rbenv (2.2.0) sha256=3c8f39b7c624f3806630dcb475484bb3579aef07a40efe85089d83f64b0c35f5
   capybara (3.40.0) sha256=42dba720578ea1ca65fd7a41d163dd368502c191804558f6e0f71b391054aeef
   cgi (0.5.1) sha256=e93fcafc69b8a934fe1e6146121fa35430efa8b4a4047c4893764067036f18e9
+  chinese_pinyin (1.1.0) sha256=129d5673891c5e6f1647fe6367eb1a9e7f11969d5eab3584615514e23b286437
   commonmarker (2.8.2-aarch64-linux) sha256=715a5df28e5c1ec7b520e6441466062e9717b82193d2a5bd11a9c94f2f1e15f0
   commonmarker (2.8.2-aarch64-linux-musl) sha256=c7d587bd7978416978e84d0de7488906b8f29b3f67ce8424942f0ca9aa6899db
   commonmarker (2.8.2-arm-linux) sha256=da9da5c08d5133ad429ece13f2e93d3a30e1b23621ffac9040e185d7ea29bde6

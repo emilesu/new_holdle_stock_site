@@ -16,9 +16,13 @@ class StocksController < ApplicationController
       return
     end
 
-    stocks = Stock.where("symbol ILIKE :q OR name ILIKE :q", q: "%#{query}%")
-      .limit(AUTOCOMPLETE_LIMIT)
-      .select(:id, :symbol, :name, :market, :exchange)
+    stocks = Stock.where(
+      "(symbol ILIKE :q OR name ILIKE :q) OR (market IN (:markets) AND pinyin_initials ILIKE :prefix)",
+      q: "%#{Stock.sanitize_sql_like(query)}%",
+      markets: %w[CN HK],
+      prefix: "#{Stock.sanitize_sql_like(query)}%"
+    ).limit(AUTOCOMPLETE_LIMIT)
+     .select(:id, :symbol, :name, :market, :exchange)
 
     results = stocks.map do |stock|
       market_label = stock.market == 'CN' ? 'A股' : stock.market == 'HK' ? '港股' : '美股'

@@ -15,6 +15,8 @@ class Stock < ApplicationRecord
     income_statements.exists? && balance_sheets.exists? && cash_flows.exists? && financial_indicators.exists?
   end
 
+  before_save :set_pinyin_initials
+
   def to_param
     if market == 'CN'
       symbol
@@ -213,5 +215,13 @@ class Stock < ApplicationRecord
     end
 
     name
+  end
+
+  private
+
+  def set_pinyin_initials
+    self.pinyin_initials = if market.in?(%w[CN HK]) && name.present?
+                             Pinyin.t(name).split.map(&:first).join.upcase
+                           end
   end
 end

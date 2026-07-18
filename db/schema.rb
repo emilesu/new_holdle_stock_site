@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_07_14_100746) do
+ActiveRecord::Schema[7.1].define(version: 2026_07_18_100000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -259,9 +259,11 @@ ActiveRecord::Schema[7.1].define(version: 2026_07_14_100746) do
     t.integer "pyramid_total_score", default: 0, null: false
     t.datetime "last_pyramid_calc_at"
     t.jsonb "radar_dim_scores"
+    t.string "pinyin_initials", comment: "中文名拼音首字母（如'平安银行'→'PAYH'），用于搜索"
     t.index ["market", "pyramid"], name: "idx_stocks_market_pyramid", order: { pyramid: :desc }
     t.index ["market", "sector", "pyramid"], name: "idx_stocks_market_sector_pyramid", order: { pyramid: :desc }
     t.index ["market", "sector", "pyramid_total_score"], name: "index_stocks_on_market_and_sector_and_pyramid_total_score", order: { pyramid_total_score: :desc }
+    t.index ["pinyin_initials"], name: "idx_stocks_pinyin_initials"
     t.index ["radar_dim_scores"], name: "index_stocks_on_radar_dim_scores", using: :gin
     t.index ["sector", "market"], name: "idx_stocks_sector_market"
     t.index ["sector"], name: "index_stocks_on_sector"

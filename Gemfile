@@ -28,6 +28,8 @@ gem "cssbundling-rails"
 
 # Build JSON APIs with ease [https://github.com/rails/jbuilder]
 gem "jbuilder"
+# 中文转拼音首字母，用于股票名称搜索
+gem "chinese_pinyin"
 
 gem 'dotenv-rails'
 gem 'faraday'
