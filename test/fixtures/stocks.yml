@@ -10,8 +10,27 @@ one:
 
 two:
   symbol: "000001"
-  name: PingAn
+  name: 平安银行
   market: CN
   industry: Finance
   exchange: SZSE
   status: active
+  pinyin_initials: PAYH
+
+three:
+  symbol: "600036"
+  name: 招商银行
+  market: CN
+  industry: Finance
+  exchange: SHSE
+  status: active
+  pinyin_initials: ZSYH
+
+four:
+  symbol: "0700"
+  name: 腾讯控股
+  market: HK
+  industry: Technology
+  exchange: HKEX
+  status: active
+  pinyin_initials: TXKG
