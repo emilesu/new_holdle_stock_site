@@ -56,7 +56,7 @@ module Admin
 
       @total_count = stocks.count
       @total_pages = (@total_count.to_f / PER_PAGE).ceil
-      @stocks = stocks.order(pyramid_total_score: :desc).offset((@page - 1) * PER_PAGE).limit(PER_PAGE)
+      @stocks = stocks.order(pyramid_total_score: :desc, id: :desc).offset((@page - 1) * PER_PAGE).limit(PER_PAGE)
       
       @sectors = Rails.cache.fetch("sectors_#{@market}_#{Date.current}", expires_in: 1.hour) do
         Stock.where(market: @market).where.not(sector: nil).distinct.pluck(:sector).sort

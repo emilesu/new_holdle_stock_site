@@ -12,7 +12,7 @@ class PyramidsController < ApplicationController
     
     @total_count = stocks.count
     @total_pages = (@total_count.to_f / PER_PAGE).ceil
-    @stocks = stocks.order(pyramid_total_score: :desc).offset((@page - 1) * PER_PAGE).limit(PER_PAGE)
+    @stocks = stocks.order(pyramid_total_score: :desc, id: :desc).offset((@page - 1) * PER_PAGE).limit(PER_PAGE)
     @top_stock = @stocks.first
 
     @sectors = Rails.cache.fetch("pyramid_sectors_#{@market}_#{Date.current}", expires_in: 1.hour) do
@@ -63,7 +63,7 @@ class PyramidsController < ApplicationController
     
     @total_count = stocks.count
     @total_pages = (@total_count.to_f / PER_PAGE).ceil
-    @stocks = stocks.order(pyramid_total_score: :desc).offset((@page - 1) * PER_PAGE).limit(PER_PAGE)
+    @stocks = stocks.order(pyramid_total_score: :desc, id: :desc).offset((@page - 1) * PER_PAGE).limit(PER_PAGE)
     @top_stock = @stocks.first
 
     @compare_data = if @top_stock
@@ -88,7 +88,7 @@ class PyramidsController < ApplicationController
     
     @total_count = stocks.count
     @total_pages = (@total_count.to_f / PER_PAGE).ceil
-    @stocks = stocks.order(pyramid_total_score: :desc).offset((@page - 1) * PER_PAGE).limit(PER_PAGE)
+    @stocks = stocks.order(pyramid_total_score: :desc, id: :desc).offset((@page - 1) * PER_PAGE).limit(PER_PAGE)
 
     respond_to do |format|
       format.turbo_stream
