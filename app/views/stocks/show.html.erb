@@ -758,7 +758,7 @@ document.addEventListener('turbo:load', function() {
     const values = points.map(p => {
       if (!p.value) return null;
       let val = parseFloat(p.value);
-      if (isCashFlowIndicator && Math.abs(val) >= 100000000) {
+      if (isCashFlowIndicator) {
         return val / 100000000;
       }
       if (isAssetTurnover) {
