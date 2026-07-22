@@ -143,30 +143,35 @@ document.addEventListener('turbo:load', function initPyramidPage() {
   let hoverDebounceTimer = null;
   let canSelectSector = <%= @can_select_sector ? 'true' : 'false' %>;
 
-  // 从服务器实时获取会员状态，解决 Turbo 缓存导致 canSelectSector 变量过期的问题
+  // 从服务器实时获取会员状态，解决 CDN/Turbo 缓存导致权限状态过期的问题
   const refreshPermission = async () => {
     try {
-      const resp = await fetch('/pyramid/permission');
+      // 加时间戳避免 CDN 返回缓存的过期权限数据
+      const resp = await fetch(`/pyramid/permission?_=${Date.now()}`);
       const data = await resp.json();
-      if (data.can_select_sector !== canSelectSector) {
-        canSelectSector = data.can_select_sector;
-        // 根据最新权限更新 DOM
-        const sectorContainer = document.getElementById('sector-container');
-        if (sectorContainer) {
-          const streamResp = await fetch(
-            `/pyramid/update_sectors?market=${encodeURIComponent(document.getElementById('pyramid-market').value)}`,
-            { headers: { 'Accept': 'text/vnd.turbo-stream.html', 'X-Requested-With': 'XMLHttpRequest' } }
-          );
-          if (streamResp.ok) {
-            const html = await streamResp.text();
-            window.Turbo.renderStreamMessage(html);
-          }
+      if (data.can_select_sector === canSelectSector) return;
+      canSelectSector = data.can_select_sector;
+      const sectorSelect = document.getElementById('pyramid-sector');
+      if (!sectorSelect) return;
+
+      if (canSelectSector) {
+        // 会员/管理员 → 启用行业选择
+        sectorSelect.disabled = false;
+        // 移除"会员可查看其他行业"提示
+        const hintSpan = document.querySelector('#sector-container > span');
+        if (hintSpan) hintSpan.remove();
+        // 如果缺少"全部"选项则补上
+        if (sectorSelect.options[0] && sectorSelect.options[0].value !== '') {
+          const allOpt = document.createElement('option');
+          allOpt.value = '';
+          allOpt.textContent = '全部';
+          sectorSelect.insertBefore(allOpt, sectorSelect.options[0]);
         }
-        // 如果已获得权限，重置行业选择为全部
-        if (canSelectSector) {
-          const sectorSelect = document.getElementById('pyramid-sector');
-          if (sectorSelect) sectorSelect.value = '';
-        }
+        sectorSelect.value = '';
+      } else {
+        // 非会员 → 禁用行业选择
+        sectorSelect.disabled = true;
+        sectorSelect.value = '公用事业';
       }
     } catch (e) {
       // 静默失败，保留页面原有状态
