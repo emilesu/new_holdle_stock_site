@@ -1,0 +1,241 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="740" viewBox="0 0 900 740">
+  <defs>
+    <filter id="sh2" x="-5%" y="-5%" width="110%" height="110%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#000" flood-opacity="0.06"/>
+    </filter>
+    <linearGradient id="healthyBg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#E8F8F5"/>
+      <stop offset="100%" stop-color="#FAFAFA"/>
+    </linearGradient>
+    <linearGradient id="unhealthyBg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FDEDEC"/>
+      <stop offset="100%" stop-color="#FAFAFA"/>
+    </linearGradient>
+    <marker id="arrowGreen" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
+      <path d="M0,0 L6,3 L0,6 Z" fill="#27AE60"/>
+    </marker>
+    <marker id="arrowRed" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
+      <path d="M0,0 L6,3 L0,6 Z" fill="#E74C3C"/>
+    </marker>
+  </defs>
+
+  <!-- ============ 灰底背景 ============ -->
+  <rect width="900" height="740" fill="#F0F0F0" rx="8"/>
+
+  <!-- ============ 标题 ============ -->
+  <text x="450" y="30" font-family="PingFang SC,PingFang,Microsoft YaHei,sans-serif" font-size="18" font-weight="700" fill="#2C3E50" text-anchor="middle">线柱关系对比——MACD动能结构健康度</text>
+
+  <!-- ============ 左侧：高优先（健康） ============ -->
+  <g transform="translate(20, 50)">
+    <rect x="0" y="0" width="425" height="640" rx="10" fill="url(#healthyBg)" stroke="#27AE60" stroke-width="1.5"/>
+
+    <!-- 标签 -->
+    <rect x="0" y="0" width="425" height="36" rx="10" fill="#27AE60"/>
+    <rect x="0" y="18" width="425" height="18" fill="#27AE60"/>
+    <text x="212" y="24" font-family="PingFang SC,PingFang,Microsoft YaHei,sans-serif" font-size="14" font-weight="700" fill="#FFF" text-anchor="middle">✅ 高优先 · 结构健康</text>
+
+    <!-- MACD 图表区域 -->
+    <text x="212" y="60" font-family="PingFang SC,PingFang,Microsoft YaHei,sans-serif" font-size="12" font-weight="700" fill="#333" text-anchor="middle">MACD示意图</text>
+
+    <!-- 0轴 -->
+    <line x1="40" y1="180" x2="395" y2="180" stroke="#DDD" stroke-width="0.8" stroke-dasharray="4,2"/>
+    <text x="35" y="184" font-family="Arial,sans-serif" font-size="9" fill="#999" text-anchor="end">0轴</text>
+
+    <!-- MACD柱子（红色，矮的——都在双线下方） -->
+    <g filter="url(#sh2)">
+      <rect x="60" y="168" width="18" height="12" rx="2" fill="#F44336"/>
+      <rect x="88" y="162" width="18" height="18" rx="2" fill="#F44336"/>
+      <rect x="116" y="155" width="18" height="25" rx="2" fill="#F44336"/>
+      <rect x="144" y="148" width="18" height="32" rx="2" fill="#F44336"/>
+      <rect x="172" y="140" width="18" height="40" rx="2" fill="#F44336"/>
+      <rect x="200" y="135" width="18" height="45" rx="2" fill="#F44336" opacity="0.7"/>
+      <rect x="228" y="132" width="18" height="48" rx="2" fill="#F44336" opacity="0.5"/>
+    </g>
+
+    <!-- DIF线（蓝色）——在柱子上方 -->
+    <polyline points="60,135 88,128 116,120 144,112 172,105 200,100 228,98" fill="none" stroke="#2196F3" stroke-width="2.5"/>
+    <text x="235" y="100" font-family="Arial,sans-serif" font-size="10" font-weight="700" fill="#2196F3">DIF线</text>
+
+    <!-- DEA线（橙色）——在柱子上方（比DIF略低） -->
+    <polyline points="60,148 88,142 116,136 144,130 172,124 200,120 228,118" fill="none" stroke="#FF9800" stroke-width="2.5"/>
+    <text x="235" y="120" font-family="Arial,sans-serif" font-size="10" font-weight="700" fill="#FF9800">DEA线</text>
+
+    <!-- 辅助对比线：说明线远高于柱 -->
+    <g stroke="#27AE60" stroke-width="1" stroke-dasharray="3,2" opacity="0.5">
+      <!-- 从DIF到柱子顶 -->
+      <line x1="170" y1="105" x2="170" y2="140"/>
+      <!-- 从DEA到柱子顶 -->
+      <line x1="198" y1="120" x2="198" y2="135"/>
+    </g>
+
+    <!-- 标注：双线 > 柱子 -->
+    <rect x="260" y="130" width="130" height="24" rx="4" fill="#27AE60" opacity="0.12"/>
+    <text x="325" y="146" font-family="PingFang SC,PingFang,Microsoft YaHei,sans-serif" font-size="11" fill="#27AE60" font-weight="700" text-anchor="middle">双线 > 柱子</text>
+
+    <!-- 三个点的排位标注 -->
+    <text x="212" y="210" font-family="PingFang SC,PingFang,Microsoft YaHei,sans-serif" font-size="11" fill="#666" text-anchor="middle">开窗时看三个点的高低：</text>
+
+    <rect x="55" y="220" width="110" height="40" rx="6" fill="#E8F8F5" stroke="#27AE60" stroke-width="0.5"/>
+    <text x="110" y="238" font-family="Arial,sans-serif" font-size="10" font-weight="700" fill="#2196F3" text-anchor="middle">DIF点</text>
+    <text x="110" y="252" font-family="Arial,sans-serif" font-size="10" fill="#666" text-anchor="middle">（最高）</text>
+
+    <rect x="175" y="220" width="110" height="40" rx="6" fill="#E8F8F5" stroke="#27AE60" stroke-width="0.5"/>
+    <text x="230" y="238" font-family="Arial,sans-serif" font-size="10" font-weight="700" fill="#FF9800" text-anchor="middle">DEA点</text>
+    <text x="230" y="252" font-family="Arial,sans-serif" font-size="10" fill="#666" text-anchor="middle">（中间）</text>
+
+    <rect x="295" y="220" width="110" height="40" rx="6" fill="#E8F8F5" stroke="#27AE60" stroke-width="0.5"/>
+    <text x="350" y="238" font-family="Arial,sans-serif" font-size="10" fill="#F44336" text-anchor="middle">MACD柱点</text>
+    <text x="350" y="252" font-family="Arial,sans-serif" font-size="10" fill="#F44336" text-anchor="middle">（最低）</text>
+
+    <text x="212" y="285" font-family="PingFang SC,PingFang,Microsoft YaHei,sans-serif" font-size="11" fill="#27AE60" font-weight="700" text-anchor="middle">DIF > DEA > 柱 → 健康的排列顺序</text>
+
+    <!-- 分隔线 -->
+    <line x1="30" y1="305" x2="395" y2="305" stroke="#DDD" stroke-width="0.5"/>
+
+    <!-- 骨骼/力道类比 -->
+    <text x="212" y="328" font-family="PingFang SC,PingFang,Microsoft YaHei,sans-serif" font-size="12" font-weight="700" fill="#333" text-anchor="middle">骨架 vs 力道：有序传导</text>
+
+    <!-- 骨架（双线）在上方 -->
+    <rect x="60" y="345" width="120" height="30" rx="6" fill="#2196F3" opacity="0.15" stroke="#2196F3" stroke-width="1"/>
+    <text x="120" y="364" font-family="PingFang SC,PingFang,Microsoft YaHei,sans-serif" font-size="12" font-weight="700" fill="#2196F3" text-anchor="middle">骨架（双线）</text>
+
+    <!-- 向下箭头 -->
+    <line x1="120" y1="375" x2="120" y2="395" stroke="#27AE60" stroke-width="1.5" marker-end="url(#arrowGreen)"/>
+
+    <!-- 力道（柱子）在下方 -->
+    <rect x="60" y="398" width="120" height="30" rx="6" fill="#F44336" opacity="0.15" stroke="#F44336" stroke-width="1"/>
+    <text x="120" y="417" font-family="PingFang SC,PingFang,Microsoft YaHei,sans-serif" font-size="12" font-weight="700" fill="#F44336" text-anchor="middle">力道（MACD柱）</text>
+
+    <!-- 示意图：骨架撑住力道 -->
+    <g transform="translate(230, 345)">
+      <!-- 骨架符号 -->
+      <rect x="0" y="0" width="130" height="28" rx="6" fill="#2196F3" opacity="0.12" stroke="#2196F3" stroke-width="1"/>
+      <text x="65" y="19" font-family="PingFang SC,PingFang,Microsoft YaHei,sans-serif" font-size="11" fill="#2196F3" text-anchor="middle">骨架撑住力道</text>
+      
+      <!-- 向上的推力 -->
+      <rect x="10" y="53" width="110" height="38" rx="6" fill="#F44336" opacity="0.1" stroke="#F44336" stroke-width="0.8"/>
+      <text x="65" y="68" font-family="PingFang SC,PingFang,Microsoft YaHei,sans-serif" font-size="10" fill="#F44336" text-anchor="middle">力道从下往上冲</text>
+      <text x="65" y="84" font-family="PingFang SC,PingFang,Microsoft YaHei,sans-serif" font-size="10" fill="#666" text-anchor="middle">→ 有序、可持续</text>
+    </g>
+
+    <!-- 判断结论 -->
+    <rect x="40" y="500" width="345" height="50" rx="8" fill="#27AE60" opacity="0.08" stroke="#27AE60" stroke-width="1"/>
+    <text x="212" y="522" font-family="PingFang SC,PingFang,Microsoft YaHei,sans-serif" font-size="12" font-weight="700" fill="#27AE60" text-anchor="middle">结论：高优先 ✓</text>
+    <text x="212" y="540" font-family="PingFang SC,PingFang,Microsoft YaHei,sans-serif" font-size="10" fill="#666" text-anchor="middle">动能结构协调，趋势可持续，可积极参与</text>
+
+    <!-- 案例参考 -->
+    <rect x="40" y="558" width="345" height="70" rx="6" fill="#FFF" stroke="#DDD" stroke-width="0.5"/>
+    <text x="212" y="578" font-family="PingFang SC,PingFang,Microsoft YaHei,sans-serif" font-size="11" font-weight="700" fill="#333" text-anchor="middle">案例：海康威视（2016年8月）</text>
+    <text x="212" y="595" font-family="PingFang SC,PingFang,Microsoft YaHei,sans-serif" font-size="10" fill="#666" text-anchor="middle">2017年入场，持有约1年，收益约+90%</text>
+    <text x="212" y="612" font-family="PingFang SC,PingFang,Microsoft YaHei,sans-serif" font-size="10" fill="#999" text-anchor="middle">开窗那一刻的动能结构已给出信号——上涨是结构的结果，不是运气</text>
+  </g>
+
+  <!-- ============ 右侧：低优先（不健康） ============ -->
+  <g transform="translate(455, 50)">
+    <rect x="0" y="0" width="425" height="640" rx="10" fill="url(#unhealthyBg)" stroke="#E74C3C" stroke-width="1.5"/>
+
+    <!-- 标签 -->
+    <rect x="0" y="0" width="425" height="36" rx="10" fill="#E74C3C"/>
+    <rect x="0" y="18" width="425" height="18" fill="#E74C3C"/>
+    <text x="212" y="24" font-family="PingFang SC,PingFang,Microsoft YaHei,sans-serif" font-size="14" font-weight="700" fill="#FFF" text-anchor="middle">❌ 低优先 · 结构不健康</text>
+
+    <!-- MACD 图表区域 -->
+    <text x="212" y="60" font-family="PingFang SC,PingFang,Microsoft YaHei,sans-serif" font-size="12" font-weight="700" fill="#333" text-anchor="middle">MACD示意图</text>
+
+    <!-- 0轴 -->
+    <line x1="40" y1="180" x2="395" y2="180" stroke="#DDD" stroke-width="0.8" stroke-dasharray="4,2"/>
+    <text x="35" y="184" font-family="Arial,sans-serif" font-size="9" fill="#999" text-anchor="end">0轴</text>
+
+    <!-- MACD柱子（红色，很高的——超过了双线） -->
+    <g filter="url(#sh2)">
+      <rect x="60" y="168" width="18" height="12" rx="2" fill="#F44336"/>
+      <rect x="88" y="160" width="18" height="20" rx="2" fill="#F44336"/>
+      <rect x="116" y="145" width="18" height="35" rx="2" fill="#F44336"/>
+      <rect x="144" y="120" width="18" height="60" rx="2" fill="#F44336"/>
+      <rect x="172" y="98" width="18" height="82" rx="2" fill="#F44336" opacity="0.8"/>
+      <rect x="200" y="90" width="18" height="90" rx="2" fill="#F44336" opacity="0.7"/>
+      <rect x="228" y="95" width="18" height="85" rx="2" fill="#F44336" opacity="0.5"/>
+    </g>
+
+    <!-- DIF线（蓝色）——在柱子下面 -->
+    <polyline points="60,174 88,165 116,152 144,145 172,140 200,128 228,120" fill="none" stroke="#2196F3" stroke-width="2.5"/>
+    <text x="235" y="122" font-family="Arial,sans-serif" font-size="10" font-weight="700" fill="#2196F3">DIF线</text>
+
+    <!-- DEA线（橙色）——在柱子下面（比DIF更低） -->
+    <polyline points="60,178 88,168 116,158 144,156 172,148 200,140 228,138" fill="none" stroke="#FF9800" stroke-width="2.5"/>
+    <text x="235" y="140" font-family="Arial,sans-serif" font-size="10" font-weight="700" fill="#FF9800">DEA线</text>
+
+    <!-- 辅助对比线：说明柱超过了线 -->
+    <g stroke="#E74C3C" stroke-width="1" stroke-dasharray="3,2" opacity="0.5">
+      <!-- 从柱子顶到DIF -->
+      <line x1="170" y1="98" x2="170" y2="120"/>
+      <!-- 从柱子顶到DEA -->
+      <line x1="198" y1="90" x2="198" y2="118"/>
+    </g>
+
+    <!-- 标注：柱子 > 双线 -->
+    <rect x="260" y="130" width="130" height="24" rx="4" fill="#E74C3C" opacity="0.12"/>
+    <text x="325" y="146" font-family="PingFang SC,PingFang,Microsoft YaHei,sans-serif" font-size="11" fill="#E74C3C" font-weight="700" text-anchor="middle">柱子 > 双线 ⚠</text>
+
+    <!-- 三个点的排位标注 -->
+    <text x="212" y="210" font-family="PingFang SC,PingFang,Microsoft YaHei,sans-serif" font-size="11" fill="#666" text-anchor="middle">开窗时看三个点的高低：</text>
+
+    <rect x="55" y="220" width="110" height="40" rx="6" fill="#FDEDEC" stroke="#E74C3C" stroke-width="0.5"/>
+    <text x="110" y="238" font-family="Arial,sans-serif" font-size="10" fill="#F44336" text-anchor="middle">MACD柱点</text>
+    <text x="110" y="252" font-family="Arial,sans-serif" font-size="10" fill="#F44336" text-anchor="middle">（最高）</text>
+
+    <rect x="175" y="220" width="110" height="40" rx="6" fill="#FDEDEC" stroke="#E74C3C" stroke-width="0.5"/>
+    <text x="230" y="238" font-family="Arial,sans-serif" font-size="10" font-weight="700" fill="#2196F3" text-anchor="middle">DIF点</text>
+    <text x="230" y="252" font-family="Arial,sans-serif" font-size="10" fill="#666" text-anchor="middle">（中间）</text>
+
+    <rect x="295" y="220" width="110" height="40" rx="6" fill="#FDEDEC" stroke="#E74C3C" stroke-width="0.5"/>
+    <text x="350" y="238" font-family="Arial,sans-serif" font-size="10" font-weight="700" fill="#FF9800" text-anchor="middle">DEA点</text>
+    <text x="350" y="252" font-family="Arial,sans-serif" font-size="10" fill="#666" text-anchor="middle">（最低）</text>
+
+    <text x="212" y="285" font-family="PingFang SC,PingFang,Microsoft YaHei,sans-serif" font-size="11" fill="#E74C3C" font-weight="700" text-anchor="middle">柱 > DIF > DEA → 不健康的排列顺序</text>
+
+    <!-- 分隔线 -->
+    <line x1="30" y1="305" x2="395" y2="305" stroke="#DDD" stroke-width="0.5"/>
+
+    <!-- 骨骼/力道类比 -->
+    <text x="212" y="328" font-family="PingFang SC,PingFang,Microsoft YaHei,sans-serif" font-size="12" font-weight="700" fill="#333" text-anchor="middle">骨架 vs 力道：无序爆发</text>
+
+    <!-- 力道（柱子）在顶部 -->
+    <rect x="60" y="345" width="120" height="30" rx="6" fill="#F44336" opacity="0.15" stroke="#F44336" stroke-width="1"/>
+    <text x="120" y="364" font-family="PingFang SC,PingFang,Microsoft YaHei,sans-serif" font-size="12" font-weight="700" fill="#F44336" text-anchor="middle">力道（MACD柱）</text>
+
+    <!-- 向下箭头 -->
+    <line x1="120" y1="375" x2="120" y2="395" stroke="#E74C3C" stroke-width="1.5" marker-end="url(#arrowRed)"/>
+
+    <!-- 骨架（双线）在下方 -->
+    <rect x="60" y="398" width="120" height="30" rx="6" fill="#2196F3" opacity="0.15" stroke="#2196F3" stroke-width="1"/>
+    <text x="120" y="417" font-family="PingFang SC,PingFang,Microsoft YaHei,sans-serif" font-size="12" font-weight="700" fill="#2196F3" text-anchor="middle">骨架（双线）</text>
+
+    <!-- 示意图：力道淹没骨架 -->
+    <g transform="translate(230, 345)">
+      <!-- 力道淹没骨架 -->
+      <rect x="0" y="0" width="130" height="28" rx="6" fill="#E74C3C" opacity="0.12" stroke="#E74C3C" stroke-width="1"/>
+      <text x="65" y="19" font-family="PingFang SC,PingFang,Microsoft YaHei,sans-serif" font-size="11" fill="#E74C3C" text-anchor="middle">力道淹没骨架</text>
+      
+      <!-- 向上的推力 -->
+      <rect x="10" y="53" width="110" height="38" rx="6" fill="#E74C3C" opacity="0.08" stroke="#E74C3C" stroke-width="0.8"/>
+      <text x="65" y="68" font-family="PingFang SC,PingFang,Microsoft YaHei,sans-serif" font-size="10" fill="#E74C3C" text-anchor="middle">力道爆发太大</text>
+      <text x="65" y="84" font-family="PingFang SC,PingFang,Microsoft YaHei,sans-serif" font-size="10" fill="#666" text-anchor="middle">→ 骨架跟不上、不可持续</text>
+    </g>
+
+    <!-- 判断结论 -->
+    <rect x="40" y="500" width="345" height="50" rx="8" fill="#E74C3C" opacity="0.08" stroke="#E74C3C" stroke-width="1"/>
+    <text x="212" y="522" font-family="PingFang SC,PingFang,Microsoft YaHei,sans-serif" font-size="12" font-weight="700" fill="#E74C3C" text-anchor="middle">结论：低优先 ✗</text>
+    <text x="212" y="540" font-family="PingFang SC,PingFang,Microsoft YaHei,sans-serif" font-size="10" fill="#666" text-anchor="middle">动能不协调，持续力不足，不建议参与</text>
+
+    <!-- 案例参考 -->
+    <rect x="40" y="558" width="345" height="70" rx="6" fill="#FFF" stroke="#DDD" stroke-width="0.5"/>
+    <text x="212" y="578" font-family="PingFang SC,PingFang,Microsoft YaHei,sans-serif" font-size="11" font-weight="700" fill="#333" text-anchor="middle">案例①：圆通速递（2026年2月）</text>
+    <text x="212" y="595" font-family="PingFang SC,PingFang,Microsoft YaHei,sans-serif" font-size="10" fill="#666" text-anchor="middle">开窗后涨不动，反复打止损，未能产生有效阶1交易</text>
+    <text x="212" y="612" font-family="PingFang SC,PingFang,Microsoft YaHei,sans-serif" font-size="10" fill="#999" text-anchor="middle">案例②：圆通速递（2015年3月）3-5月暴涨150%，6月暴跌31%</text>
+  </g>
+
+  <!-- ============ 底部口诀（留白，不压图） ============ -->
+  <rect x="100" y="705" width="700" height="28" rx="6" fill="#2C3E50" opacity="0.08"/>
+  <text x="450" y="723" font-family="PingFang SC,PingFang,Microsoft YaHei,sans-serif" font-size="13" fill="#2C3E50" text-anchor="middle" font-weight="700">口诀：开窗看线柱，柱在上线在上，高优先；线在柱在下，低优先；低优先不动手，等下一次开窗</text>
+</svg>
