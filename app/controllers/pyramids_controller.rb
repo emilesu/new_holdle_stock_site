@@ -77,6 +77,10 @@ class PyramidsController < ApplicationController
     end
   end
 
+  def permission
+    render json: { can_select_sector: user_signed_in? && current_user.is_member? }
+  end
+
   def load_more
     @market = params[:market] || 'CN'
     @sector = params[:sector]

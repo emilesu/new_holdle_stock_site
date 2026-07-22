@@ -141,7 +141,37 @@ document.addEventListener('turbo:load', function initPyramidPage() {
   let lastHoveredStockId = null;
   let pendingRequestId = 0;
   let hoverDebounceTimer = null;
-  const canSelectSector = <%= @can_select_sector ? 'true' : 'false' %>;
+  let canSelectSector = <%= @can_select_sector ? 'true' : 'false' %>;
+
+  // 从服务器实时获取会员状态，解决 Turbo 缓存导致 canSelectSector 变量过期的问题
+  const refreshPermission = async () => {
+    try {
+      const resp = await fetch('/pyramid/permission');
+      const data = await resp.json();
+      if (data.can_select_sector !== canSelectSector) {
+        canSelectSector = data.can_select_sector;
+        // 根据最新权限更新 DOM
+        const sectorContainer = document.getElementById('sector-container');
+        if (sectorContainer) {
+          const streamResp = await fetch(
+            `/pyramid/update_sectors?market=${encodeURIComponent(document.getElementById('pyramid-market').value)}`,
+            { headers: { 'Accept': 'text/vnd.turbo-stream.html', 'X-Requested-With': 'XMLHttpRequest' } }
+          );
+          if (streamResp.ok) {
+            const html = await streamResp.text();
+            window.Turbo.renderStreamMessage(html);
+          }
+        }
+        // 如果已获得权限，重置行业选择为全部
+        if (canSelectSector) {
+          const sectorSelect = document.getElementById('pyramid-sector');
+          if (sectorSelect) sectorSelect.value = '';
+        }
+      }
+    } catch (e) {
+      // 静默失败，保留页面原有状态
+    }
+  };
 
   const initChart = (baseData, compareData = null) => {
     if (chartInstance) {
@@ -660,6 +690,8 @@ document.addEventListener('turbo:load', function initPyramidPage() {
 
   setupSectorListener();
   addRowEventListeners();
+  // 异步刷新会员权限状态，解决 Turbo 缓存导致 canSelectSector 变量过期的问题
+  refreshPermission();
 
   if (initialBaseData && initialBaseData.base) {
     initChart(initialBaseData.base);

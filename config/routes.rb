@@ -27,6 +27,7 @@ Rails.application.routes.draw do
   get "pyramid/update_sectors", to: "pyramids#update_sectors"
   get "pyramid/update_list", to: "pyramids#update_list"
   get "pyramid/load_more", to: "pyramids#load_more"
+  get "pyramid/permission", to: "pyramids#permission"
 
   resources :courses, only: [:index, :show]
   resources :lessons, only: [:show]
