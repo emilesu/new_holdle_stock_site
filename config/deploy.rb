@@ -10,11 +10,11 @@ set :deploy_to, '/var/www/holdle_stock_prod'
 
 # rbenv、node版本
 set :rbenv_ruby, '3.2.4'
-set :nvm_node, 'v20.20.2'
+set :nvm_node, 'v22.23.1'
 
 # 确保 node/yarn 在 PATH 中（assets:precompile 内部通过 system() 调用）
 SSHKit.config.default_env = {} if SSHKit.config.default_env.nil?
-SSHKit.config.default_env[:path] = "/home/emilesu/.nvm/versions/node/v20.20.2/bin:$PATH"
+SSHKit.config.default_env[:path] = "/home/emilesu/.nvm/versions/node/v22.23.1/bin:$PATH"
 
 # 资产预编译前确保 node_modules 已安装
 namespace :deploy do
@@ -35,7 +35,7 @@ Rake::Task['deploy:assets:precompile'].enhance do
       with rails_env: fetch(:rails_env),
           rails_groups: fetch(:rails_assets_groups),
           'SKIP_YARN_INSTALL' => 'true',
-          'PATH' => "/home/emilesu/.nvm/versions/node/v20.20.2/bin:/home/emilesu/.rbenv/shims:/home/emilesu/.rbenv/bin:$PATH" do
+          'PATH' => "/home/emilesu/.nvm/versions/node/v22.23.1/bin:/home/emilesu/.rbenv/shims:/home/emilesu/.rbenv/bin:$PATH" do
         execute :rake, "assets:precompile"
       end
     end
