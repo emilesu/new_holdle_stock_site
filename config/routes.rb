@@ -6,6 +6,9 @@ Rails.application.routes.draw do
   # OAuth失败跳转路由
   get '/users/oauth_failure', to: 'sessions#oauth_failure', as: :oauth_failure
 
+  # B站数据API回调地址
+  match '/oauth/callback', to: 'bilibili/callbacks#create', via: [:get, :post], as: :bilibili_callback
+
   get "up" => "rails/health#show", as: :rails_health_check
 
   root "home#index"
