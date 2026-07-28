@@ -1,0 +1,55 @@
+<% set_page_title "#{@article.title} - AI复盘报告 - Holdle" %>
+<% set_page_description truncate(strip_tags(@article.summary.presence || @article.title), length: 120) %>
+<div class="py-16">
+  <div class="container-narrow">
+
+    <%# 面包屑导航 %>
+    <div class="text-hl-12 text-muted-4 mb-6">
+      <%= link_to 'AI复盘报告', articles_path, class: 'hover:text-link transition-colors' %>
+      <span class="mx-1.5 text-muted-5">/</span>
+      <span class="text-ink font-medium"><%= @article.title %></span>
+    </div>
+
+    <%# 文章标题区 %>
+    <div class="hl-card p-6 sm:p-8 mb-6">
+      <div class="flex items-center gap-3 mb-4">
+        <% if @article.published_at.present? %>
+          <span class="text-hl-12 text-muted-4"><%= l(@article.published_at.to_date, format: :long) %></span>
+        <% end %>
+        <% if @article.member_only? %>
+          <span class="inline-flex px-2 py-0.5 text-hl-11 font-medium bg-bg-mute text-muted-3 border border-line-soft rounded ml-auto">会员</span>
+        <% else %>
+          <span class="inline-flex px-2 py-0.5 text-hl-11 font-medium bg-bg-soft text-muted-4 border border-line-soft rounded ml-auto">公开</span>
+        <% end %>
+      </div>
+
+      <h1 class="text-hl-22 font-semibold text-ink mb-2"><%= @article.title %></h1>
+      <% if @article.summary.present? %>
+        <p class="text-hl-14 text-muted leading-relaxed mt-3"><%= @article.summary %></p>
+      <% end %>
+    </div>
+
+    <%# Markdown 内容 %>
+    <div class="hl-card p-6 sm:p-8 mb-6">
+      <article class="prose prose-gray max-w-none
+        prose-headings:font-semibold prose-headings:text-ink
+        prose-h2:text-hl-18 prose-h3:text-hl-16
+        prose-p:text-hl-14 prose-p:text-muted prose-p:leading-relaxed
+        prose-a:text-link prose-a:no-underline hover:prose-a:text-link-hover
+        prose-strong:text-ink prose-strong:font-semibold
+        prose-code:text-hl-13 prose-code:bg-bg-mute prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:before:content-none prose-code:after:content-none
+        prose-pre:bg-bg-mute prose-pre:text-ink prose-pre:rounded prose-pre:overflow-x-auto prose-pre:p-4 prose-pre:text-hl-13 prose-pre:leading-relaxed prose-pre:border prose-pre:border-line-soft prose-pre:font-mono
+        prose-table:w-full prose-table:text-hl-13
+        prose-th:bg-bg-soft prose-th:text-muted-2 prose-th:font-medium prose-th:px-4 prose-th:py-2
+        prose-td:px-4 prose-td:py-2 prose-td:border-b prose-td:border-line-soft
+        prose-img:rounded prose-img:border prose-img:border-line-soft prose-img:mx-auto
+        prose-blockquote:border-l-link prose-blockquote:text-muted-3 prose-blockquote:not-italic
+        prose-ul:text-muted prose-ol:text-muted
+        prose-li:text-hl-14
+        prose-hr:border-line-soft">
+        <%= sanitize @article.markdown_html, tags: %w[p a img ul ol li h1 h2 h3 h4 h5 h6 pre code blockquote table thead tbody tr th td strong em br hr span div], attributes: %w[href src alt class id target rel width height] %>
+      </article>
+    </div>
+
+  </div>
+</div>

@@ -34,6 +34,7 @@ Rails.application.routes.draw do
 
   resources :courses, only: [:index, :show]
   resources :lessons, only: [:show]
+  resources :articles, only: [:index, :show]
 
   get "join", to: "pages#join"
   get "video", to: "pages#video"
@@ -105,6 +106,8 @@ Rails.application.routes.draw do
         resources :lessons
       end
     end
+    resources :articles
+
     # 后台订单管理
     resources :orders, only: [:index, :show]
 

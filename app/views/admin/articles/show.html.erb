@@ -1,0 +1,46 @@
+<div class="mb-6">
+  <%= link_to '← 返回文章列表', admin_articles_path, class: 'text-hl-13 text-muted hover:text-link transition-colors' %>
+</div>
+
+<div class="hl-card p-6 sm:p-8">
+  <div class="flex items-center gap-3 mb-4">
+    <h1 class="text-hl-22 font-bold text-ink"><%= @article.title %></h1>
+    <% if @article.member_only? %>
+      <span class="hl-tag bg-blue-50 text-blue-600 border border-blue-200">会员</span>
+    <% else %>
+      <span class="hl-tag bg-bg-mute text-muted-3 border border-line">公开</span>
+    <% end %>
+    <span class="hl-tag bg-bg-mute text-muted-3 border border-line"><%= @article.published? ? '已发布' : '草稿' %></span>
+  </div>
+
+  <% if @article.summary.present? %>
+    <div class="mb-4">
+      <h3 class="text-hl-14 font-semibold text-ink mb-2">简介</h3>
+      <div class="text-hl-13 text-muted"><%= @article.summary %></div>
+    </div>
+  <% end %>
+
+  <% if @article.published_at.present? %>
+    <div class="mb-4 text-hl-13 text-muted">
+      <strong>发布时间：</strong><%= l(@article.published_at, format: :long) %>
+    </div>
+  <% end %>
+
+  <div class="mb-4 text-hl-13 text-muted">
+    <strong>排序权重：</strong><%= @article.sort %>
+  </div>
+
+  <% if @article.content.present? %>
+    <div class="mt-6 pt-6 border-t border-line-soft">
+      <h3 class="text-hl-14 font-semibold text-ink mb-3">文章内容 (Markdown)</h3>
+      <div class="bg-bg-mute p-4 rounded border border-line-soft overflow-x-auto">
+        <pre class="text-hl-13 text-muted whitespace-pre-wrap font-mono"><%= @article.content %></pre>
+      </div>
+    </div>
+  <% end %>
+
+  <div class="mt-6 pt-6 border-t border-line-soft flex items-center gap-3">
+    <%= link_to '编辑', edit_admin_article_path(@article), class: 'hl-btn hl-btn-primary' %>
+    <%= button_to '删除', admin_article_path(@article), method: :delete, class: 'hl-btn !bg-red-50 !text-red-600 !border-red-200 hover:!bg-red-100', data: { turbo_confirm: '确认删除？' } %>
+  </div>
+</div>

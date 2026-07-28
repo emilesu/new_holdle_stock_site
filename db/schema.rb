@@ -10,9 +10,22 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_07_18_100000) do
+ActiveRecord::Schema[7.1].define(version: 2026_07_28_150000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
+
+  create_table "articles", comment: "AI复盘报告文章表", force: :cascade do |t|
+    t.string "title", null: false, comment: "文章标题"
+    t.text "summary", comment: "简介/摘要"
+    t.text "content", comment: "Markdown 正文内容"
+    t.boolean "is_published", default: false, comment: "发布状态(false=草稿, true=发布)"
+    t.integer "access_level", default: 0, comment: "访问级别(0=公开, 1=会员)"
+    t.integer "sort", default: 0, comment: "排序权重"
+    t.datetime "published_at", comment: "发布时间"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["published_at"], name: "index_articles_on_published_at"
+  end
 
   create_table "balance_sheets", force: :cascade do |t|
     t.bigint "financial_report_id", null: false, comment: "关联财务报告主表ID"

@@ -1,0 +1,48 @@
+<div class="flex items-center justify-between mb-6">
+  <h1 class="text-hl-22 font-bold text-ink">文章管理</h1>
+  <%= link_to '新增文章', new_admin_article_path, class: 'hl-btn hl-btn-primary' %>
+</div>
+
+<div class="hl-card overflow-hidden">
+  <table class="w-full">
+    <thead>
+      <tr class="border-b border-line bg-bg-mute">
+        <th class="px-6 py-4 text-left text-hl-12 font-semibold text-muted-3 uppercase tracking-wider">标题</th>
+        <th class="px-6 py-4 text-left text-hl-12 font-semibold text-muted-3 uppercase tracking-wider">访问级别</th>
+        <th class="px-6 py-4 text-left text-hl-12 font-semibold text-muted-3 uppercase tracking-wider">状态</th>
+        <th class="px-6 py-4 text-left text-hl-12 font-semibold text-muted-3 uppercase tracking-wider">排序</th>
+        <th class="px-6 py-4 text-left text-hl-12 font-semibold text-muted-3 uppercase tracking-wider">发布时间</th>
+        <th class="px-6 py-4 text-right text-hl-12 font-semibold text-muted-3 uppercase tracking-wider">操作</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @articles.each do |article| %>
+        <tr class="border-b border-line hover:bg-bg-mute">
+          <td class="px-6 py-4 text-hl-13">
+            <%= link_to article.title, admin_article_path(article), class: 'text-link hover:text-link-hover' %>
+          </td>
+          <td class="px-6 py-4 text-hl-13">
+            <% if article.member_only? %>
+              <span class="hl-tag bg-blue-50 text-blue-600 border border-blue-200">会员</span>
+            <% else %>
+              <span class="hl-tag bg-bg-mute text-muted-3 border border-line">公开</span>
+            <% end %>
+          </td>
+          <td class="px-6 py-4 text-hl-13 text-muted">
+            <%= article.published? ? '已发布' : '草稿' %>
+          </td>
+          <td class="px-6 py-4 text-hl-13 text-muted"><%= article.sort %></td>
+          <td class="px-6 py-4 text-hl-13 text-muted">
+            <%= article.published_at.present? ? l(article.published_at.to_date, format: :long) : '-' %>
+          </td>
+          <td class="px-6 py-4 text-hl-13 text-right">
+            <div class="flex items-center justify-end space-x-3">
+              <%= link_to '编辑', edit_admin_article_path(article), class: 'text-muted hover:text-ink' %>
+              <%= button_to '删除', admin_article_path(article), method: :delete, class: 'text-profit hover:text-red-700', data: { turbo_confirm: '确认删除？' } %>
+            </div>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>
