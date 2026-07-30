@@ -47,3 +47,8 @@ pidfile ENV.fetch("PIDFILE") { "tmp/pids/server.pid" }
 
 # Allow puma to be restarted by `bin/rails restart` command.
 plugin :tmp_restart
+
+# Solid Queue Worker（生产环境），实现 Job 持久化和任务隔离
+if rails_env == "production"
+  plugin :solid_queue
+end
