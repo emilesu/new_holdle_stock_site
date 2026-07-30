@@ -1,7 +1,7 @@
 class CrawlerJob < ApplicationJob
   queue_as :default
 
-  def perform(task_name:, service_name:, method_name: "call", args: [], kwargs: {},
+  def perform(task_name:, service_name:, execution_id:, method_name: "call", args: [], kwargs: {},
               single_mode: false, single_limit: nil, single_market: nil)
     start_time = Time.current
 
@@ -21,15 +21,17 @@ class CrawlerJob < ApplicationJob
       message = build_message(task_name, result)
       duration = (Time.current - start_time).round(2)
 
-      CrawlerExecution.create!(
-        task_name: task_name, status: "success", message: message,
-        duration: duration, executed_at: start_time
+      record = CrawlerExecution.find(execution_id)
+      record.update!(
+        status: "success", message: message,
+        duration: duration
       )
     rescue => e
       duration = (Time.current - start_time).round(2)
-      CrawlerExecution.create!(
-        task_name: task_name, status: "error",
-        message: "执行失败: #{e.message}", duration: duration, executed_at: start_time
+      record = CrawlerExecution.find(execution_id)
+      record.update!(
+        status: "error",
+        message: "执行失败: #{e.message}", duration: duration
       )
     end
   end

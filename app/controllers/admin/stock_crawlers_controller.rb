@@ -94,6 +94,14 @@ module Admin
 
     def enqueue_crawler(task_name, service_name, method_name: "call", args: [],
                         kwargs: {}, single_mode: false, single_limit: nil, single_market: nil)
+      execution = CrawlerExecution.create!(
+        task_name: task_name,
+        status: "running",
+        message: "任务已提交，正在后台异步执行中...",
+        duration: 0,
+        executed_at: Time.current
+      )
+
       CrawlerJob.perform_later(
         task_name: task_name,
         service_name: service_name,
@@ -102,15 +110,8 @@ module Admin
         kwargs: kwargs,
         single_mode: single_mode,
         single_limit: single_limit,
-        single_market: single_market
-      )
-
-      CrawlerExecution.create!(
-        task_name: task_name,
-        status: "running",
-        message: "任务已提交，正在后台异步执行中...",
-        duration: 0,
-        executed_at: Time.current
+        single_market: single_market,
+        execution_id: execution.id
       )
 
       redirect_to admin_stock_crawlers_path, notice: "爬取任务已提交后台异步执行，请稍后在执行结果中查看状态"
