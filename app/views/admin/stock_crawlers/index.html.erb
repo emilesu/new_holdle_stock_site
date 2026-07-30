@@ -15,22 +15,26 @@
       </div>
     </div>
     <div class="p-5 space-y-3">
-      <a href="<%= admin_stock_crawlers_us_stock_list_path %>" 
+      <a href="<%= admin_stock_crawlers_us_stock_list_path %>"
+         data-turbo-method="post" data-turbo-confirm="确认执行「爬取美股列表」？" rel="nofollow"
          class="hl-btn hl-btn-primary flex items-center justify-center space-x-3">
         <span class="text-xl">📋</span>
         <span class="font-medium">爬取美股列表</span>
       </a>
-      <a href="<%= admin_stock_crawlers_us_stock_basic_path %>" 
+      <a href="<%= admin_stock_crawlers_us_stock_basic_path %>"
+         data-turbo-method="post" data-turbo-confirm="确认执行「爬取美股名称&行业」？" rel="nofollow"
          class="hl-btn hl-btn-primary flex items-center justify-center space-x-3">
         <span class="text-xl">🏢</span>
         <span class="font-medium">爬取美股名称&行业</span>
       </a>
-      <a href="<%= admin_stock_crawlers_us_finance_path %>" 
+      <a href="<%= admin_stock_crawlers_us_finance_path %>"
+         data-turbo-method="post" data-turbo-confirm="确认执行「爬取美股全套财务」？" rel="nofollow"
          class="hl-btn hl-btn-primary flex items-center justify-center space-x-3">
         <span class="text-xl">💰</span>
         <span class="font-medium">爬取美股全套财务</span>
       </a>
-      <a href="<%= admin_stock_crawlers_us_finance_em_single_path(limit: 5) %>" 
+      <a href="<%= admin_stock_crawlers_us_finance_em_single_path(limit: 5) %>"
+         data-turbo-method="post" data-turbo-confirm="确认执行「测试5只美股(东方财富)」？" rel="nofollow"
          class="hl-btn hl-btn-line flex items-center justify-center space-x-3">
         <span class="text-xl">🔬</span>
         <span class="font-medium">测试5只美股(东方财富)</span>
@@ -49,17 +53,20 @@
       </div>
     </div>
     <div class="p-5 space-y-3">
-      <a href="<%= admin_stock_crawlers_hk_stock_list_path %>" 
+      <a href="<%= admin_stock_crawlers_hk_stock_list_path %>"
+         data-turbo-method="post" data-turbo-confirm="确认执行「爬取港股列表、名称&行业」？" rel="nofollow"
          class="hl-btn hl-btn-primary flex items-center justify-center space-x-3">
         <span class="text-xl">📋</span>
         <span class="font-medium">爬取港股列表、名称&行业</span>
       </a>
-      <a href="<%= admin_stock_crawlers_hk_finance_path %>" 
+      <a href="<%= admin_stock_crawlers_hk_finance_path %>"
+         data-turbo-method="post" data-turbo-confirm="确认执行「爬取港股全套财务」？" rel="nofollow"
          class="hl-btn hl-btn-primary flex items-center justify-center space-x-3">
         <span class="text-xl">💰</span>
         <span class="font-medium">爬取港股全套财务</span>
       </a>
-      <a href="<%= admin_stock_crawlers_hk_finance_em_single_path(limit: 5) %>" 
+      <a href="<%= admin_stock_crawlers_hk_finance_em_single_path(limit: 5) %>"
+         data-turbo-method="post" data-turbo-confirm="确认执行「测试5只港股(东方财富)」？" rel="nofollow"
          class="hl-btn hl-btn-line flex items-center justify-center space-x-3">
         <span class="text-xl">🔬</span>
         <span class="font-medium">测试5只港股(东方财富)</span>
@@ -78,17 +85,20 @@
       </div>
     </div>
     <div class="p-5 space-y-3">
-      <a href="<%= admin_stock_crawlers_a_stock_list_path %>" 
+      <a href="<%= admin_stock_crawlers_a_stock_list_path %>"
+         data-turbo-method="post" data-turbo-confirm="确认执行「爬取A股列表、名称&行业」？" rel="nofollow"
          class="hl-btn hl-btn-primary flex items-center justify-center space-x-3">
         <span class="text-xl">📋</span>
         <span class="font-medium">爬取A股列表、名称&行业</span>
       </a>
-      <a href="<%= admin_stock_crawlers_a_finance_path %>" 
+      <a href="<%= admin_stock_crawlers_a_finance_path %>"
+         data-turbo-method="post" data-turbo-confirm="确认执行「爬取A股全套财务」？" rel="nofollow"
          class="hl-btn hl-btn-primary flex items-center justify-center space-x-3">
         <span class="text-xl">💰</span>
         <span class="font-medium">爬取A股全套财务</span>
       </a>
-      <a href="<%= admin_stock_crawlers_a_finance_em_single_path(limit: 5) %>" 
+      <a href="<%= admin_stock_crawlers_a_finance_em_single_path(limit: 5) %>"
+         data-turbo-method="post" data-turbo-confirm="确认执行「测试5只A股(东方财富)」？" rel="nofollow"
          class="hl-btn hl-btn-line flex items-center justify-center space-x-3">
         <span class="text-xl">🔬</span>
         <span class="font-medium">测试5只A股(东方财富)</span>
@@ -107,17 +117,20 @@
       </div>
     </div>
     <div class="p-5 space-y-3">
-      <a href="<%= admin_stock_crawlers_update_all_pyramid_path %>" 
+      <a href="<%= admin_stock_crawlers_update_all_pyramid_path %>"
+         data-turbo-method="post" data-turbo-confirm="确认执行「全局更新金字塔分数」？" rel="nofollow"
          class="hl-btn hl-btn-primary flex items-center justify-center space-x-3">
         <span class="text-xl">🏆</span>
         <span class="font-medium">全局更新金字塔分数</span>
       </a>
-      <a href="<%= admin_stock_crawlers_refresh_all_radar_path %>" 
+      <a href="<%= admin_stock_crawlers_refresh_all_radar_path %>"
+         data-turbo-method="post" data-turbo-confirm="确认执行「雷达缓存(增量)」？" rel="nofollow"
          class="hl-btn hl-btn-primary flex items-center justify-center space-x-3">
         <span class="text-xl">📈</span>
         <span class="font-medium">雷达缓存(增量)</span>
       </a>
-      <a href="<%= admin_stock_crawlers_refresh_all_radar_full_path %>" 
+      <a href="<%= admin_stock_crawlers_refresh_all_radar_full_path %>"
+         data-turbo-method="post" data-turbo-confirm="确认执行「雷达缓存(全量)」？" rel="nofollow"
          class="hl-btn hl-btn-warning flex items-center justify-center space-x-3">
         <span class="text-xl">🔄</span>
         <span class="font-medium">雷达缓存(全量)</span>
