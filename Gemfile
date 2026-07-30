@@ -63,6 +63,9 @@ gem 'capistrano-nvm'
 gem 'ed25519', '>= 1.2', '< 2.0'
 gem 'bcrypt_pbkdf', '>= 1.0', '< 2.0'
 
+# 生产环境队列后端，使用 PostgreSQL 持久化（替代默认 :async 内存队列）
+gem "solid_queue"
+
 # Use Redis adapter to run Action Cable in production
 # gem "redis", ">= 4.0.1"
 
