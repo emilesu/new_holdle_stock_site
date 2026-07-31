@@ -26,7 +26,8 @@ class SignOutTest < ActionDispatch::IntegrationTest
   end
 
   test "unauthenticated user cannot access protected page and can sign in then out" do
-    original_url = "/courses"
+    # /courses 已放开为公开访问，改用仍需登录的个人中心页验证
+    original_url = "/users/profile"
     get original_url
     assert_redirected_to new_user_session_path
 
@@ -58,7 +59,7 @@ class SignOutTest < ActionDispatch::IntegrationTest
     sign_in @user
     delete destroy_user_session_path
 
-    get "/courses"
+    get "/users/profile"
     assert_redirected_to new_user_session_path
   end
 end

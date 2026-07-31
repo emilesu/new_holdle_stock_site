@@ -1,5 +1,5 @@
 class LessonsController < ApplicationController
-  before_action :authenticate_user!
+  # 公开小节无需登录即可查看，会员小节仍通过 check_access 拦截
   before_action :check_access
 
   def show
@@ -19,6 +19,11 @@ class LessonsController < ApplicationController
     course = lesson.course
     unless course.published?
       redirect_to courses_path, alert: '该课程尚未发布'
+      return
+    end
+    if lesson.member_only? && !user_signed_in?
+      store_location_for(:user, request.fullpath)
+      redirect_to new_user_session_path, alert: '该小节仅限会员访问，请先登录'
       return
     end
     unless lesson.available_to?(current_user)
