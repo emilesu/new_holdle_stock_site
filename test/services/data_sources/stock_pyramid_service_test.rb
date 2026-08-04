@@ -170,14 +170,15 @@ module DataSources
       assert result[:success]
       score = result[:new_score]
 
-      # ROE avg = 30 -> 500分
-      # ROA avg ≈ 5.5% → 0分(<7)
-      # 净利润规模 avg ≈ 32.64亿 → 100分(>=10亿)
-      # 资产周转率 avg ≈ 0.32 → 32% → 0分(<80%)
+      # ROE avg = 30 -> 500分（线性插值端点不变）
+      # ROA avg ≈ 6.45% → 0分(<7)
+      # 净利润规模 avg ≈ 32.64亿 → 50分(盈利档，<100亿)
+      # 资产周转率 avg ≈ 0.31 → 31% → 0分(<80%)
       # 毛利率 avg = 48.2% → 50分(>30%)
-      # 净利润增长: 连年增(早→晚)但代码反向比较(晚→早) → 扣分(-90)
-      # 现金流增长: 同上 → 扣分(-35)
-      # 总分 ≈ 500 + 0 + 100 + 0 + 50 - 90 - 35 = 525
+      # 净利润增长: 连年增且增幅>20% → 1.5倍权重，clamp至+90
+      # 现金流增长: 连年增 → clamp至+90
+      # 现金占比 avg ≈ 25% → 50分(≥20%档)
+      # 总分 ≈ 500 + 0 + 50 + 0 + 50 + 90 + 90 + 50 = 830
       assert score >= 500, "高分数据应得到较高分数，实际得分=#{score}"
       assert score <= 1000, "得分不应超过1000，实际得分=#{score}"
     end
@@ -304,13 +305,89 @@ module DataSources
       assert result[:success]
 
       # ROE avg = (-5 -3 +10 +15 +20)/5 = 7.4%, 但有任意ROE为负 -> ROE分=0
-      # 现金占比 avg = 15% → 50分
-      # 净利润规模 avg = 10亿 → 100分(>=10亿)
+      # ROA avg = 5%(10亿/200亿) → 0分(<7)
+      # 净利润规模 avg = 10亿 → 50分(盈利档，<100亿)
       # 毛利率 avg = 40% → 50分
-      # 总分 ≈ 0+0+100+0+50+0+0+50 = 200
+      # 现金占比 avg = 15%(30亿/200亿) → 本应25分，但ROE为负 → 现金分归零
+      # 总分 ≈ 0+0+50+0+50+0+0+0 = 100
       score = result[:new_score]
-      assert score < 300, "负ROE应导致总分偏低，实际得分=#{score}"
+      assert_equal 100, score, "负ROE应导致总分偏低且规模落入盈利档，实际得分=#{score}"
       assert_equal score, @stock.reload.pyramid_total_score
+    end
+
+    test "7. ROE 线性插值：边界附近连续计分，消除档位跳跃" do
+      # 24.74%（如恺英网络）不应再因差0.26pp被卡在400档，插值应为447
+      score = StockPyramidService.send(:calculate_roe_score, (1..5).map { { roe: 24.74 } })
+      assert_equal 447, score
+
+      # 档位端点保持原语义
+      assert_equal 400, StockPyramidService.send(:calculate_roe_score, (1..5).map { { roe: 20.0 } })
+      assert_equal 450, StockPyramidService.send(:calculate_roe_score, (1..5).map { { roe: 25.0 } })
+      assert_equal 550, StockPyramidService.send(:calculate_roe_score, (1..5).map { { roe: 35.0 } })
+
+      # 低于10%不得分
+      assert_equal 0, StockPyramidService.send(:calculate_roe_score, (1..5).map { { roe: 9.9 } })
+    end
+
+    test "8. 增长分档：增幅<5%半权、5%~20%全权、>20% 1.5倍；降幅<=5%不扣、5%~15%半扣、>15%全额扣" do
+      # 增幅分档：+30%*1.5 + 降1.5%不扣 + +17.2% + +20%*1.5 → 45+0+20+22.5 = 88
+      all_data1 = [100, 130, 128, 150, 180].map { |v| { net_income: v } }
+      assert_equal 88, StockPyramidService.send(:calculate_net_profit_growth_score, nil, all_data1)
+
+      # +30%*1.5 + +11.5% + 降10.3%半扣(-10) + +23%*1.5 → 45+25-10+22.5 = 83
+      all_data2 = [100, 130, 145, 130, 160].map { |v| { net_income: v } }
+      assert_equal 83, StockPyramidService.send(:calculate_net_profit_growth_score, nil, all_data2)
+
+      # +30%*1.5 + 降23%全额(-25) + +20%*1.5 + +16.7% → 45-25+30+15 = 65
+      all_data3 = [100, 130, 100, 120, 140].map { |v| { net_income: v } }
+      assert_equal 65, StockPyramidService.send(:calculate_net_profit_growth_score, nil, all_data3)
+
+      # 现金流增长分档逻辑一致
+      all_data4 = [100, 130, 145, 130, 160].map { |v| { operating_cash_flow: v } }
+      assert_equal 83, StockPyramidService.send(:calculate_cash_flow_growth_score, all_data4)
+    end
+
+    test "9. 负值年份不参与增长计分：亏损收窄不再被当作成长" do
+      # [-100, -30, -10, 5, 20]：前3段含负值全部跳过，仅5→20(+300%)按1.5倍 → 15*1.5 = 23
+      all_data = [-100, -30, -10, 5, 20].map { |v| { net_income: v } }
+      assert_equal 23, StockPyramidService.send(:calculate_net_profit_growth_score, nil, all_data)
+
+      # 连亏5年（亏损逐年收窄）不得正分
+      all_data2 = [-140, -40, -29, -15, -10].map { |v| { net_income: v } }
+      assert_equal 0, StockPyramidService.send(:calculate_net_profit_growth_score, nil, all_data2)
+
+      # 盈利转亏损（正→负）是重大负面信号，全额扣分：100→-20扣30，其余含负值段跳过 → -30
+      all_data3 = [100, -20, -5, -2, 1].map { |v| { net_income: v } }
+      assert_equal(-30, StockPyramidService.send(:calculate_net_profit_growth_score, nil, all_data3))
+      # 现金流增长逻辑一致
+      all_data4 = [100, -20, -5, -2, 1].map { |v| { operating_cash_flow: v } }
+      assert_equal(-30, StockPyramidService.send(:calculate_cash_flow_growth_score, all_data4))
+    end
+
+    test "10. ROA 去重：ROE高分(>=450)时ROA减半，ROE不高时ROA全额" do
+      all_data = (1..5).map { { roa: 16.0 } }
+      # ROE 500(≥450) → ROA 100*0.5 = 50
+      assert_equal 50, StockPyramidService.send(:calculate_roa_score, all_data, 500)
+      # ROE 300(<450) → ROA 100 全额
+      assert_equal 100, StockPyramidService.send(:calculate_roa_score, all_data, 300)
+    end
+
+    test "11. 现金占比：权重降为50且ROE为负时归零" do
+      # ROE为正 + 现金25% → 50分
+      all_data1 = (1..5).map { { roe: 20.0, cash_to_assets_ratio: 25.0 } }
+      assert_equal 50, StockPyramidService.send(:calculate_cash_ratio_score, all_data1)
+      # ROE为正 + 现金12% → 25分
+      all_data2 = (1..5).map { { roe: 20.0, cash_to_assets_ratio: 12.0 } }
+      assert_equal 25, StockPyramidService.send(:calculate_cash_ratio_score, all_data2)
+      # ROE存在负值 → 现金分归零（即使现金充足）
+      all_data3 = (1..4).map { { roe: 20.0, cash_to_assets_ratio: 25.0 } } + [{ roe: -5.0, cash_to_assets_ratio: 25.0 }]
+      assert_equal 0, StockPyramidService.send(:calculate_cash_ratio_score, all_data3)
+      # ROE数据完全缺失 → 现金分归零（与ROE分"数据不足3年得0分"口径一致）
+      all_data4 = (1..5).map { { cash_to_assets_ratio: 25.0 } }
+      assert_equal 0, StockPyramidService.send(:calculate_cash_ratio_score, all_data4)
+      # ROE数据不足3年（仅2年）→ 现金分归零
+      all_data5 = (1..2).map { { roe: 20.0, cash_to_assets_ratio: 25.0 } } + (1..3).map { { cash_to_assets_ratio: 25.0 } }
+      assert_equal 0, StockPyramidService.send(:calculate_cash_ratio_score, all_data5)
     end
   end
 end

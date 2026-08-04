@@ -55,7 +55,7 @@ module DataSources
         score += roe_score
         Rails.logger.info "[PyramidService] #{symbol} ROE得分: #{roe_score}, 累计: #{score}"
 
-        roa_score = calculate_roa_score(all_data)
+        roa_score = calculate_roa_score(all_data, roe_score)
         score += roa_score
         Rails.logger.info "[PyramidService] #{symbol} ROA得分: #{roa_score}, 累计: #{score}"
 
@@ -90,7 +90,8 @@ module DataSources
 
       # 计算ROE分数（权重最高，0-550分）
       # 近5年ROE平均值，任一为负则得0分
-      # 新增规则：均值>=25%但最大值超过最小值4倍时，一律计450分（不少于3年数据即执行）
+      # 线性插值：10%~35%按档位平滑过渡，消除档位边界跳跃（如24.9%与25.0%不再差50分）
+      # 特殊规则：均值>=25%但最大值超过最小值4倍时，一律计450分（不少于3年数据即执行）
       def calculate_roe_score(all_data)
         roe_values = all_data.map { |d| d[:roe] }.compact.map(&:to_f)
         return 0 if roe_values.size < 3
@@ -100,15 +101,18 @@ module DataSources
 
         avg_roe = roe_values.sum / roe_values.size
 
-        score = case
-                when avg_roe >= 35 then 550  # 卓越：ROE >= 35%
-                when avg_roe >= 30 then 500  # 优秀：ROE >= 30%
-                when avg_roe >= 25 then 450  # 良好：ROE >= 25%
-                when avg_roe >= 20 then 400  # 中等偏上：ROE >= 20%
-                when avg_roe >= 15 then 350  # 中等：ROE >= 15%
-                when avg_roe >= 10 then 300  # 及格：ROE >= 10%
-                else 0
-                end
+        # 档位基准：[ROE下限, 对应分数]，区间内线性插值
+        steps = [[10, 300], [15, 350], [20, 400], [25, 450], [30, 500], [35, 550]]
+        if avg_roe >= 35
+          score = 550  # 卓越：ROE >= 35%
+        elsif avg_roe < 10
+          score = 0    # 低于10%不得分
+        else
+          (lo, lo_score), (hi, hi_score) = steps.each_cons(2).find do |(lo, _), (hi, _)|
+            avg_roe >= lo && avg_roe < hi
+          end
+          score = lo_score + (avg_roe - lo) / (hi - lo) * (hi_score - lo_score)
+        end
 
         recent_roe = roe_values.last(5)
         if avg_roe >= 25 && recent_roe.size >= 3
@@ -119,25 +123,31 @@ module DataSources
           end
         end
 
-        score
+        score.round
       end
 
       # 计算ROA分数（0-100分）
-      def calculate_roa_score(all_data)
+      # ROE已获高分(>=450，均值约25%+)时ROA减半，避免同一经营质量重复计分；
+      # ROE一般但ROA高的低杠杆公司ROA全额给分，作为独立奖励
+      def calculate_roa_score(all_data, roe_score)
         roa_values = all_data.map { |d| d[:roa] }.compact.map(&:to_f)
         return 0 if roa_values.size < 3
 
         avg_roa = roa_values.sum / roa_values.size
 
-        case
+        score = case
         when avg_roa >= 15 then 100  # 优秀
         when avg_roa >= 11 then 80   # 良好
         when avg_roa >= 7 then 50    # 及格
         else 0
         end
+
+        score = (score * 0.5).round if roe_score >= 450
+        score
       end
 
-      # 计算净利润规模分数（0-150分）
+      # 计算净利润规模分数（0-200分）
+      # 五档阶梯：千亿级200 / 五百亿级150 / 百亿级100 / 盈利50 / 亏损0
       def calculate_net_income_score(all_data)
         ni_values = all_data.map { |d| d[:net_income] }.compact.map(&:to_f)
         return 0 if ni_values.size < 5
@@ -145,8 +155,9 @@ module DataSources
         avg_ni = ni_values.sum / ni_values.size
 
         case
-        when avg_ni >= 100_0000_0000 then 150  # 千亿级
-        when avg_ni >= 10_0000_0000 then 100   # 百亿级
+        when avg_ni >= 1000_0000_0000 then 200  # 千亿级
+        when avg_ni >= 500_0000_0000 then 150   # 五百亿级
+        when avg_ni >= 100_0000_0000 then 100   # 百亿级
         when avg_ni > 0 then 50                 # 盈利
         else 0
         end
@@ -173,6 +184,9 @@ module DataSources
       end
 
       # 计算净利润增长分数（-90至90分）
+      # 规则：负值年份不参与计分（避免"亏损收窄=成长"失真）；
+      #       增长按幅度分档：增幅>=20%按1.5倍权重、5%~20%全额、<5%半权（微增不当作真成长）；
+      #       降幅<=5%视为正常波动不扣分、5%~15%半扣、>15%全额扣
       def calculate_net_profit_growth_score(stock, all_data)
         ni_values = all_data.map { |d| d[:net_income] }.compact.map(&:to_f)
         return 0 if ni_values.size < 5
@@ -183,15 +197,41 @@ module DataSources
 
         years.each_with_index do |i, idx|
           next if i + 1 >= ni_values.size
-          score += weights[idx] if ni_values[i] < ni_values[i + 1]  # 增长加分（后值更大）
-          score -= weights[idx] if ni_values[i] > ni_values[i + 1]  # 下降扣分（前值更大）
+          old_value = ni_values[i]
+          new_value = ni_values[i + 1]
+          next if old_value == 0
+
+          if old_value < 0 || new_value < 0
+            # 盈利转亏损（正→负）是重大负面信号，全额扣分；
+            # 其余含负值段（亏损收窄/扭亏）不参与计分，避免"亏损收窄=成长"失真
+            score -= weights[idx] if old_value > 0 && new_value < 0
+            next
+          end
+
+          if new_value > old_value
+            growth_ratio = (new_value - old_value) / old_value.abs * 100
+            if growth_ratio >= 20
+              score += weights[idx] * 1.5  # 高增长1.5倍权重
+            elsif growth_ratio >= 5
+              score += weights[idx]        # 正常增长
+            else
+              score += weights[idx] * 0.5  # 微增长半权
+            end
+          else
+            drop_ratio = (old_value - new_value) / old_value.abs * 100
+            if drop_ratio > 15
+              score -= weights[idx]        # 大降幅全额扣分
+            elsif drop_ratio > 5
+              score -= weights[idx] * 0.5  # 中降幅半扣
+            end
+          end
         end
 
-        score.clamp(-90, 90)
+        score.round.clamp(-90, 90)
       end
 
       # 计算经营现金流增长分数（-90至90分）
-      # 使用经营活动现金流量(operating_cash_flow)数据，逻辑与净利润增长分数一致
+      # 使用经营活动现金流量(operating_cash_flow)数据，计分规则与净利润增长分数一致
       def calculate_cash_flow_growth_score(all_data)
         cf_values = all_data.map { |d| d[:operating_cash_flow] }.compact.map(&:to_f)
         return 0 if cf_values.size < 5
@@ -202,24 +242,55 @@ module DataSources
 
         years.each_with_index do |i, idx|
           next if i + 1 >= cf_values.size
-          score += weights[idx] if cf_values[i] < cf_values[i + 1]  # 增长加分（后值更大）
-          score -= weights[idx] if cf_values[i] > cf_values[i + 1]  # 下降扣分（前值更大）
+          old_value = cf_values[i]
+          new_value = cf_values[i + 1]
+          next if old_value == 0
+
+          if old_value < 0 || new_value < 0
+            # 盈利转亏损（正→负）是重大负面信号，全额扣分；
+            # 其余含负值段（亏损收窄/扭亏）不参与计分，避免"亏损收窄=成长"失真
+            score -= weights[idx] if old_value > 0 && new_value < 0
+            next
+          end
+
+          if new_value > old_value
+            growth_ratio = (new_value - old_value) / old_value.abs * 100
+            if growth_ratio >= 20
+              score += weights[idx] * 1.5  # 高增长1.5倍权重
+            elsif growth_ratio >= 5
+              score += weights[idx]        # 正常增长
+            else
+              score += weights[idx] * 0.5  # 微增长半权
+            end
+          else
+            drop_ratio = (old_value - new_value) / old_value.abs * 100
+            if drop_ratio > 15
+              score -= weights[idx]        # 大降幅全额扣分
+            elsif drop_ratio > 5
+              score -= weights[idx] * 0.5  # 中降幅半扣
+            end
+          end
         end
 
-        score.clamp(-90, 90)
+        score.round.clamp(-90, 90)
       end
 
-      # 计算现金占总资产比率分数（0-100分）
-      # 近5年现金占总资产比率平均值，≥20%得100分，≥10%得50分
+      # 计算现金占总资产比率分数（0-50分）
+      # 近5年现金占总资产比率平均值，≥20%得50分，≥10%得25分；
+      # ROE存在负值或ROE数据不足3年的公司现金分归零
+      #（账上有钱但经营亏损/数据缺失，不应获得抗风险奖励，与ROE分数据口径一致）
       def calculate_cash_ratio_score(all_data)
         cr_values = all_data.map { |d| d[:cash_to_assets_ratio] }.compact.map(&:to_f)
         return 0 if cr_values.size < 3
 
+        roe_values = all_data.map { |d| d[:roe] }.compact.map(&:to_f)
+        return 0 if roe_values.size < 3 || roe_values.any? { |v| v <= 0 }
+
         avg_cr = cr_values.sum / cr_values.size
 
         case
-        when avg_cr >= 20 then 100  # 现金充裕，抗风险能力强
-        when avg_cr >= 10 then 50   # 现金充足
+        when avg_cr >= 20 then 50  # 现金充裕，抗风险能力强
+        when avg_cr >= 10 then 25  # 现金充足
         else 0
         end
       end
