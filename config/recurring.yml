@@ -13,3 +13,7 @@ production:
   clear_solid_queue_finished_jobs:
     command: "SolidQueue::Job.clear_finished_in_batches(sleep_between_batches: 0.3)"
     schedule: every hour at minute 12
+  # 上市日期同步进度监控：每5分钟检查一次，同步完成时在管理后台补全 CrawlerExecution 记录
+  listing_date_sync_monitor:
+    class: ListingDateSyncMonitorJob
+    schedule: every 5 minutes
