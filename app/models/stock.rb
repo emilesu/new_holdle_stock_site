@@ -21,14 +21,25 @@ class Stock < ApplicationRecord
     stocks.map { |s| [s.id, s.pyramid_tags] }.to_h
   end
 
-  # 单只股票的金字塔警示标签
+  # 标签悬停提示文案（金字塔列表徽章 title）
+  def self.pyramid_tag_hint(tag)
+    {
+      '数据<5年' => '财务数据不足5年，评分可靠性较低',
+      '亏损年份' => '近5年存在亏损年份，评分经特殊规则处理',
+      '次新股'   => '上市不足3年，历史表现参考有限'
+    }[tag] || tag
+  end
+
+  # 单只股票的金字塔警示标签（纯展示，不参与评分）
   # - "数据<5年": 财务指标不足5年，评分基于5年均值，可靠性较低
   # - "亏损年份": 近5年存在 ROE<=0 或净利润<0 的年份，增长/现金分经特殊规则处理
+  # - "次新股": 上市日期距今不足3年（需 listing_date 已同步，美股暂不支持）
   def pyramid_tags
     years = financial_years.last(5)
     tags = []
     tags << '数据<5年' if years.size < 5
     tags << '亏损年份' if years.any? { |y| pyramid_loss_year?(y) }
+    tags << '次新股' if listing_date.present? && listing_date >= (Date.current - 3.years)
     tags
   end
 

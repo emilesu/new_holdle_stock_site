@@ -76,4 +76,33 @@ class StockTest < ActiveSupport::TestCase
     s2&.destroy!
     s3&.destroy!
   end
+
+  test "pyramid_tags: 上市不足3年标记'次新股'" do
+    (2021..2025).each { |y| create_year(@stock, y, roe: 20.0, net_income: 50_0000_0000) }
+    @stock.update!(listing_date: Date.current - 2.years)
+    assert_equal ["次新股"], @stock.pyramid_tags
+  end
+
+  test "pyramid_tags: 上市超过3年不打次新股标签" do
+    (2021..2025).each { |y| create_year(@stock, y, roe: 20.0, net_income: 50_0000_0000) }
+    @stock.update!(listing_date: Date.current - 5.years)
+    assert_equal [], @stock.pyramid_tags
+  end
+
+  test "pyramid_tags: 无上市日期不打次新股标签" do
+    (2021..2025).each { |y| create_year(@stock, y, roe: 20.0, net_income: 50_0000_0000) }
+    @stock.update!(listing_date: nil)
+    assert_equal [], @stock.pyramid_tags
+  end
+
+  test "pyramid_tags: 次新股与数据不足并存" do
+    (2023..2025).each { |y| create_year(@stock, y, roe: 20.0, net_income: 50_0000_0000) }
+    @stock.update!(listing_date: Date.current - 1.year)
+    assert_equal ["数据<5年", "次新股"], @stock.pyramid_tags
+  end
+
+  test "pyramid_tag_hint: 返回标签提示文案" do
+    assert_equal "上市不足3年，历史表现参考有限", Stock.pyramid_tag_hint("次新股")
+    assert_equal "未知标签", Stock.pyramid_tag_hint("未知标签")
+  end
 end
