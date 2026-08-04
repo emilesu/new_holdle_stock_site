@@ -50,7 +50,7 @@ class HkStockListServiceTest < ActiveSupport::TestCase
   # ====================================================
   test "常量定义完整" do
     assert DataSources::HkStockListService::MAIRUI_BASE_URL.present?
-    assert DataSources::HkStockListService::EM_DATACENTER_URL.present?
+    assert DataSources::EastmoneyDatacenter::BASE_URL.present?
     assert DataSources::HkStockListService::TIMEOUT > 0
     assert DataSources::HkStockListService::RETRY_TIMES >= 0
     assert DataSources::HkStockListService::REQUEST_INTERVAL >= 0
@@ -155,6 +155,67 @@ class HkStockListServiceTest < ActiveSupport::TestCase
 
     stock = Stock.find_by(symbol: "00700.HK", market: "HK")
     assert_equal "资讯科技业", stock.sector
+  end
+
+  test "process_stock 新增港股并填充上市日期" do
+    item = { symbol: "00700.HK", name: "腾讯控股", exchange: "香港交易所",
+             sector: "资讯科技业", industry: "软件及服务", listing_date: Date.new(2004, 6, 16) }
+
+    result = DataSources::HkStockListService.send(:process_stock, item)
+    assert_equal :created, result
+
+    stock = Stock.find_by(symbol: "00700.HK", market: "HK")
+    assert_equal Date.new(2004, 6, 16), stock.listing_date
+  end
+
+  test "process_stock 新增港股自动生成pinyin_initials" do
+    item = { symbol: "00700.HK", name: "腾讯控股", exchange: "香港交易所",
+             sector: "资讯科技业", industry: "软件及服务" }
+
+    DataSources::HkStockListService.send(:process_stock, item)
+
+    stock = Stock.find_by(symbol: "00700.HK", market: "HK")
+    assert_equal "TXKG", stock.pinyin_initials
+  end
+
+  test "process_stock 上市日期无变化跳过" do
+    Stock.create!(symbol: "00005.HK", name: "汇丰控股", market: "HK",
+                  exchange: "香港交易所", sector: "金融业", industry: "银行", status: "active",
+                  listing_date: Date.new(1992, 1, 1))
+
+    item = { symbol: "00005.HK", name: "汇丰控股", exchange: "香港交易所",
+             sector: "金融业", industry: "银行", listing_date: Date.new(1992, 1, 1) }
+
+    result = DataSources::HkStockListService.send(:process_stock, item)
+    assert_equal :skipped, result
+  end
+
+  test "process_stock 存量股票上市日期为空时补全" do
+    Stock.create!(symbol: "00005.HK", name: "汇丰控股", market: "HK",
+                  exchange: "香港交易所", sector: "金融业", industry: "银行", status: "active")
+
+    item = { symbol: "00005.HK", name: "汇丰控股", exchange: "香港交易所",
+             sector: "金融业", industry: "银行", listing_date: Date.new(1992, 1, 1) }
+
+    result = DataSources::HkStockListService.send(:process_stock, item)
+    assert_equal :updated, result
+
+    stock = Stock.find_by(symbol: "00005.HK", market: "HK")
+    assert_equal Date.new(1992, 1, 1), stock.listing_date
+  end
+
+  test "process_stock 接口未返回上市日期时存量股票跳过" do
+    Stock.create!(symbol: "00005.HK", name: "汇丰控股", market: "HK",
+                  exchange: "香港交易所", sector: "金融业", industry: "银行", status: "active",
+                  listing_date: Date.new(1992, 1, 1))
+
+    # 接口本次未返回上市日期（listing_date 为 nil），不应误判为有变更导致 updated 统计虚增
+    item = { symbol: "00005.HK", name: "汇丰控股", exchange: "香港交易所",
+             sector: "金融业", industry: "银行", listing_date: nil }
+
+    result = DataSources::HkStockListService.send(:process_stock, item)
+    assert_equal :skipped, result
+    assert_equal Date.new(1992, 1, 1), Stock.find_by(symbol: "00005.HK", market: "HK").listing_date
   end
 
   # ====================================================
@@ -303,8 +364,8 @@ class HkStockListServiceTest < ActiveSupport::TestCase
   test "call 方法正常流程" do
     responses = [
       build_success_response('[{"dm":"00001.HK","mc":"长和","jys":"HK"},{"dm":"00002.HK","mc":"中电控股","jys":"HK"}]'),
-      build_success_response('{"result":{"data":[{"BELONG_INDUSTRY":"综合企业"}]},"success":true}'),
-      build_success_response('{"result":{"data":[{"BELONG_INDUSTRY":"公用事业"}]},"success":true}')
+      build_success_response('{"result":{"data":[{"BELONG_INDUSTRY":"综合企业","LISTING_DATE":"1972-11-06"}]},"success":true}'),
+      build_success_response('{"result":{"data":[{"BELONG_INDUSTRY":"公用事业","LISTING_DATE":"1986-05-08"}]},"success":true}')
     ]
     DataSources::HkStockListService.http_client = build_sequence_client(responses)
 
@@ -317,11 +378,13 @@ class HkStockListServiceTest < ActiveSupport::TestCase
     assert stock1.present?
     assert_equal "长和", stock1.name
     assert_equal "综合企业", stock1.sector
+    assert_equal Date.new(1972, 11, 6), stock1.listing_date
 
     stock2 = Stock.find_by(symbol: "00002.HK", market: "HK")
     assert stock2.present?
     assert_equal "中电控股", stock2.name
     assert_equal "公用事业", stock2.sector
+    assert_equal Date.new(1986, 5, 8), stock2.listing_date
   end
 
   test "call 方法API不可用时使用测试数据" do

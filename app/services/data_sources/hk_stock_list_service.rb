@@ -4,10 +4,6 @@ module DataSources
     MAIRUI_BASE_URL = "https://api.mairuiapi.com".freeze
     MAIRUI_LICENCE = ENV["MAIRUI_LICENCE"].presence || "LICENCE-66D8-9F96-0C7F0FBCD073"
 
-    # 东方财富 - 港股公司资料（含行业分类）
-    EM_DATACENTER_URL = "https://datacenter.eastmoney.com/securities/api/data/v1/get".freeze
-    EM_REFERER = "https://emweb.securities.eastmoney.com/".freeze
-
     USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36".freeze
     TIMEOUT = 15
     RETRY_TIMES = 2
@@ -137,10 +133,11 @@ module DataSources
 
           hk_list.each_with_index do |item, index|
             begin
-              # 从东方财富获取行业分类
+              # 从东方财富获取行业分类 + 上市日期
               industry_info = fetch_hk_industry(item[:symbol])
               item[:sector] = industry_info[:sector]
               item[:industry] = industry_info[:industry]
+              item[:listing_date] = industry_info[:listing_date]
 
               result = process_stock(item)
               stats[result] += 1
@@ -238,64 +235,44 @@ module DataSources
         end
       end
 
-      # 从东方财富获取港股行业分类信息，映射为HSICS标准一级/二级行业
+      # 从东方财富获取港股行业分类信息 + 上市日期，行业映射为HSICS标准一级/二级行业
       # 使用 datacenter.eastmoney.com 的 RPT_HKF10_INFO_ORGPROFILE 报表
+      # 上市日期：同一报表含 LISTING_DATE 字段，零额外请求顺带获取；未来日期视为异常数据返回 nil
       def fetch_hk_industry(symbol)
-        retries = RETRY_TIMES
+        data = EastmoneyDatacenter.fetch_data(
+          report_name: "RPT_HKF10_INFO_ORGPROFILE",
+          columns: "SECUCODE,SECURITY_CODE,ORG_NAME,BELONG_INDUSTRY,LISTING_DATE",
+          filter: %((SECUCODE="#{symbol}")),
+          page_size: 200,
+          http_client: http_client
+        )
+        return { sector: "其他", industry: "其他", listing_date: nil } unless data.present?
 
-        begin
-          response = http_client.get(EM_DATACENTER_URL) do |req|
-            req.headers["User-Agent"] = USER_AGENT
-            req.headers["Referer"] = EM_REFERER
-            req.params.merge!({
-              reportName: "RPT_HKF10_INFO_ORGPROFILE",
-              columns: "SECUCODE,SECURITY_CODE,ORG_NAME,BELONG_INDUSTRY",
-              filter: %((SECUCODE="#{symbol}")),
-              pageNumber: 1,
-              pageSize: 200,
-              sortTypes: "",
-              sortColumns: "",
-              source: "F10",
-              client: "PC"
-            })
-            req.options.timeout = TIMEOUT
-          end
+        first_row = data.first
+        raw_industry = first_row&.dig("BELONG_INDUSTRY")
+        listing_date = parse_listing_date(first_row&.dig("LISTING_DATE"))
 
-          if response.success?
-            data = JSON.parse(response.body)
-            raw_industry = data.dig("result", "data", 0, "BELONG_INDUSTRY")
-
-            if raw_industry.present?
-              mapping = HK_INDUSTRY_MAPPING[raw_industry]
-              if mapping
-                { sector: mapping[:sector], industry: mapping[:industry] }
-              else
-                Rails.logger.warn "#{symbol} 行业名 '#{raw_industry}' 未在HK_INDUSTRY_MAPPING中，归入其他"
-                { sector: "其他", industry: "其他" }
-              end
-            else
-              { sector: "其他", industry: "其他" }
-            end
+        if raw_industry.present?
+          mapping = HK_INDUSTRY_MAPPING[raw_industry]
+          if mapping
+            { sector: mapping[:sector], industry: mapping[:industry], listing_date: listing_date }
           else
-            Rails.logger.warn "#{symbol} 行业分类请求失败，状态码: #{response.status}"
-            { sector: "其他", industry: "其他" }
+            Rails.logger.warn "#{symbol} 行业名 '#{raw_industry}' 未在HK_INDUSTRY_MAPPING中，归入其他"
+            { sector: "其他", industry: "其他", listing_date: listing_date }
           end
-        rescue Faraday::TimeoutError, Faraday::ConnectionFailed => e
-          retries -= 1
-          if retries > 0
-            Rails.logger.warn "#{symbol} 行业分类请求超时/断连，重试中（剩余 #{retries} 次）..."
-            sleep RETRY_INTERVAL
-            retry
-          end
-          Rails.logger.error "#{symbol} 行业分类请求失败（已重试 #{RETRY_TIMES} 次）: #{e.message}"
-          { sector: "其他", industry: "其他" }
-        rescue JSON::ParserError => e
-          Rails.logger.error "#{symbol} 行业分类JSON解析失败: #{e.message}"
-          { sector: "其他", industry: "其他" }
-        rescue => e
-          Rails.logger.error "#{symbol} 行业分类请求异常: #{e.message}"
-          { sector: "其他", industry: "其他" }
+        else
+          { sector: "其他", industry: "其他", listing_date: listing_date }
         end
+      end
+
+      # 解析东方财富 LISTING_DATE 字段为 Date；空值或未来日期返回 nil
+      def parse_listing_date(raw)
+        return nil if raw.blank?
+
+        date = Date.parse(raw.to_s)
+        date <= Date.current ? date : nil
+      rescue Date::Error, ArgumentError
+        nil
       end
 
       def map_exchange(jys_code)
@@ -303,6 +280,7 @@ module DataSources
       end
 
       # 处理单只港股：新增/更新/跳过，依据数据是否有变更
+      # 新增公司时自动填充上市日期（东方财富F10顺带获取）与拼音首字母（Stock模型before_save自动生成）
       def process_stock(item)
         symbol = item[:symbol]
         return :failed unless symbol.present?
@@ -314,7 +292,9 @@ module DataSources
           no_changes = item[:name] == stock.name &&
                        item[:exchange] == stock.exchange &&
                        item[:sector] == stock.sector &&
-                       item[:industry] == stock.industry
+                       item[:industry] == stock.industry &&
+                       # 接口未返回上市日期（nil）时不参与比较，避免存量已有日期时误判为有变更导致 updated 统计虚增
+                       (item[:listing_date].blank? || item[:listing_date] == stock.listing_date)
           return :skipped if no_changes
         end
 
@@ -322,7 +302,10 @@ module DataSources
         stock.exchange = item[:exchange]
         stock.sector = item[:sector]
         stock.industry = item[:industry]
+        # 上市日期仅在接口有有效日期（非未来日期）时写入，存量缺失的港股顺带补全
+        stock.listing_date = item[:listing_date] if item[:listing_date].present?
         stock.status = "active" if stock.status.blank?
+        # pinyin_initials 由 Stock 模型 before_save 回调自动生成（中文名拼音首字母），此处无需显式赋值
         stock.save!
 
         is_new ? :created : :updated

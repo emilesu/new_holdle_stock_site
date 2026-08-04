@@ -8,6 +8,9 @@ module DataSources
     RETRY_TIMES = 2
     RETRY_INTERVAL = 1
 
+    # 新增股票上市日期请求间隔（秒），避免触发数据源限流
+    REQUEST_INTERVAL = 0.3
+
     # 交易所映射表：东方财富API返回的TRADE_MARKET → 标准交易所名称
     EXCHANGE_MAPPING = {
       "上交所主板" => "上海证券交易所",
@@ -571,12 +574,20 @@ module DataSources
       end
 
       # 处理单只股票：新增/更新/跳过，依据数据是否有变更
+      # 新增公司时自动填充上市日期（逐只调用东方财富F10组织资料报表）与拼音首字母（Stock模型before_save自动生成）
       def process_stock(item)
         symbol = item["symbol"]
         return :failed unless symbol.present?
 
         stock = Stock.find_or_initialize_by(symbol: symbol, market: "CN")
         is_new = stock.new_record?
+
+        # 仅对新增股票拉取上市日期，避免对存量股票产生大量请求；
+        # 存量缺口由 DataSources::StockListingDateService 增量同步兜底
+        if is_new
+          stock.listing_date = fetch_listing_date(secucode_from_symbol(symbol))
+          sleep REQUEST_INTERVAL
+        end
 
         unless is_new
           no_changes = item["name"] == stock.name &&
@@ -590,12 +601,46 @@ module DataSources
         stock.exchange = item["exchange"]
         stock.sector = item["sector"]
         stock.industry = item["main_business"]
+        # pinyin_initials 由 Stock 模型 before_save 回调自动生成（中文名拼音首字母），此处无需显式赋值
         stock.save!
 
         is_new ? :created : :updated
       rescue => e
         Rails.logger.error "处理股票 #{item['symbol']} 失败: #{e.message}"
         :failed
+      end
+
+      # 获取A股上市日期（东方财富 F10 组织资料报表）
+      # 查询成功但无数据时返回 nil；请求失败（超时/断连重试耗尽等）记录错误并返回 nil，
+      # 不阻断股票创建，上市日期由 StockListingDateService 后续兜底同步
+      def fetch_listing_date(secucode)
+        data = EastmoneyDatacenter.fetch_data(
+          report_name: "RPT_F10_ORG_BASICINFO",
+          columns: "SECUCODE,LISTING_DATE",
+          filter: %((SECUCODE="#{secucode}")),
+          page_size: 1
+        )
+        return nil unless data.present?
+
+        listing = data.first&.dig("LISTING_DATE")
+        return nil if listing.blank?
+
+        date = Date.parse(listing.to_s)
+        # 未来日期视为异常数据，不写入（与上市日期同步服务口径一致）
+        date <= Date.current ? date : nil
+      rescue Date::Error, ArgumentError => e
+        Rails.logger.error "#{secucode} 上市日期解析失败: #{e.message}"
+        nil
+      rescue => e
+        Rails.logger.error "#{secucode} 上市日期请求异常: #{e.message}"
+        nil
+      end
+
+      # 库内 symbol（如 SH600519）→ 东方财富 SECUCODE 格式（如 600519.SH）
+      def secucode_from_symbol(symbol)
+        code = symbol.to_s.sub(/\A[A-Z]{2}/, "")
+        suffix = symbol.to_s[0, 2].upcase
+        "#{code}.#{suffix}"
       end
     end
   end

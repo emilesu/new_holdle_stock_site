@@ -3,19 +3,14 @@ module DataSources
   # 增量策略：仅处理 listing_date 为空的股票，避免重复请求
   # 美股暂不支持（东方财富美股 F10 报表无上市日期字段），美股次新标签由"数据<5年"兜底
   class StockListingDateService
-    EM_DATACENTER_URL = "https://datacenter.eastmoney.com/securities/api/data/v1/get".freeze
-    EM_REFERER = "https://emweb.securities.eastmoney.com/".freeze
-    USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36".freeze
-    TIMEOUT = 15
-    RETRY_TIMES = 2
-    RETRY_INTERVAL = 1
-    REQUEST_INTERVAL = 0.3
-
     # 市场 => 东方财富 F10 组织资料报表名
     REPORTS = {
       "CN" => "RPT_F10_ORG_BASICINFO",
       "HK" => "RPT_HKF10_INFO_ORGPROFILE"
     }.freeze
+
+    # 请求间隔（秒），避免触发数据源限流
+    REQUEST_INTERVAL = 0.3
 
     class << self
       def call(market: nil)
@@ -74,43 +69,19 @@ module DataSources
       end
 
       # 查询成功但接口无上市日期数据时返回 nil（计入 skipped）
-      # 请求失败（超时/断连重试耗尽、非 2xx、解析失败等）直接抛异常，由 call 层计入 failed，避免统计失真
+      # 请求失败（超时/断连重试耗尽、非 2xx、解析失败等）抛异常，由 call 层计入 failed，避免统计失真
       def fetch_listing_date(report_name, secucode)
-        retries = RETRY_TIMES
+        data = EastmoneyDatacenter.fetch_data(
+          report_name: report_name,
+          columns: "SECUCODE,LISTING_DATE",
+          filter: %((SECUCODE="#{secucode}")),
+          page_size: 1,
+          raise_on_failure: true
+        )
+        return nil unless data.present?
 
-        begin
-          response = Faraday.get(EM_DATACENTER_URL) do |req|
-            req.headers["User-Agent"] = USER_AGENT
-            req.headers["Referer"] = EM_REFERER
-            req.params.merge!({
-              reportName: report_name,
-              columns: "SECUCODE,LISTING_DATE",
-              filter: %((SECUCODE="#{secucode}")),
-              pageNumber: 1,
-              pageSize: 1,
-              sortTypes: "",
-              sortColumns: "",
-              source: "F10",
-              client: "PC"
-            })
-            req.options.timeout = TIMEOUT
-          end
-
-          raise Faraday::Error, "#{secucode} 上市日期请求失败，状态码: #{response.status}" unless response.success?
-
-          data = JSON.parse(response.body).dig("result", "data")
-          listing = data&.first&.dig("LISTING_DATE")
-          listing.present? ? Date.parse(listing.to_s) : nil
-        rescue Faraday::TimeoutError, Faraday::ConnectionFailed => e
-          retries -= 1
-          if retries > 0
-            Rails.logger.warn "#{secucode} 请求超时/断连，重试中（剩余 #{retries} 次）..."
-            sleep RETRY_INTERVAL
-            retry
-          end
-          Rails.logger.error "#{secucode} 请求失败（已重试 #{RETRY_TIMES} 次）: #{e.message}"
-          raise
-        end
+        listing = data.first&.dig("LISTING_DATE")
+        listing.present? ? Date.parse(listing.to_s) : nil
       end
     end
   end
