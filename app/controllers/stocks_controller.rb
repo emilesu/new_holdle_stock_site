@@ -85,17 +85,16 @@ class StocksController < ApplicationController
 
     @user_favorite = current_user&.user_favorites&.find_by(stock_id: @stock.id)
 
-    # 市场主题色
+    # 市场主题色（统一走 application_helper）
     @market_text_color = case @stock.market
                          when 'CN' then 'text-green-600'
                          when 'HK' then 'text-amber-600'
                          else 'text-blue-600'
                          end
-    @market_badge_bg = case @stock.market
-                       when 'CN' then 'bg-green-100 text-green-800'
-                       when 'HK' then 'bg-amber-100 text-amber-800'
-                       else 'bg-blue-100 text-blue-800'
-                       end
+    @market_badge_bg = helpers.market_badge_class(@stock.market)
+
+    # 金字塔警示标签（数据<5年 / 亏损年份 / 次新股），与金字塔列表口径一致
+    @pyramid_tags = @stock.pyramid_tags
 
     preformat_financial_data
   end

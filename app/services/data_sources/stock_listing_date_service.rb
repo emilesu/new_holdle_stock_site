@@ -23,7 +23,7 @@ module DataSources
         Rails.logger.info "开始同步上市日期（东方财富 F10）"
         Rails.logger.info "=" * 70
 
-        stats = { total: 0, updated: 0, skipped: 0, failed: 0, api_error: 0 }
+        stats = { total: 0, updated: 0, skipped: 0, failed: 0 }
         markets = market.present? ? [market] : REPORTS.keys
 
         markets.each do |m|
@@ -39,11 +39,12 @@ module DataSources
           stocks.find_each do |stock|
             begin
               date = fetch_listing_date(REPORTS[m], secucode(stock))
-              if date
+              if date && date <= Date.current
                 stock.update_column(:listing_date, date)
                 stats[:updated] += 1
               else
                 stats[:skipped] += 1
+                Rails.logger.warn "上市日期缺失或异常（未来日期）跳过 #{stock.symbol}: #{date}" if date
               end
             rescue => e
               stats[:failed] += 1
@@ -72,6 +73,8 @@ module DataSources
         end
       end
 
+      # 查询成功但接口无上市日期数据时返回 nil（计入 skipped）
+      # 请求失败（超时/断连重试耗尽、非 2xx、解析失败等）直接抛异常，由 call 层计入 failed，避免统计失真
       def fetch_listing_date(report_name, secucode)
         retries = RETRY_TIMES
 
@@ -93,14 +96,11 @@ module DataSources
             req.options.timeout = TIMEOUT
           end
 
-          if response.success?
-            data = JSON.parse(response.body).dig("result", "data")
-            listing = data&.first&.dig("LISTING_DATE")
-            listing.present? ? Date.parse(listing.to_s) : nil
-          else
-            Rails.logger.warn "#{secucode} 上市日期请求失败，状态码: #{response.status}"
-            nil
-          end
+          raise Faraday::Error, "#{secucode} 上市日期请求失败，状态码: #{response.status}" unless response.success?
+
+          data = JSON.parse(response.body).dig("result", "data")
+          listing = data&.first&.dig("LISTING_DATE")
+          listing.present? ? Date.parse(listing.to_s) : nil
         rescue Faraday::TimeoutError, Faraday::ConnectionFailed => e
           retries -= 1
           if retries > 0
@@ -109,13 +109,7 @@ module DataSources
             retry
           end
           Rails.logger.error "#{secucode} 请求失败（已重试 #{RETRY_TIMES} 次）: #{e.message}"
-          nil
-        rescue JSON::ParserError => e
-          Rails.logger.error "#{secucode} JSON解析失败: #{e.message}"
-          nil
-        rescue => e
-          Rails.logger.error "#{secucode} 请求异常: #{e.message}"
-          nil
+          raise
         end
       end
     end

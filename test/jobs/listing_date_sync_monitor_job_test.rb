@@ -43,7 +43,9 @@ class ListingDateSyncMonitorJobTest < ActiveSupport::TestCase
   test "进程退出时将 running 记录补全为 success" do
     executed_at = Time.current - 120
     listing = CrawlerExecution.create!(
-      task_name: TASK_NAME, status: "running", message: "同步进行中", duration: 0, executed_at: executed_at
+      task_name: TASK_NAME, status: "running",
+      message: "同步进行中：已同步 1 / 10，待同步 9 只（#{ListingDateSyncMonitorJob::MONITOR_MARK}）",
+      duration: 0, executed_at: executed_at
     )
 
     ListingDateSyncMonitorJob.perform_now(process_alive: false)
@@ -62,5 +64,17 @@ class ListingDateSyncMonitorJobTest < ActiveSupport::TestCase
     ListingDateSyncMonitorJob.perform_now(process_alive: false)
 
     assert_equal 1, CrawlerExecution.where(task_name: TASK_NAME).count, "不应覆盖已完成的记录"
+  end
+
+  test "进程退出时不误标非本监控创建的 running 记录（如 CrawlerJob）" do
+    # 模拟 admin 后台经 CrawlerJob 触发同步时创建的记录（message 无监控标记）
+    listing = CrawlerExecution.create!(
+      task_name: TASK_NAME, status: "running", message: "任务已提交，正在后台异步执行中...", duration: 0, executed_at: Time.current
+    )
+
+    ListingDateSyncMonitorJob.perform_now(process_alive: false)
+
+    listing.reload
+    assert_equal "running", listing.status, "非本监控创建的 running 记录不应被误标为完成"
   end
 end

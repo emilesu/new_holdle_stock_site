@@ -9,6 +9,9 @@ class ListingDateSyncMonitorJob < ApplicationJob
   queue_as :default
 
   SYNC_TASK_NAME = "上市日期同步".freeze
+  # 进度信息中的监控标记：仅本监控创建/刷新过的 running 记录（message 含该标记）在进程退出时会被补全为 success，
+  # 避免误标 CrawlerJob 等后台队列创建的 running 记录（如 admin 后台按钮触发）
+  MONITOR_MARK = "监控每5分钟刷新".freeze
 
   def perform(process_alive: manual_sync_process_alive?)
     total = Stock.where(market: %w[CN HK]).count
@@ -27,7 +30,7 @@ class ListingDateSyncMonitorJob < ApplicationJob
           executed_at: Time.current
         )
       end
-    elsif record&.status == "running"
+    elsif record&.status == "running" && record.message&.include?(MONITOR_MARK)
       duration = (Time.current - record.executed_at).round(2)
       record.update!(
         status: "success",
@@ -47,7 +50,7 @@ class ListingDateSyncMonitorJob < ApplicationJob
 
   def progress_message(total, pending)
     done = total - pending
-    "同步进行中：已同步 #{done} / #{total}，待同步 #{pending} 只（监控每5分钟刷新）"
+    "同步进行中：已同步 #{done} / #{total}，待同步 #{pending} 只（#{MONITOR_MARK}）"
   end
 
   def final_message(total, pending, duration)

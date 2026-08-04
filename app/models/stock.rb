@@ -39,7 +39,7 @@ class Stock < ApplicationRecord
     tags = []
     tags << '数据<5年' if years.size < 5
     tags << '亏损年份' if years.any? { |y| pyramid_loss_year?(y) }
-    tags << '次新股' if listing_date.present? && listing_date >= (Date.current - 3.years)
+    tags << '次新股' if listing_date.present? && listing_date <= Date.current && listing_date >= (Date.current - 3.years)
     tags
   end
 
@@ -199,7 +199,8 @@ class Stock < ApplicationRecord
     # 只从 financial_indicators 表获取年份（四张表中数据最核心的表）
     # 避免其他表有数据但指标表缺失时，页面显示全是空值的列
     dates = if preloaded_income_statements.present?
-      preloaded_financial_indicators&.map(&:report_date) || []
+      # 无财务数据股票 preload 时写入 [nil] 哨兵，需 compact 容错，避免对 nil 调用 report_date
+      preloaded_financial_indicators&.compact&.map(&:report_date) || []
     else
       financial_indicators.pluck(:report_date)
     end
