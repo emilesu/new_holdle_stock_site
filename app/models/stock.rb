@@ -15,6 +15,23 @@ class Stock < ApplicationRecord
     income_statements.exists? && balance_sheets.exists? && cash_flows.exists? && financial_indicators.exists?
   end
 
+  # 金字塔列表警示标签（批量计算，纯展示用途，不参与评分）
+  # 依赖预加载的财务数据（preloaded_* accessor），避免列表页 N+1 查询
+  def self.pyramid_tags_for(stocks)
+    stocks.map { |s| [s.id, s.pyramid_tags] }.to_h
+  end
+
+  # 单只股票的金字塔警示标签
+  # - "数据<5年": 财务指标不足5年，评分基于5年均值，可靠性较低
+  # - "亏损年份": 近5年存在 ROE<=0 或净利润<0 的年份，增长/现金分经特殊规则处理
+  def pyramid_tags
+    years = financial_years.last(5)
+    tags = []
+    tags << '数据<5年' if years.size < 5
+    tags << '亏损年份' if years.any? { |y| pyramid_loss_year?(y) }
+    tags
+  end
+
   before_save :set_pinyin_initials
 
   def to_param
@@ -226,5 +243,11 @@ class Stock < ApplicationRecord
                              chinese_part = name.split('|').first.strip
                              Pinyin.t(chinese_part).split.map(&:first).join.upcase
                            end
+  end
+
+  # 判断某年是否为亏损年份（ROE<=0 或净利润<0）
+  def pyramid_loss_year?(year)
+    d = get_financial_data_by_year(year)
+    (d[:roe].present? && d[:roe].to_f <= 0) || (d[:net_income].present? && d[:net_income].to_f < 0)
   end
 end

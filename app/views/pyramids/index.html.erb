@@ -98,6 +98,10 @@
                       <div class="min-w-0">
                         <div class="stock-name text-hl-13 font-medium text-ink truncate hover:text-link">
                           <%= stock.market == 'US' && stock.name&.include?('|') ? stock.name.split('|').first.strip : stock.name %>
+                          <% (@tags[stock.id] || []).each do |tag| %>
+                            <span class="ml-1 align-middle inline-block px-1.5 rounded-full text-hl-10 border border-line-soft bg-bg-mute text-muted-2"
+                                  title="<%= tag == '数据<5年' ? '财务数据不足5年，评分可靠性较低' : '近5年存在亏损年份，评分经特殊规则处理' %>"><%= tag %></span>
+                          <% end %>
                         </div>
                         <div class="text-hl-11 text-muted-3 truncate"><%= stock.symbol %></div>
                       </div>
