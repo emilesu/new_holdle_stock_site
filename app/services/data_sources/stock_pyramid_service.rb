@@ -301,6 +301,22 @@ module DataSources
           pyramid_total_score: score,
           last_pyramid_calc_at: Time.current
         )
+        invalidate_industry_comparison_cache(stock)
+      end
+
+      # 金字塔分数变化后删除股票详情页右侧"行业金字塔对比"栏缓存，
+      # 避免缓存快照(12小时TTL)持续显示旧分数
+      def invalidate_industry_comparison_cache(stock)
+        return if stock.sector.blank? || stock.market.blank?
+
+        # 缓存键格式: industry_comparison/v2/{sector}/{market}/{date}，
+        # 删除今天与昨天两天键，覆盖 12 小时 TTL 的跨天边界场景
+        [Date.current, Date.current - 1.day].each do |date|
+          key = [:industry_comparison, "v2", stock.sector, stock.market, date].join('/')
+          Rails.cache.delete(key)
+        end
+      rescue => e
+        Rails.logger.warn "[PyramidService] 行业对比缓存失效失败 #{stock.symbol}: #{e.message}"
       end
 
       # 分数不变时仅更新时间戳，提供视觉反馈
