@@ -330,38 +330,48 @@ module DataSources
     end
 
     test "8. 增长分档：增幅<5%半权、5%~20%全权、>20% 1.5倍；降幅<=5%不扣、5%~15%半扣、>15%全额扣" do
-      # 增幅分档：+30%*1.5 + 降1.5%不扣 + +17.2% + +20%*1.5 → 45+0+20+22.5 = 88
+      # 权重[15,20,25,30]（近期权重高）：+30%*1.5 + 降1.5%不扣 + +17.2% + +20%*1.5 → 22.5+0+25+45 = 92.5 → 93，但超+90上限被clamp为90
       all_data1 = [100, 130, 128, 150, 180].map { |v| { net_income: v } }
-      assert_equal 88, StockPyramidService.send(:calculate_net_profit_growth_score, nil, all_data1)
+      assert_equal 90, StockPyramidService.send(:calculate_net_profit_growth_score, nil, all_data1)
 
-      # +30%*1.5 + +11.5% + 降10.3%半扣(-10) + +23%*1.5 → 45+25-10+22.5 = 83
+      # +30%*1.5 + +11.5% + 降10.3%半扣(-12.5) + +23%*1.5 → 22.5+20-12.5+45 = 75
       all_data2 = [100, 130, 145, 130, 160].map { |v| { net_income: v } }
-      assert_equal 83, StockPyramidService.send(:calculate_net_profit_growth_score, nil, all_data2)
+      assert_equal 75, StockPyramidService.send(:calculate_net_profit_growth_score, nil, all_data2)
 
-      # +30%*1.5 + 降23%全额(-25) + +20%*1.5 + +16.7% → 45-25+30+15 = 65
+      # +30%*1.5 + 降23%全额(-20) + +20%*1.5 + +16.7% → 22.5-20+37.5+30 = 70
       all_data3 = [100, 130, 100, 120, 140].map { |v| { net_income: v } }
-      assert_equal 65, StockPyramidService.send(:calculate_net_profit_growth_score, nil, all_data3)
+      assert_equal 70, StockPyramidService.send(:calculate_net_profit_growth_score, nil, all_data3)
 
       # 现金流增长分档逻辑一致
       all_data4 = [100, 130, 145, 130, 160].map { |v| { operating_cash_flow: v } }
-      assert_equal 83, StockPyramidService.send(:calculate_cash_flow_growth_score, all_data4)
+      assert_equal 75, StockPyramidService.send(:calculate_cash_flow_growth_score, all_data4)
+    end
+
+    test "8a. 权重方向：近期增速权重高于远期（i=3 最近两年权重30 > i=0 最早两年权重15）" do
+      # 仅最近两年 +30% → 仅 i=3 参与：30*1.5 = 45
+      recent_growth = [100, 100, 100, 100, 130].map { |v| { net_income: v } }
+      assert_equal 45, StockPyramidService.send(:calculate_net_profit_growth_score, nil, recent_growth)
+
+      # 仅最早两年 +30% → 仅 i=0 参与：15*1.5 = 22.5 → 23
+      early_growth = [100, 130, 130, 130, 130].map { |v| { net_income: v } }
+      assert_equal 23, StockPyramidService.send(:calculate_net_profit_growth_score, nil, early_growth)
     end
 
     test "9. 负值年份不参与增长计分：亏损收窄不再被当作成长" do
-      # [-100, -30, -10, 5, 20]：前3段含负值全部跳过，仅5→20(+300%)按1.5倍 → 15*1.5 = 23
+      # [-100, -30, -10, 5, 20]：前3段含负值全部跳过，仅5→20(+300%)按1.5倍 → 30*1.5 = 45
       all_data = [-100, -30, -10, 5, 20].map { |v| { net_income: v } }
-      assert_equal 23, StockPyramidService.send(:calculate_net_profit_growth_score, nil, all_data)
+      assert_equal 45, StockPyramidService.send(:calculate_net_profit_growth_score, nil, all_data)
 
       # 连亏5年（亏损逐年收窄）不得正分
       all_data2 = [-140, -40, -29, -15, -10].map { |v| { net_income: v } }
       assert_equal 0, StockPyramidService.send(:calculate_net_profit_growth_score, nil, all_data2)
 
-      # 盈利转亏损（正→负）是重大负面信号，全额扣分：100→-20扣30，其余含负值段跳过 → -30
+      # 盈利转亏损（正→负）是重大负面信号，全额扣分：100→-20是i=0段（最早两年），扣最低档15，其余含负值段跳过 → -15
       all_data3 = [100, -20, -5, -2, 1].map { |v| { net_income: v } }
-      assert_equal(-30, StockPyramidService.send(:calculate_net_profit_growth_score, nil, all_data3))
+      assert_equal(-15, StockPyramidService.send(:calculate_net_profit_growth_score, nil, all_data3))
       # 现金流增长逻辑一致
       all_data4 = [100, -20, -5, -2, 1].map { |v| { operating_cash_flow: v } }
-      assert_equal(-30, StockPyramidService.send(:calculate_cash_flow_growth_score, all_data4))
+      assert_equal(-15, StockPyramidService.send(:calculate_cash_flow_growth_score, all_data4))
     end
 
     test "10. ROA 去重：ROE高分(>=450)时ROA减半，ROE不高时ROA全额" do

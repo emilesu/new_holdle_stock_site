@@ -192,8 +192,8 @@ module DataSources
         return 0 if ni_values.size < 5
 
         score = 0
-        years = [0, 1, 2, 3]     # 最近4年对比
-        weights = [30, 25, 20, 15] # 权重递减
+        years = [0, 1, 2, 3]       # 最近4年对比（i=0最早两年 → i=3最近两年）
+        weights = [15, 20, 25, 30] # 权重递增：越接近当前年份权重越高
 
         years.each_with_index do |i, idx|
           next if i + 1 >= ni_values.size
@@ -237,8 +237,8 @@ module DataSources
         return 0 if cf_values.size < 5
 
         score = 0
-        years = [0, 1, 2, 3]     # 最近4年对比
-        weights = [30, 25, 20, 15] # 权重递减
+        years = [0, 1, 2, 3]       # 最近4年对比（i=0最早两年 → i=3最近两年）
+        weights = [15, 20, 25, 30] # 权重递增：越接近当前年份权重越高
 
         years.each_with_index do |i, idx|
           next if i + 1 >= cf_values.size
