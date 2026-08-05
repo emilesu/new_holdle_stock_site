@@ -41,44 +41,64 @@ class StocksController < ApplicationController
   def show
     @financial_data_by_year = @stock.cached_financial_data
     @financial_years = @financial_data_by_year.keys.sort
-    
+
+    # 会员/管理员才享有金字塔分值排序；访客与非会员保持近五年ROE排序（原有体验）
+    @is_member = user_signed_in? && current_user.is_member?
+
     cached_comparison_data = Rails.cache.fetch(
-      [:industry_comparison, @stock.sector, @stock.market, Date.current].join('/'),
+      # v2：对比栏 item 新增 pyramid_score 键，升级版本号避免命中旧格式缓存导致会员排序崩溃
+      [:industry_comparison, "v2", @stock.sector, @stock.market, Date.current].join('/'),
       expires_in: INDUSTRY_CACHE_EXPIRES_IN
     ) do
       sector_stocks = Stock.where(sector: @stock.sector, market: @stock.market)
         .where.not(radar_dim_scores: nil)
         .where('pyramid_total_score > 560')
-        .select(:id, :symbol, :name, :market, :exchange, :radar_dim_scores)
+        # listing_date 用于 pyramid_tags 次新股判断，必须包含在 select 中
+        .select(:id, :symbol, :name, :market, :exchange, :radar_dim_scores, :pyramid_total_score, :listing_date)
         .to_a
-      
+
       sector_stocks.map do |stock|
         roe_score = stock.radar_dim_scores&.dig('roe')
         next nil unless roe_score && roe_score > 0
 
         {
           stock: stock,
-          roe_average: roe_score
+          roe_average: roe_score,
+          pyramid_score: stock.pyramid_total_score
         }
       end.compact
-         .sort_by { |item| -item[:roe_average] }
-         .first(INDUSTRY_COMPARISON_LIMIT)
     end
 
-    @industry_comparison_data = cached_comparison_data.map do |item|
+    # 排序/截断在缓存外按用户身份进行，避免缓存随身份失效：
+    # 会员按该行业金字塔总分排序，访客/非会员按近五年ROE排序
+    comparison_sorted = if @is_member
+      # to_i 兜底：即使命中旧格式缓存（pyramid_score 为 nil）也不会抛 NoMethodError
+      cached_comparison_data.sort_by { |item| [-item[:pyramid_score].to_i, -item[:stock].id] }
+    else
+      cached_comparison_data.sort_by { |item| -item[:roe_average] }
+    end
+
+    @industry_comparison_data = comparison_sorted.first(INDUSTRY_COMPARISON_LIMIT).map do |item|
       item.merge(is_current_stock: item[:stock].id == @stock.id)
     end
 
+    # 当前股票不在排序结果时追加显示（会员/非会员均保持）
     unless @industry_comparison_data.any? { |item| item[:is_current_stock] }
       current_roe = @stock.radar_dim_scores&.dig('roe')
       if current_roe && current_roe > 0
         @industry_comparison_data << {
           stock: @stock,
           roe_average: current_roe,
+          pyramid_score: @stock.pyramid_total_score,
           is_current_stock: true
         }
       end
     end
+
+    # 对比列表警示标签（次新股/亏损年份/数据<5年），所有用户可见，预加载财务数据避免 N+1
+    comparison_stocks = @industry_comparison_data.map { |item| item[:stock] }
+    Stock.preload_pyramid_financials(comparison_stocks)
+    @comparison_tags = Stock.pyramid_tags_for(comparison_stocks)
 
     @radar_data = build_radar_data(@stock)
     @comparison_radar_data = build_comparison_radar_data

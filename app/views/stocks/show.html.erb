@@ -408,7 +408,9 @@
         <div class="sticky top-24 bg-white hl-card flex flex-col max-h-[calc(100vh-7.5rem)]">
           <div class="px-4 py-4 border-b border-line bg-bg-mute shrink-0">
             <span class="text-link font-semibold"><%= @stock.sector.presence || '-' %></span>
-            <span class="text-muted-3 items-center justify-right text-hl-11"> - 近五年ROE对比</span>
+            <span class="text-muted-3 items-center justify-right text-hl-11">
+              <%= @is_member ? ' - 行业金字塔对比' : ' - 近五年ROE对比' %>
+            </span>
           </div>
           <div class="p-4 flex-1 min-h-0 hover-scroll">
             
@@ -423,18 +425,24 @@
                        data-symbol="<%= stock.symbol %>"
                        data-radar='<%= raw radar_data.to_json if radar_data %>'>
                       <div class="flex items-center justify-between">
-                        <div class="flex items-center space-x-2">
-                          <span class="w-5 h-5 rounded-full flex items-center justify-center text-hl-11 font-medium 
+                        <div class="flex items-center space-x-2 min-w-0">
+                          <span class="w-5 h-5 rounded-full flex items-center justify-center text-hl-11 font-medium shrink-0
                             <%= item[:is_current_stock] ? 'bg-blue-500 text-white' : 'bg-bg-mute text-muted-2' %>">
                             <%= index + 1 %>
                           </span>
-                          <div class="flex flex-col">
-                            <span class="text-hl-13 font-medium text-ink"><%= stock.display_name_for_comparison %></span>
+                          <div class="flex flex-col min-w-0">
+                            <div class="flex items-center space-x-1 min-w-0">
+                              <span class="text-hl-13 font-medium text-ink truncate"><%= stock.display_name_for_comparison %></span>
+                              <% (@comparison_tags[stock.id] || []).each do |tag| %>
+                                <span class="shrink-0 align-middle inline-block px-1.5 rounded-full text-hl-10 border <%= @market_badge_bg %>"
+                                      title="<%= Stock.pyramid_tag_hint(tag) %>"><%= tag %></span>
+                              <% end %>
+                            </div>
                             <span class="text-hl-11 text-muted-4"><%= stock.symbol %></span>
                           </div>
                         </div>
-                        <span class="text-hl-11 font-medium <%= @market_text_color %>">
-                          <%= '%.2f' % item[:roe_average] %>%
+                        <span class="text-hl-11 font-medium shrink-0 ml-2 <%= @market_text_color %>">
+                          <%= @is_member ? item[:pyramid_score] : ('%.2f' % item[:roe_average]) + '%' %>
                         </span>
                       </div>
                     </a>

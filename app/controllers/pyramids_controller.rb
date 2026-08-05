@@ -13,7 +13,7 @@ class PyramidsController < ApplicationController
     @total_count = stocks.count
     @total_pages = (@total_count.to_f / PER_PAGE).ceil
     @stocks = stocks.order(pyramid_total_score: :desc, id: :desc).offset((@page - 1) * PER_PAGE).limit(PER_PAGE)
-    preload_pyramid_financials(@stocks)
+    Stock.preload_pyramid_financials(@stocks)
     @tags = Stock.pyramid_tags_for(@stocks)
     @top_stock = @stocks.first
 
@@ -66,7 +66,7 @@ class PyramidsController < ApplicationController
     @total_count = stocks.count
     @total_pages = (@total_count.to_f / PER_PAGE).ceil
     @stocks = stocks.order(pyramid_total_score: :desc, id: :desc).offset((@page - 1) * PER_PAGE).limit(PER_PAGE)
-    preload_pyramid_financials(@stocks)
+    Stock.preload_pyramid_financials(@stocks)
     @tags = Stock.pyramid_tags_for(@stocks)
     @top_stock = @stocks.first
 
@@ -97,7 +97,7 @@ class PyramidsController < ApplicationController
     @total_count = stocks.count
     @total_pages = (@total_count.to_f / PER_PAGE).ceil
     @stocks = stocks.order(pyramid_total_score: :desc, id: :desc).offset((@page - 1) * PER_PAGE).limit(PER_PAGE)
-    preload_pyramid_financials(@stocks)
+    Stock.preload_pyramid_financials(@stocks)
     @tags = Stock.pyramid_tags_for(@stocks)
 
     respond_to do |format|
@@ -106,19 +106,4 @@ class PyramidsController < ApplicationController
   end
 
   private
-
-  # 预加载金字塔列表所需财务数据到模型 accessor，批量计算警示标签避免 N+1
-  def preload_pyramid_financials(stocks)
-    ids = stocks.map(&:id)
-    return if ids.empty?
-
-    reports = FinancialReport.where(stock_id: ids).includes(:financial_indicators, :income_statements).group_by(&:stock_id)
-    stocks.each do |s|
-      rs = reports[s.id] || []
-      # 无财务数据的股票用 [nil] 哨兵，确保 financial_years 走内存分支而非触发查询
-      s.preloaded_income_statements = rs.empty? ? [nil] : rs.flat_map { |r| r.income_statements.to_a }
-      s.preloaded_financial_indicators = rs.empty? ? [nil] : rs.flat_map { |r| r.financial_indicators.to_a }
-    end
-  end
-
 end
