@@ -11,7 +11,7 @@ module DataSources
         
         old_score = stock.pyramid_total_score.to_i
         
-        begin
+        result = begin
           new_score = calculate_total_score(stock)
           
           if new_score == old_score
@@ -26,6 +26,10 @@ module DataSources
           update_stock(stock, 0)
           { success: false, old_score: old_score, new_score: 0, error: e.message, updated: true }
         end
+
+        # 每次重算后都清理行业对比缓存：即使分数未变化，也可能存在"库中已是最新但缓存仍为旧快照"的陈旧数据
+        invalidate_industry_comparison_cache(stock)
+        result
       end
 
       private
@@ -301,10 +305,9 @@ module DataSources
           pyramid_total_score: score,
           last_pyramid_calc_at: Time.current
         )
-        invalidate_industry_comparison_cache(stock)
       end
 
-      # 金字塔分数变化后删除股票详情页右侧"行业金字塔对比"栏缓存，
+      # 删除股票详情页右侧"行业金字塔对比"栏缓存，
       # 避免缓存快照(12小时TTL)持续显示旧分数
       def invalidate_industry_comparison_cache(stock)
         return if stock.sector.blank? || stock.market.blank?
