@@ -16,7 +16,7 @@
                   <div class="stock-name text-hl-13 font-medium text-ink truncate hover:text-link">
                     <%= stock.market == 'US' && stock.name&.include?('|') ? stock.name.split('|').first.strip : stock.name %>
                     <% (@tags[stock.id] || []).each do |tag| %>
-                      <span class="ml-1 align-middle inline-block px-1.5 rounded-full text-hl-10 border <%= market_badge_class(@market) %>"
+                      <span class="ml-1 align-middle inline-block px-2 py-0.5 rounded-full text-hl-11 border <%= market_badge_class(@market) %>"
                             title="<%= Stock.pyramid_tag_hint(tag) %>"><%= tag %></span>
                     <% end %>
                   </div>

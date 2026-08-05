@@ -434,7 +434,7 @@
                             <div class="flex items-center space-x-1 min-w-0">
                               <span class="text-hl-13 font-medium text-ink truncate"><%= stock.display_name_for_comparison %></span>
                               <% (@comparison_tags[stock.id] || []).each do |tag| %>
-                                <span class="shrink-0 align-middle inline-block px-1.5 rounded-full text-hl-10 border <%= @market_badge_bg %>"
+                                <span class="shrink-0 align-middle inline-block px-2 py-0.5 rounded-full text-hl-11 border <%= @market_badge_bg %>"
                                       title="<%= Stock.pyramid_tag_hint(tag) %>"><%= tag %></span>
                               <% end %>
                             </div>
