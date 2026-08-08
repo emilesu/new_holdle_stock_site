@@ -31,7 +31,10 @@ class Chapter < ApplicationRecord
 
   def summary_html
     return '' if summary.blank?
-    Commonmarker.to_html(summary, options: { unsafe: true })
+    html = Commonmarker.to_html(summary, options: { unsafe: true })
+    html.gsub!(/<table([^>]*)>/i, '<div class="md-table-wrap"><table\1>')
+    html.gsub!(/<\/table>/i, '</table></div>')
+    html
   rescue => e
     Rails.logger.error "Chapter markdown rendering error: #{e.message}"
     summary

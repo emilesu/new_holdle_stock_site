@@ -770,3 +770,10 @@
     font-size: inherit !important;
   }
 }
+
+/* ==================== Markdown 表格横向滚动（防止宽表格撑破容器） ==================== */
+.md-table-wrap {
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}

@@ -35,6 +35,8 @@ class Article < ApplicationRecord
     html.gsub!(/<pre\s+style="[^"]*"/, '<pre')
     html.gsub!(/<code\s+style="[^"]*"/, '<code')
     html.gsub!(/<span\s+style="[^"]*"/, '<span')
+    html.gsub!(/<table([^>]*)>/i, '<div class="md-table-wrap"><table\1>')
+    html.gsub!(/<\/table>/i, '</table></div>')
     html
   rescue => e
     Rails.logger.error "Article markdown HTML error: #{e.message}"
