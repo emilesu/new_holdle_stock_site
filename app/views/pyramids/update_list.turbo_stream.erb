@@ -36,7 +36,8 @@
          data-next-page="2"
          data-total-pages="<%= @total_pages %>"
          data-market="<%= @market %>"
-         data-sector="<%= @sector || '' %>">
+         data-sector="<%= @sector || '' %>"
+         data-industry="<%= @industry || '' %>">
       <% if @total_pages > 1 %>
         <span class="flex items-center space-x-2"><span>滚动加载更多...</span></span>
       <% else %>

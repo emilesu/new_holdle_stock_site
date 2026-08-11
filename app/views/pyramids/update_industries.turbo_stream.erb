@@ -1,0 +1,10 @@
+<%= turbo_stream.replace 'industry-container' do %>
+  <div id="industry-container">
+    <select name="industry" id="pyramid-industry" class="px-3 py-2 text-hl-13 border border-line rounded focus:border-link w-40 bg-white" <%= 'disabled' unless @can_select_sector %>>
+      <option value="">全部</option>
+      <% @industries.each do |industry| %>
+        <option value="<%= industry %>"><%= industry %></option>
+      <% end %>
+    </select>
+  </div>
+<% end %>

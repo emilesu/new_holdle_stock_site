@@ -13,3 +13,12 @@
   <% end %>
 </div>
 <% end %>
+
+<%# 切换市场后 sector 已变化，旧 industry 失效，重置 industry 下拉为禁用「全部」 %>
+<%= turbo_stream.replace 'industry-container' do %>
+  <div id="industry-container">
+    <select name="industry" id="pyramid-industry" class="px-3 py-2 text-hl-13 border border-line rounded focus:border-link w-40 bg-white" disabled>
+      <option value="">全部</option>
+    </select>
+  </div>
+<% end %>

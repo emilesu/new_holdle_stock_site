@@ -28,6 +28,7 @@ Rails.application.routes.draw do
   get "pyramid", to: "pyramids#index"
   get "pyramid/compare", to: "pyramids#compare"
   get "pyramid/update_sectors", to: "pyramids#update_sectors"
+  get "pyramid/update_industries", to: "pyramids#update_industries"
   get "pyramid/update_list", to: "pyramids#update_list"
   get "pyramid/load_more", to: "pyramids#load_more"
   get "pyramid/permission", to: "pyramids#permission"

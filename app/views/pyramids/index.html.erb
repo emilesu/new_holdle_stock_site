@@ -63,7 +63,7 @@
             </div>
 
             <div class="flex items-center gap-2">
-              <label class="text-hl-13 font-medium text-muted-2 w-12 shrink-0">行业</label>
+              <label class="text-hl-13 font-medium text-muted-2 w-12 shrink-0">板块</label>
               <div id="sector-container">
                 <select name="sector" id="pyramid-sector" class="px-3 py-2 text-hl-13 border border-line rounded focus:border-link w-40 bg-white" <%= 'disabled' unless @can_select_sector %>>
                   <% if @can_select_sector %>
@@ -75,6 +75,24 @@
                 </select>
                 <% unless @can_select_sector %>
                   <span class="text-hl-11 text-muted-3 ml-2">会员可查看其他行业</span>
+                <% end %>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <label class="text-hl-13 font-medium text-muted-2 w-12 shrink-0">行业</label>
+              <div id="industry-container">
+                <% if @can_select_sector && @sector.present? %>
+                  <select name="industry" id="pyramid-industry" class="px-3 py-2 text-hl-13 border border-line rounded focus:border-link w-40 bg-white">
+                    <option value="">全部</option>
+                    <% @industries.each do |industry| %>
+                      <option value="<%= industry %>" <%= 'selected' if @industry == industry %>><%= industry %></option>
+                    <% end %>
+                  </select>
+                <% else %>
+                  <select name="industry" id="pyramid-industry" class="px-3 py-2 text-hl-13 border border-line rounded focus:border-link w-40 bg-white" disabled>
+                    <option value="">全部</option>
+                  </select>
                 <% end %>
               </div>
             </div>
@@ -119,7 +137,8 @@
                data-next-page="2"
                data-total-pages="<%= @total_pages %>"
                data-market="<%= @market %>"
-               data-sector="<%= @sector || '' %>">
+               data-sector="<%= @sector || '' %>"
+               data-industry="<%= @industry || '' %>">
             <% if @total_pages > 1 %>
               <span class="flex items-center space-x-2"><span>滚动加载更多...</span></span>
             <% else %>
@@ -172,14 +191,26 @@ document.addEventListener('turbo:load', function initPyramidPage() {
           sectorSelect.insertBefore(allOpt, sectorSelect.options[0]);
         }
         sectorSelect.value = '';
+        // 板块重置为「全部」，行业下拉禁用并重置
+        resetIndustrySelect();
       } else {
         // 非会员 → 禁用行业选择
         sectorSelect.disabled = true;
         sectorSelect.value = '公用事业';
+        // 行业下拉禁用并重置
+        resetIndustrySelect();
       }
     } catch (e) {
       // 静默失败，保留页面原有状态
     }
+  };
+
+  // 将行业下拉重置为禁用「全部」状态
+  const resetIndustrySelect = () => {
+    const industrySelect = document.getElementById('pyramid-industry');
+    if (!industrySelect) return;
+    industrySelect.disabled = true;
+    industrySelect.innerHTML = '<option value="">全部</option>';
   };
 
   const initChart = (baseData, compareData = null) => {
@@ -396,11 +427,14 @@ document.addEventListener('turbo:load', function initPyramidPage() {
     }
   };
 
-  const updateList = async (market, sector) => {
+  const updateList = async (market, sector, industry) => {
     try {
       let url = `/pyramid/update_list?market=${encodeURIComponent(market)}`;
       if (sector && sector !== '') {
         url += `&sector=${encodeURIComponent(sector)}`;
+      }
+      if (industry && industry !== '') {
+        url += `&industry=${encodeURIComponent(industry)}`;
       }
 
       const response = await fetch(url, {
@@ -446,6 +480,49 @@ document.addEventListener('turbo:load', function initPyramidPage() {
     }
   };
 
+  const setupIndustryListener = () => {
+    const industrySelect = document.getElementById('pyramid-industry');
+    if (industrySelect) {
+      industrySelect.removeEventListener('change', handleIndustryChange);
+      industrySelect.addEventListener('change', handleIndustryChange);
+    }
+  };
+
+  // 加载某板块下的行业列表并渲染下拉（默认选中「全部」）
+  const loadIndustries = async (market, sector) => {
+    try {
+      const url = `/pyramid/update_industries?market=${encodeURIComponent(market)}&sector=${encodeURIComponent(sector)}`;
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Accept': 'text/vnd.turbo-stream.html',
+          'X-Requested-With': 'XMLHttpRequest'
+        }
+      });
+
+      if (!response.ok) {
+        console.error('Industries request failed:', response.status);
+        return;
+      }
+
+      const html = await response.text();
+
+      // 竞态保护：市场/板块已切换或权限已变化时，丢弃过期的行业列表响应
+      const marketEl = document.getElementById('pyramid-market');
+      const sectorEl = document.getElementById('pyramid-sector');
+      if (!marketEl || !sectorEl || !canSelectSector) return;
+      if (marketEl.value !== market || sectorEl.value !== sector) return;
+
+      window.Turbo.renderStreamMessage(html);
+
+      setTimeout(() => {
+        setupIndustryListener();
+      }, 50);
+    } catch (e) {
+      console.error('Failed to update industries:', e);
+    }
+  };
+
   const handleSectorChange = function() {
     if (!canSelectSector) {
       this.value = '公用事业';
@@ -453,7 +530,24 @@ document.addEventListener('turbo:load', function initPyramidPage() {
     }
     const market = document.getElementById('pyramid-market').value;
     const sector = this.value;
-    updateList(market, sector);
+    if (sector) {
+      loadIndustries(market, sector);
+    } else {
+      // 板块选「全部」时行业下拉禁用并重置为「全部」
+      const industrySelect = document.getElementById('pyramid-industry');
+      if (industrySelect) {
+        industrySelect.disabled = true;
+        industrySelect.innerHTML = '<option value="">全部</option>';
+      }
+    }
+    updateList(market, sector, '');
+  };
+
+  const handleIndustryChange = function() {
+    if (!canSelectSector) return;
+    const market = document.getElementById('pyramid-market').value;
+    const sector = document.getElementById('pyramid-sector').value;
+    updateList(market, sector, this.value);
   };
 
   document.getElementById('pyramid-market').addEventListener('change', function() {
@@ -468,7 +562,7 @@ document.addEventListener('turbo:load', function initPyramidPage() {
     }
     pendingRequestId++;
     updateSectors(market);
-    updateList(market, canSelectSector ? '' : '公用事业');
+    updateList(market, canSelectSector ? '' : '公用事业', '');
   });
 
   // 无限滚动加载（v3 - 使用 JS 变量维护页码，避开 Turbo replace 不生效的 Bug）
@@ -526,7 +620,8 @@ document.addEventListener('turbo:load', function initPyramidPage() {
 
     const market = sentinel.dataset.market || 'CN';
     const sector = sentinel.dataset.sector || '';
-    console.log('[Scroll] loadNextPage: 开始加载 page=' + nextPage + ', market=' + market + ', sector=' + sector);
+    const industry = sentinel.dataset.industry || '';
+    console.log('[Scroll] loadNextPage: 开始加载 page=' + nextPage + ', market=' + market + ', sector=' + sector + ', industry=' + industry);
 
     scrollIsLoading = true;
     sentinel.innerHTML = '<span class="flex items-center space-x-2"><svg class="animate-spin h-4 w-4 text-gray-400" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg><span>加载中...</span></span>';
@@ -535,6 +630,9 @@ document.addEventListener('turbo:load', function initPyramidPage() {
       let url = `/pyramid/load_more?page=${nextPage}&market=${encodeURIComponent(market)}`;
       if (sector) {
         url += `&sector=${encodeURIComponent(sector)}`;
+      }
+      if (industry) {
+        url += `&industry=${encodeURIComponent(industry)}`;
       }
 
       const response = await fetch(url, {
@@ -698,6 +796,7 @@ document.addEventListener('turbo:load', function initPyramidPage() {
   document.addEventListener('turbo:before-cache', cleanupBeforeCache);
 
   setupSectorListener();
+  setupIndustryListener();
   addRowEventListeners();
   // 异步刷新会员权限状态，解决 Turbo 缓存导致 canSelectSector 变量过期的问题
   refreshPermission();
