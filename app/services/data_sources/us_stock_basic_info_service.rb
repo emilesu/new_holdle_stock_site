@@ -214,6 +214,37 @@ module DataSources
 
       # Travel & Hospitality 旅行与酒店
       "Travel Services" => "旅行服务",
+
+      # 补充映射（2026-08-11 补齐美股数据时新增）
+      "Agricultural Inputs" => "农业投入品",
+      "Airports & Air Services" => "机场与航空服务",
+      "Beverages—Wineries & Distilleries" => "酒类酿造",
+      "Business Equipment & Supplies" => "商业设备与用品",
+      "Department Stores" => "百货商店",
+      "Diagnostics & Research" => "诊断与研究",
+      "Electronic Gaming & Multimedia" => "电子游戏与多媒体",
+      "Electronics & Computer Distribution" => "电子与电脑分销",
+      "Farm Products" => "农产品",
+      "Grocery Stores" => "食品杂货零售",
+      "Health Information Services" => "医疗信息服务",
+      "Insurance—Specialty" => "专业保险",
+      "Lodging" => "酒店住宿",
+      "Medical Appliances & Equipment" => "医疗设备器具",
+      "Pollution & Treatment Controls" => "污染治理与环保",
+      "REIT—Diversified" => "综合REIT",
+      "REIT—Office" => "写字楼REIT",
+      "REIT—Residential" => "住宅REIT",
+      "Resorts & Casinos" => "度假村与博彩",
+      "Scientific & Technical Instruments" => "科技仪器",
+      "Security & Protection Services" => "安防服务",
+      "Shell Companies" => "壳公司",
+      "Thermal Coal" => "动力煤",
+      "Trucking" => "卡车运输",
+      "Utilities—Diversified" => "综合公用事业",
+      "Utilities—Independent Power Producers" => "独立发电商",
+      "Utilities—Regulated Water" => "监管水务公用",
+      "Utilities—Renewable" => "可再生公用",
+      "Waste Management" => "废物管理",
     }.freeze
 
     class << self
@@ -348,46 +379,61 @@ module DataSources
       def fetch_industry_info(ticker)
         puts "\n[2/2] 正在从Yahoo Finance获取行业信息..."
 
-        begin
-          response = Faraday.get(YAHOO_SEARCH_URL) do |req|
-            req.headers["User-Agent"] = USER_AGENT
-            req.headers["Referer"] = "https://finance.yahoo.com/"
-            req.params['q'] = ticker
-            req.options.timeout = TIMEOUT
-          end
+        # Yahoo 统一使用破折号格式：BRK/B → BRK-B，NLY^F → NLY-F，BRK.B → BRK-B
+        yahoo_symbol = ticker.tr("/^.", "-")
+        max_attempts = 3
 
-          if response.success?
-            data = JSON.parse(response.body)
-            quotes = data["quotes"]
-            
-            if quotes && quotes.any?
-              stock_data = quotes.find { |q| q["symbol"] == ticker }
-              if stock_data
-                # 获取英文行业和板块
-                english_industry = stock_data["industry"] || stock_data["industryDisp"]
-                english_sector = stock_data["sector"] || stock_data["sectorDisp"]
-                
-                # 转换为中文
-                chinese_industry = INDUSTRY_MAPPING[english_industry] || english_industry
-                chinese_sector = SECTOR_MAPPING[english_sector] || english_sector
-                
-                puts "✅ Yahoo返回行业信息:"
-                puts "  - 板块(英文): #{english_sector} → 中文: #{chinese_sector}"
-                puts "  - 行业(英文): #{english_industry} → 中文: #{chinese_industry}"
-                
-                return { sector: chinese_sector, industry: chinese_industry }
-              end
+        max_attempts.times do |attempt|
+          begin
+            response = Faraday.get(YAHOO_SEARCH_URL) do |req|
+              req.headers["User-Agent"] = USER_AGENT
+              req.headers["Referer"] = "https://finance.yahoo.com/"
+              req.params['q'] = yahoo_symbol
+              req.options.timeout = TIMEOUT
             end
-            puts "⚠️  未找到匹配的股票数据"
-            return nil
-          else
-            puts "⚠️  Yahoo请求失败，状态码: #{response.status}"
+
+            # 限流或服务端错误时重试，避免批量爬取中途大面积失败
+            if response.status == 429 || response.status >= 500
+              puts "⚠️  Yahoo请求失败(#{response.status})，重试 #{attempt + 1}/#{max_attempts}..."
+              sleep 2 * (attempt + 1) if attempt < max_attempts - 1
+              next
+            end
+
+            if response.success?
+              data = JSON.parse(response.body)
+              quotes = data["quotes"]
+
+              if quotes && quotes.any?
+                # 兼容原始代码与转换后的 Yahoo 格式
+                stock_data = quotes.find { |q| q["symbol"] == ticker || q["symbol"] == yahoo_symbol }
+                if stock_data
+                  # 获取英文行业和板块
+                  english_industry = stock_data["industry"] || stock_data["industryDisp"]
+                  english_sector = stock_data["sector"] || stock_data["sectorDisp"]
+
+                  # 转换为中文
+                  chinese_industry = INDUSTRY_MAPPING[english_industry] || english_industry
+                  chinese_sector = SECTOR_MAPPING[english_sector] || english_sector
+
+                  puts "✅ Yahoo返回行业信息:"
+                  puts "  - 板块(英文): #{english_sector} → 中文: #{chinese_sector}"
+                  puts "  - 行业(英文): #{english_industry} → 中文: #{chinese_industry}"
+
+                  return { sector: chinese_sector, industry: chinese_industry }
+                end
+              end
+              puts "⚠️  未找到匹配的股票数据"
+              return nil
+            else
+              puts "⚠️  Yahoo请求失败，状态码: #{response.status}"
+              return nil
+            end
+          rescue => e
+            puts "⚠️  Yahoo请求异常: #{e.message}"
             return nil
           end
-        rescue => e
-          puts "⚠️  Yahoo请求异常: #{e.message}"
-          return nil
         end
+        nil
       end
 
       def stock_english_name(symbol)
