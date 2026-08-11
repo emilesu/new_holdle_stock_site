@@ -1,10 +1,10 @@
 <% set_page_title "#{@article.title} - AI复盘报告 - Holdle" %>
 <% set_page_description truncate(strip_tags(@article.summary.presence || @article.title), length: 120) %>
 <div class="py-16">
-  <div class="container-narrow">
+  <div class="container-narrow-flush">
 
     <%# 面包屑导航 %>
-    <div class="text-hl-12 text-muted-4 mb-6">
+    <div class="text-hl-12 text-muted-4 mb-6 px-6 md:px-0">
       <%= link_to 'AI复盘报告', articles_path, class: 'hover:text-link transition-colors' %>
       <span class="mx-1.5 text-muted-5">/</span>
       <span class="text-ink font-medium"><%= @article.title %></span>

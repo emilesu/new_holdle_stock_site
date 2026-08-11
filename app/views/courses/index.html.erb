@@ -2,13 +2,13 @@
 <% set_page_description "学习使用 Holdle 的工具和方法，掌握金字塔评分系统、财务分析技巧，构建你的交易规则系统。" %>
 <% set_page_keywords "投资课程,交易系统,股票分析,金字塔评分,财务分析" %>
 <div class="py-16">
-  <div class="container-narrow">
-    <div class="label-en">COURSES - V2.0</div>
-    <h1 class="text-hl-22 font-semibold text-ink mb-2">HOLDLE - 投资交易课</h1>
-    <p class="text-hl-13 text-muted-3  mb-7">股票新手必看，学习如何使用 HOLDLE 的工具和方法，构建你的交易系统</p>
+  <div class="container-narrow-flush">
+    <div class="label-en px-6 md:px-0">COURSES - V2.0</div>
+    <h1 class="text-hl-22 font-semibold text-ink mb-2 px-6 md:px-0">HOLDLE - 投资交易课</h1>
+    <p class="text-hl-13 text-muted-3  mb-7 px-6 md:px-0">股票新手必看，学习如何使用 HOLDLE 的工具和方法，构建你的交易系统</p>
     <%# <p class="text-hl-13 font-semibold text-ink mb-7">核心逻辑 —— “结硬寨、打呆仗”：低频量化 + 规则化交易 + 分散持仓 + 机械风控（全程不主观预判）</p> %>
 
-    <div class="grid grid-cols-1 gap-4">
+    <div class="grid grid-cols-1 gap-6 md:gap-4">
       <% @courses.each do |course| %>
         <%= link_to course_path(course), class: 'hl-card hl-card-hover block transition-colors' do %>
           <div class="p-6 sm:p-7">

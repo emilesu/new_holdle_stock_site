@@ -94,6 +94,18 @@
   padding-left: 24px;
   padding-right: 24px;
 }
+/* 课程 / 投研页面容器：手机端白底卡片贴边，桌面端(md+)保留标准留白 */
+@utility container-narrow-flush {
+  max-width: var(--spacing-hl-narrow);
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 0;
+  padding-right: 0;
+  @media (min-width: theme(--breakpoint-md)) {
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+}
 
 /* 大写英文小标签 */
 @utility label-en {
@@ -181,6 +193,21 @@
   }
   .hl-card-hover:hover {
     border-color: #d5d5d5;
+  }
+  /* 手机端（<md）容器贴边时，白底卡片取消边框与圆角；桌面端(md+)恢复 */
+  @media (width < theme(--breakpoint-md)) {
+    .container-narrow-flush .hl-card {
+      border-width: 0;
+      border-radius: 0;
+    }
+  }
+  /* 手机端表格：中文按词组断行避免单字换行、数字不拆断，按内容宽度展开由滚动容器左右滑动查看 */
+  @media (width < theme(--breakpoint-md)) {
+    .md-table-wrap table {
+      width: 100%;
+      min-width: max-content;
+      word-break: keep-all;
+    }
   }
 
   /* 引述 / 高亮块 */

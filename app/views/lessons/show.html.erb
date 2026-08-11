@@ -1,10 +1,10 @@
 <% set_page_title "#{@lesson.title} - #{@course.title} - Holdle" %>
 <% set_page_description "学习#{@lesson.title}，掌握Holdle投资交易工具和方法。" %>
 <div class="py-16">
-  <div class="container-narrow">
+  <div class="container-narrow-flush">
 
     <%# 面包屑导航 %>
-    <div class="text-hl-12 text-muted-4 mb-6">
+    <div class="text-hl-12 text-muted-4 mb-6 px-6 md:px-0">
       <%= link_to '交易课', courses_path, class: 'hover:text-link transition-colors' %>
       <span class="mx-1.5 text-muted-5">/</span>
       <%= link_to @course.title, course_path(@course), class: 'hover:text-link transition-colors' %>
