@@ -52,52 +52,51 @@
             <h2 class="text-hl-16 font-semibold text-ink-soft">金字塔排行榜</h2>
           </div>
           <div class="px-6 py-4 border-b border-line">
-          <div class="flex flex-wrap gap-4 items-center">
-            <div class="flex items-center gap-2">
-              <label class="text-hl-13 font-medium text-muted-2 w-12 shrink-0">市场</label>
-              <select name="market" id="pyramid-market" class="px-3 py-2 text-hl-13 border border-line rounded focus:border-link w-28 bg-white">
-                <option value="CN" <%= 'selected' if @market == 'CN' %>>A股</option>
-                <option value="HK" <%= 'selected' if @market == 'HK' %>>港股</option>
-                <option value="US" <%= 'selected' if @market == 'US' %>>美股</option>
-              </select>
-            </div>
-
-            <div class="flex items-center gap-2">
-              <label class="text-hl-13 font-medium text-muted-2 w-12 shrink-0">板块</label>
-              <div id="sector-container">
-                <select name="sector" id="pyramid-sector" class="px-3 py-2 text-hl-13 border border-line rounded focus:border-link w-40 bg-white" <%= 'disabled' unless @can_select_sector %>>
-                  <% if @can_select_sector %>
-                    <option value="">全部</option>
-                  <% end %>
-                  <% @sectors.each do |sector| %>
-                    <option value="<%= sector %>" <%= 'selected' if @sector == sector %>><%= sector %></option>
-                  <% end %>
+            <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+              <div class="flex items-center gap-1.5 flex-1 min-w-0 sm:shrink-0">
+                <label class="text-hl-13 font-medium text-muted-2 w-10 shrink-0">市场</label>
+                <select name="market" id="pyramid-market" class="px-3 py-2 text-hl-13 border border-line rounded focus:border-link w-full sm:w-24 bg-white">
+                  <option value="CN" <%= 'selected' if @market == 'CN' %>>A股</option>
+                  <option value="HK" <%= 'selected' if @market == 'HK' %>>港股</option>
+                  <option value="US" <%= 'selected' if @market == 'US' %>>美股</option>
                 </select>
-                <% unless @can_select_sector %>
-                  <span class="text-hl-11 text-muted-3 ml-2">会员可查看其他行业</span>
-                <% end %>
               </div>
-            </div>
 
-            <div class="flex items-center gap-2">
-              <label class="text-hl-13 font-medium text-muted-2 w-12 shrink-0">行业</label>
-              <div id="industry-container">
-                <% if @can_select_sector && @sector.present? %>
-                  <select name="industry" id="pyramid-industry" class="px-3 py-2 text-hl-13 border border-line rounded focus:border-link w-40 bg-white">
-                    <option value="">全部</option>
-                    <% @industries.each do |industry| %>
-                      <option value="<%= industry %>" <%= 'selected' if @industry == industry %>><%= industry %></option>
+              <div class="flex items-center gap-1.5 sm:flex-1 sm:min-w-0">
+                <label class="text-hl-13 font-medium text-muted-2 w-10 shrink-0">板块</label>
+                <div id="sector-container" class="flex-1 min-w-0">
+                  <select name="sector" id="pyramid-sector" class="px-3 py-2 text-hl-13 border border-line rounded focus:border-link w-full min-w-28 bg-white" <%= 'disabled' unless @can_select_sector %>>
+                    <% if @can_select_sector %>
+                      <option value="">全部</option>
+                    <% end %>
+                    <% @sectors.each do |sector| %>
+                      <option value="<%= sector %>" <%= 'selected' if @sector == sector %>><%= sector %></option>
                     <% end %>
                   </select>
-                <% else %>
-                  <select name="industry" id="pyramid-industry" class="px-3 py-2 text-hl-13 border border-line rounded focus:border-link w-40 bg-white" disabled>
-                    <option value="">全部</option>
-                  </select>
-                <% end %>
+                </div>
+              </div>
+
+              <div class="flex items-center gap-1.5 sm:flex-1 sm:min-w-0">
+                <label class="text-hl-13 font-medium text-muted-2 w-10 shrink-0">行业</label>
+                <div id="industry-container" class="flex-1 min-w-0">
+                  <% if @can_select_sector && @sector.present? %>
+                    <select name="industry" id="pyramid-industry" class="px-3 py-2 text-hl-13 border border-line rounded focus:border-link w-full min-w-28 bg-white">
+                      <option value="">全部</option>
+                      <% @industries.each do |industry| %>
+                        <option value="<%= industry %>" <%= 'selected' if @industry == industry %>><%= industry %></option>
+                      <% end %>
+                    </select>
+                  <% else %>
+                    <select name="industry" id="pyramid-industry" class="px-3 py-2 text-hl-13 border border-line rounded focus:border-link w-full min-w-28 bg-white" disabled>
+                      <option value="">全部</option>
+                    </select>
+                  <% end %>
+                </div>
               </div>
             </div>
+
+            <p id="sector-hint" class="text-hl-11 text-muted-3 mt-2 <%= 'hidden' if @can_select_sector %>">会员可查看其他行业</p>
           </div>
-        </div>
 
         <div id="pyramid-list-container">
           <div id="pyramid-stock-list" class="divide-y divide-line-soft">
@@ -180,9 +179,9 @@ document.addEventListener('turbo:load', function initPyramidPage() {
       if (canSelectSector) {
         // 会员/管理员 → 启用行业选择
         sectorSelect.disabled = false;
-        // 移除"会员可查看其他行业"提示
-        const hintSpan = document.querySelector('#sector-container > span');
-        if (hintSpan) hintSpan.remove();
+        // 隐藏"会员可查看其他行业"提示
+        const hint = document.getElementById('sector-hint');
+        if (hint) hint.classList.add('hidden');
         // 如果缺少"全部"选项则补上
         if (sectorSelect.options[0] && sectorSelect.options[0].value !== '') {
           const allOpt = document.createElement('option');
@@ -197,6 +196,9 @@ document.addEventListener('turbo:load', function initPyramidPage() {
         // 非会员 → 禁用行业选择
         sectorSelect.disabled = true;
         sectorSelect.value = '公用事业';
+        // 显示"会员可查看其他行业"提示
+        const hint = document.getElementById('sector-hint');
+        if (hint) hint.classList.remove('hidden');
         // 行业下拉禁用并重置
         resetIndustrySelect();
       }

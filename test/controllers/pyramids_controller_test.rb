@@ -43,6 +43,23 @@ class PyramidsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "update_sectors 返回板块列表、重置行业并同步会员提示" do
+    sign_in users(:two)
+
+    get "/pyramid/update_sectors", params: { market: "CN" }, headers: { "Accept" => "text/vnd.turbo-stream.html" }
+    assert_response :success
+    # 三个 turbo_stream replace 目标都必须存在，保证 Turbo 局部刷新能定位到元素
+    assert_match(/turbo-stream action="replace" target="sector-container"/, response.body)
+    assert_match(/turbo-stream action="replace" target="industry-container"/, response.body)
+    assert_match(/turbo-stream action="replace" target="sector-hint"/, response.body)
+    # 会员可见板块选项（setup 中 CN 市场有「公用事业」板块）
+    assert_match(/公用事业/, response.body)
+    # 切换市场后行业下拉重置为禁用「全部」
+    assert_match(/id="pyramid-industry"[^>]*disabled/, response.body)
+    # 会员提示应隐藏
+    assert_match(/id="sector-hint"[^>]*hidden/, response.body)
+  end
+
   test "会员 index 带 industry 参数只返回匹配行业的股票" do
     sign_in users(:two) # admin fixture，is_member? 为 true
 
