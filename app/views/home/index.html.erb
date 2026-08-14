@@ -3,10 +3,10 @@
 <% set_page_keywords "股票分析,港股,美股,A股,财务数据,金字塔评分,智能选股,行业对比,投资分析" %>
 <%# ========== 1. Hero ========== %>
 <section class="py-hl-hero bg-white border-b border-line relative overflow-hidden">
-  <div aria-hidden="true"
+  <%# <div aria-hidden="true"
        class="absolute inset-0 hidden md:block bg-no-repeat bg-cover bg-center opacity-60 transition-opacity duration-700"
        style="background-image: url('https://video.holdle.com/image/default/DF480BC57A704FE0B5269BDCFBDB032E-6-2.png');">
-  </div>
+  </div> %>
   <div aria-hidden="true"
        class="absolute inset-0 hidden md:block bg-gradient-to-r from-white/85 via-white/70 to-white/60"></div>
   <div class="container-hl relative z-10">
@@ -14,67 +14,21 @@
     <h1 class="text-hl-40 font-bold leading-tight text-ink mb-3">
       HOLD LE <span class="font-normal text-muted-2">（Hold Life）</span>
     </h1>
-    <p class="text-hl-18 text-muted-2 mb-7 leading-snug">老地方，老规矩，只是主人回来了。</p>
+    <p class="text-hl-18 text-muted-2 mb-7 leading-snug">
+      你不是不会投资股票。<br>
+      而是缺少一套识别、等待最具概率优势时机的体系。
+      </p>
     <p class="text-hl-14 text-muted max-w-160 leading-relaxed mb-8">
-      我是大苏，Hold Le的站长！<br>
-      七年没更新，人也还在，站也还在。数据源重新接好了，工具链重新打磨了。<br>
-      还是那个老问题：怎么等、怎么买、怎么拿。<br>
-      答案没变，人胖了点。
+      我给你分享一套我用了十几年的交易方法。<br>
+      它会重新改变你对股票交易的认知。<br>
+      提高你的胜率。
     </p>
     <div class="flex flex-wrap gap-3">
-      <%= link_to "看我的回归视频", video_path, class: "hl-btn hl-btn-primary" %>
+      <%= link_to "我的视频", video_path, class: "hl-btn hl-btn-primary" %>
       <%= link_to "开始学习", courses_path, class: "hl-btn hl-btn-line" %>
       <%= link_to "用 HOLD LE 工具", pyramid_path, class: "hl-btn hl-btn-line" %>
       <button data-action="click->message#open" class="hl-btn hl-btn-line">给大苏写信</button>
     </div>
-  </div>
-</section>
-
-<%# ========== 2. 致老朋友 ========== %>
-<section class="py-16">
-  <div class="container-narrow">
-    <div class="label-en">A LETTER TO OLD FRIENDS</div>
-    <h2 class="text-hl-22 font-semibold text-ink mb-2">致七年前认识我的老朋友</h2>
-    <p class="text-hl-13 text-muted-3 mb-7">一封迟了七年的短信</p>
-
-    <details class="group">
-      <summary class="flex items-center justify-between px-6 py-4
-                      bg-bg-mute rounded cursor-pointer list-none
-                      transition-colors duration-150 hover:bg-bg-mute
-                      [&::-webkit-details-marker]:hidden
-                      group-open:rounded-b-none">
-        <span class="text-hl-13 text-muted">阅读全文</span>
-        <span class="text-hl-15 text-muted-3 transition-transform duration-200 group-open:rotate-45">+</span>
-      </summary>
-      <div class="hl-card p-10 border-t-0 rounded-t-none">
-        <div class="text-hl-12 text-muted-4 mb-4 tracking-wide-2">2026.07 · REUNION LETTER</div>
-        <div class="text-hl-14 text-muted leading-loose whitespace-pre-line">各位 holdle 的老朋友：
-
-我是大苏。
-
-七年没更新，但「HOLDLE」一直都在。早前数据源崩了三次（疫情三年，每个数据源都关停换人），是瓶姐和黄同学扛着这事儿，头发白了不少。
-
-这七年间我干嘛去了，你们大概也听说过一些。简单说：早年在 P2P 公司做技术和企划，老板 2016 年卷款跑路。我作为打工人，法律责任由法院判定——<strong class="text-ink">7 年 9 个月</strong>。
-
-人生给我安排了一段"强制飞行模式"，作息规律但没有行情的七年。
-
-回来一看：
-- 老粉还在催更（感动）
-- 数据源全要重接（活儿）
-- AI 颠覆了编程和做视频的方式（得学）
-- 老站那批文章和工具链还能打（但要修）
-
-所以这次不是"复出"，是<strong class="text-ink">系统重装 + 修复补丁</strong>。
-
-工具会变，K 线会变，但人性贪婪和恐惧的比例，从来没变过。
-这事儿我以前说过一次，现在再说一次。
-
-老规矩还是老规矩：<strong class="text-ink">不荐股，不开群，每个月只想让你看一次盘。</strong>
-
-老朋友们，欢迎回家。</div>
-        <div class="mt-6 text-right text-hl-13 text-muted-3">大苏 字　·　2026 年 7 月</div>
-      </div>
-    </details>
   </div>
 </section>
 
@@ -126,7 +80,7 @@
 </section>
 
 <%# ========== 4. 方法论 ========== %>
-<section class="py-16">
+<section class="py-16  bg-white">
   <div class="container-hl">
     <div class="label-en">METHODOLOGY</div>
     <h2 class="text-hl-22 font-semibold text-ink mb-2">怎么在股市里"先活下来"？</h2>
@@ -150,7 +104,7 @@
         <h3 class="text-hl-18 font-semibold mb-2">分析价格</h3>
         <p class="text-hl-13 text-muted-3 mb-5 italic">入场价格是否处于长期上涨初期？</p>
         <ul>
-          <li class="hl-list-item">状态 A / B / C / D 信号识别</li>
+          <li class="hl-list-item">“状态 A” 信号识别</li>
           <li class="hl-list-item">多周期图（月 / 周 / 日）综合判断</li>
           <li class="hl-list-item">等买点出现，而不是猜涨跌</li>
           <li class="hl-list-item hl-list-item-last">按规则执行，不被情绪左右</li>
@@ -226,7 +180,7 @@
 </section>
 
 <%# ========== 6. 关于大苏 ========== %>
-<section class="py-16">
+<section class="py-16  bg-white">
   <div class="container-hl">
     <div class="label-en">ABOUT THE AUTHOR</div>
     <h2 class="text-hl-22 font-semibold text-ink mb-2">关于我</h2>
@@ -260,8 +214,10 @@
           <strong class="text-ink">等待计划中的事情自己出现，自己去发展。</strong>
         </div>
         <div class="hl-callout-dashed">
-          <h4 class="text-hl-12 text-muted-3 font-medium mb-2 tracking-wide-2">关于 7 年断更这件事</h4>
-          <p class="text-hl-13 text-muted leading-relaxed">早年在 P2P 公司做技术，老板 2016 年跑路。作为打工人，法律责任由法院判定。这事不展开讲了，以后有机会再说。这次回来是想告诉你：<strong class="text-ink">人还在，方法还在，工具还能打。</strong>
+          <h4 class="text-hl-12 text-muted-3 font-medium mb-2 tracking-wide-2">关于 HOLDLE 网站</h4>
+          <p class="text-hl-13 text-muted leading-relaxed">我2017年底开始在holdle.com分享这个交易方法，网站至今已经十年。<br>十年里，很多人使用或参考了HOLDLE的方法之后，在股市投资中获得了可观的收益。<br><br>
+           中途大苏因个人原因，网站停更了，<strong class="text-ink">但是HOLDLE方法并不会因为停更而失效。</strong>相反，在每次行情中，HOLDLE都能准确击中最佳的时机点位。<br><br>
+           2026年网站内容、工具重新升级，HOLDLE方法论开始进入AI时代。
         </div>
       </div>
     </div>
@@ -335,7 +291,7 @@
           <span class="hl-faq-icon">+</span>
         </summary>
         <div class="hl-faq-content">
-          <strong class="text-ink">并没有！！！</strong><br>HOLD LE 不会开任何"每日荐股""牛股推荐"群。目的是<strong class="text-ink">授人以渔</strong>，让你自己能学会一套<strong class="text-ink">长期经过实践检验</strong>的交易方法。<br><br>荐股群容易被不良股票诈骗者利用，用来发布广告，散布错误的短线交易观念。轻信的话，很可能会造成经济损失。
+          HOLDLE有会员微信社区交流群，便于讨论学习和分享方法心得。所有会员朋友都可以加入。<br><strong class="text-ink">但HOLDLE没有“荐股群”！！！</strong><br><br>HOLD LE 不会开任何"每日荐股""牛股推荐"群。目的是<strong class="text-ink">授人以渔</strong>，让你自己能学会一套<strong class="text-ink">长期经过实践检验</strong>的交易方法。<br><br>荐股群容易被不良股票诈骗者利用，用来发布广告，散布错误的短线交易观念。轻信的话，很可能会造成经济损失。
         </div>
       </details>
 
@@ -379,7 +335,7 @@
           <span class="hl-faq-icon">+</span>
         </summary>
         <div class="hl-faq-content">
-          可以。老数据都在。直接用原有账号登录即可。如果有问题，可以联系我。
+          可以。老数据都在。直接用微信登录即可。如果有问题，可以联系我。
         </div>
       </details>
     </div>
