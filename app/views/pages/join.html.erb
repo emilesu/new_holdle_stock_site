@@ -16,8 +16,11 @@
       只做一件事：把我这一路踩过的坑、验证过的规则，<span class="text-ink font-medium">毫无保留地交给你</span>。
     </p>
     <div class="w-48 h-px mx-auto mb-10 bg-line"></div>
-    <p class="text-hl-13 text-muted">
-      现有 <span class="text-ink font-medium">4,120+</span> 位老朋友 & 8,094 名注册用户档案
+    <div class="flex justify-center">
+      <%= render "pages/join_pay_button", label: "马上加入" %>
+    </div>
+    <p class="text-hl-13 text-muted mt-4">
+      当前已有 <span class="text-ink font-medium text-profit">4,120+</span> 会员使用 HOLD LE 策略
     </p>
   </div>
 </section>
@@ -255,12 +258,7 @@
 
           <div class="w-full h-px bg-line mb-5"></div>
 
-          <% if user_signed_in? %>
-            <%= link_to "微信支付 ¥468", new_order_path, class: "hl-btn hl-btn-primary w-full text-center block" %>
-          <% else %>
-            <%= link_to "微信支付 ¥468", new_user_session_path, class: "hl-btn hl-btn-primary w-full text-center block", data: { turbo: false } %>
-            <p class="text-hl-12 text-muted-4 text-center mt-2">登录后可使用微信支付自动开通</p>
-          <% end %>
+          <%= render "pages/join_pay_button", label: "微信支付 ¥468", show_hint: true, full_width: true %>
         </div>
 
         <div class="hl-card p-7">

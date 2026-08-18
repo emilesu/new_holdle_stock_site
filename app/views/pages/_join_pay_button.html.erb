@@ -1,0 +1,13 @@
+<%# 加入会员支付按钮：会员显示"已加入"不可点击；访客/非会员显示微信支付按钮 %>
+<%# full_width: true 时按钮撑满父容器（方法一卡片内用），否则自适应内容宽度（Hero 居中用） %>
+<% width_cls = local_assigns[:full_width] ? "w-full text-center block" : "" %>
+<% if current_user&.is_member? %>
+  <span class="hl-btn <%= width_cls %> bg-bg-mute text-muted-4 border-line cursor-not-allowed hover:border-line">已加入</span>
+<% elsif user_signed_in? %>
+  <%= link_to label, new_order_path, class: "hl-btn hl-btn-primary #{width_cls}" %>
+<% else %>
+  <%= link_to label, new_user_session_path, class: "hl-btn hl-btn-primary #{width_cls}", data: { turbo: false } %>
+  <% if local_assigns[:show_hint] %>
+    <p class="text-hl-12 text-muted-4 text-center mt-2">登录后可使用微信支付自动开通</p>
+  <% end %>
+<% end %>
