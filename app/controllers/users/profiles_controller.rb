@@ -5,6 +5,7 @@ class Users::ProfilesController < ApplicationController
 
   def show
     authorize @user
+    @api_keys = current_user.api_keys.order(created_at: :desc)
   end
 
   def edit

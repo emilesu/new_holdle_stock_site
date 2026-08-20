@@ -52,6 +52,17 @@ Rails.application.routes.draw do
     post "pay_callbacks", to: "pay_callbacks#create"
   end
 
+  # T7 计费后台：MCP 服务三步扣次接口（内部 token 鉴权，见 03_T7计费后台设计_v0.2.md）
+  namespace :api do
+    namespace :v1 do
+      namespace :mcp do
+        post :precheck
+        post :confirm
+        post :release
+      end
+    end
+  end
+
   # 前台登录用户留言
   resources :message_boards, only: [:create] do
     get :my, on: :collection

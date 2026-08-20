@@ -17,3 +17,7 @@ production:
   listing_date_sync_monitor:
     class: ListingDateSyncMonitorJob
     schedule: every 5 minutes
+  # T7 计费后台：预占超时释放（60 秒未 confirm/release 的 precheck 自动释放）
+  release_stale_prechecks:
+    class: ReleaseStalePrechecksJob
+    schedule: every minute

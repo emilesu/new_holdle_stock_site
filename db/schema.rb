@@ -10,9 +10,26 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_08_11_065619) do
+ActiveRecord::Schema[7.1].define(version: 2026_08_20_100002) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
+
+  create_table "api_keys", force: :cascade do |t|
+    t.string "key_hash", null: false, comment: "SHA256(key)，不存明文"
+    t.string "key_prefix", null: false, comment: "前 11 位（hl_ + 前 8 位 hex），展示用"
+    t.bigint "user_id", null: false
+    t.string "plan_code", null: false, comment: "当前套餐"
+    t.string "status", default: "active", null: false, comment: "active/disabled/revoked"
+    t.integer "quota_remaining", comment: "剩余次数（member_permanent=nil 无限）"
+    t.integer "quota_total", default: 0, comment: "总次数（累计充值次数）"
+    t.datetime "last_used_at", comment: "最近使用"
+    t.string "disabled_reason", comment: "停用原因"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["key_hash"], name: "index_api_keys_on_key_hash", unique: true
+    t.index ["user_id", "status"], name: "index_api_keys_on_user_id_and_status"
+    t.index ["user_id"], name: "index_api_keys_on_user_id"
+  end
 
   create_table "articles", comment: "AI复盘报告文章表", force: :cascade do |t|
     t.string "title", null: false, comment: "文章标题"
@@ -258,6 +275,18 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_11_065619) do
     t.index ["user_id"], name: "index_orders_on_user_id"
   end
 
+  create_table "plans", force: :cascade do |t|
+    t.string "plan_code", null: false, comment: "套餐编码（welcome/starter/light/standard/member_permanent）"
+    t.string "name", null: false, comment: "展示名"
+    t.integer "price_cents", default: 0, comment: "价格（分）"
+    t.integer "quota", comment: "次数（nil=无限，member_permanent）"
+    t.boolean "is_member_upgrade", default: false, comment: "是否升级会员（468 档=true）"
+    t.boolean "active", default: true, comment: "是否在售"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["plan_code"], name: "index_plans_on_plan_code", unique: true
+  end
+
   create_table "solid_queue_blocked_executions", force: :cascade do |t|
     t.bigint "job_id", null: false
     t.string "queue_name", null: false
@@ -408,6 +437,24 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_11_065619) do
     t.index ["symbol"], name: "idx_stocks_symbol", unique: true
   end
 
+  create_table "usage_logs", force: :cascade do |t|
+    t.string "request_id", null: false, comment: "幂等键（MCP 生成）"
+    t.bigint "api_key_id", null: false
+    t.bigint "user_id", null: false
+    t.string "tool_name", comment: "holdle_ask / holdle_get_rules"
+    t.text "question", comment: "问题内容（可脱敏）"
+    t.string "status", default: "precheck", comment: "precheck/confirmed/released"
+    t.integer "consumed", default: 0, comment: "确认扣次数（=1）"
+    t.string "ip", comment: "来源 IP"
+    t.datetime "created_at", null: false
+    t.datetime "confirmed_at", comment: "确认时间"
+    t.index ["api_key_id", "status"], name: "index_usage_logs_on_api_key_id_and_status"
+    t.index ["api_key_id"], name: "index_usage_logs_on_api_key_id"
+    t.index ["created_at"], name: "index_usage_logs_on_created_at"
+    t.index ["request_id"], name: "index_usage_logs_on_request_id", unique: true
+    t.index ["user_id"], name: "index_usage_logs_on_user_id"
+  end
+
   create_table "user_favorites", force: :cascade do |t|
     t.bigint "user_id", null: false, comment: "用户ID"
     t.bigint "stock_id", null: false, comment: "股票ID"
@@ -441,6 +488,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_11_065619) do
     t.index ["weixin_web_openid"], name: "index_users_on_weixin_web_openid", unique: true
   end
 
+  add_foreign_key "api_keys", "users"
   add_foreign_key "balance_sheets", "financial_reports"
   add_foreign_key "balance_sheets", "stocks"
   add_foreign_key "cash_flows", "financial_reports"
@@ -460,6 +508,8 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_11_065619) do
   add_foreign_key "solid_queue_ready_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_recurring_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_scheduled_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
+  add_foreign_key "usage_logs", "api_keys"
+  add_foreign_key "usage_logs", "users"
   add_foreign_key "user_favorites", "stocks"
   add_foreign_key "user_favorites", "users"
 end

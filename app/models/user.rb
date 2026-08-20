@@ -17,6 +17,8 @@ class User < ApplicationRecord
   has_many :favorite_stocks, through: :user_favorites, source: :stock
   has_many :message_boards, dependent: :destroy
   has_many :orders, dependent: :destroy
+  has_many :api_keys, dependent: :destroy
+  has_many :usage_logs, dependent: :destroy
 
   # 谷歌登录账号匹配创建
   def self.find_for_google_oauth(auth)
