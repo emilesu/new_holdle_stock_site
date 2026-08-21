@@ -10,9 +10,22 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_08_20_100002) do
+ActiveRecord::Schema[7.1].define(version: 2026_08_21_100001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
+
+  create_table "api_key_adjustments", comment: "API key 次数调整记录", force: :cascade do |t|
+    t.bigint "api_key_id", null: false, comment: "被调整的 key"
+    t.bigint "user_id", null: false, comment: "key 所属用户"
+    t.bigint "admin_id", null: false, comment: "操作管理员"
+    t.integer "delta", null: false, comment: "调整次数（正=加，负=减）"
+    t.string "reason", comment: "调整原因/备注"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["admin_id"], name: "index_api_key_adjustments_on_admin_id"
+    t.index ["api_key_id"], name: "index_api_key_adjustments_on_api_key_id"
+    t.index ["user_id"], name: "index_api_key_adjustments_on_user_id"
+  end
 
   create_table "api_keys", force: :cascade do |t|
     t.string "key_hash", null: false, comment: "SHA256(key)，不存明文"
@@ -270,6 +283,8 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_20_100002) do
     t.datetime "expire_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "plan_code", default: "member_permanent", null: false, comment: "购买套餐编码"
+    t.integer "quota", comment: "本次购买次数（member_permanent=nil 表示无限）"
     t.index ["order_no"], name: "index_orders_on_order_no", unique: true
     t.index ["status"], name: "index_orders_on_status"
     t.index ["user_id"], name: "index_orders_on_user_id"
@@ -488,6 +503,9 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_20_100002) do
     t.index ["weixin_web_openid"], name: "index_users_on_weixin_web_openid", unique: true
   end
 
+  add_foreign_key "api_key_adjustments", "api_keys"
+  add_foreign_key "api_key_adjustments", "users"
+  add_foreign_key "api_key_adjustments", "users", column: "admin_id"
   add_foreign_key "api_keys", "users"
   add_foreign_key "balance_sheets", "financial_reports"
   add_foreign_key "balance_sheets", "stocks"
