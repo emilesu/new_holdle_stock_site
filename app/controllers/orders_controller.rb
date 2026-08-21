@@ -4,11 +4,17 @@ class OrdersController < ApplicationController
 
   def new
     @plan = find_purchasable_plan(params[:plan])
+    unless @plan
+      redirect_to join_path, alert: plan_unavailable_message(params[:plan]) and return
+    end
     @order = Order.new
   end
 
   def create
     plan = find_purchasable_plan(params[:plan])
+    unless plan
+      redirect_to join_path, alert: plan_unavailable_message(params[:plan]) and return
+    end
     payment_method = detect_payment_method
 
     # JSAPI 支付需要 openid，优先公众号，回退到开放平台
@@ -96,10 +102,15 @@ class OrdersController < ApplicationController
 
   private
 
-  # T7 Phase2：可购买套餐（排除 welcome 赠送档）。非法/缺省兜底 member_permanent（保持现有 468 入口）
+  # T7 Phase2：可购买套餐（排除 welcome 赠送档）。
+  # 缺省(无 plan 参数) → 主推 member_permanent 468；非法 code 查不到 → 返回 nil（明确报错，不回退高价）
   def find_purchasable_plan(code)
     purchasable = Plan.active.where.not(plan_code: "welcome")
-    purchasable.find_by(plan_code: code) || purchasable.find_by!(plan_code: "member_permanent")
+    code.present? ? purchasable.find_by(plan_code: code) : purchasable.find_by(plan_code: "member_permanent")
+  end
+
+  def plan_unavailable_message(code)
+    code.present? ? "套餐不存在或已下架，请重新选择" : "套餐数据未初始化，请稍后再试"
   end
 
   def detect_payment_method

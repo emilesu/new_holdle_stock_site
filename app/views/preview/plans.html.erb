@@ -1,0 +1,155 @@
+<% set_page_title "选择 AI 投研助手套餐 — HOLDLE" %>
+<% set_page_description "HOLDLE AI 投研助手套餐：新用户免费 15 次，尝鲜包 5 元/20 次，轻量包 20 元/90 次，标准包 100 元/500 次，永久会员 468 元无限次。" %>
+
+<% plans = Plan.active.order(:price_cents) %>
+
+<%# ========== 标题 ========== %>
+<section class="border-b border-line bg-white">
+  <div class="container-hl py-16 text-center">
+    <div class="label-en">CHOOSE YOUR PLAN</div>
+    <h1 class="text-hl-22 md:text-hl-40 font-bold leading-tight text-ink mb-4">
+      选择适合你的 <span class="text-profit">AI 投研助手</span> 套餐
+    </h1>
+    <p class="text-hl-14 text-muted max-w-2xl mx-auto leading-relaxed mb-8">
+      按次付费，用完可随时充值；也可以一次加入永久会员，无限使用。<br />
+      新用户注册即送 <span class="text-ink font-medium">15 次免费体验</span>，先试再买。
+    </p>
+
+    <% if current_user && current_user.api_keys.active.any? %>
+      <% key = current_user.api_keys.active.first %>
+      <div class="max-w-xl mx-auto">
+        <div class="hl-callout">
+          当前账号：<span class="text-ink font-medium"><%= key.plan_name %></span> ·
+          <% if key.quota_remaining.nil? %>
+            <span class="text-profit font-medium">无限次</span>
+          <% else %>
+            剩余 <span class="text-ink font-medium"><%= key.quota_remaining %></span> 次
+          <% end %>
+          （购买次数包将自动叠加到这把 Key）
+        </div>
+      </div>
+    <% end %>
+  </div>
+</section>
+
+<%# ========== 套餐卡片 ========== %>
+<section class="border-b border-line">
+  <div class="container-hl py-16">
+    <% if plans.any? %>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mb-8">
+      <% plans.each do |plan| %>
+        <% unlimited = plan.quota.nil? %>
+        <div class="hl-card p-7 flex flex-col <%= plan.is_member_upgrade ? 'border-2 border-ink' : '' %>">
+          <div class="flex items-center justify-between mb-1">
+            <h2 class="text-hl-15 font-semibold text-ink"><%= plan.name %></h2>
+            <% if plan.is_member_upgrade %>
+              <span class="inline-block border border-profit text-profit px-2 py-0.5 text-hl-11 font-medium">推荐</span>
+            <% end %>
+          </div>
+          <p class="text-hl-12 text-muted-3 mb-3">
+            <%= plan.plan_code == "welcome" ? "注册即送" : (plan.is_member_upgrade ? "一次付费" : "按次付费") %>
+          </p>
+
+          <div class="flex items-baseline gap-1 mb-4">
+            <span class="text-hl-22 font-bold text-ink">
+              <%= plan.price_cents.zero? ? "免费" : "¥#{plan.price_cents / 100}" %>
+            </span>
+            <% unless plan.price_cents.zero? %>
+              <span class="text-hl-12 text-muted-3">一次</span>
+            <% end %>
+          </div>
+
+          <p class="text-hl-16 font-semibold text-ink mb-5">
+            <%= unlimited ? "无限次" : "#{plan.quota} 次" %>
+          </p>
+
+          <ul class="text-hl-13 text-muted space-y-2 mb-6 flex-1">
+            <% if plan.is_member_upgrade %>
+              <li class="relative pl-3.5 list-dot-link">AI 助手无限次使用</li>
+              <li class="relative pl-3.5 list-dot-link">全部课程解锁</li>
+              <li class="relative pl-3.5 list-dot-link">会员交流群</li>
+            <% elsif plan.plan_code == "welcome" %>
+              <li class="relative pl-3.5 list-dot-link">无门槛体验完整能力</li>
+              <li class="relative pl-3.5 list-dot-link">用完再决定是否付费</li>
+            <% else %>
+              <li class="relative pl-3.5 list-dot-link">HOLDLE 方法论问答</li>
+              <li class="relative pl-3.5 list-dot-link">个股分析 / 止损仓位指导</li>
+              <li class="relative pl-3.5 list-dot-link">次数用完可随时叠加</li>
+            <% end %>
+          </ul>
+
+          <% if plan.plan_code == "welcome" %>
+            <%= link_to "免费领取", new_user_registration_path, class: "hl-btn hl-btn-line w-full text-center" %>
+          <% else %>
+            <%= link_to "立即购买", new_order_path(plan: plan.plan_code), class: "hl-btn #{plan.is_member_upgrade ? 'hl-btn-primary' : 'hl-btn-line'} w-full text-center" %>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+    <% else %>
+      <div class="hl-card px-6 py-16 text-center mb-8">
+        <p class="text-hl-14 text-muted-4">暂无可用套餐</p>
+        <p class="mt-2 text-hl-13 text-muted-3">请在服务器执行 <code>RAILS_ENV=production bin/rails mcp:seed_plans</code> 初始化套餐数据</p>
+      </div>
+    <% end %>
+    <p class="text-hl-12 text-muted-4 text-center leading-relaxed">
+      购买后由系统自动发放专属 Key（注册用户已自动拥有）；次数包自动叠加到现有 Key，永久会员将 Key 转为无限次。<br />
+      虚拟服务一经购买不支持退款；支付成功即自动开通，无需人工确认。
+    </p>
+  </div>
+</section>
+
+<%# ========== 老会员 ========== %>
+<section class="border-b border-line bg-bg-soft">
+  <div class="container-narrow py-12 text-center">
+    <p class="text-hl-14 text-muted leading-loose">
+      历史付费会员：已送 <span class="text-profit font-semibold">永久 AI 权益（无限次）</span>，登录查看你的 Key，无需重复购买。
+    </p>
+  </div>
+</section>
+
+<%# ========== 简版 FAQ ========== %>
+<section class="bg-white">
+  <div class="container-narrow py-16">
+    <div class="label-en">FAQ</div>
+    <h2 class="text-hl-22 font-bold text-ink mb-8">购买前，你可能想问</h2>
+
+    <div class="hl-card overflow-hidden hl-faq">
+      <details class="hl-faq-item">
+        <summary>
+          <span class="hl-q-badge">Q</span>
+          <span>次数包和永久会员有什么区别？</span>
+          <span class="hl-faq-icon">+</span>
+        </summary>
+        <div class="hl-faq-content">次数包按次计费、用完可叠加，适合低频用户；永久会员 468 元一次付费，AI 助手无限次 + 全部课程解锁 + 会员交流群，适合长期学习者。</div>
+      </details>
+
+      <details class="hl-faq-item">
+        <summary>
+          <span class="hl-q-badge">Q</span>
+          <span>买了次数包，会不会重复发放 Key？</span>
+          <span class="hl-faq-icon">+</span>
+        </summary>
+        <div class="hl-faq-content">不会。每个账号只有一把 Key，购买次数包自动叠加到现有 Key 上；升级永久会员则把同一把 Key 转为无限次。</div>
+      </details>
+
+      <details class="hl-faq-item">
+        <summary>
+          <span class="hl-q-badge">Q</span>
+          <span>支付后多久开通？</span>
+          <span class="hl-faq-icon">+</span>
+        </summary>
+        <div class="hl-faq-content">微信支付回调后自动开通，无需人工确认。如遇延迟（网络波动），可留言或微信联系我，24 小时内人工处理。</div>
+      </details>
+
+      <details class="hl-faq-item">
+        <summary>
+          <span class="hl-q-badge">Q</span>
+          <span>支持退款吗？</span>
+          <span class="hl-faq-icon">+</span>
+        </summary>
+        <div class="hl-faq-content">虚拟服务，购买前请确认需求，一经购买不支持退款。详见服务协议。</div>
+      </details>
+    </div>
+  </div>
+</section>

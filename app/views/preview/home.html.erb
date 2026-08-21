@@ -1,0 +1,270 @@
+<% set_page_title "HOLDLE AI 投研助手 — 把 17 年方法论装进你的 AI" %>
+<% set_page_description "HOLDLE 投资课程已全部免费。基于 HOLDLE 方法论打造的 AI 投研助手，陪你学方法、做分析，新用户免费送 15 次体验。" %>
+
+<%# ========== 1. Hero：首屏即 AI ========== %>
+<section class="py-hl-hero bg-white border-b border-line relative overflow-hidden">
+  <div aria-hidden="true" class="absolute inset-0 hidden md:block bg-gradient-to-r from-white/85 via-white/70 to-white/60"></div>
+  <div class="container-hl relative z-10">
+    <div class="text-hl-11 text-muted-5 tracking-wide-3 mb-5 font-medium">HOLD LE · 2.0</div>
+    <h1 class="text-hl-22 md:text-hl-40 font-bold leading-tight text-ink mb-3">
+      HOLDLE <span class="text-profit">AI 投研助手</span>
+    </h1>
+    <p class="text-hl-18 text-muted-2 mb-7 leading-snug">
+      把 17 年方法论，装进你的 AI。
+    </p>
+    <p class="text-hl-14 text-muted max-w-160 leading-relaxed mb-4">
+      课程免费 · AI 陪练 —— 学投资的新方式。
+    </p>
+    <p class="text-hl-13 text-muted-3 max-w-160 leading-relaxed mb-8">
+      新用户免费送 <span class="text-ink font-medium">15 次体验</span>，用完再决定。
+    </p>
+    <div class="flex flex-wrap gap-3">
+      <%= link_to "免费领 15 次体验", new_user_registration_path, class: "hl-btn hl-btn-primary" %>
+      <%= link_to "看使用教程", video_path, class: "hl-btn hl-btn-line" %>
+      <%= link_to "了解收费", preview_plans_path, class: "hl-btn hl-btn-line" %>
+    </div>
+  </div>
+</section>
+
+<%# ========== 2. 转型声明 ========== %>
+<section class="border-b border-line bg-bg-soft">
+  <div class="container-narrow py-10 text-center">
+    <p class="text-hl-14 text-muted leading-relaxed">
+      HOLDLE 投资课程已<span class="text-ink font-semibold">全部免费</span>。
+      我们把它做成了 <span class="text-profit font-semibold">AI 投研助手</span> ——
+      基于 HOLDLE 方法论，陪你学方法、做分析。
+    </p>
+  </div>
+</section>
+
+<%# ========== 3. AI 投研助手（核心板块） ========== %>
+<section class="border-b border-line bg-white">
+  <div class="container-hl py-16">
+    <div class="label-en">AI RESEARCH ASSISTANT</div>
+    <h2 class="text-hl-22 font-semibold text-ink mb-2">HOLDLE AI 投研助手</h2>
+    <p class="text-hl-13 text-muted-3 mb-7">把方法论装进你的 AI 工具（Codex / Trae / Claude / Cursor / WorkBuddy 等）</p>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-7">
+      <div class="hl-card hl-card-hover p-7">
+        <h3 class="text-hl-16 font-semibold mb-2">分析一只股票？</h3>
+        <p class="text-hl-13 text-muted-3 leading-normal">它带你按 HOLDLE 方法走一遍：财务、估值、时机，一步不落。</p>
+      </div>
+      <div class="hl-card hl-card-hover p-7">
+        <h3 class="text-hl-16 font-semibold mb-2">状态A 不懂？</h3>
+        <p class="text-hl-13 text-muted-3 leading-normal">问它，带你一步步理解择时逻辑，直到真的懂为止。</p>
+      </div>
+      <div class="hl-card hl-card-hover p-7">
+        <h3 class="text-hl-16 font-semibold mb-2">止损、仓位、出场？</h3>
+        <p class="text-hl-13 text-muted-3 leading-normal">随时问，有问必答——交易管理是大多数人的盲区。</p>
+      </div>
+    </div>
+
+    <div class="hl-callout mb-7">
+      它不荐股、不预测——只讲方法，判断权在你。
+    </div>
+
+    <div class="flex flex-wrap gap-3">
+      <%= link_to "免费领 15 次体验", new_user_registration_path, class: "hl-btn hl-btn-primary" %>
+      <%= link_to "查看使用教程", video_path, class: "hl-btn hl-btn-line" %>
+    </div>
+  </div>
+</section>
+
+<%# ========== 4. 方法论：AI 背后的方法 ========== %>
+<section class="border-b border-line">
+  <div class="container-hl py-16">
+    <div class="label-en">THE METHOD BEHIND AI</div>
+    <h2 class="text-hl-22 font-semibold text-ink mb-2">AI 助手背后，是一套 17 年验证的方法</h2>
+    <p class="text-hl-13 text-muted-3 mb-7">HOLDLE 方法论：<span class="text-ink font-medium">选好 → 等好 → 管好</span>。AI 只是把方法讲给你听的那个人。</p>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div class="hl-card hl-card-hover p-7">
+        <div class="text-hl-11 text-muted-5 tracking-wide-2 mb-3">01 / SELECT</div>
+        <h3 class="text-hl-16 font-semibold mb-2">选好：企业质量</h3>
+        <p class="text-hl-13 text-muted-3 leading-normal">抓具备长期概率优势的优质企业，先让方向不偏。</p>
+      </div>
+      <div class="hl-card hl-card-hover p-7">
+        <div class="text-hl-11 text-muted-5 tracking-wide-2 mb-3">02 / WAIT</div>
+        <h3 class="text-hl-16 font-semibold mb-2">等好：状态A 择时</h3>
+        <p class="text-hl-13 text-muted-3 leading-normal">只在最具概率优势的时机出手，靠规则不靠感觉。</p>
+      </div>
+      <div class="hl-card hl-card-hover p-7">
+        <div class="text-hl-11 text-muted-5 tracking-wide-2 mb-3">03 / MANAGE</div>
+        <h3 class="text-hl-16 font-semibold mb-2">管好：交易管理</h3>
+        <p class="text-hl-13 text-muted-3 leading-normal">止损、仓位、出场——决定长期结果的关键七成。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<%# ========== 5. 案例弱化 + 免责 ========== %>
+<section class="border-b border-line bg-bg-soft">
+  <div class="container-narrow py-14">
+    <div class="label-en">VERIFIED BY PRACTICE</div>
+    <h2 class="text-hl-22 font-semibold text-ink mb-2">方法，经历过行情验证</h2>
+    <p class="text-hl-13 text-muted-3 leading-relaxed mb-4">
+      从 2009 年入市到 2026 年 AI 时代回归，这套方法穿越过牛熊。
+      案例是方法论的验证，<span class="text-ink font-medium">不是任何形式的荐股依据</span>。
+    </p>
+    <p class="text-hl-12 text-muted-4 leading-relaxed">
+      过去战绩不代表未来，方法有效性可长期复现；投资有风险，决策请独立思考。
+    </p>
+  </div>
+</section>
+
+<%# ========== 6. 创始人精简 ========== %>
+<section class="border-b border-line bg-white">
+  <div class="container-narrow py-14">
+    <div class="label-en">ABOUT</div>
+    <p class="text-hl-14 text-ink leading-loose">
+      你好，我是<span class="font-semibold">大苏 EmileSu</span>。2009 年入市，摸盘十七年，2017 年创办 HOLD LE，持续做投资教育。
+      不荐股、不开群、不预测——只做一件事：<span class="text-profit font-semibold">把验证过的规则，毫无保留地交给你</span>。
+    </p>
+  </div>
+</section>
+
+<%# ========== 7. 定价 / 行动 ========== %>
+<section class="border-b border-line">
+  <div class="container-hl py-16">
+    <div class="label-en">PRICING</div>
+    <h2 class="text-hl-22 font-semibold text-ink mb-2">从免费到永久，按需选择</h2>
+    <p class="text-hl-13 text-muted-3 mb-7">新用户免费 15 次 → 按次套餐 → 468 元永久会员</p>
+
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+      <%# 免费体验 %>
+      <div class="hl-card p-6">
+        <h3 class="text-hl-14 font-semibold text-ink mb-1">免费体验</h3>
+        <p class="text-hl-12 text-muted-3 mb-3">新用户</p>
+        <p class="text-hl-22 font-bold text-ink mb-1">15 次</p>
+        <p class="text-hl-13 text-muted mb-4">注册即送</p>
+        <%= link_to "免费领取", new_user_registration_path, class: "hl-btn hl-btn-line w-full text-center" %>
+      </div>
+      <%# 尝鲜包 %>
+      <div class="hl-card p-6">
+        <h3 class="text-hl-14 font-semibold text-ink mb-1">尝鲜包</h3>
+        <p class="text-hl-12 text-muted-3 mb-3">5 元</p>
+        <p class="text-hl-22 font-bold text-ink mb-1">20 次</p>
+        <p class="text-hl-13 text-muted mb-4">试试手感</p>
+        <%= link_to "购买", new_order_path(plan: "starter"), class: "hl-btn hl-btn-line w-full text-center" %>
+      </div>
+      <%# 轻量包 %>
+      <div class="hl-card p-6">
+        <h3 class="text-hl-14 font-semibold text-ink mb-1">轻量包</h3>
+        <p class="text-hl-12 text-muted-3 mb-3">20 元</p>
+        <p class="text-hl-22 font-bold text-ink mb-1">90 次</p>
+        <p class="text-hl-13 text-muted mb-4">日常够用</p>
+        <%= link_to "购买", new_order_path(plan: "light"), class: "hl-btn hl-btn-line w-full text-center" %>
+      </div>
+      <%# 标准包 %>
+      <div class="hl-card p-6">
+        <h3 class="text-hl-14 font-semibold text-ink mb-1">标准包</h3>
+        <p class="text-hl-12 text-muted-3 mb-3">100 元</p>
+        <p class="text-hl-22 font-bold text-ink mb-1">500 次</p>
+        <p class="text-hl-13 text-muted mb-4">重度使用</p>
+        <%= link_to "购买", new_order_path(plan: "standard"), class: "hl-btn hl-btn-line w-full text-center" %>
+      </div>
+      <%# 永久会员 %>
+      <div class="hl-card p-6 border-2 border-ink">
+        <div class="flex items-center justify-between mb-1">
+          <h3 class="text-hl-14 font-semibold text-ink">永久会员</h3>
+          <span class="inline-block border border-profit text-profit px-2 py-0.5 text-hl-11 font-medium">推荐</span>
+        </div>
+        <p class="text-hl-12 text-muted-3 mb-3">468 元 · 一次付费</p>
+        <p class="text-hl-22 font-bold text-ink mb-1">无限次</p>
+        <p class="text-hl-13 text-muted mb-4">课程全解锁</p>
+        <%= link_to "加入会员", new_order_path(plan: "member_permanent"), class: "hl-btn hl-btn-primary w-full text-center" %>
+      </div>
+    </div>
+
+    <p class="text-hl-12 text-muted-4 text-center">
+      次数用完可随时充值；虚拟服务一经购买不支持退款。
+    </p>
+  </div>
+</section>
+
+<%# ========== 8. FAQ：AI 助手 7 问 ========== %>
+<section class="border-b border-line bg-white">
+  <div class="container-narrow py-16">
+    <div class="label-en">FAQ</div>
+    <h2 class="text-hl-22 font-semibold text-ink mb-8">关于 AI 投研助手</h2>
+
+    <div class="hl-card overflow-hidden hl-faq">
+      <details class="hl-faq-item">
+        <summary>
+          <span class="hl-q-badge">Q</span>
+          <span>HOLDLE AI 投研助手是什么？</span>
+          <span class="hl-faq-icon">+</span>
+        </summary>
+        <div class="hl-faq-content">
+          基于 HOLDLE 方法论知识库的智能问答服务。接入你常用的 AI 工具（Trae/Claude/Cursor/WorkBuddy 等）即可提问，它按 HOLDLE 完整方法论回答你。不是荐股工具——不推荐买卖，不预测涨跌。
+        </div>
+      </details>
+
+      <details class="hl-faq-item">
+        <summary>
+          <span class="hl-q-badge">Q</span>
+          <span>AI 助手怎么收费？</span>
+          <span class="hl-faq-icon">+</span>
+        </summary>
+        <div class="hl-faq-content">
+          新注册用户免费送 15 次体验；之后按次付费：5元/20次、20元/90次、100元/500次；468 元永久会员 = 无限次使用 + 课程完整解锁。虚拟服务一经购买不支持退款。
+        </div>
+      </details>
+
+      <details class="hl-faq-item">
+        <summary>
+          <span class="hl-q-badge">Q</span>
+          <span>AI 助手和课程是什么关系？</span>
+          <span class="hl-faq-icon">+</span>
+        </summary>
+        <div class="hl-faq-content">
+          课程是系统学习 HOLDLE 方法论的完整体系，AI 助手是你的「随行教练」——学完有不懂的随时问，分析个股时带你按方法论走一遍。课程打基础，AI 助手陪你实践。
+        </div>
+      </details>
+
+      <details class="hl-faq-item">
+        <summary>
+          <span class="hl-q-badge">Q</span>
+          <span>AI 助手会荐股吗？</span>
+          <span class="hl-faq-icon">+</span>
+        </summary>
+        <div class="hl-faq-content">
+          不会。HOLDLE 的红线是不荐股、不预测、不承诺收益。AI 助手的回答都是方法论讲解——教你「怎么判断」，不替你做决定。如果某次回答像在荐股，那是错误的，请告诉我们改进。
+        </div>
+      </details>
+
+      <details class="hl-faq-item">
+        <summary>
+          <span class="hl-q-badge">Q</span>
+          <span>AI 助手用什么工具能接？</span>
+          <span class="hl-faq-icon">+</span>
+        </summary>
+        <div class="hl-faq-content">
+          任何支持 MCP 协议的 AI 工具都可以：Trae、Claude Desktop、Cursor、WorkBuddy 等。把专属 Key 填进工具的 MCP 配置即可，有图文教程。
+        </div>
+      </details>
+
+      <details class="hl-faq-item">
+        <summary>
+          <span class="hl-q-badge">Q</span>
+          <span>我的 Key 用完了 / 泄露了怎么办？</span>
+          <span class="hl-faq-icon">+</span>
+        </summary>
+        <div class="hl-faq-content">
+          次数用完去购买套餐充值即可；Key 泄露可登录个人中心吊销并重新生成。每个账号默认 1 个 Key，请勿分享。
+        </div>
+      </details>
+
+      <details class="hl-faq-item">
+        <summary>
+          <span class="hl-q-badge">Q</span>
+          <span>AI 助手会记录我的问题吗？</span>
+          <span class="hl-faq-icon">+</span>
+        </summary>
+        <div class="hl-faq-content">
+          会记录提问内容，仅用于改进 HOLDLE 知识库和回答质量（内部使用，不对外公开）。详情见《隐私政策》。
+        </div>
+      </details>
+    </div>
+  </div>
+</section>

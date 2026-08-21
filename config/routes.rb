@@ -38,6 +38,13 @@ Rails.application.routes.draw do
   resources :articles, only: [:index, :show]
 
   get "join", to: "pages#join"
+
+  # 暗发布预览：新页面重设计，仅 admin 可见（非 admin 404），确认后删除
+  namespace :preview do
+    get :home
+    get :join
+    get :plans
+  end
   get "video", to: "pages#video"
 
   # 微信支付订单
