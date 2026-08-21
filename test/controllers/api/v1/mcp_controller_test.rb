@@ -180,4 +180,31 @@ class Api::V1::McpControllerTest < ActionDispatch::IntegrationTest
     assert_equal 1, UsageLog.where(request_id: request_id).count
     assert_equal "precheck", UsageLog.find_by(request_id: request_id).status
   end
+
+  test "precheck 保存 question 与 tool_name（提问分析数据源）" do
+    plain = build_api_key(quota: 10)
+    request_id = SecureRandom.uuid
+
+    post api_v1_mcp_precheck_path, params: {
+      api_key: plain, request_id: request_id,
+      question: "如何看待突破买入时机", tool_name: "holdle_ask"
+    }, headers: @auth
+
+    assert_response 200
+    log = UsageLog.find_by(request_id: request_id)
+    assert_equal "如何看待突破买入时机", log.question
+    assert_equal "holdle_ask", log.tool_name
+  end
+
+  test "precheck 不传 question/tool_name 时兼容存 nil" do
+    plain = build_api_key(quota: 10)
+    request_id = SecureRandom.uuid
+
+    post api_v1_mcp_precheck_path, params: { api_key: plain, request_id: request_id }, headers: @auth
+
+    assert_response 200
+    log = UsageLog.find_by(request_id: request_id)
+    assert_nil log.question
+    assert_nil log.tool_name
+  end
 end

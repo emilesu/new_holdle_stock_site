@@ -115,6 +115,9 @@ Rails.application.routes.draw do
 
     # T7 Phase2：套餐只读
     resources :plans, only: [:index]
+
+    # T7 Phase3：AI 提问分析报表（只读）
+    get "usage_analytics", to: "usage_analytics#index"
     resources :stocks, only: [:index, :show, :new, :create, :edit, :update, :destroy] do
       collection do
         get :sectors

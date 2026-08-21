@@ -4,4 +4,5 @@ class UsageLog < ApplicationRecord
 
   validates :request_id, presence: true, uniqueness: true
   validates :status, inclusion: { in: %w[precheck confirmed released] }
+  validates :tool_name, length: { maximum: 255 }
 end

@@ -1,0 +1,127 @@
+<div class="mb-6 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+  <div>
+    <h1 class="text-hl-22 font-bold text-ink">AI 提问分析</h1>
+    <p class="mt-1 text-hl-13 text-muted">统计用户在 AI 投研助手的提问（仅统计已确认扣次的问题），反哺训练与知识库优化</p>
+  </div>
+  <div class="flex gap-2">
+    <%= link_to "近 7 天", admin_usage_analytics_path(days: 7),
+        class: "px-4 py-2 rounded text-hl-13 border transition-colors #{@days == 7 ? 'border-ink bg-ink text-white' : 'border-line text-muted hover:border-ink'}" %>
+    <%= link_to "近 30 天", admin_usage_analytics_path(days: 30),
+        class: "px-4 py-2 rounded text-hl-13 border transition-colors #{@days == 30 ? 'border-ink bg-ink text-white' : 'border-line text-muted hover:border-ink'}" %>
+  </div>
+</div>
+
+<% if @total_questions.zero? %>
+  <div class="hl-card px-6 py-16 text-center">
+    <p class="text-hl-14 text-muted-4">暂无 confirmed 提问数据</p>
+    <p class="mt-2 text-hl-13 text-muted-4">需 MCP 服务端在 precheck 时传入 question 后开始积累（见实现计划·双端配合）</p>
+  </div>
+<% else %>
+  <% total_category = @category_counts.values.sum.to_f %>
+
+  <%# 总览卡片 %>
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+    <div class="hl-card px-5 py-4">
+      <p class="text-hl-12 text-muted-3">总提问数</p>
+      <p class="mt-1 text-hl-22 font-bold text-ink"><%= number_with_delimiter(@total_questions) %></p>
+    </div>
+    <div class="hl-card px-5 py-4">
+      <p class="text-hl-12 text-muted-3">活跃用户</p>
+      <p class="mt-1 text-hl-22 font-bold text-ink"><%= @active_users %></p>
+    </div>
+    <div class="hl-card px-5 py-4">
+      <p class="text-hl-12 text-muted-3">今日提问</p>
+      <p class="mt-1 text-hl-22 font-bold text-ink"><%= number_with_delimiter(@today_questions) %></p>
+    </div>
+    <div class="hl-card px-5 py-4">
+      <p class="text-hl-12 text-muted-3">人均提问</p>
+      <p class="mt-1 text-hl-22 font-bold text-ink"><%= @avg_per_user %></p>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+    <%# 分类统计 %>
+    <div class="hl-card lg:col-span-2">
+      <div class="px-5 py-4 border-b border-line">
+        <h2 class="text-hl-15 font-semibold text-ink">问题分类统计</h2>
+        <p class="mt-0.5 text-hl-12 text-muted-3">一条问题可命中多个分类，均计入；百分比基于所有分类命中数</p>
+      </div>
+      <div class="px-5 py-4 space-y-4">
+        <% @category_counts.each do |name, count| %>
+          <% percent = total_category.zero? ? 0 : (count / total_category * 100).round(1) %>
+          <div>
+            <div class="flex justify-between items-baseline mb-1.5">
+              <span class="text-hl-13 text-ink font-medium"><%= name %></span>
+              <span class="text-hl-13 text-muted-3"><%= count %> 条 · <%= percent %>%</span>
+            </div>
+            <div class="h-1.5 bg-bg-mute rounded-full overflow-hidden">
+              <div class="h-full bg-ink rounded-full" style="width: <%= percent %>%"></div>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+    <%# Top 10 活跃用户 %>
+    <div class="hl-card">
+      <div class="px-5 py-4 border-b border-line">
+        <h2 class="text-hl-15 font-semibold text-ink">活跃用户 Top 10</h2>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full hl-table">
+          <tbody class="divide-y divide-line">
+            <% @top_users.each_with_index do |(user, count), index| %>
+              <tr class="hover:bg-bg-mute transition-colors">
+                <td class="px-5 py-3 w-10 text-hl-13 text-muted-3"><%= index + 1 %></td>
+                <td class="px-5 py-3">
+                  <span class="text-hl-13 text-ink font-medium"><%= user&.nickname.presence || "用户##{user&.id}" %></span>
+                </td>
+                <td class="px-5 py-3 text-right text-hl-13 text-muted-3"><%= count %> 次</td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <%# Top 20 问题 %>
+    <div class="hl-card">
+      <div class="px-5 py-4 border-b border-line">
+        <h2 class="text-hl-15 font-semibold text-ink">高频问题 Top 20</h2>
+        <p class="mt-0.5 text-hl-12 text-muted-3">按问题原文分组计数</p>
+      </div>
+      <div class="divide-y divide-line">
+        <% @top_questions.each_with_index do |(question, count), index| %>
+          <div class="px-5 py-3 flex items-start justify-between gap-4">
+            <div class="flex items-start gap-3 min-w-0">
+              <span class="text-hl-12 text-muted-3 mt-0.5 shrink-0"><%= index + 1 %></span>
+              <p class="text-hl-13 text-ink min-w-0"><%= truncate(question.to_s, length: 60) %></p>
+            </div>
+            <span class="text-hl-12 text-muted-3 shrink-0"><%= count %> 次</span>
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+    <%# 最近 20 条原始问题 %>
+    <div class="hl-card">
+      <div class="px-5 py-4 border-b border-line">
+        <h2 class="text-hl-15 font-semibold text-ink">最近提问（原始）</h2>
+        <p class="mt-0.5 text-hl-12 text-muted-3">最新 20 条，含提问用户</p>
+      </div>
+      <div class="divide-y divide-line">
+        <% @recent_questions.each do |log| %>
+          <div class="px-5 py-3">
+            <p class="text-hl-13 text-ink"><%= truncate(log.question.to_s, length: 80) %></p>
+            <p class="mt-1 text-hl-12 text-muted-3">
+              <%= log.user&.nickname.presence || "用户##{log.user_id}" %>
+              · <%= log.created_at.strftime("%m-%d %H:%M") %>
+            </p>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+<% end %>

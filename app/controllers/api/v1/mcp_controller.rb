@@ -22,11 +22,13 @@ module Api
             l.user = api_key.user
             l.status = "precheck"
             l.ip = request.remote_ip
+            l.question = params[:question].to_s.strip.presence
+            l.tool_name = params[:tool_name].to_s.strip.presence
           end
         rescue ActiveRecord::RecordNotUnique
           UsageLog.find_by!(request_id: params[:request_id])
         rescue ActiveRecord::RecordInvalid
-          return render json: { ok: false, error: "request_id 无效" }, status: 400
+          return render json: { ok: false, error: "请求参数无效" }, status: 400
         end
 
         render json: { ok: true, plan: api_key.plan_code, remaining: api_key.quota_remaining, request_id: params[:request_id] }
