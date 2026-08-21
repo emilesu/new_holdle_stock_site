@@ -91,7 +91,8 @@ Rails.application.configure do
   config.hosts = [
     "test.holdle.com",                  # 测试域名
     /.*\.holdle\.com/,                  # 所有 holdle.com 子域名（www.holdle.com 等）
-    "localhost"                         # 本地健康检查
+    "localhost",                        # 本地健康检查
+    "127.0.0.1"                         # MCP 服务同机直连 Rails（T7 计费接口）
   ]
   # Skip DNS rebinding protection for the default health check endpoint.
   config.host_authorization = { exclude: ->(request) { request.path == "/up" } }
