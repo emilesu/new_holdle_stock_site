@@ -11,12 +11,12 @@
       HOLDLE <span class="text-profit">AI 投研助手</span>
     </h1>
     <p class="text-hl-16 text-muted-2 mb-4">
-      课程免费，AI 陪练 —— 投资方法的学习新方式
+      课程免费 + AI 陪练 —— 投资方法的学习新方式
     </p>
     <p class="text-hl-14 text-muted max-w-2xl mx-auto leading-relaxed mb-10">
-      HOLDLE 投资基础课程已<span class="text-ink font-medium">全部免费</span>。<br />
-      现在你只需要一个「AI 投研助手」——课程里没懂的、想分析的，随时问它。<br />
-      新用户免费送 <span class="text-profit font-medium">15 次体验</span>。
+      HOLDLE 投资基础课程已<span class="text-ink font-medium">全部开源免费</span>。<br />
+      现在你只需要一个「AI 投研助手」——课程里没懂的、想分析的，随时问它。<br /><br />
+      当前已有 <span class="text-profit font-medium">4,120+</span> 会员使用 HOLD LE 策略
     </p>
     <div class="flex justify-center">
       <%= link_to "免费领 15 次体验", new_user_registration_path, class: "hl-btn hl-btn-primary" %>
@@ -26,28 +26,48 @@
 </section>
 
 <%# ========== 为什么需要 AI 助手 ========== %>
-<section class="border-b border-line">
-  <div class="container-narrow py-16">
+<section class="border-b border-line bg-white">
+  <div class="container-hl py-16">
     <div class="label-en">WHY AI ASSISTANT</div>
-    <h2 class="text-hl-22 font-bold text-ink mb-4">学投资最难的不是「看懂」，是「用起来」</h2>
-    <p class="text-hl-13 text-muted mb-8">这些问题，你是否也卡住过？</p>
+    <h2 class="text-hl-22 font-semibold text-ink mb-2">学投资最难的不是「看懂」，是「用起来」</h2>
+    <p class="text-hl-13 text-muted-3 mb-7">课程免费了，但你还需要有人陪你练——把方法用在自己的投资决策上。</p>
 
-    <div class="space-y-4 mb-8">
-      <div class="hl-card p-6">
-        <p class="text-hl-14 text-ink">状态A 的入场时机，到底怎么判断？</p>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-7">
+      <div class="hl-card hl-card-hover p-7">
+        <div class="text-hl-11 text-muted-5 tracking-wide-2 mb-3">01 / UNDERSTAND</div>
+        <h3 class="text-hl-16 font-semibold mb-2">课程里没懂的？问它</h3>
+        <p class="text-hl-13 text-muted-3 leading-normal mb-5 min-h-11">状态A 的入场时机怎么判断？」</p>
+        <ul class="mb-5">
+          <li class="py-1 text-hl-13 text-muted relative pl-3.5 list-dot-link">带你一步步理解方法论</li>
+          <li class="py-1 text-hl-13 text-muted relative pl-3.5 list-dot-link">讲到你会用为止</li>
+          <li class="py-1 text-hl-13 text-muted relative pl-3.5 list-dot-link">基于 HOLDLE 完整知识库</li>
+        </ul>
       </div>
-      <div class="hl-card p-6">
-        <p class="text-hl-14 text-ink">这只股票，按 HOLDLE 方法该看哪几步？</p>
+      <div class="hl-card hl-card-hover p-7">
+        <div class="text-hl-11 text-muted-5 tracking-wide-2 mb-3">02 / ANALYZE</div>
+        <h3 class="text-hl-16 font-semibold mb-2">拿到股票想分析？问它</h3>
+        <p class="text-hl-13 text-muted-3 leading-normal mb-5 min-h-11">「帮我按 HOLDLE 方法分析 600519」</p>
+        <ul class="mb-5">
+          <li class="py-1 text-hl-13 text-muted relative pl-3.5 list-dot-link">带你按「选好→等好→管好」走</li>
+          <li class="py-1 text-hl-13 text-muted relative pl-3.5 list-dot-link">企业质量 + 状态A 双判断</li>
+          <li class="py-1 text-hl-13 text-muted relative pl-3.5 list-dot-link">不荐股，教你判断</li>
+        </ul>
       </div>
-      <div class="hl-card p-6">
-        <p class="text-hl-14 text-ink">我的止损设得对不对？</p>
+      <div class="hl-card hl-card-hover p-7">
+        <div class="text-hl-11 text-muted-5 tracking-wide-2 mb-3">03 / MANAGE</div>
+        <h3 class="text-hl-16 font-semibold mb-2">自己的操作拿不准？问它</h3>
+        <p class="text-hl-13 text-muted-3 leading-normal mb-5 min-h-11">「三阶止损怎么设？」</p>
+        <ul class="mb-5">
+          <li class="py-1 text-hl-13 text-muted relative pl-3.5 list-dot-link">交易管理规则随时查</li>
+          <li class="py-1 text-hl-13 text-muted relative pl-3.5 list-dot-link">入场 / 仓位 / 出场全覆盖</li>
+          <li class="py-1 text-hl-13 text-muted relative pl-3.5 list-dot-link">规则化执行，不被情绪左右</li>
+        </ul>
       </div>
     </div>
 
-    <p class="text-hl-14 text-muted leading-loose">
-      AI 投研助手基于 HOLDLE 完整方法论，陪你一步步想清楚——<br />
-      <span class="text-ink font-medium">不是替你决定，是教你判断。</span>
-    </p>
+    <div class="hl-callout mb-7">
+      AI 投研助手基于 HOLDLE 完整方法论，陪你一步步想清楚 —— 它只讲方法，判断权在你。
+    </div>
   </div>
 </section>
 
@@ -64,7 +84,11 @@
         <h3 class="text-hl-15 font-semibold text-ink mb-1">新用户 · 免费体验</h3>
         <p class="text-hl-12 text-muted-3 mb-4">注册即送，无门槛</p>
         <p class="text-hl-22 font-bold text-ink mb-1">15 次</p>
-        <p class="text-hl-13 text-muted mb-5">体验完再决定</p>
+        <ul class="text-hl-13 text-muted space-y-2 mb-5">
+          <li class="relative pl-3.5 list-dot-link">先安装试一下</li>
+          <li class="relative pl-3.5 list-dot-link">体验完再决定</li>
+        </ul>
+        <p class="text-hl-13 text-muted mb-5"></p>
         <%= link_to "免费领取", new_user_registration_path, class: "hl-btn hl-btn-line w-full text-center" %>
       </div>
 
@@ -74,8 +98,13 @@
           <h3 class="text-hl-15 font-semibold text-ink">尝鲜包</h3>
           <span class="text-hl-22 font-bold text-ink">5 元</span>
         </div>
-        <p class="text-hl-12 text-muted-3 mb-4">20 次 · 试试手感</p>
-        <p class="text-hl-13 text-muted-4 leading-normal mb-5">价格最低，验证 AI 助手是否适合你</p>
+        <p class="text-hl-12 text-muted-3 mb-4">试试手感</p>
+        <p class="text-hl-22 font-bold text-ink mb-1">20 次</p>
+        <ul class="text-hl-13 text-muted space-y-2 mb-5">
+          <li class="relative pl-3.5 list-dot-link">按次计费</li>
+          <li class="relative pl-3.5 list-dot-link">适合先用起来</li>
+        </ul>
+        <p class="text-hl-13 text-muted-4 leading-normal mb-5">，验证 AI 助手是否适合你</p>
         <%= link_to "购买", new_order_path(plan: "starter"), class: "hl-btn hl-btn-line w-full text-center" %>
       </div>
 
@@ -85,8 +114,12 @@
           <h3 class="text-hl-15 font-semibold text-ink">轻量包</h3>
           <span class="text-hl-22 font-bold text-ink">20 元</span>
         </div>
-        <p class="text-hl-12 text-muted-3 mb-4">90 次 · 日常够用</p>
-        <p class="text-hl-13 text-muted-4 leading-normal mb-5">高频提问的最佳性价比</p>
+        <p class="text-hl-12 text-muted-3 mb-4">日常够用</p>
+        <p class="text-hl-22 font-bold text-ink mb-1">90 次</p>
+        <ul class="text-hl-13 text-muted space-y-2 mb-5">
+          <li class="relative pl-3.5 list-dot-link">按次计费</li>
+          <li class="relative pl-3.5 list-dot-link">性价比之选</li>
+        </ul>
         <%= link_to "购买", new_order_path(plan: "light"), class: "hl-btn hl-btn-line w-full text-center" %>
       </div>
 
@@ -96,8 +129,12 @@
           <h3 class="text-hl-15 font-semibold text-ink">标准包</h3>
           <span class="text-hl-22 font-bold text-ink">100 元</span>
         </div>
-        <p class="text-hl-12 text-muted-3 mb-4">500 次 · 重度使用</p>
-        <p class="text-hl-13 text-muted-4 leading-normal mb-5">深度分析选手的首选</p>
+        <p class="text-hl-12 text-muted-3 mb-4">重度使用</p>
+        <p class="text-hl-22 font-bold text-ink mb-1">500 次</p>
+        <ul class="text-hl-13 text-muted space-y-2 mb-5">
+          <li class="relative pl-3.5 list-dot-link">按次计费</li>
+          <li class="relative pl-3.5 list-dot-link">深度分析选手的首选</li>
+        </ul>
         <%= link_to "购买", new_order_path(plan: "standard"), class: "hl-btn hl-btn-line w-full text-center" %>
       </div>
 
@@ -113,15 +150,15 @@
         </div>
         <ul class="text-hl-13 text-muted space-y-2 mb-5">
           <li class="relative pl-3.5 list-dot-link">AI 助手<span class="text-ink font-medium">无限次</span>使用</li>
-          <li class="relative pl-3.5 list-dot-link">全部课程解锁</li>
-          <li class="relative pl-3.5 list-dot-link">会员交流群</li>
+          <li class="relative pl-3.5 list-dot-link">进阶课程解锁</li>
+          <li class="relative pl-3.5 list-dot-link">金字塔解锁</li>
         </ul>
         <%= link_to "加入会员", new_order_path(plan: "member_permanent"), class: "hl-btn hl-btn-primary w-full text-center" %>
       </div>
     </div>
 
     <p class="text-hl-12 text-muted-4 text-center mt-6">
-      虚拟服务一经购买不支持退款（购买前请确认需求）；次数用完可随时充值。
+      ※ 虚拟服务一经购买不支持退款（购买前请确认需求）；按次套餐用完后可随时续购，次数用完可随时充值。
     </p>
   </div>
 </section>
@@ -180,8 +217,8 @@
 <section class="bg-white">
   <div class="container-narrow py-20 text-center">
     <h2 class="text-hl-22 md:text-hl-40 font-bold text-ink mb-8 leading-tight">
-      课程免费，AI 陪你<br />
-      现在就试试
+      课如果你信我<br />
+      我们就一起走一段
     </h2>
     <div class="flex justify-center gap-3">
       <%= link_to "免费领 15 次体验", new_user_registration_path, class: "hl-btn hl-btn-primary" %>
