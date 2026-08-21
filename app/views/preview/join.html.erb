@@ -26,7 +26,7 @@
 </section>
 
 <%# ========== 为什么需要 AI 助手 ========== %>
-<section class="border-b border-line bg-white">
+<section class="border-b border-line">
   <div class="container-hl py-16">
     <div class="label-en">WHY AI ASSISTANT</div>
     <h2 class="text-hl-22 font-semibold text-ink mb-2">学投资最难的不是「看懂」，是「用起来」</h2>
@@ -72,7 +72,7 @@
 </section>
 
 <%# ========== 定价核心区 ========== %>
-<section class="border-b border-line bg-bg-soft">
+<section class="border-b border-line bg-white">
   <div class="container-hl py-16">
     <div class="label-en">PRICING</div>
     <h2 class="text-hl-22 font-bold text-ink mb-2">透明定价，一屏看清</h2>
@@ -88,7 +88,6 @@
           <li class="relative pl-3.5 list-dot-link">先安装试一下</li>
           <li class="relative pl-3.5 list-dot-link">体验完再决定</li>
         </ul>
-        <p class="text-hl-13 text-muted mb-5"></p>
         <%= link_to "免费领取", new_user_registration_path, class: "hl-btn hl-btn-line w-full text-center" %>
       </div>
 
@@ -104,7 +103,6 @@
           <li class="relative pl-3.5 list-dot-link">按次计费</li>
           <li class="relative pl-3.5 list-dot-link">适合先用起来</li>
         </ul>
-        <p class="text-hl-13 text-muted-4 leading-normal mb-5">，验证 AI 助手是否适合你</p>
         <%= link_to "购买", new_order_path(plan: "starter"), class: "hl-btn hl-btn-line w-full text-center" %>
       </div>
 
@@ -164,7 +162,7 @@
 </section>
 
 <%# ========== 老会员权益 ========== %>
-<section class="border-b border-line bg-white">
+<section class="border-b border-line">
   <div class="container-narrow py-14 text-center">
     <div class="label-en">FOR OLD MEMBERS</div>
     <h2 class="text-hl-22 font-bold text-ink mb-4">老会员，我们没忘</h2>
@@ -177,7 +175,7 @@
 </section>
 
 <%# ========== 简版 FAQ ========== %>
-<section class="border-b border-line">
+<section class="border-b border-line bg-white">
   <div class="container-narrow py-16">
     <div class="label-en">FAQ</div>
     <h2 class="text-hl-22 font-bold text-ink mb-8">常见问题（简版）</h2>
@@ -192,13 +190,42 @@
         <div class="hl-faq-content">不会。它只讲方法——教你「怎么判断」，不替你做决定。不荐股、不预测、不承诺收益是 HOLDLE 的红线。</div>
       </details>
 
+      
       <details class="hl-faq-item">
         <summary>
           <span class="hl-q-badge">Q</span>
-          <span>怎么接入？</span>
+          <span>AI 助手用什么工具能接？</span>
           <span class="hl-faq-icon">+</span>
         </summary>
-        <div class="hl-faq-content">支持 Trae / Claude Desktop / Cursor / WorkBuddy 等任何支持 MCP 协议的工具，把专属 Key 填进 MCP 配置即可，有图文教程。</div>
+        <div class="hl-faq-content">
+          任何支持 MCP 协议的 AI 工具都可以：Trae、Claude Desktop、Cursor、WorkBuddy 等。把专属 Key 填进工具的 MCP 配置即可，有图文教程。
+        </div>
+      </details>
+
+      <details class="hl-faq-item">
+        <summary>
+          <span class="hl-q-badge">Q</span>
+          <span>AI 助手怎么收费？</span>
+          <span class="hl-faq-icon">+</span>
+        </summary>
+        <div class="hl-faq-content">
+          按提问次数计算：<br><br>
+          新注册用户免费送 15 次体验；<br>
+          之后按次付费：5元/20次、20元/90次、100元/500次；<br>
+          468 元永久会员 = 无限次使用 + 金字塔排行 + 进阶课解锁。<br><br>
+          虚拟服务一经购买不支持退款。
+        </div>
+      </details>
+
+      <details class="hl-faq-item">
+        <summary>
+          <span class="hl-q-badge">Q</span>
+          <span>我的 Key 用完了 / 泄露了怎么办？</span>
+          <span class="hl-faq-icon">+</span>
+        </summary>
+        <div class="hl-faq-content">
+          次数用完去购买套餐充值即可；Key 泄露可联系站长「大苏」，吊销并重新生成。每个账号默认 1 个 Key，请勿分享。
+        </div>
       </details>
 
       <details class="hl-faq-item">
@@ -214,7 +241,7 @@
 </section>
 
 <%# ========== 行动按钮 ========== %>
-<section class="bg-white">
+<section class="border-b border-line">
   <div class="container-narrow py-20 text-center">
     <h2 class="text-hl-22 md:text-hl-40 font-bold text-ink mb-8 leading-tight">
       课如果你信我<br />
