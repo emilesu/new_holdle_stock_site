@@ -44,4 +44,34 @@ namespace :mcp do
 
     puts "完成：新发 #{sent} 个，跳过 #{skipped} 个"
   end
+
+  desc "全库补发 key（幂等）：会员→无限次 / 非会员→welcome 15次，已有 active key 跳过"
+  task ensure_all_user_keys: :environment do
+    member_plan = Plan.find_by!(plan_code: "member_permanent")
+    welcome_plan = Plan.find_by!(plan_code: "welcome")
+    sent = 0
+    skipped = 0
+    failed = 0
+
+    User.find_each do |user|
+      if user.api_keys.active.exists?
+        skipped += 1
+        next
+      end
+
+      plan = user.is_member? ? member_plan : welcome_plan
+      plain = ApiKey.generate!(user: user, plan: plan)
+      if plain
+        puts "用户 #{user.id}（#{user.nickname}）已发 #{plan.plan_code} key"
+        sent += 1
+      else
+        skipped += 1
+      end
+    rescue => e
+      failed += 1
+      puts "用户 #{user.id} 发 key 失败: #{e.message}"
+    end
+
+    puts "完成：新发 #{sent} 个，跳过 #{skipped} 个，失败 #{failed} 个"
+  end
 end

@@ -47,3 +47,63 @@
     <% end %>
   </div>
 </div>
+
+<%# T7 Phase2 B2：AI 投研 KEY 管理（操作区，仅此页） %>
+<% key = @user.api_keys.active.first %>
+<div class="hl-card mt-6">
+  <div class="px-6 py-4 border-b border-gray-100">
+    <h2 class="text-lg font-semibold text-gray-900">AI 投研 KEY 管理</h2>
+  </div>
+  <div class="px-6 py-6 space-y-6">
+    <% if key %>
+      <div class="text-sm text-gray-600">
+        当前 Key：<span class="font-mono font-medium text-gray-900"><%= key.key_prefix %>…</span>
+        ｜ 套餐：<span class="font-medium text-gray-900"><%= key.plan_name %></span>
+        ｜ 剩余：<span class="font-medium text-gray-900">
+          <%= key.unlimited? ? "无限次" : "#{key.quota_remaining} 次" %>
+        </span>
+        ｜ 状态：<span class="font-medium <%= key.status == "active" ? "text-green-600" : "text-red-600" %>">
+          <%= key.status == "active" ? "使用中" : "已停用" %>
+        </span>
+      </div>
+
+      <%# 调整次数（仅有限次 key） %>
+      <% unless key.unlimited? %>
+        <div>
+          <h3 class="text-sm font-medium text-gray-700 mb-2">调整次数（补偿/退款）</h3>
+          <%= form_with url: adjust_api_key_quota_admin_user_path(@user), method: :post, class: "flex items-end gap-3" do |f| %>
+            <div>
+              <%= f.label :delta, "调整数量（正=加，负=减）", class: "block text-xs text-gray-500 mb-1" %>
+              <%= f.number_field :delta, required: true, class: "w-28 px-3 py-2 border border-gray-300 rounded-md text-sm" %>
+            </div>
+            <div class="flex-1">
+              <%= f.label :reason, "备注", class: "block text-xs text-gray-500 mb-1" %>
+              <%= f.text_field :reason, placeholder: "补偿原因（必填）", class: "w-full px-3 py-2 border border-gray-300 rounded-md text-sm" %>
+            </div>
+            <%= f.submit "提交调整", class: "px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-medium" %>
+          <% end %>
+        </div>
+      <% else %>
+        <p class="text-sm text-gray-400">无限次会员 key，无需调整次数。</p>
+      <% end %>
+
+      <%# 停用/启用 %>
+      <div class="flex gap-3">
+        <% if key.status == "active" %>
+          <%= button_to "吊销 key（停用）", disable_api_key_admin_user_path(@user), method: :post,
+            data: { turbo_confirm: "确认吊销该 key？停用后用户将无法使用 AI 投研。" },
+            class: "px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 text-sm font-medium" %>
+        <% else %>
+          <%= button_to "启用 key", enable_api_key_admin_user_path(@user), method: :post,
+            class: "px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm font-medium" %>
+        <% end %>
+
+        <%= button_to "重新生成 key", regenerate_api_key_admin_user_path(@user), method: :post,
+          data: { turbo_confirm: "将吊销当前 key 并生成新 key（新 key 仅展示一次），确认？" },
+          class: "px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 text-sm font-medium" %>
+      </div>
+    <% else %>
+      <p class="text-sm text-gray-400">该用户暂无 active AI KEY（用户注册/购买后自动发放）。</p>
+    <% end %>
+  </div>
+</div>

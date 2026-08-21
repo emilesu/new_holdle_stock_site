@@ -48,7 +48,7 @@
 
         <%# AI 投研助手 API Key（T7 计费后台，老会员自动显示） %>
         <%# ⚠️ 临时隐藏：T7 功能未完善，仅管理员可见（2026-08-20）；上线后移除该 if %>
-        <% if current_user.admin? %>
+        <% if current_user.is_admin? %>
         <div class="bg-bg-soft rounded p-4 sm:p-5">
           <span class="text-hl-12 text-muted-4 block mb-3">AI 投研助手 API Key</span>
           <% if @api_keys.any? %>
@@ -70,7 +70,8 @@
             </div>
             <p class="text-hl-11 text-muted-4 mt-3">完整 key 仅在创建时展示一次，请妥善保管；如需重新生成请联系站长。</p>
           <% else %>
-            <span class="text-hl-13 text-muted-3">暂无 API Key。购买 AI 投研助手套餐后即可使用。</span>
+            <span class="text-hl-13 text-muted-3">暂无 API Key。</span>
+            <%= link_to "去购买 AI 投研助手套餐", new_order_path, class: "text-hl-13 text-profit font-medium hover:underline ml-1" %>
           <% end %>
         </div>
         <% end %>
@@ -93,7 +94,7 @@
       <%# 操作按钮 %>
       <div class="px-6 sm:px-8 pb-6 sm:pb-8 flex flex-wrap gap-3">
         <%= link_to "编辑资料", users_edit_profile_path, class: "hl-btn hl-btn-primary" %>
-        <% if current_user.admin? %>
+        <% if current_user.is_admin? %>
           <%= link_to "后台管理", admin_root_path, class: "hl-btn hl-btn-line" %>
         <% end %>
       </div>

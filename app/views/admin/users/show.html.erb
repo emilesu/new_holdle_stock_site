@@ -78,6 +78,90 @@
         <%= @user.bio.presence || '<span class="text-gray-400">暂无简介</span>'.html_safe %>
       </p>
     </div>
+
+    <%# T7 Phase2 B1：AI 投研 KEY（只读展示，操作在 edit 页） %>
+    <% key = @user.api_keys.active.first %>
+    <div class="mt-6 bg-gray-50 rounded-md p-5">
+      <h3 class="text-sm font-medium text-gray-500 mb-3">AI 投研 KEY</h3>
+      <% if key %>
+        <div class="space-y-2 text-sm">
+          <div class="flex justify-between">
+            <span class="text-gray-500">Key</span>
+            <span class="font-mono font-medium text-gray-900"><%= key.key_prefix %>…</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-500">套餐</span>
+            <span class="font-medium text-gray-900"><%= key.plan_name %></span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-500">剩余次数</span>
+            <span class="font-medium text-gray-900"><%= key.unlimited? ? "无限" : "#{key.quota_remaining} 次" %></span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-500">状态</span>
+            <span class="font-medium <%= key.status == "active" ? "text-green-600" : "text-red-600" %>">
+              <%= key.status == "active" ? "使用中" : (key.status == "disabled" ? "已停用" : "已吊销") %>
+            </span>
+          </div>
+        </div>
+
+        <h4 class="text-xs font-medium text-gray-400 mt-5 mb-2">最近用量（近 10 条）</h4>
+        <% usage_logs = key.usage_logs.order(created_at: :desc).limit(10) %>
+        <% if usage_logs.any? %>
+          <table class="w-full text-xs">
+            <thead>
+              <tr class="text-left text-gray-400 border-b border-gray-200">
+                <th class="py-1.5 pr-3 font-medium">时间</th>
+                <th class="py-1.5 pr-3 font-medium">工具</th>
+                <th class="py-1.5 font-medium">消耗</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% usage_logs.each do |log| %>
+                <tr class="border-b border-gray-100">
+                  <td class="py-1.5 pr-3 text-gray-500"><%= l(log.created_at, format: :short) %></td>
+                  <td class="py-1.5 pr-3 text-gray-700"><%= log.tool_name.presence || "-" %></td>
+                  <td class="py-1.5 text-gray-700"><%= log.consumed %></td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        <% else %>
+          <p class="text-xs text-gray-400">暂无调用记录</p>
+        <% end %>
+
+        <h4 class="text-xs font-medium text-gray-400 mt-5 mb-2">最近调整记录（近 5 条）</h4>
+        <% adjustments = key.api_key_adjustments.order(created_at: :desc).limit(5) %>
+        <% if adjustments.any? %>
+          <table class="w-full text-xs">
+            <thead>
+              <tr class="text-left text-gray-400 border-b border-gray-200">
+                <th class="py-1.5 pr-3 font-medium">时间</th>
+                <th class="py-1.5 pr-3 font-medium">调整</th>
+                <th class="py-1.5 pr-3 font-medium">管理员</th>
+                <th class="py-1.5 font-medium">备注</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% adjustments.each do |a| %>
+                <tr class="border-b border-gray-100">
+                  <td class="py-1.5 pr-3 text-gray-500"><%= l(a.created_at, format: :short) %></td>
+                  <td class="py-1.5 pr-3 <%= a.delta.positive? ? "text-green-600" : "text-red-600" %> font-medium">
+                    <%= a.delta.positive? ? "+#{a.delta}" : a.delta %>
+                  </td>
+                  <td class="py-1.5 pr-3 text-gray-700"><%= a.admin.nickname %></td>
+                  <td class="py-1.5 text-gray-700"><%= a.reason %></td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        <% else %>
+          <p class="text-xs text-gray-400">暂无调整记录</p>
+        <% end %>
+      <% else %>
+        <p class="text-sm text-gray-400">该用户暂无 active AI KEY</p>
+      <% end %>
+    </div>
   </div>
 </div>
 

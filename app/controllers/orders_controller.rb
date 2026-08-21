@@ -3,11 +3,12 @@ class OrdersController < ApplicationController
   before_action :redirect_if_already_member, only: [:new, :create]
 
   def new
-    @product = Order::PRODUCTS["member_permanent"]
+    @plan = find_purchasable_plan(params[:plan])
     @order = Order.new
   end
 
   def create
+    plan = find_purchasable_plan(params[:plan])
     payment_method = detect_payment_method
 
     # JSAPI 支付需要 openid，优先公众号，回退到开放平台
@@ -23,9 +24,11 @@ class OrdersController < ApplicationController
 
     begin
       order = current_user.orders.create!(
-        product_code: "member_permanent",
-        title: Order::PRODUCTS["member_permanent"][:title],
-        amount_cents: Order::PRODUCTS["member_permanent"][:amount_cents],
+        product_code: plan.plan_code,
+        plan_code: plan.plan_code,
+        quota: plan.quota,
+        title: plan.name,
+        amount_cents: plan.price_cents,
         payment_method: payment_method
       )
     rescue ActiveRecord::RecordInvalid => e
@@ -92,6 +95,12 @@ class OrdersController < ApplicationController
   end
 
   private
+
+  # T7 Phase2：可购买套餐（排除 welcome 赠送档）。非法/缺省兜底 member_permanent（保持现有 468 入口）
+  def find_purchasable_plan(code)
+    purchasable = Plan.active.where.not(plan_code: "welcome")
+    purchasable.find_by(plan_code: code) || purchasable.find_by!(plan_code: "member_permanent")
+  end
 
   def detect_payment_method
     request.user_agent.to_s.include?("MicroMessenger") ? "wechat_jsapi" : "wechat_native"

@@ -101,7 +101,7 @@
                   </svg>
                   我的留言
                 <% end %>
-              <% if current_user.admin? %>
+              <% if current_user.is_admin? %>
                 <%= link_to admin_root_path, class: "flex items-center gap-3 px-4 py-2 text-hl-13 text-muted hover:text-ink hover:bg-bg-mute transition-colors" do %>
                   <svg class="w-4 h-4 text-muted-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
@@ -174,7 +174,7 @@
                         data: { action: "click->message#open:prevent" } do %>
               我的留言
             <% end %>
-            <% if current_user.admin? %>
+            <% if current_user.is_admin? %>
               <%= link_to '后台管理', admin_root_path, class: "block px-4 py-2 text-hl-13 text-muted hover:text-ink hover:bg-bg-mute rounded" %>
             <% end %>
             <%= button_to '退出登录', destroy_user_session_path, method: :delete, class: "block w-full text-left px-4 py-2 text-hl-13 text-muted hover:text-ink hover:bg-bg-mute rounded", form_class: "block" %>

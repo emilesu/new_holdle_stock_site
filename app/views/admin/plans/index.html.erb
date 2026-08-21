@@ -1,0 +1,50 @@
+<div class="mb-6">
+  <h1 class="text-hl-22 font-bold text-ink">AI 投研套餐</h1>
+  <p class="mt-1 text-hl-13 text-muted">套餐定价配置（只读，调价请手动改库，低频操作）</p>
+</div>
+
+<div class="hl-card">
+  <div class="overflow-x-auto">
+    <table class="w-full hl-table">
+      <thead>
+        <tr>
+          <th class="px-6 py-3 text-left text-hl-12 font-semibold text-muted uppercase">套餐编码</th>
+          <th class="px-6 py-3 text-left text-hl-12 font-semibold text-muted uppercase">名称</th>
+          <th class="px-6 py-3 text-left text-hl-12 font-semibold text-muted uppercase">价格</th>
+          <th class="px-6 py-3 text-left text-hl-12 font-semibold text-muted uppercase">次数</th>
+          <th class="px-6 py-3 text-left text-hl-12 font-semibold text-muted uppercase">升级会员</th>
+          <th class="px-6 py-3 text-left text-hl-12 font-semibold text-muted uppercase">状态</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-line">
+        <% @plans.each do |plan| %>
+          <tr class="hover:bg-bg-mute transition-colors">
+            <td class="px-6 py-4 whitespace-nowrap">
+              <span class="font-mono text-hl-13 text-ink"><%= plan.plan_code %></span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <span class="text-hl-13 text-ink font-medium"><%= plan.name %></span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <span class="text-hl-13 text-muted-3">¥<%= plan.price_yuan %></span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <span class="text-hl-13 text-muted-3">
+                <%= plan.unlimited? ? "无限次" : "#{plan.quota} 次" %>
+              </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <span class="text-hl-13 text-muted-3"><%= plan.is_member_upgrade ? "是" : "否" %></span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <span class="inline-flex items-center px-2.5 py-1 rounded text-hl-12 font-medium
+                <%= plan.active ? 'bg-green-50 text-profit' : 'bg-bg-mute text-muted-3' %>">
+                <%= plan.active ? "在售" : "下架" %>
+              </span>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>

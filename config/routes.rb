@@ -104,7 +104,17 @@ Rails.application.routes.draw do
       patch :restore, on: :member    # 恢复软删除留言
     end
     
-    resources :users, only: [:index, :show, :new, :create, :edit, :update, :destroy]
+    resources :users, only: [:index, :show, :new, :create, :edit, :update, :destroy] do
+      member do
+        post :adjust_api_key_quota  # 调整 key 次数（补偿）
+        post :disable_api_key       # 停用 key
+        post :enable_api_key        # 启用 key
+        post :regenerate_api_key    # 重新生成 key
+      end
+    end
+
+    # T7 Phase2：套餐只读
+    resources :plans, only: [:index]
     resources :stocks, only: [:index, :show, :new, :create, :edit, :update, :destroy] do
       collection do
         get :sectors

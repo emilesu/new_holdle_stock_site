@@ -19,6 +19,7 @@ class User < ApplicationRecord
   has_many :orders, dependent: :destroy
   has_many :api_keys, dependent: :destroy
   has_many :usage_logs, dependent: :destroy
+  has_many :api_key_adjustments, dependent: :destroy # 作为 key 持有人
 
   # 谷歌登录账号匹配创建
   def self.find_for_google_oauth(auth)
@@ -64,6 +65,15 @@ class User < ApplicationRecord
   end
 
   before_save :set_default_member_expire_at
+  after_create :grant_initial_api_key
+
+  # T7 Phase2：注册即发 key（会员→无限次 / 非会员→welcome 15次），幂等
+  def grant_initial_api_key
+    plan = Plan.find_by(plan_code: is_member? ? "member_permanent" : "welcome")
+    ApiKey.generate!(user: self, plan: plan) if plan
+  rescue => e
+    Rails.logger.warn "[ApiKey] 注册发 key 失败 user=#{id}: #{e.message}"
+  end
 
   def set_default_member_expire_at
     return unless member_expire_at.blank?
