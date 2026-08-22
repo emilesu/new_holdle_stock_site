@@ -210,69 +210,76 @@ class Api::V1::McpControllerTest < ActionDispatch::IntegrationTest
 
   # === 扣次粒度修复（90s 滑动窗口）测试 ===
 
-  # 按间隔序列（秒）连续 precheck+confirm，第一个请求在基准时间点
+  # 单次 precheck+confirm（供 confirm_sequence 复用）
+  def post_confirm(plain)
+    request_id = SecureRandom.uuid
+    post api_v1_mcp_precheck_path, params: { api_key: plain, request_id: request_id }, headers: @auth
+    post api_v1_mcp_confirm_path, params: { api_key: plain, request_id: request_id }, headers: @auth
+    assert_response 200
+  end
+
+  # 按间隔序列（秒）连续 precheck+confirm：第一个请求在基准时间点，之后每个间隔后发一次请求
   def confirm_sequence(plain, intervals)
-    first = true
+    travel_to Time.current
+    post_confirm(plain)
     intervals.each do |secs|
-      travel secs.seconds unless first
-      first = false
-      request_id = SecureRandom.uuid
-      post api_v1_mcp_precheck_path, params: { api_key: plain, request_id: request_id }, headers: @auth
-      post api_v1_mcp_confirm_path, params: { api_key: plain, request_id: request_id }, headers: @auth
-      assert_response 200
+      travel secs.seconds
+      post_confirm(plain)
     end
+  ensure
+    travel_back
   end
 
   test "90 秒窗口内连续 confirm 合并为一次扣费" do
     plain = build_api_key(quota: 10)
+    travel_to Time.current
 
-    travel_to Time.current do
-      r1 = SecureRandom.uuid
-      post api_v1_mcp_precheck_path, params: { api_key: plain, request_id: r1 }, headers: @auth
-      post api_v1_mcp_confirm_path, params: { api_key: plain, request_id: r1 }, headers: @auth
-      assert_equal 1, response.parsed_body["consumed"]
-      assert_equal 9, response.parsed_body["remaining"]
-      round1 = response.parsed_body["round_id"]
-      assert_not_nil round1
+    r1 = SecureRandom.uuid
+    post api_v1_mcp_precheck_path, params: { api_key: plain, request_id: r1 }, headers: @auth
+    post api_v1_mcp_confirm_path, params: { api_key: plain, request_id: r1 }, headers: @auth
+    assert_equal 1, response.parsed_body["consumed"]
+    assert_equal 9, response.parsed_body["remaining"]
+    round1 = response.parsed_body["round_id"]
+    assert_not_nil round1
 
-      travel 30.seconds do
-        r2 = SecureRandom.uuid
-        post api_v1_mcp_precheck_path, params: { api_key: plain, request_id: r2 }, headers: @auth
-        post api_v1_mcp_confirm_path, params: { api_key: plain, request_id: r2 }, headers: @auth
-        assert_equal true, response.parsed_body["merged"]
-        assert_equal 0, response.parsed_body["consumed"]
-        assert_equal 9, response.parsed_body["remaining"]
-        assert_equal round1, response.parsed_body["round_id"] # 合并沿用第一回合 round_id
-      end
-    end
+    travel 30.seconds
+    r2 = SecureRandom.uuid
+    post api_v1_mcp_precheck_path, params: { api_key: plain, request_id: r2 }, headers: @auth
+    post api_v1_mcp_confirm_path, params: { api_key: plain, request_id: r2 }, headers: @auth
+    assert_equal true, response.parsed_body["merged"]
+    assert_equal 0, response.parsed_body["consumed"]
+    assert_equal 9, response.parsed_body["remaining"]
+    assert_equal round1, response.parsed_body["round_id"] # 合并沿用第一回合 round_id
 
     assert_equal 9, ApiKey.find_by(key_hash: Digest::SHA256.hexdigest(plain)).quota_remaining
     assert_equal 1, UsageLog.where(status: "confirmed").count
     assert_equal 1, UsageLog.where(status: "merged").count
+  ensure
+    travel_back
   end
 
   test "间隔超过 90 秒断开为新回合各扣一次" do
     plain = build_api_key(quota: 10)
+    travel_to Time.current
 
-    travel_to Time.current do
-      r1 = SecureRandom.uuid
-      post api_v1_mcp_precheck_path, params: { api_key: plain, request_id: r1 }, headers: @auth
-      post api_v1_mcp_confirm_path, params: { api_key: plain, request_id: r1 }, headers: @auth
-      assert_equal 9, response.parsed_body["remaining"]
-      round1 = response.parsed_body["round_id"]
+    r1 = SecureRandom.uuid
+    post api_v1_mcp_precheck_path, params: { api_key: plain, request_id: r1 }, headers: @auth
+    post api_v1_mcp_confirm_path, params: { api_key: plain, request_id: r1 }, headers: @auth
+    assert_equal 9, response.parsed_body["remaining"]
+    round1 = response.parsed_body["round_id"]
 
-      travel 100.seconds do
-        r2 = SecureRandom.uuid
-        post api_v1_mcp_precheck_path, params: { api_key: plain, request_id: r2 }, headers: @auth
-        post api_v1_mcp_confirm_path, params: { api_key: plain, request_id: r2 }, headers: @auth
-        assert_equal 1, response.parsed_body["consumed"]
-        assert_equal 8, response.parsed_body["remaining"]
-        assert_not_equal round1, response.parsed_body["round_id"] # 新回合
-      end
-    end
+    travel 100.seconds
+    r2 = SecureRandom.uuid
+    post api_v1_mcp_precheck_path, params: { api_key: plain, request_id: r2 }, headers: @auth
+    post api_v1_mcp_confirm_path, params: { api_key: plain, request_id: r2 }, headers: @auth
+    assert_equal 1, response.parsed_body["consumed"]
+    assert_equal 8, response.parsed_body["remaining"]
+    assert_not_equal round1, response.parsed_body["round_id"] # 新回合
 
     assert_equal 8, ApiKey.find_by(key_hash: Digest::SHA256.hexdigest(plain)).quota_remaining
     assert_equal 2, UsageLog.where(status: "confirmed").count
+  ensure
+    travel_back
   end
 
   test "merged 记录重复 confirm 返回 already_processed 幂等" do
@@ -335,9 +342,7 @@ class Api::V1::McpControllerTest < ActionDispatch::IntegrationTest
   test "需求验证样例：间隔全部 ≤90s（20,80,40,40,85,70）只扣 1 次" do
     plain = build_api_key(quota: 10)
 
-    travel_to Time.current do
-      confirm_sequence(plain, [20, 80, 40, 40, 85, 70])
-    end
+    confirm_sequence(plain, [20, 80, 40, 40, 85, 70])
 
     assert_equal 9, ApiKey.find_by(key_hash: Digest::SHA256.hexdigest(plain)).quota_remaining
     assert_equal 1, UsageLog.where(status: "confirmed").count
@@ -348,9 +353,7 @@ class Api::V1::McpControllerTest < ActionDispatch::IntegrationTest
   test "需求验证样例：两处断开（20,80,100,40,20,70,120,20）扣 3 次" do
     plain = build_api_key(quota: 10)
 
-    travel_to Time.current do
-      confirm_sequence(plain, [20, 80, 100, 40, 20, 70, 120, 20])
-    end
+    confirm_sequence(plain, [20, 80, 100, 40, 20, 70, 120, 20])
 
     assert_equal 7, ApiKey.find_by(key_hash: Digest::SHA256.hexdigest(plain)).quota_remaining
     assert_equal 3, UsageLog.where(status: "confirmed").count
