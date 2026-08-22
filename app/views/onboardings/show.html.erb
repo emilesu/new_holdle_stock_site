@@ -49,7 +49,11 @@
       <div class="hl-card hl-card-hover p-7 flex flex-col">
         <span class="text-hl-11 text-muted-5 tracking-wide-2 font-medium mb-4">OPTION 2</span>
         <h2 class="text-hl-16 font-semibold text-ink mb-4">去交易课，开始学习</h2>
-        <p class="text-hl-13 text-muted leading-relaxed mb-7 flex-1">HOLD LE 投资基础课程全部免费，从方法论到实战，一步步建立属于你的概率交易体系。</p>
+        <ul class="space-y-3 mb-7 flex-1 text-hl-13 text-muted">
+          <li class="relative pl-4 list-dot">HOLD LE 投资基础课程已全部开源免费</li>
+          <li class="relative pl-4 list-dot">从方法论到实战</li>
+          <li class="relative pl-4 list-dot">一步步建立属于你的概率交易体系</li>
+        </ul>
         <%= button_to "去交易课学习", onboarding_complete_path, method: :post,
               params: @preview ? { target: "courses", preview: "1" } : { target: "courses" },
               class: "hl-btn hl-btn-line w-full text-center" %>

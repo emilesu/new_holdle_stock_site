@@ -122,6 +122,15 @@ class OnboardingsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "未完成引导的用户 POST 收藏不被守卫拦截（动作不丢失）" do
+    user = create_new_user
+    sign_in user
+    # 若守卫仍拦截 POST，此 POST 会被 302 到引导页，收藏不会创建（count 不变）
+    assert_difference "UserFavorite.count", 1 do
+      post user_favorites_path, params: { stock_id: stocks(:one).id }
+    end
+  end
+
   # ===== 邮箱注册跳转（自定义 RegistrationsController） =====
 
   test "邮箱注册成功后跳转引导页" do

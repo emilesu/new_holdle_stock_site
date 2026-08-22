@@ -7,6 +7,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
+
+    <%# 登录态页面禁用 Turbo 快照缓存：防止跨账号/登出后恢复旧快照（admin 按钮泄漏、后退弹回） %>
+    <% if user_signed_in? %>
+      <meta name="turbo-cache-control" content="no-cache">
+    <% end %>
     
     <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js"></script>
