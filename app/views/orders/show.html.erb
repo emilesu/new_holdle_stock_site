@@ -95,7 +95,8 @@
   </div>
 </section>
 
-<% unless @order.paid? || @order.payment_method == "wechat_jsapi" %>
+<% unless @order.paid? %>
+  <%# JSAPI/Native 均轮询：JSAPI 支付成功跳回本页时回调可能未到，轮询到 paid 后 reload 进落地页 %>
   <%= javascript_tag nonce: true do %>
     document.addEventListener('turbo:load', function() {
       if (window._orderPollTimer) {

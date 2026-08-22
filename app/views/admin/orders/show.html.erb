@@ -14,11 +14,19 @@
         <div class="space-y-3">
           <div class="flex justify-between">
             <span class="text-muted">用户</span>
-            <span class="font-medium text-ink"><%= @order.user.nickname %> (#<%= @order.user_id %>)</span>
+            <span class="font-medium text-ink"><%= link_to "#{@order.user.nickname} (#{@order.user_id})", admin_user_path(@order.user), class: "text-link hover:underline" %></span>
           </div>
           <div class="flex justify-between">
             <span class="text-muted">商品</span>
             <span class="font-medium text-ink"><%= @order.title %></span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-muted">套餐编码</span>
+            <span class="font-medium text-ink font-mono text-hl-12"><%= @order.plan_code %></span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-muted">本次次数</span>
+            <span class="font-medium text-ink"><%= @order.quota.nil? ? "无限" : "#{@order.quota} 次" %></span>
           </div>
           <div class="flex justify-between">
             <span class="text-muted">金额</span>
@@ -59,6 +67,33 @@
             <span class="text-muted">创建时间</span>
             <span class="font-medium text-ink"><%= l(@order.created_at, format: :long) %></span>
           </div>
+        </div>
+      </div>
+
+      <div class="bg-bg-soft rounded p-5">
+        <h3 class="text-hl-13 font-medium text-muted mb-4">用户 & Key 状态</h3>
+        <div class="space-y-3">
+          <% if @api_key %>
+            <div class="flex justify-between">
+              <span class="text-muted">Key 套餐</span>
+              <span class="font-medium text-ink"><%= @api_key.plan_name %></span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-muted">Key 剩余</span>
+              <span class="font-medium text-ink"><%= @api_key.unlimited? ? "无限次" : "#{@api_key.quota_remaining} 次" %></span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-muted">Key 状态</span>
+              <span class="font-medium text-ink">
+                <%= @api_key.status == "active" ? "使用中" : (@api_key.status == "disabled" ? "已停用" : "已吊销") %>
+              </span>
+            </div>
+          <% else %>
+            <div class="flex justify-between">
+              <span class="text-muted">Key</span>
+              <span class="font-medium text-muted-4">该用户暂无 active Key</span>
+            </div>
+          <% end %>
         </div>
       </div>
     </div>

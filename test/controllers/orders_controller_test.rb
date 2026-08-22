@@ -32,4 +32,63 @@ class OrdersControllerTest < ActionDispatch::IntegrationTest
     get new_order_path
     assert_redirected_to new_user_session_path
   end
+
+  # ===== 支付成功落地页（T7 支付流程改造） =====
+
+  def build_active_key(user, plan_code: "starter", quota: 20)
+    plain = "hl_" + SecureRandom.hex(8)
+    ApiKey.create!(
+      key_hash: Digest::SHA256.hexdigest(plain),
+      key_prefix: plain[0, 11],
+      user: user,
+      plan_code: plan_code,
+      quota_remaining: quota,
+      quota_total: quota
+    )
+    plain
+  end
+
+  test "支付成功订单渲染落地页：普通用户可见 Key 明文与复制按钮，不可见安装提示词" do
+    plain = build_active_key(users(:one))
+    order = users(:one).orders.create!(title: "尝鲜包", amount_cents: 500, plan_code: "starter", quota: 20, status: "paid")
+
+    get order_path(order)
+
+    assert_response :success
+    assert_match "支付成功，已自动开通", response.body
+    assert_match plain, response.body
+    assert_match "复制 Key", response.body
+    assert_no_match "安装提示词", response.body
+  end
+
+  test "支付成功落地页：admin 可见安装提示词（含服务地址）" do
+    sign_in users(:two) # admin
+    plain = build_active_key(users(:two))
+    order = users(:two).orders.create!(title: "尝鲜包", amount_cents: 500, plan_code: "starter", quota: 20, status: "paid")
+
+    get order_path(order)
+
+    assert_response :success
+    assert_match "安装提示词", response.body
+    assert_match "ai.holdle.com/mcp", response.body
+  end
+
+  test "支付成功落地页：无 Key 时提示前往个人中心查看" do
+    order = users(:one).orders.create!(title: "尝鲜包", amount_cents: 500, plan_code: "starter", quota: 20, status: "paid")
+
+    get order_path(order)
+
+    assert_response :success
+    assert_match "支付成功，已自动开通", response.body
+    assert_match "请前往个人中心查看你的 Key", response.body
+  end
+
+  test "未支付订单仍渲染支付页（回归）" do
+    order = users(:one).orders.create!(title: "尝鲜包", amount_cents: 500, plan_code: "starter", quota: 20)
+
+    get order_path(order)
+
+    assert_response :success
+    assert_no_match "支付成功，已自动开通", response.body
+  end
 end

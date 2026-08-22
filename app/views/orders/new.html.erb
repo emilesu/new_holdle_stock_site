@@ -25,6 +25,26 @@
           </div>
         </div>
 
+        <%# 到账说明：当前 Key 状态 + 购买效果（T7 支付流程改造） %>
+        <% if (key = current_user.api_keys.active.first) %>
+          <div class="bg-bg-soft rounded px-5 py-4 mb-5 text-hl-12 text-muted space-y-1.5">
+            <p>当前 Key：<span class="text-ink font-medium"><%= key.plan_name %></span>，剩余 <span class="text-ink font-medium"><%= key.unlimited? ? "无限次" : "#{key.quota_remaining} 次" %></span></p>
+            <p>
+              <% if @plan.unlimited? %>
+                购买后将把同一把 Key 转为无限次使用。
+              <% else %>
+                购买后将自动叠加 <span class="text-ink font-medium"><%= @plan.quota %></span> 次，不会重复发放 Key。
+              <% end %>
+            </p>
+            <p class="text-profit font-medium">支付成功自动到账，无需人工确认。</p>
+          </div>
+        <% else %>
+          <div class="bg-bg-soft rounded px-5 py-4 mb-5 text-hl-12 text-muted space-y-1.5">
+            <p>支付成功后系统将自动为你生成专属 Key，可在个人中心查看与复制。</p>
+            <p class="text-profit font-medium">支付成功自动到账，无需人工确认。</p>
+          </div>
+        <% end %>
+
         <form action="<%= orders_path %>" method="post" data-turbo="false">
           <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
           <input type="hidden" name="plan" value="<%= @plan.plan_code %>">

@@ -85,7 +85,9 @@ class OrdersController < ApplicationController
     @order = current_user.orders.find(params[:id])
 
     if @order.paid?
-      redirect_to root_path, notice: "欢迎加入 HOLD LE！"
+      # 支付成功落地页：展示 Key + 引导（回调 mark_as_paid! 已确保 Key 就绪）
+      @api_key = current_user.api_keys.active.first
+      render :paid
     elsif @order.payment_method == "wechat_jsapi"
       # JSAPI 需要重新生成支付参数并渲染页面
       @pay_params = WxPay::Service.generate_js_pay_req(

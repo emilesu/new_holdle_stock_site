@@ -1,0 +1,101 @@
+<% set_page_title "支付成功 - HOLD LE" %>
+
+<%# 支付成功落地页：展示 Key 在哪 + 怎么用（安装提示词暂仅 admin 可见，与 profile 一致） %>
+<% plan = Plan.find_by(plan_code: @order.plan_code) %>
+
+<section class="bg-bg-soft min-h-screen">
+  <div class="container-hl py-12">
+    <div class="max-w-lg mx-auto text-center">
+      <div class="hl-card p-7 mb-6 text-left">
+        <div class="text-center mb-6">
+          <div class="w-16 h-16 mx-auto mb-4 bg-green-100 text-green-600 rounded-full flex items-center justify-center">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            </svg>
+          </div>
+          <h2 class="text-hl-22 font-bold text-ink mb-2">支付成功，已自动开通</h2>
+          <p class="text-hl-13 text-muted">
+            <% if plan&.is_member_upgrade %>
+              永久会员已生效，你的 Key 已转为无限次使用
+            <% else %>
+              次数已到账，可立即开始提问
+            <% end %>
+          </p>
+        </div>
+
+        <%# 订单摘要 %>
+        <div class="bg-bg-soft rounded px-5 py-4 mb-6">
+          <div class="flex justify-between text-hl-13 mb-2">
+            <span class="text-muted">套餐</span>
+            <span class="text-ink font-medium"><%= @order.title %></span>
+          </div>
+          <div class="flex justify-between text-hl-13 mb-2">
+            <span class="text-muted">实付金额</span>
+            <span class="text-profit font-semibold">¥<%= @order.amount_yuan %></span>
+          </div>
+          <div class="w-full h-px bg-line my-3"></div>
+          <div class="flex justify-between text-hl-13">
+            <span class="text-muted">当前 Key 状态</span>
+            <span class="text-ink font-medium">
+              <% if @api_key %>
+                <% if @api_key.unlimited? %>
+                  无限次
+                <% else %>
+                  剩余 <%= @api_key.quota_remaining %> 次
+                <% end %>
+              <% else %>
+                请在个人中心查看
+              <% end %>
+            </span>
+          </div>
+        </div>
+
+        <%# Key 展示 + 复制 %>
+        <% if @api_key %>
+          <div class="mb-6">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-hl-12 text-muted-4">你的专属 Key（用于配置 AI 投研助手）</span>
+            </div>
+            <div class="border border-line rounded px-4 py-3 bg-white" data-controller="copy">
+              <div class="flex items-center justify-between gap-3">
+                <span data-copy-target="source" class="text-hl-13 font-mono font-medium text-ink break-all"><%= @api_key.key_plaintext.presence || "#{@api_key.key_prefix}…" %></span>
+                <button type="button" data-action="copy#copy" data-copy-label="复制 Key"
+                        class="hl-btn hl-btn-line px-3 py-1.5 text-hl-12 shrink-0">复制 Key</button>
+              </div>
+            </div>
+            <p class="text-hl-11 text-muted-4 mt-2">Key 请勿分享给他人；泄露可在个人中心自助重新生成，旧 Key 立即失效。</p>
+          </div>
+        <% else %>
+          <div class="mb-6 bg-bg-soft rounded px-5 py-4 text-center">
+            <p class="text-hl-13 text-muted">支付已完成，请前往个人中心查看你的 Key</p>
+          </div>
+        <% end %>
+
+        <%# 安装提示词（暂仅管理员可见，与 profile 一致；开放时去掉 is_admin? 包裹） %>
+        <% if @api_key && current_user.is_admin? %>
+          <details class="mb-6 border border-line rounded overflow-hidden" open>
+            <summary class="px-5 py-3 text-hl-13 font-medium text-ink cursor-pointer select-none">
+              安装提示词（复制后粘贴给你的 AI 工具）
+            </summary>
+            <div class="px-5 pb-5 pt-1" data-controller="copy">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-hl-12 text-muted-4">复制到 Trae / Claude / Cursor 等工具</span>
+                <button type="button" data-action="copy#copy" data-copy-label="复制提示词"
+                        class="hl-btn hl-btn-line px-3 py-1.5 text-hl-12">复制提示词</button>
+              </div>
+              <textarea readonly rows="9" data-copy-target="source" class="w-full bg-bg-soft border border-line rounded px-4 py-3 text-hl-12 text-muted font-mono leading-relaxed focus:outline-none"><%= install_prompt(@api_key.key_plaintext) %></textarea>
+            </div>
+          </details>
+        <% end %>
+
+        <%# 引导按钮 %>
+        <div class="flex flex-col gap-3">
+          <%= link_to "前往个人中心", users_profile_path, class: "hl-btn hl-btn-primary block w-full text-center py-3" %>
+          <%= link_to "看使用教程", video_path, class: "hl-btn hl-btn-line block w-full text-center py-3" %>
+        </div>
+      </div>
+
+      <p class="text-hl-12 text-muted-4">遇到问题？请邮件联系 emilesu@holdle.com</p>
+    </div>
+  </div>
+</section>
