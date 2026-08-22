@@ -77,4 +77,9 @@ Rails.application.configure do
   # 允许通过公网 IP 访问开发服务器
   config.hosts << "8.210.33.72"
   config.hosts << "test.holdle.com"
+
+  # T7 Phase3：Active Record 加密（api_keys.key_plaintext）开发固定密钥
+  config.active_record.encryption.primary_key = "dev-primary-key-000000000000000000000000000000"
+  config.active_record.encryption.deterministic_key = "dev-deterministic-key-0000000000000000"
+  config.active_record.encryption.key_derivation_salt = "dev-salt-0000000000000000000000"
 end
