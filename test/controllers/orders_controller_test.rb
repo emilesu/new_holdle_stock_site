@@ -40,6 +40,7 @@ class OrdersControllerTest < ActionDispatch::IntegrationTest
     ApiKey.create!(
       key_hash: Digest::SHA256.hexdigest(plain),
       key_prefix: plain[0, 11],
+      key_plaintext: plain, # 加密列明文，落地页展示与安装提示词依赖
       user: user,
       plan_code: plan_code,
       quota_remaining: quota,
