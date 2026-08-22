@@ -13,10 +13,10 @@ module Admin
       @days = [7, 30].include?(params[:days].to_i) ? params[:days].to_i : 7
       @logs = confirmed_logs
 
-      # 总览卡片
-      @total_questions = @logs.count
+      # 总览卡片（提问数按 round_id 去重：90s 窗口合并后一个回合多条 confirm 算一次；老数据 round_id 为空回退 request_id）
+      @total_questions = @logs.distinct.count("COALESCE(round_id, request_id)")
       @active_users = @logs.select(:user_id).distinct.count
-      @today_questions = confirmed_logs.where(created_at: Date.current.all_day).count
+      @today_questions = confirmed_logs.where(created_at: Date.current.all_day).distinct.count("COALESCE(round_id, request_id)")
       @avg_per_user = @active_users.zero? ? 0 : (@total_questions.to_f / @active_users).round(1)
 
       # 分类统计（一条可命中多类，都计；都不中归其他）

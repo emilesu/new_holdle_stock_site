@@ -9,7 +9,7 @@ class Admin::UsageAnalyticsControllerTest < ActionDispatch::IntegrationTest
     @user = users(:one)
   end
 
-  def create_log(user, question, status, created_at: Time.current)
+  def create_log(user, question, status, created_at: Time.current, round_id: nil)
     key = user.api_keys.create!(
       key_hash: Digest::SHA256.hexdigest("hl#{SecureRandom.hex(8)}"),
       key_prefix: "hl_t",
@@ -20,7 +20,7 @@ class Admin::UsageAnalyticsControllerTest < ActionDispatch::IntegrationTest
     )
     UsageLog.create!(
       request_id: SecureRandom.uuid, api_key: key, user: user,
-      question: question, status: status, created_at: created_at
+      question: question, status: status, created_at: created_at, round_id: round_id
     )
   end
 
@@ -91,5 +91,29 @@ class Admin::UsageAnalyticsControllerTest < ActionDispatch::IntegrationTest
     get admin_usage_analytics_path
 
     assert_redirected_to new_user_session_path
+  end
+
+  test "总提问数按 round_id 去重（同回合多条 confirmed 算一次）" do
+    round = SecureRandom.uuid
+    # 同一回合两条 confirmed（模拟并发双扣边界）+ 独立回合一条
+    create_log(@user, "状态A突破", "confirmed", round_id: round)
+    create_log(@user, "状态A突破", "confirmed", round_id: round)
+    create_log(@user, "止损设置", "confirmed", round_id: SecureRandom.uuid)
+
+    get admin_usage_analytics_path
+
+    assert_response 200
+    # 总提问数 = 2（round_id 去重后），而非 3；老数据（round_id 为 NULL）回退 request_id 各计一次
+    assert_match %r{总提问数</p>\s*<p class="mt-1 text-hl-22 font-bold text-ink">2</p>}, response.body
+  end
+
+  test "老数据 round_id 为 NULL 时按 request_id 兜底计数" do
+    create_log(@user, "老问题A", "confirmed") # round_id 默认 nil
+    create_log(@user, "老问题B", "confirmed")
+
+    get admin_usage_analytics_path
+
+    assert_response 200
+    assert_match %r{总提问数</p>\s*<p class="mt-1 text-hl-22 font-bold text-ink">2</p>}, response.body
   end
 end
