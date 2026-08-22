@@ -1,0 +1,92 @@
+<% set_page_title "隐私政策 - HOLDLE" %>
+<% set_page_description "HOLDLE 隐私政策：我们收集的信息、使用方式、存储保护、信息共享、您的权利等。" %>
+
+<%# ========== 页头 ========== %>
+<section class="border-b border-line bg-white">
+  <div class="container-narrow py-14">
+    <div class="label-en">PRIVACY POLICY</div>
+    <h1 class="text-hl-22 md:text-hl-40 font-bold leading-tight text-ink mb-3">HOLDLE 隐私政策</h1>
+    <p class="text-hl-12 text-muted-4">版本：v1.0 · 更新日期：<%= l(Date.new(2026, 8, 22), format: :long) %></p>
+  </div>
+</section>
+
+<%# ========== 政策正文 ========== %>
+<section class="bg-bg-soft">
+  <div class="container-narrow py-10">
+    <div class="hl-card p-6 sm:p-10 space-y-8">
+
+      <p class="text-hl-12 text-muted-4 leading-relaxed">
+        本政策说明 HOLDLE 如何收集、使用、存储和保护您的个人信息。当您注册、登录或使用本服务时，即视为您已阅读并同意本政策。
+      </p>
+
+      <%# 一、我们收集的信息 %>
+      <div>
+        <h2 class="text-hl-16 font-semibold text-ink mb-3">一、我们收集的信息</h2>
+        <ol class="space-y-2">
+          <li class="flex gap-3 text-hl-13 text-muted leading-relaxed"><span class="text-muted-4 shrink-0">1.</span><span><span class="text-ink font-medium">账号信息</span>：注册时提供的邮箱、微信授权信息、昵称</span></li>
+          <li class="flex gap-3 text-hl-13 text-muted leading-relaxed"><span class="text-muted-4 shrink-0">2.</span><span><span class="text-ink font-medium">使用信息</span>：AI 助手的使用记录（提问内容、使用时间、次数消耗）</span></li>
+          <li class="flex gap-3 text-hl-13 text-muted leading-relaxed"><span class="text-muted-4 shrink-0">3.</span><span><span class="text-ink font-medium">支付信息</span>：订单金额、支付状态（不含银行卡等敏感支付信息，支付由微信官方处理）</span></li>
+        </ol>
+      </div>
+
+      <%# 二、我们如何使用这些信息 %>
+      <div>
+        <h2 class="text-hl-16 font-semibold text-ink mb-3">二、我们如何使用这些信息</h2>
+        <ol class="space-y-2">
+          <li class="flex gap-3 text-hl-13 text-muted leading-relaxed"><span class="text-muted-4 shrink-0">1.</span><span><span class="text-ink font-medium">提供服务</span>：用于账号登录、AI 助手问答、次数计费、会员权益</span></li>
+          <li class="flex gap-3 text-hl-13 text-muted leading-relaxed"><span class="text-muted-4 shrink-0">2.</span><span><span class="text-ink font-medium">改进服务</span>：分析用户提问内容，优化 HOLDLE 知识库和 AI 回答质量（<strong class="text-ink">仅用于内部改进，不对外公开</strong>）</span></li>
+          <li class="flex gap-3 text-hl-13 text-muted leading-relaxed"><span class="text-muted-4 shrink-0">3.</span><span><span class="text-ink font-medium">运营统计</span>：用户活跃度、功能使用情况（脱敏统计）</span></li>
+        </ol>
+      </div>
+
+      <%# 三、信息存储与保护 %>
+      <div>
+        <h2 class="text-hl-16 font-semibold text-ink mb-3">三、信息存储与保护</h2>
+        <ol class="space-y-2">
+          <li class="flex gap-3 text-hl-13 text-muted leading-relaxed"><span class="text-muted-4 shrink-0">1.</span><span>数据存储于中国大陆 / 香港合规服务器，采取合理安全措施</span></li>
+          <li class="flex gap-3 text-hl-13 text-muted leading-relaxed"><span class="text-muted-4 shrink-0">2.</span><span>提问内容仅用于内部服务改进，<strong class="text-ink">不会出售、出租或用于其他商业用途</strong></span></li>
+        </ol>
+      </div>
+
+      <%# 四、信息共享 %>
+      <div>
+        <h2 class="text-hl-16 font-semibold text-ink mb-3">四、信息共享</h2>
+        <ol class="space-y-2">
+          <li class="flex gap-3 text-hl-13 text-muted leading-relaxed"><span class="text-muted-4 shrink-0">1.</span><span>除以下情况外，我们不会向第三方共享您的个人信息：</span></li>
+        </ol>
+        <ul class="space-y-2 mt-2">
+          <li class="flex gap-3 text-hl-13 text-muted leading-relaxed"><span class="text-muted-4 shrink-0">·</span><span>法律法规要求</span></li>
+          <li class="flex gap-3 text-hl-13 text-muted leading-relaxed"><span class="text-muted-4 shrink-0">·</span><span>支付处理（微信支付，仅传递必要订单信息）</span></li>
+          <li class="flex gap-3 text-hl-13 text-muted leading-relaxed"><span class="text-muted-4 shrink-0">·</span><span>获得您的明确同意</span></li>
+        </ul>
+      </div>
+
+      <%# 五、您的权利 %>
+      <div>
+        <h2 class="text-hl-16 font-semibold text-ink mb-3">五、您的权利</h2>
+        <ol class="space-y-2">
+          <li class="flex gap-3 text-hl-13 text-muted leading-relaxed"><span class="text-muted-4 shrink-0">1.</span><span><span class="text-ink font-medium">查询</span>：您可以在个人中心查看自己的 Key、次数、使用记录</span></li>
+          <li class="flex gap-3 text-hl-13 text-muted leading-relaxed"><span class="text-muted-4 shrink-0">2.</span><span><span class="text-ink font-medium">更正</span>：发现信息有误可联系修改</span></li>
+          <li class="flex gap-3 text-hl-13 text-muted leading-relaxed"><span class="text-muted-4 shrink-0">3.</span><span><span class="text-ink font-medium">删除 / 注销</span>：可联系 HOLDLE 删除账号（删除后相关记录一并处理）</span></li>
+        </ol>
+      </div>
+
+      <%# 六、未成年人保护 %>
+      <div>
+        <h2 class="text-hl-16 font-semibold text-ink mb-3">六、未成年人保护</h2>
+        <p class="text-hl-13 text-muted leading-relaxed">本服务面向成年人，不面向未成年人提供投资教育服务。</p>
+      </div>
+
+      <%# 七、政策更新 %>
+      <div>
+        <h2 class="text-hl-16 font-semibold text-ink mb-3">七、政策更新</h2>
+        <p class="text-hl-13 text-muted leading-relaxed">隐私政策如有更新，将在网站公示。继续使用即视为接受。</p>
+      </div>
+
+    </div>
+
+    <p class="text-hl-12 text-muted-4 text-center mt-8">
+      如有疑问，请联系站长：emilesu@qq.com
+    </p>
+  </div>
+</section>

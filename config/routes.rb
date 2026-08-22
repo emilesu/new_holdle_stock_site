@@ -39,6 +39,10 @@ Rails.application.routes.draw do
 
   get "join", to: "pages#join"
 
+  # 服务协议 / 隐私政策（公开静态页）
+  get "terms", to: "legal#terms"
+  get "privacy", to: "legal#privacy"
+
   # 暗发布预览：新页面重设计，仅 admin 可见（非 admin 404），确认后删除
   namespace :preview do
     get :home

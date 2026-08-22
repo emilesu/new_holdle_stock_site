@@ -1,0 +1,112 @@
+<% set_page_title "用户服务协议 - HOLDLE" %>
+<% set_page_description "HOLDLE 用户服务协议：服务说明、账号与 Key、AI 投研助手使用规则、付费与退款、免责声明等。" %>
+
+<%# ========== 页头 ========== %>
+<section class="border-b border-line bg-white">
+  <div class="container-narrow py-14">
+    <div class="label-en">TERMS OF SERVICE</div>
+    <h1 class="text-hl-22 md:text-hl-40 font-bold leading-tight text-ink mb-3">HOLDLE 用户服务协议</h1>
+    <p class="text-hl-12 text-muted-4">版本：v1.0 · 更新日期：<%= l(Date.new(2026, 8, 22), format: :long) %></p>
+  </div>
+</section>
+
+<%# ========== 协议正文 ========== %>
+<section class="bg-bg-soft">
+  <div class="container-narrow py-10">
+    <div class="hl-card p-6 sm:p-10 space-y-8">
+
+      <p class="text-hl-12 text-muted-4 leading-relaxed">
+        欢迎使用 HOLDLE（holdle.com）。在使用本服务前，请仔细阅读本协议。当您注册、登录或使用本服务时，即视为您已阅读并同意本协议的全部内容。
+      </p>
+
+      <%# 一、服务说明 %>
+      <div>
+        <h2 class="text-hl-16 font-semibold text-ink mb-3">一、服务说明</h2>
+        <p class="text-hl-13 text-muted mb-2">HOLDLE（holdle.com）提供以下服务：</p>
+        <ol class="space-y-2">
+          <li class="flex gap-3 text-hl-13 text-muted leading-relaxed"><span class="text-muted-4 shrink-0">1.</span><span><span class="text-ink font-medium">投资教育内容</span>：投资课程、文章、视频等学习内容</span></li>
+          <li class="flex gap-3 text-hl-13 text-muted leading-relaxed"><span class="text-muted-4 shrink-0">2.</span><span><span class="text-ink font-medium">AI 投研助手</span>：基于 HOLDLE 方法论知识库的 AI 问答服务（以下简称「AI 助手」）</span></li>
+          <li class="flex gap-3 text-hl-13 text-muted leading-relaxed"><span class="text-muted-4 shrink-0">3.</span><span><span class="text-ink font-medium">投资分析工具</span>：股票数据查询、筛选工具等</span></li>
+        </ol>
+      </div>
+
+      <%# 二、账号与 Key %>
+      <div>
+        <h2 class="text-hl-16 font-semibold text-ink mb-3">二、账号与 Key</h2>
+        <ol class="space-y-2">
+          <li class="flex gap-3 text-hl-13 text-muted leading-relaxed"><span class="text-muted-4 shrink-0">1.</span><span>用户注册账号后，HOLDLE 将自动发放一个 AI 助手 API Key（以下简称「Key」）</span></li>
+          <li class="flex gap-3 text-hl-13 text-muted leading-relaxed"><span class="text-muted-4 shrink-0">2.</span><span>每个账号默认 1 个有效 Key；Key 是用户使用 AI 助手的凭证</span></li>
+          <li class="flex gap-3 text-hl-13 text-muted leading-relaxed"><span class="text-muted-4 shrink-0">3.</span><span><span class="text-ink font-medium">Key 仅限本人使用</span>，不得分享、转借、转售给他人</span></li>
+          <li class="flex gap-3 text-hl-13 text-muted leading-relaxed"><span class="text-muted-4 shrink-0">4.</span><span>如发现 Key 泄露 / 被他人使用，应立即联系 HOLDLE 吊销并重发</span></li>
+        </ol>
+      </div>
+
+      <%# 三、AI 投研助手的使用 %>
+      <div>
+        <h2 class="text-hl-16 font-semibold text-ink mb-3">三、AI 投研助手的使用</h2>
+        <ol class="space-y-2">
+          <li class="flex gap-3 text-hl-13 text-muted leading-relaxed"><span class="text-muted-4 shrink-0">1.</span><span><span class="text-ink font-medium">AI 助手定位</span>：基于 HOLDLE 方法论的知识讲解工具，帮助用户理解投资方法</span></li>
+          <li class="flex gap-3 text-hl-13 text-muted leading-relaxed"><span class="text-muted-4 shrink-0">2.</span><span><span class="text-ink font-medium">不构成投资建议</span>：AI 助手的回答仅为方法论知识讲解，<strong class="text-ink">不构成任何投资建议</strong>，不构成买卖证券的推荐或要约</span></li>
+          <li class="flex gap-3 text-hl-13 text-muted leading-relaxed"><span class="text-muted-4 shrink-0">3.</span><span><span class="text-ink font-medium">判断权在用户</span>：用户应根据自己的判断独立做出投资决策，HOLDLE 不对用户的决策结果负责</span></li>
+          <li class="flex gap-3 text-hl-13 text-muted leading-relaxed"><span class="text-muted-4 shrink-0">4.</span><span><span class="text-ink font-medium">使用次数</span>：AI 助手按次数计费（赠送次数 / 付费套餐），次数用完后需充值或升级</span></li>
+          <li class="flex gap-3 text-hl-13 text-muted leading-relaxed"><span class="text-muted-4 shrink-0">5.</span><span><span class="text-ink font-medium">限制行为</span>：禁止批量抓取、逆向分析、自动化滥用 AI 助手服务</span></li>
+        </ol>
+      </div>
+
+      <%# 四、付费与退款 %>
+      <div>
+        <h2 class="text-hl-16 font-semibold text-ink mb-3">四、付费与退款</h2>
+        <ol class="space-y-2">
+          <li class="flex gap-3 text-hl-13 text-muted leading-relaxed"><span class="text-muted-4 shrink-0">1.</span><span>付费套餐包括：尝鲜包（5 元 / 20 次）、轻量包（20 元 / 90 次）、标准包（100 元 / 500 次）、永久会员（468 元 / 无限次），具体价格以购买页为准</span></li>
+          <li class="flex gap-3 text-hl-13 text-muted leading-relaxed"><span class="text-muted-4 shrink-0">2.</span><span><span class="text-ink font-medium">虚拟服务，一经购买不支持退款</span>（请在购买前确认需求）</span></li>
+          <li class="flex gap-3 text-hl-13 text-muted leading-relaxed"><span class="text-muted-4 shrink-0">3.</span><span>付款即视为同意本协议及购买页的条款说明</span></li>
+        </ol>
+      </div>
+
+      <%# 五、会员服务 %>
+      <div>
+        <h2 class="text-hl-16 font-semibold text-ink mb-3">五、会员服务</h2>
+        <ol class="space-y-2">
+          <li class="flex gap-3 text-hl-13 text-muted leading-relaxed"><span class="text-muted-4 shrink-0">1.</span><span>永久会员（468 元）权益：课程完整解锁 + AI 助手无限次使用 + 社区交流</span></li>
+          <li class="flex gap-3 text-hl-13 text-muted leading-relaxed"><span class="text-muted-4 shrink-0">2.</span><span>会员资格与账号绑定，不可转让</span></li>
+          <li class="flex gap-3 text-hl-13 text-muted leading-relaxed"><span class="text-muted-4 shrink-0">3.</span><span>老会员权益以 HOLDLE 公告为准</span></li>
+        </ol>
+      </div>
+
+      <%# 六、用户行为规范 %>
+      <div>
+        <h2 class="text-hl-16 font-semibold text-ink mb-3">六、用户行为规范</h2>
+        <ol class="space-y-2">
+          <li class="flex gap-3 text-hl-13 text-muted leading-relaxed"><span class="text-muted-4 shrink-0">1.</span><span>不得利用本服务进行任何违法违规活动</span></li>
+          <li class="flex gap-3 text-hl-13 text-muted leading-relaxed"><span class="text-muted-4 shrink-0">2.</span><span>不得传播虚假信息、骚扰他人</span></li>
+          <li class="flex gap-3 text-hl-13 text-muted leading-relaxed"><span class="text-muted-4 shrink-0">3.</span><span>不得绕过付费机制（如共享 Key、破解等）</span></li>
+          <li class="flex gap-3 text-hl-13 text-muted leading-relaxed"><span class="text-muted-4 shrink-0">4.</span><span>违反规范，HOLDLE 有权暂停或终止服务</span></li>
+        </ol>
+      </div>
+
+      <%# 七、免责声明 %>
+      <div>
+        <h2 class="text-hl-16 font-semibold text-ink mb-3">七、免责声明</h2>
+        <ol class="space-y-2">
+          <li class="flex gap-3 text-hl-13 text-muted leading-relaxed"><span class="text-muted-4 shrink-0">1.</span><span>投资有风险，入市需谨慎。HOLDLE 提供的是教育服务，不承诺任何投资收益</span></li>
+          <li class="flex gap-3 text-hl-13 text-muted leading-relaxed"><span class="text-muted-4 shrink-0">2.</span><span>股票市场数据来源于公开接口，HOLDLE 不对数据准确性承担绝对责任</span></li>
+          <li class="flex gap-3 text-hl-13 text-muted leading-relaxed"><span class="text-muted-4 shrink-0">3.</span><span>因不可抗力（网络故障、政策变化等）导致服务中断，HOLDLE 不承担赔偿责任</span></li>
+        </ol>
+      </div>
+
+      <%# 八、协议变更 %>
+      <div>
+        <h2 class="text-hl-16 font-semibold text-ink mb-3">八、协议变更</h2>
+        <ol class="space-y-2">
+          <li class="flex gap-3 text-hl-13 text-muted leading-relaxed"><span class="text-muted-4 shrink-0">1.</span><span>HOLDLE 有权根据业务需要修改本协议，修改后将在网站公示</span></li>
+          <li class="flex gap-3 text-hl-13 text-muted leading-relaxed"><span class="text-muted-4 shrink-0">2.</span><span>继续使用服务即视为接受修改后的协议</span></li>
+        </ol>
+      </div>
+
+    </div>
+
+    <p class="text-hl-12 text-muted-4 text-center mt-8">
+      如有疑问，请联系站长：emilesu@qq.com
+    </p>
+  </div>
+</section>
