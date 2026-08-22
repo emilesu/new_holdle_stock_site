@@ -42,6 +42,21 @@ class Users::ProfilesController < ApplicationController
     @favorites = UserFavorite.where(user: @user).includes(:stock).order(created_at: :desc).page(params[:page]).per(20)
   end
 
+  # 自助重新生成 Key：就地换（同 id 换新值），流水不断链；旧 key 立即失效
+  def regenerate_api_key
+    authorize @user
+    key = current_user.api_keys.active.first
+    if key.nil?
+      redirect_to users_profile_path, alert: "没有可重新生成的 Key"
+      return
+    end
+
+    key.regenerate_plaintext!
+    redirect_to users_profile_path, notice: "Key 已重新生成，旧 Key 立即失效，请在所有工具中更新配置"
+  rescue StandardError => e
+    redirect_to users_profile_path, alert: "重新生成失败：#{e.message}"
+  end
+
   private
 
   def set_user

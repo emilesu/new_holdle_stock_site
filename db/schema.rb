@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_08_21_100001) do
+ActiveRecord::Schema[7.1].define(version: 2026_08_21_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -39,6 +39,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_21_100001) do
     t.string "disabled_reason", comment: "停用原因"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.text "key_plaintext", comment: "Key 明文（Rails 加密存储，供 profile 页展示与复制）"
     t.index ["key_hash"], name: "index_api_keys_on_key_hash", unique: true
     t.index ["user_id", "status"], name: "index_api_keys_on_user_id_and_status"
     t.index ["user_id"], name: "index_api_keys_on_user_id"

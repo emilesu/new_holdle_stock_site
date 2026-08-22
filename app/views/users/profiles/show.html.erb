@@ -46,35 +46,53 @@
           <span class="text-hl-14 text-ink font-medium"><%= human_role(@user.role) %></span>
         </div>
 
-        <%# AI 投研助手 API Key（T7 计费后台，老会员自动显示） %>
-        <%# ⚠️ 临时隐藏：T7 功能未完善，仅管理员可见（2026-08-20）；上线后移除该 if %>
-        <% if current_user.is_admin? %>
+        <%# AI 投研助手 API Key（T7 Phase3：开放给所有用户，完整展示 + 复制 + 安装提示词） %>
         <div class="bg-bg-soft rounded p-4 sm:p-5">
-          <span class="text-hl-12 text-muted-4 block mb-3">AI 投研助手 API Key</span>
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-hl-12 text-muted-4">AI 投研助手 API Key</span>
+            <% if @api_keys.any? %>
+              <%= link_to "购买套餐充值", new_order_path, class: "text-hl-12 text-profit font-medium hover:underline" %>
+            <% end %>
+          </div>
           <% if @api_keys.any? %>
-            <div class="space-y-3">
+            <div class="space-y-4">
               <% @api_keys.each do |key| %>
-                <div class="flex flex-wrap items-center gap-x-4 gap-y-1 border border-line rounded px-4 py-3">
-                  <div class="min-w-0">
-                    <div class="flex items-center gap-2">
-                      <span class="text-hl-14 text-ink font-medium font-mono"><%= key.key_prefix %>…</span>
-                      <span class="text-hl-11 text-muted-4"><%= key.status == "active" ? "使用中" : (key.status == "disabled" ? "已停用" : "已吊销") %></span>
+                <div class="space-y-3">
+                  <%# Key 完整展示 + 复制 %>
+                  <div class="border border-line rounded px-4 py-3 bg-white" data-controller="copy">
+                    <div class="flex items-center justify-between gap-3">
+                      <span data-copy-target="source" class="text-hl-13 font-mono font-medium text-ink break-all"><%= key.key_plaintext.presence || "#{key.key_prefix}…" %></span>
+                      <div class="flex items-center gap-2 shrink-0">
+                        <button type="button" data-action="copy#copy" data-copy-label="复制 Key" class="hl-btn hl-btn-line px-3 py-1.5 text-hl-12">复制 Key</button>
+                        <% if key.active? %>
+                          <%= button_to "重新生成", users_regenerate_api_key_path, method: :post, form: { class: "inline" }, data: { confirm: "旧 Key 将立即失效，需在所有工具中更新配置。确定重新生成？" }, class: "hl-btn hl-btn-line px-3 py-1.5 text-hl-12" %>
+                        <% end %>
+                      </div>
                     </div>
-                    <div class="text-hl-12 text-muted-3 mt-1">
-                      <%= key.plan_name %>
-                      · 剩余 <%= key.unlimited? ? "无限次" : "#{key.quota_remaining} 次" %>
+                    <div class="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-hl-12 text-muted-3">
+                      <span class="<%= key.status == "active" ? "text-profit" : "text-muted-4" %>"><%= key.status == "active" ? "使用中" : (key.status == "disabled" ? "已停用" : "已吊销") %></span>
+                      <span><%= key.plan_name %></span>
+                      <span>剩余 <%= key.unlimited? ? "无限次" : "#{key.quota_remaining} 次" %></span>
                     </div>
+                  </div>
+
+                  <%# 安装提示词 + 复制 %>
+                  <div data-controller="copy">
+                    <div class="flex items-center justify-between mb-1.5">
+                      <span class="text-hl-12 text-muted-4">安装提示词（复制后粘贴给你的 AI 工具）</span>
+                      <button type="button" data-action="copy#copy" data-copy-label="复制提示词" class="hl-btn hl-btn-line px-3 py-1.5 text-hl-12">复制提示词</button>
+                    </div>
+                    <textarea readonly rows="9" data-copy-target="source" class="w-full bg-white border border-line rounded px-4 py-3 text-hl-12 text-muted font-mono leading-relaxed focus:outline-none"><%= install_prompt(key.key_plaintext) %></textarea>
                   </div>
                 </div>
               <% end %>
             </div>
-            <p class="text-hl-11 text-muted-4 mt-3">完整 key 仅在创建时展示一次，请妥善保管；如需重新生成请联系站长。</p>
+            <p class="text-hl-11 text-muted-4 mt-3">Key 请勿分享给他人；泄露可联系站长重新生成。</p>
           <% else %>
             <span class="text-hl-13 text-muted-3">暂无 API Key。</span>
             <%= link_to "去购买 AI 投研助手套餐", new_order_path, class: "text-hl-13 text-profit font-medium hover:underline ml-1" %>
           <% end %>
         </div>
-        <% end %>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div class="bg-bg-soft rounded p-4 sm:p-5">

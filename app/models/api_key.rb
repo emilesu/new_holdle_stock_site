@@ -1,4 +1,7 @@
 class ApiKey < ApplicationRecord
+  # 明文 key 加密存储（profile 页可解密展示），hash 校验逻辑不变
+  encrypts :key_plaintext
+
   belongs_to :user
   has_many :usage_logs, dependent: :destroy
   has_many :api_key_adjustments, dependent: :destroy
@@ -19,10 +22,22 @@ class ApiKey < ApplicationRecord
     create!(
       key_hash: Digest::SHA256.hexdigest(plain),
       key_prefix: plain[0, 11], # "hl_xxxxxxxx"
+      key_plaintext: plain, # 加密存储，profile 页可展示
       user: user,
       plan_code: plan.plan_code,
       quota_remaining: plan.quota, # member_permanent 的 quota=nil → 无限
       quota_total: plan.quota || 0
+    )
+    plain
+  end
+
+  # T7 Phase3：重新生成明文 key（保留套餐/次数/状态，只换 hash/明文），供全库补明文用
+  def regenerate_plaintext!
+    plain = "hl_" + SecureRandom.hex(8)
+    update!(
+      key_hash: Digest::SHA256.hexdigest(plain),
+      key_prefix: plain[0, 11],
+      key_plaintext: plain
     )
     plain
   end

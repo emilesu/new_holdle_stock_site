@@ -61,4 +61,9 @@ Rails.application.configure do
 
   # Raise error when a before_action's only/except options reference missing actions
   config.action_controller.raise_on_missing_callback_actions = true
+
+  # T7 Phase3：Active Record 加密（api_keys.key_plaintext）测试专用固定密钥，避免依赖 credentials
+  config.active_record.encryption.primary_key = "test-primary-key-00000000000000000000000000000000"
+  config.active_record.encryption.deterministic_key = "test-deterministic-key-0000000000000000"
+  config.active_record.encryption.key_derivation_salt = "test-salt-0000000000000000000000"
 end

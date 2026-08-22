@@ -19,6 +19,10 @@ class UserPolicy < ApplicationPolicy
     user == record
   end
 
+  def regenerate_api_key?
+    user == record
+  end
+
   def index?
     user&.is_admin?
   end

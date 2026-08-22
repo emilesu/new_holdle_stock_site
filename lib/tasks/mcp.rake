@@ -74,4 +74,28 @@ namespace :mcp do
 
     puts "完成：新发 #{sent} 个，跳过 #{skipped} 个，失败 #{failed} 个"
   end
+
+  desc "全库重生成 key 明文（Phase3）：无明文或非 active 的 key 换新明文，active 且有明文跳过（幂等）"
+  task backfill_key_plaintext: :environment do
+    regenerated = 0
+    skipped = 0
+    failed = 0
+
+    ApiKey.find_each do |key|
+      # 已是新版（有明文）且在使用中的 key 不动，保证幂等
+      if key.key_plaintext.present? && key.active?
+        skipped += 1
+        next
+      end
+
+      key.regenerate_plaintext!
+      puts "key ##{key.id}（用户 #{key.user_id}，#{key.plan_code}）已换新明文"
+      regenerated += 1
+    rescue => e
+      failed += 1
+      puts "key ##{key.id} 重生成失败: #{e.message}"
+    end
+
+    puts "完成：重生成 #{regenerated} 个，跳过 #{skipped} 个，失败 #{failed} 个"
+  end
 end

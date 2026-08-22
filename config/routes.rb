@@ -77,6 +77,7 @@ Rails.application.routes.draw do
 
   namespace :users do
     get "profile", to: "profiles#show", as: :profile
+    post "profile/regenerate_api_key", to: "profiles#regenerate_api_key", as: :regenerate_api_key
     get "profile/edit", to: "profiles#edit", as: :edit_profile
     patch "profile", to: "profiles#update"
     patch "profile/password", to: "profiles#update_password", as: :update_profile_password

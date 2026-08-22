@@ -27,3 +27,6 @@ application.register("login-tabs", LoginTabsController)
 
 import QrcodeController from "./qrcode_controller"
 application.register("qrcode", QrcodeController)
+
+import CopyController from "./copy_controller"
+application.register("copy", CopyController)
