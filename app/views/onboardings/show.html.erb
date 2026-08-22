@@ -1,0 +1,68 @@
+<% set_page_title "欢迎加入 HOLD LE" %>
+<% set_page_description "新用户注册引导：领取 15 次 AI 投研助手体验，或直接开始交易课学习。" %>
+<div class="py-16 bg-bg-soft min-h-screen">
+  <div class="container-narrow">
+
+    <%# 管理员预览横幅（?preview=1，仅管理员可见） %>
+    <% if @preview %>
+      <div class="mb-8 border border-line rounded bg-bg-mute px-4 py-3 text-hl-12 text-muted flex flex-wrap items-center justify-between gap-2">
+        <span>预览模式：这是新注册用户看到的引导页，点击卡片会照常跳转，但不会写入引导状态。</span>
+        <%= link_to "退出预览", root_path, class: "text-link hover:text-link-hover font-medium shrink-0" %>
+      </div>
+    <% end %>
+
+    <%# 欢迎头部 %>
+    <div class="text-center mb-12">
+      <span class="label-en">WELCOME TO HOLD LE</span>
+      <h1 class="text-hl-22 sm:text-hl-40 font-bold text-ink mb-3">欢迎加入 HOLD LE，<%= current_user.nickname %></h1>
+      <p class="text-hl-14 text-muted-3">
+        <% if @api_key %>
+          <% if @api_key.unlimited? %>
+            已为你开通无限次 AI 投研助手（会员权益）
+          <% else %>
+            15 次免费体验已到账，剩余 <%= @api_key.quota_remaining %> 次
+          <% end %>
+        <% else %>
+          15 次免费体验已到账，可在个人中心查看你的 Key
+        <% end %>
+      </p>
+    </div>
+
+    <%# 两个引导选择 %>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+      <%# 引导一：领 15 次 → 配置 AI 投研助手 %>
+      <div class="hl-card hl-card-hover p-7 flex flex-col">
+        <span class="text-hl-11 text-muted-5 tracking-wide-2 font-medium mb-4">OPTION 1</span>
+        <h2 class="text-hl-16 font-semibold text-ink mb-4">领 15 次，配置 AI 投研助手</h2>
+        <ul class="space-y-3 mb-7 flex-1 text-hl-13 text-muted">
+          <li class="relative pl-4 list-dot">15 次免费体验已自动到账</li>
+          <li class="relative pl-4 list-dot">去个人中心复制你的专属 Key</li>
+          <li class="relative pl-4 list-dot">用 Key 配置 AI 投研助手，开始提问</li>
+        </ul>
+        <%= button_to "去配置 AI 投研助手", onboarding_complete_path, method: :post,
+              params: @preview ? { target: "profile", preview: "1" } : { target: "profile" },
+              class: "hl-btn hl-btn-primary w-full text-center" %>
+      </div>
+
+      <%# 引导二：去交易课 %>
+      <div class="hl-card hl-card-hover p-7 flex flex-col">
+        <span class="text-hl-11 text-muted-5 tracking-wide-2 font-medium mb-4">OPTION 2</span>
+        <h2 class="text-hl-16 font-semibold text-ink mb-4">去交易课，开始学习</h2>
+        <p class="text-hl-13 text-muted leading-relaxed mb-7 flex-1">HOLD LE 投资基础课程全部免费，从方法论到实战，一步步建立属于你的概率交易体系。</p>
+        <%= button_to "去交易课学习", onboarding_complete_path, method: :post,
+              params: @preview ? { target: "courses", preview: "1" } : { target: "courses" },
+              class: "hl-btn hl-btn-line w-full text-center" %>
+      </div>
+
+    </div>
+
+    <%# 跳过引导 %>
+    <div class="text-center mt-10">
+      <%= button_to "先逛逛首页，稍后再选", onboarding_complete_path, method: :post,
+            params: @preview ? { target: "skip", preview: "1" } : { target: "skip" },
+            class: "text-hl-12 text-muted-4 hover:text-muted hover:underline transition-colors bg-transparent" %>
+    </div>
+
+  </div>
+</div>

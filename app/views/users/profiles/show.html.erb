@@ -116,6 +116,7 @@
         <%= link_to "编辑资料", users_edit_profile_path, class: "hl-btn hl-btn-primary" %>
         <% if current_user.is_admin? %>
           <%= link_to "后台管理", admin_root_path, class: "hl-btn hl-btn-line" %>
+          <%= link_to "预览注册引导页", onboarding_path(preview: 1), class: "hl-btn hl-btn-line" %>
         <% end %>
       </div>
 

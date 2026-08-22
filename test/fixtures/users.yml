@@ -2,6 +2,7 @@ one:
   email: user1@test.com
   encrypted_password: $2a$04$Z5ztQaXKHO9FC7oW0CYm1.7/S.Fs/kvB/sO.ceeQy9zJ25vnMXbh6
   nickname: 测试用户一
+  onboarded_at: <%= 1.month.ago.to_fs(:db) %>
   created_at: <%= 1.month.ago.to_fs(:db) %>
   updated_at: <%= 1.month.ago.to_fs(:db) %>
 
@@ -10,5 +11,6 @@ two:
   encrypted_password: $2a$04$jOMq6qFAyVp.wHA/CPfjwue3O/fV7gp6U1ADdYRTerrySeyZFe8WS
   nickname: 测试用户二
   role: admin
+  onboarded_at: <%= 1.month.ago.to_fs(:db) %>
   created_at: <%= 1.month.ago.to_fs(:db) %>
   updated_at: <%= 1.month.ago.to_fs(:db) %>

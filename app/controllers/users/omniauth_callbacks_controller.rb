@@ -122,7 +122,7 @@ class Users::OmniauthCallbacksController < Devise::OmniauthCallbacksController
     end
 
     sign_in user
-    redirect_after_wechat_auth("微信注册并登录成功")
+    redirect_after_wechat_auth("微信注册并登录成功", new_user: true)
   end
 
   # 合并微信凭据到旧账号，若旧账号为会员则转移至新微信账号
@@ -179,10 +179,15 @@ class Users::OmniauthCallbacksController < Devise::OmniauthCallbacksController
     end
   end
 
-  def redirect_after_wechat_auth(notice)
+  def redirect_after_wechat_auth(notice, new_user: false)
     if session[:after_wechat_auth] == "new_order"
       session.delete(:after_wechat_auth)
+      # 下单流程中注册的新用户：先完成支付，引导延后（直接视为已完成引导，避免被兜底守卫拦截下单）
+      current_user.update!(onboarded_at: Time.current) if new_user && current_user.onboarded_at.blank?
       redirect_to new_order_path, notice: "已授权，请重新点击微信支付"
+    elsif new_user
+      # 微信新注册用户先进注册引导页
+      redirect_to onboarding_path, notice: notice
     else
       redirect_to root_path, notice: notice
     end
@@ -243,7 +248,7 @@ class Users::OmniauthCallbacksController < Devise::OmniauthCallbacksController
       Rails.logger.info "[OmniAuth Google] new user created id=#{user.id}"
       sign_in user
       Rails.logger.info "[OmniAuth Google] sign_in completed, session user_id=#{session['warden.user.user.key']&.first&.first}"
-      redirect_to root_path, notice: "Google注册登录成功"
+      redirect_to onboarding_path, notice: "Google注册登录成功"
     end
   end
 

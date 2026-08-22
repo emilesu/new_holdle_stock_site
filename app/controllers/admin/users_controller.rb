@@ -31,7 +31,8 @@ module Admin
     def create
       @user = User.new(user_params)
       @user.password = SecureRandom.hex(8)
-      
+      @user.onboarded_at = Time.current # 管理员代建账号视为已完成引导，不强制跳引导页
+
       if @user.save
         redirect_to admin_user_path(@user), notice: '用户创建成功，初始密码已发送至邮箱'
       else

@@ -1,7 +1,7 @@
 Rails.application.routes.draw do
 
   # Devise OAuth回调路由
-  devise_for :users, controllers: { omniauth_callbacks: 'users/omniauth_callbacks' }
+  devise_for :users, controllers: { registrations: 'users/registrations', omniauth_callbacks: 'users/omniauth_callbacks' }
 
   # OAuth失败跳转路由
   get '/users/oauth_failure', to: 'sessions#oauth_failure', as: :oauth_failure
@@ -38,6 +38,10 @@ Rails.application.routes.draw do
   resources :articles, only: [:index, :show]
 
   get "join", to: "pages#join"
+
+  # 注册引导（新用户首次注册后进入；admin 可 ?preview=1 预览）
+  get "onboarding", to: "onboardings#show", as: :onboarding
+  post "onboarding/complete", to: "onboardings#complete", as: :onboarding_complete
 
   # 服务协议 / 隐私政策（公开静态页）
   get "terms", to: "legal#terms"

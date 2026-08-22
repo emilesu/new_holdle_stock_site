@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_08_21_120000) do
+ActiveRecord::Schema[7.1].define(version: 2026_08_22_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -497,6 +497,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_21_120000) do
     t.string "weixin_web_openid"
     t.string "weixin_app_openid"
     t.string "avatar", limit: 255
+    t.datetime "onboarded_at", comment: "注册引导完成时间（NULL=未完成，需先过引导页）"
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
     t.index ["weixin_app_openid"], name: "index_users_on_weixin_app_openid", unique: true

@@ -30,17 +30,29 @@ class Users::ProfilesControllerTest < ActionDispatch::IntegrationTest
     assert_select "span[data-copy-target='source']", text: /hl_testkey12345678/
   end
 
-  test "页面有复制按钮与安装提示词，提示词包含 Key" do
+  test "普通用户可见 Key 与复制按钮，但不可见安装提示词（v1.32.2 起仅 admin 可见）" do
     user = users(:one)
     create_key(user)
     sign_in user
 
     get users_profile_path
 
+    assert_response :success
     assert_select "button", text: "复制 Key"
+    assert_select "button", text: "复制提示词", count: 0
+  end
+
+  test "管理员可见安装提示词，提示词包含 Key 与新地址" do
+    user = users(:two) # admin fixture
+    create_key(user)
+    sign_in user
+
+    get users_profile_path
+
+    assert_response :success
     assert_select "button", text: "复制提示词"
     assert_select "textarea", /hl_testkey12345678/
-    assert_select "textarea", %r{https://www\.holdle\.com/api/v1/mcp}
+    assert_select "textarea", %r{https://ai\.holdle\.com/mcp}
   end
 
   test "无 Key 用户显示购买引导" do
