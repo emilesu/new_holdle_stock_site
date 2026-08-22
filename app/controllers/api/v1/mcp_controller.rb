@@ -50,6 +50,12 @@ module Api
         # 既杜绝并发双扣（decrement_quota! 丢更新），也保证窗口判定不并发竞态
         result = ApiKey.transaction do
           api_key.with_lock do
+            # 锁内重载 log 并二次校验终态：防并发同 request_id 双 confirm 时，
+            # 后到者把先到者已 confirmed/merged 的记录误当 precheck 覆盖改写
+            log.reload
+            next { already_processed: true } if log.status.in?(%w[confirmed merged])
+            next { released: true } if log.status == "released"
+
             # 窗口参照 = 距上一次 confirm 请求（含 merged 记录）的时间，滑动语义保证一次回答内长链检索不误拆
             last = UsageLog.where(api_key_id: api_key.id)
                            .where(status: %w[confirmed merged])
@@ -70,7 +76,11 @@ module Api
           end
         end
 
-        if result[:merged]
+        if result[:already_processed]
+          render json: { ok: true, already_processed: true }
+        elsif result[:released]
+          render json: { ok: false, error: "request 已释放" }, status: 400
+        elsif result[:merged]
           render json: { ok: true, consumed: 0, merged: true, remaining: result[:remaining], round_id: result[:round_id] }
         else
           render json: { ok: true, consumed: 1, remaining: result[:remaining], round_id: result[:round_id] }

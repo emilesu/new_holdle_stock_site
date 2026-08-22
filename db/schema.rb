@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_08_23_000001) do
+ActiveRecord::Schema[7.1].define(version: 2026_08_23_000002) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -466,8 +466,6 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_23_000001) do
     t.datetime "confirmed_at", comment: "确认时间"
     t.string "round_id", comment: "回合标识（90s 窗口内合并的请求共用；NULL=老数据）"
     t.index ["api_key_id", "status", "confirmed_at"], name: "index_usage_logs_on_api_key_id_and_status_and_confirmed_at"
-    t.index ["api_key_id", "status"], name: "index_usage_logs_on_api_key_id_and_status"
-    t.index ["api_key_id"], name: "index_usage_logs_on_api_key_id"
     t.index ["created_at"], name: "index_usage_logs_on_created_at"
     t.index ["request_id"], name: "index_usage_logs_on_request_id", unique: true
     t.index ["round_id"], name: "index_usage_logs_on_round_id"
