@@ -43,6 +43,82 @@
               </div>
             </div>
           </div>
+
+          <%# 金字塔评分说明区（与雷达图同卡片，随雷达图一起固定悬浮） %>
+          <div class="border-t border-line">
+            <div class="px-6 py-4 border-b border-line bg-bg-mute">
+              <h2 class="text-hl-16 font-semibold text-ink-soft">金字塔评分怎么算</h2>
+            </div>
+            <div class="p-6">
+              <p class="text-hl-13 text-muted leading-relaxed mb-5">
+                金字塔评分 = <span class="text-ink font-medium">6 项财务质量指标</span>（满分 1000 分）
+                + <span class="text-ink font-medium">2 项成长趋势加减分</span>，
+                衡量一家公司的赚钱效率、规模与成长性。
+              </p>
+              <div class="overflow-x-auto md-table-wrap">
+                <table class="hl-table">
+                  <thead>
+                    <tr>
+                      <th>指标</th>
+                      <th>权重</th>
+                      <th>说明</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>ROE 净资产收益率</td>
+                      <td><span class="hl-tag">核心</span></td>
+                      <td>赚钱效率，评分核心</td>
+                    </tr>
+                    <tr>
+                      <td>净利润规模</td>
+                      <td><span class="hl-tag">重要</span></td>
+                      <td>体量决定抗风险能力</td>
+                    </tr>
+                    <tr>
+                      <td>ROA 总资产回报率</td>
+                      <td><span class="hl-tag">重要</span></td>
+                      <td>剔除杠杆的真实赚钱能力</td>
+                    </tr>
+                    <tr>
+                      <td>总资产周转率</td>
+                      <td><span class="hl-tag">辅助</span></td>
+                      <td>资产运营效率</td>
+                    </tr>
+                    <tr>
+                      <td>毛利率</td>
+                      <td><span class="hl-tag">辅助</span></td>
+                      <td>护城河深浅</td>
+                    </tr>
+                    <tr>
+                      <td>现金占总资产比率</td>
+                      <td><span class="hl-tag">辅助</span></td>
+                      <td>抗风险缓冲</td>
+                    </tr>
+                    <tr>
+                      <td>净利润增长趋势</td>
+                      <td><span class="hl-tag">加减分</span></td>
+                      <td>近年成长性</td>
+                    </tr>
+                    <tr>
+                      <td>经营现金流增长趋势</td>
+                      <td><span class="hl-tag">加减分</span></td>
+                      <td>现金流的成长性</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div class="px-6 py-4 border-t border-line bg-bg-mute flex items-center justify-between gap-4">
+              <% if current_user&.is_member? %>
+                <p class="text-hl-13 text-muted">板块 / 行业筛选、完整榜单已为你解锁</p>
+                <span class="hl-btn bg-bg-mute text-muted-4 border-line cursor-not-allowed hover:border-line shrink-0">已解锁</span>
+              <% else %>
+                <p class="text-hl-13 text-muted">板块 / 行业筛选、完整榜单为会员专属功能</p>
+                <%= link_to "了解会员权益", join_path, class: "hl-btn hl-btn-primary shrink-0" %>
+              <% end %>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -734,6 +810,8 @@ document.addEventListener('turbo:load', function initPyramidPage() {
         radarCard.style.width = '';
         radarCard.style.left = '';
         radarCard.style.top = '';
+        radarCard.style.maxHeight = '';
+        radarCard.style.overflowY = '';
         radarColumn.style.setProperty('--radar-card-height', '0px');
         return;
       }
@@ -749,12 +827,17 @@ document.addEventListener('turbo:load', function initPyramidPage() {
         radarCard.style.width = columnRect.width + 'px';
         radarCard.style.left = columnRect.left + 'px';
         radarCard.style.top = stickyThreshold + 'px';   // ← 固定值，始终对齐
+        // 矮视口下限制卡片高度并允许内部滚动，保证底部 CTA 可达
+        radarCard.style.maxHeight = (window.innerHeight - stickyThreshold - 16) + 'px';
+        radarCard.style.overflowY = 'auto';
         radarColumn.style.setProperty('--radar-card-height', radarCard.offsetHeight + 'px');
       } else {
         pageContainer.classList.remove('radar-fixed');
         radarCard.style.width = '';
         radarCard.style.left = '';
         radarCard.style.top = '';
+        radarCard.style.maxHeight = '';
+        radarCard.style.overflowY = '';
         radarColumn.style.setProperty('--radar-card-height', '0px');
       }
     };

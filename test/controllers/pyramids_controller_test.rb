@@ -33,6 +33,22 @@ class PyramidsControllerTest < ActionDispatch::IntegrationTest
     assert_match(/bg-blue-100 text-blue-800/, response.body, "美股警示徽章应为蓝色主题")
   end
 
+  test "index 渲染金字塔评分说明区（雷达图下方）" do
+    # 非会员视角：说明区含权重表与「了解会员权益」CTA
+    get pyramid_path(market: "CN")
+    assert_response :success
+    assert_select "h2", text: "金字塔评分怎么算"
+    assert_select "table.hl-table tbody tr", count: 8, message: "权重表应有 8 项指标"
+    assert_match(/了解会员权益/, response.body, "非会员应看到加入会员入口按钮")
+
+    # 会员视角：CTA 变为「已解锁」
+    sign_in users(:two) # admin fixture，is_member? 为 true
+    get pyramid_path(market: "CN")
+    assert_response :success
+    assert_match(/已解锁/, response.body, "会员应看到已解锁状态")
+    assert_no_match(/了解会员权益/, response.body, "会员不应看到加入会员按钮")
+  end
+
   test "update_list 与 load_more 渲染成功且无灰色徽章" do
     get "/pyramid/update_list", params: { market: "CN" }, headers: { "Accept" => "text/vnd.turbo-stream.html" }
     assert_response :success
