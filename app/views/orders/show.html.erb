@@ -3,19 +3,7 @@
 <section class="bg-bg-soft min-h-screen">
   <div class="container-hl py-12">
     <div class="max-w-lg mx-auto text-center">
-      <% if @order.paid? %>
-        <%# 支付成功 %>
-        <div class="hl-card p-7 mb-6">
-          <div class="w-16 h-16 mx-auto mb-4 bg-green-100 text-green-600 rounded-full flex items-center justify-center">
-            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-            </svg>
-          </div>
-          <h2 class="text-hl-22 font-bold text-ink mb-2">支付成功！</h2>
-          <p class="text-hl-13 text-muted mb-4">欢迎加入 HOLD LE，你现在已拥有所有会员权限。</p>
-          <%= link_to "进入首页", root_path, class: "hl-btn hl-btn-primary inline-block px-8 py-3" %>
-        </div>
-      <% elsif @order.payment_method == "wechat_jsapi" %>
+      <% if @order.payment_method == "wechat_jsapi" %>
         <%# 微信内 JSAPI 支付 %>
         <div class="hl-card p-7 mb-6">
           <div class="mb-6">
@@ -24,8 +12,8 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
               </svg>
             </div>
-            <h2 class="text-hl-18 font-bold text-ink mb-2">正在拉起微信支付...</h2>
-            <p class="text-hl-13 text-muted">如果未自动弹出，请点击下方按钮</p>
+            <h2 id="wx-pay-title" class="text-hl-18 font-bold text-ink mb-2">正在拉起微信支付...</h2>
+            <p id="wx-pay-sub" class="text-hl-13 text-muted">如果未自动弹出，请点击下方按钮</p>
           </div>
 
           <button id="wx-pay-btn" data-pay-params="<%= @pay_params.to_json %>"
@@ -71,6 +59,12 @@
             try { alreadyInvoked = sessionStorage.getItem(invokedKey) === '1'; } catch(e) {}
             if (!alreadyInvoked) {
               setTimeout(invokeWechatPay, 500);
+            } else {
+              // 已拉起过一次（支付成功跳回本页、回调未到），切换为确认中文案，避免误导已支付用户
+              var titleEl = document.getElementById('wx-pay-title');
+              var subEl = document.getElementById('wx-pay-sub');
+              if (titleEl) titleEl.textContent = '正在确认支付结果...';
+              if (subEl) subEl.textContent = '如已完成支付，页面将自动跳转；未支付请点击下方按钮';
             }
           });
         <% end %>

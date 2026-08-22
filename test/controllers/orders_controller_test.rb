@@ -84,6 +84,29 @@ class OrdersControllerTest < ActionDispatch::IntegrationTest
     assert_match "请前往个人中心查看你的 Key", response.body
   end
 
+  test "支付成功落地页：明文缺失的 key 自动换新明文展示" do
+    # 模拟老 key 无明文（未 backfill）：创建时不传 key_plaintext
+    ApiKey.create!(
+      key_hash: Digest::SHA256.hexdigest("hl_old_plain"),
+      key_prefix: "hl_oldxxx",
+      user: users(:one),
+      plan_code: "starter",
+      quota_remaining: 20,
+      quota_total: 20
+    )
+    order = users(:one).orders.create!(title: "尝鲜包", amount_cents: 500, plan_code: "starter", quota: 20, status: "paid")
+
+    get order_path(order)
+
+    assert_response :success
+    assert_match "支付成功，已自动开通", response.body
+    assert_no_match "hl_old", response.body # 旧 key 不应再出现
+
+    key = users(:one).api_keys.active.first
+    assert key.key_plaintext.present? # 已兜底换新明文
+    assert_match key.key_plaintext, response.body # 落地页展示新明文
+  end
+
   test "未支付订单仍渲染支付页（回归）" do
     order = users(:one).orders.create!(title: "尝鲜包", amount_cents: 500, plan_code: "starter", quota: 20)
 

@@ -87,6 +87,8 @@ class OrdersController < ApplicationController
     if @order.paid?
       # 支付成功落地页：展示 Key + 引导（回调 mark_as_paid! 已确保 Key 就绪）
       @api_key = current_user.api_keys.active.first
+      # 明文缺失兜底：老 key 无明文时换新明文，保证落地页可展示/复制（用户从未见过明文，旧明文无副作用）
+      @api_key&.regenerate_plaintext! if @api_key&.key_plaintext.blank?
       render :paid
     elsif @order.payment_method == "wechat_jsapi"
       # JSAPI 需要重新生成支付参数并渲染页面

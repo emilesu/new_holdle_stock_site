@@ -32,6 +32,8 @@
             <p>
               <% if @plan.unlimited? %>
                 购买后将把同一把 Key 转为无限次使用。
+              <% elsif key.unlimited? %>
+                当前 Key 已为无限次使用，无需购买次数包。
               <% else %>
                 购买后将自动叠加 <span class="text-ink font-medium"><%= @plan.quota %></span> 次，不会重复发放 Key。
               <% end %>
