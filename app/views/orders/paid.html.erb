@@ -83,7 +83,7 @@
                 <button type="button" data-action="copy#copy" data-copy-label="复制提示词"
                         class="hl-btn hl-btn-line px-3 py-1.5 text-hl-12">复制提示词</button>
               </div>
-              <textarea readonly rows="9" data-copy-target="source" class="w-full bg-bg-soft border border-line rounded px-4 py-3 text-hl-12 text-muted font-mono leading-relaxed focus:outline-none"><%= install_prompt(@api_key.key_plaintext) %></textarea>
+              <textarea readonly rows="20" data-copy-target="source" class="w-full bg-bg-soft border border-line rounded px-4 py-3 text-hl-12 text-muted font-mono leading-relaxed focus:outline-none"><%= install_prompt(@api_key.key_plaintext) %></textarea>
             </div>
           </details>
         <% end %>

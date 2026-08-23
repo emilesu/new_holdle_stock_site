@@ -83,13 +83,13 @@
                         <span class="text-hl-12 text-muted-4">安装提示词（复制后粘贴给你的 AI 工具）</span>
                         <button type="button" data-action="copy#copy" data-copy-label="复制提示词" class="hl-btn hl-btn-line px-3 py-1.5 text-hl-12">复制提示词</button>
                       </div>
-                      <textarea readonly rows="9" data-copy-target="source" class="w-full bg-white border border-line rounded px-4 py-3 text-hl-12 text-muted font-mono leading-relaxed focus:outline-none"><%= install_prompt(key.key_plaintext) %></textarea>
+                      <textarea readonly rows="20" data-copy-target="source" class="w-full bg-white border border-line rounded px-4 py-3 text-hl-12 text-muted font-mono leading-relaxed focus:outline-none"><%= install_prompt(key.key_plaintext) %></textarea>
                     </div>
                   <% end %>
                 </div>
               <% end %>
             </div>
-            <p class="text-hl-11 text-muted-4 mt-3">Key 请勿分享给他人；泄露可联系站长重新生成。</p>
+            <p class="text-hl-11 text-muted-4 mt-3">Key 是你的付费凭证，请勿泄露给他人；如泄露请点击上方「重新生成」立即更换，旧 Key 即刻失效。</p>
           <% else %>
             <span class="text-hl-13 text-muted-3">暂无 API Key。</span>
             <%= link_to "去购买 AI 投研助手套餐", new_order_path, class: "text-hl-13 text-profit font-medium hover:underline ml-1" %>

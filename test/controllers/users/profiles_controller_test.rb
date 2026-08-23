@@ -53,6 +53,10 @@ class Users::ProfilesControllerTest < ActionDispatch::IntegrationTest
     assert_select "button", text: "复制提示词"
     assert_select "textarea", /hl_testkey12345678/
     assert_select "textarea", %r{https://ai\.holdle\.com/mcp}
+    # v1.2 使用规则段（MCP 强制路由 + round_id 计费说明）
+    assert_select "textarea", /使用规则（必须遵守）/
+    assert_select "textarea", /holdle_get_rules/
+    assert_select "textarea", /round_id/
   end
 
   test "无 Key 用户显示购买引导" do

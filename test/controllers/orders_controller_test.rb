@@ -72,6 +72,8 @@ class OrdersControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_match "安装提示词", response.body
     assert_match "ai.holdle.com/mcp", response.body
+    assert_match "使用规则（必须遵守）", response.body
+    assert_match "holdle_get_rules", response.body
   end
 
   test "支付成功落地页：无 Key 时提示前往个人中心查看" do
