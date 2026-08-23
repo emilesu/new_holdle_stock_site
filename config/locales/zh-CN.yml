@@ -29,3 +29,14 @@ zh-CN:
           other: "显示所有 %{count} 条数据"
       more_pages:
         display_entries: "第 %{first}–%{last} 条，共 %{total} 条"
+  devise:
+    failure:
+      already_authenticated: "您已经登录。"
+      inactive: "您的账户尚未激活。"
+      invalid: "无效的%{authentication_keys}或密码。"
+      locked: "您的账户已被锁定。"
+      last_attempt: "您还有一次尝试机会，再失败账户将被锁定。"
+      not_found_in_database: "无效的%{authentication_keys}或密码。"
+      timeout: "您的会话已过期，请重新登录后继续操作。"
+      unauthenticated: "继续操作前请先登录或注册。"
+      unconfirmed: "您的邮箱尚未确认，请先确认邮箱。"
