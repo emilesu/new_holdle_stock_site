@@ -188,5 +188,7 @@ class Admin::UsageAnalyticsControllerTest < ActionDispatch::IntegrationTest
     assert_response 200
     # merged 在窗内 → 该 round 按 round_id 去重计 1（confirmed 虽在窗外）
     assert_match %r{总提问数</p>\s*<p class="mt-1 text-hl-22 font-bold text-ink">1</p>}, response.body
+    # 活跃用户与总提问同口径：merged 在窗内 → 该用户计入活跃用户（而非 confirmed 口径的 0）
+    assert_match %r{活跃用户</p>\s*<p class="mt-1 text-hl-22 font-bold text-ink">1</p>}, response.body
   end
 end

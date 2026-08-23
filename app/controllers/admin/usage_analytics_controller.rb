@@ -18,7 +18,9 @@ module Admin
 
       # 总览卡片（提问数按 round_id 去重：一回合 1 confirmed + N merged 计 1 次；老数据 round_id 为空回退 request_id 每条计 1）
       @total_questions = @count_logs.distinct.count("COALESCE(round_id, request_id)")
-      @active_users = @logs.select(:user_id).distinct.count
+      # 活跃用户与人均须与总提问同口径（count_logs：confirmed+merged），
+      # 否则跨窗口场景（同 round 仅 merged 在窗内）用户出现在 Top 10 却不算活跃用户
+      @active_users = @count_logs.select(:user_id).distinct.count
       @today_questions = count_logs.where(created_at: Date.current.all_day).distinct.count("COALESCE(round_id, request_id)")
       @avg_per_user = @active_users.zero? ? 0 : (@total_questions.to_f / @active_users).round(1)
 
