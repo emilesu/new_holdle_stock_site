@@ -155,9 +155,12 @@ class Admin::UsageAnalyticsControllerTest < ActionDispatch::IntegrationTest
     get admin_usage_analytics_path
 
     assert_response 200
-    body = response.body
-    # @admin（2 次）应排在 @user（1 次）之前
-    assert body.index("测试用户二") < body.index("测试用户一")
+    # 按 Top 活跃用户表区块解析（避免全局文本顺序脆弱）：@admin（2 次）在 @user（1 次）前
+    rows = Nokogiri::HTML(response.body).css("table.hl-table tbody tr").first(10)
+    nicknames = rows.map { |r| r.css("td")[1].text.strip }
+    counts = rows.map { |r| r.css("td")[2].text.strip }
+    assert_equal ["测试用户二", "测试用户一"], nicknames.first(2)
+    assert_equal ["2 次", "1 次"], counts.first(2)
   end
 
   test "分类统计不受 merged 记录影响（merged 不重复计入分类）" do
@@ -169,9 +172,21 @@ class Admin::UsageAnalyticsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response 200
     body = response.body
-    # 状态A 分类命中 1 条（merged 不重复计入），而非 2 条
-    assert_match "状态A/择时", body
-    assert_match "1 条", body
-    assert_no_match "2 条", body
+    # 行级断言限定「状态A/择时」分类行：命中 1 条（merged 不重复计入），而非 2 条
+    assert_match %r{状态A/择时</span>\s*<span class="text-hl-13 text-muted-3">1 条}, body
+    assert_no_match %r{状态A/择时</span>\s*<span class="text-hl-13 text-muted-3">2 条}, body
+  end
+
+  test "跨窗口 round：confirmed 在窗外、merged 在窗内时按窗口记录计入（现状语义）" do
+    boundary = 7.days.ago.beginning_of_day
+    round = SecureRandom.uuid
+    create_log(@user, "状态A", "confirmed", created_at: boundary - 5.minutes, round_id: round)
+    create_log(@user, "状态A", "merged", created_at: boundary + 1.minute, round_id: round)
+
+    get admin_usage_analytics_path # 默认 7 天窗口
+
+    assert_response 200
+    # merged 在窗内 → 该 round 按 round_id 去重计 1（confirmed 虽在窗外）
+    assert_match %r{总提问数</p>\s*<p class="mt-1 text-hl-22 font-bold text-ink">1</p>}, response.body
   end
 end

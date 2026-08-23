@@ -34,9 +34,12 @@ module Admin
                                .order(created_at: :desc).limit(20)
 
       # Top 10 活跃用户（按去重后提问数排序，一次查用户避免视图 N+1）
+      # 注意：不能用 group(:user_id).count（返回 COUNT(*) 行数），须 select 自定义去重聚合列
       user_counts = @count_logs.group(:user_id)
+                               .select("user_id, COUNT(DISTINCT COALESCE(round_id, request_id)) AS question_count")
                                .order(Arel.sql("COUNT(DISTINCT COALESCE(round_id, request_id)) DESC"))
-                               .count.first(10).to_h
+                               .limit(10)
+                               .map { |row| [row.user_id, row.question_count.to_i] }.to_h
       users = User.where(id: user_counts.keys).index_by(&:id)
       @top_users = user_counts.map { |user_id, count| [users[user_id], count] }
                              .reject { |user, _| user.nil? }
