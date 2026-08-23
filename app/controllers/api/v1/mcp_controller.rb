@@ -56,18 +56,31 @@ module Api
             next { already_processed: true } if log.status.in?(%w[confirmed merged])
             next { released: true } if log.status == "released"
 
-            # 窗口参照 = 距上一次 confirm 请求（含 merged 记录）的时间，滑动语义保证一次回答内长链检索不误拆
+            # 回合判定：round_id 优先（MCP 侧同一次用户提问复用同一 round_id），90s 滑动窗口仅兜底旧 agent
+            # last = 该 key 最近一条 confirmed/merged 记录（窗口参照，含 merged 不误拆长链）
             last = UsageLog.where(api_key_id: api_key.id)
                            .where(status: %w[confirmed merged])
                            .order(confirmed_at: :desc).first
 
-            if last && (Time.current - last.confirmed_at) <= 90.seconds
-              # 同一回合：不扣费，标记 merged（沿用上一请求的 round_id），consumed=0
+            current_round_id = log.round_id.presence
+
+            if current_round_id && last && last.round_id == current_round_id
+              # ① 同 round_id → 同回合，合并不扣费（覆盖复盘长链：检索→跑数据→补充检索间隔可 >90s）
+              log.update!(status: "merged", consumed: 0, confirmed_at: Time.current, round_id: current_round_id)
+              { merged: true, remaining: api_key.quota_remaining, round_id: current_round_id }
+            elsif current_round_id
+              # ② 换了 round_id → 新回合正常扣费（即使 <90s，防连问白嫖）；round_id 用 precheck 透传值
+              api_key.decrement_quota!
+              api_key.touch(:last_used_at)
+              log.update!(status: "confirmed", consumed: 1, confirmed_at: Time.current, round_id: current_round_id)
+              { merged: false, remaining: api_key.quota_remaining, round_id: current_round_id }
+            elsif last && (Time.current - last.confirmed_at) <= 90.seconds
+              # ③ 未传 round_id（旧 agent）→ 90s 滑动窗口兜底合并，沿用 last.round_id
               log.update!(status: "merged", consumed: 0, confirmed_at: Time.current, round_id: last.round_id)
               { merged: true, remaining: api_key.quota_remaining, round_id: last.round_id }
             else
-              # 新回合：正常扣费。round_id 优先用 precheck 透传的（MCP 同提问复用），否则 Rails 生成兜底
-              round_id = log.round_id.presence || SecureRandom.uuid
+              # ④ 未传 round_id 且超 90s → 新回合，round_id 由 Rails 生成兜底
+              round_id = SecureRandom.uuid
               api_key.decrement_quota!
               api_key.touch(:last_used_at)
               log.update!(status: "confirmed", consumed: 1, confirmed_at: Time.current, round_id: round_id)

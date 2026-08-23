@@ -360,4 +360,107 @@ class Api::V1::McpControllerTest < ActionDispatch::IntegrationTest
     assert_equal 6, UsageLog.where(status: "merged").count
     assert_equal 9, UsageLog.count
   end
+
+  # === round_id 优先判定（v1.36.2，MCP 端实测补丁）测试 ===
+
+  test "round_id 优先：同 round_id 间隔超过 90 秒仍合并（复盘长链不误拆）" do
+    plain = build_api_key(quota: 10)
+    travel_to Time.current
+    round = SecureRandom.uuid
+
+    r1 = SecureRandom.uuid
+    post api_v1_mcp_precheck_path, params: { api_key: plain, request_id: r1, round_id: round }, headers: @auth
+    post api_v1_mcp_confirm_path, params: { api_key: plain, request_id: r1, round_id: round }, headers: @auth
+    assert_equal 1, response.parsed_body["consumed"]
+    assert_equal round, response.parsed_body["round_id"]
+
+    # 100 秒后再检索，同一 round_id → 合并不扣费（验收用例 2 反例）
+    travel 100.seconds
+    r2 = SecureRandom.uuid
+    post api_v1_mcp_precheck_path, params: { api_key: plain, request_id: r2, round_id: round }, headers: @auth
+    post api_v1_mcp_confirm_path, params: { api_key: plain, request_id: r2, round_id: round }, headers: @auth
+    assert_equal true, response.parsed_body["merged"]
+    assert_equal 0, response.parsed_body["consumed"]
+    assert_equal round, response.parsed_body["round_id"]
+
+    assert_equal 9, ApiKey.find_by(key_hash: Digest::SHA256.hexdigest(plain)).quota_remaining
+    assert_equal 1, UsageLog.where(status: "confirmed").count
+    assert_equal 1, UsageLog.where(status: "merged").count
+  ensure
+    travel_back
+  end
+
+  test "round_id 优先：换 round_id 90 秒内连问拆为新回合各扣一次（防白嫖）" do
+    plain = build_api_key(quota: 10)
+    travel_to Time.current
+
+    round_a = SecureRandom.uuid
+    r1 = SecureRandom.uuid
+    post api_v1_mcp_precheck_path, params: { api_key: plain, request_id: r1, round_id: round_a }, headers: @auth
+    post api_v1_mcp_confirm_path, params: { api_key: plain, request_id: r1, round_id: round_a }, headers: @auth
+    assert_equal 1, response.parsed_body["consumed"]
+
+    # 30 秒后问问题 B（新 round_id）→ 必须新回合扣费（验收用例 3 反例）
+    travel 30.seconds
+    round_b = SecureRandom.uuid
+    r2 = SecureRandom.uuid
+    post api_v1_mcp_precheck_path, params: { api_key: plain, request_id: r2, round_id: round_b }, headers: @auth
+    post api_v1_mcp_confirm_path, params: { api_key: plain, request_id: r2, round_id: round_b }, headers: @auth
+    assert_equal 1, response.parsed_body["consumed"]
+    assert_nil response.parsed_body["merged"] # 新回合响应无 merged 标记
+    assert_equal round_b, response.parsed_body["round_id"]
+
+    assert_equal 8, ApiKey.find_by(key_hash: Digest::SHA256.hexdigest(plain)).quota_remaining
+    assert_equal 2, UsageLog.where(status: "confirmed").count
+  ensure
+    travel_back
+  end
+
+  test "round_id 优先：同 round_id 90 秒内合并" do
+    plain = build_api_key(quota: 10)
+    travel_to Time.current
+    round = SecureRandom.uuid
+
+    r1 = SecureRandom.uuid
+    post api_v1_mcp_precheck_path, params: { api_key: plain, request_id: r1, round_id: round }, headers: @auth
+    post api_v1_mcp_confirm_path, params: { api_key: plain, request_id: r1, round_id: round }, headers: @auth
+    assert_equal 1, response.parsed_body["consumed"]
+
+    travel 30.seconds
+    r2 = SecureRandom.uuid
+    post api_v1_mcp_precheck_path, params: { api_key: plain, request_id: r2, round_id: round }, headers: @auth
+    post api_v1_mcp_confirm_path, params: { api_key: plain, request_id: r2, round_id: round }, headers: @auth
+    assert_equal true, response.parsed_body["merged"]
+    assert_equal 0, response.parsed_body["consumed"]
+    assert_equal round, response.parsed_body["round_id"]
+
+    assert_equal 9, ApiKey.find_by(key_hash: Digest::SHA256.hexdigest(plain)).quota_remaining
+  ensure
+    travel_back
+  end
+
+  test "round_id 优先：换 round_id 且间隔超 90 秒拆新回合" do
+    plain = build_api_key(quota: 10)
+    travel_to Time.current
+
+    round_a = SecureRandom.uuid
+    r1 = SecureRandom.uuid
+    post api_v1_mcp_precheck_path, params: { api_key: plain, request_id: r1, round_id: round_a }, headers: @auth
+    post api_v1_mcp_confirm_path, params: { api_key: plain, request_id: r1, round_id: round_a }, headers: @auth
+    assert_equal 1, response.parsed_body["consumed"]
+
+    travel 120.seconds
+    round_b = SecureRandom.uuid
+    r2 = SecureRandom.uuid
+    post api_v1_mcp_precheck_path, params: { api_key: plain, request_id: r2, round_id: round_b }, headers: @auth
+    post api_v1_mcp_confirm_path, params: { api_key: plain, request_id: r2, round_id: round_b }, headers: @auth
+    assert_equal 1, response.parsed_body["consumed"]
+    assert_nil response.parsed_body["merged"] # 新回合响应无 merged 标记
+    assert_equal round_b, response.parsed_body["round_id"]
+
+    assert_equal 8, ApiKey.find_by(key_hash: Digest::SHA256.hexdigest(plain)).quota_remaining
+    assert_equal 2, UsageLog.where(status: "confirmed").count
+  ensure
+    travel_back
+  end
 end
