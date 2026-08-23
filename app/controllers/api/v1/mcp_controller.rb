@@ -62,7 +62,9 @@ module Api
                            .where(status: %w[confirmed merged])
                            .order(confirmed_at: :desc).first
 
-            current_round_id = log.round_id.presence
+            # round_id 优先取 precheck 落库值（契约：MCP 在 precheck 透传），confirm 单独携带时兜底
+            #（防御：precheck 未传而 confirm 传的场景，避免判定退化为时间窗口）
+            current_round_id = log.round_id.presence || params[:round_id].presence
 
             if current_round_id && last && last.round_id == current_round_id
               # ① 同 round_id → 同回合，合并不扣费（覆盖复盘长链：检索→跑数据→补充检索间隔可 >90s）

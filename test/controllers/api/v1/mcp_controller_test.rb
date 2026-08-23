@@ -463,4 +463,59 @@ class Api::V1::McpControllerTest < ActionDispatch::IntegrationTest
   ensure
     travel_back
   end
+
+  test "round_id 优先：同 round_id 连续 3 次调用只扣 1 次（last 为 merged 仍合并）" do
+    plain = build_api_key(quota: 10)
+    travel_to Time.current
+    round = SecureRandom.uuid
+
+    r1 = SecureRandom.uuid
+    post api_v1_mcp_precheck_path, params: { api_key: plain, request_id: r1, round_id: round }, headers: @auth
+    post api_v1_mcp_confirm_path, params: { api_key: plain, request_id: r1, round_id: round }, headers: @auth
+    assert_equal 1, response.parsed_body["consumed"]
+
+    travel 30.seconds
+    r2 = SecureRandom.uuid
+    post api_v1_mcp_precheck_path, params: { api_key: plain, request_id: r2, round_id: round }, headers: @auth
+    post api_v1_mcp_confirm_path, params: { api_key: plain, request_id: r2, round_id: round }, headers: @auth
+    assert_equal true, response.parsed_body["merged"]
+
+    # 第 3 次：last 为同 round 的 merged 记录，仍合并（契约验收用例 1：1 confirmed + 2 merged）
+    travel 30.seconds
+    r3 = SecureRandom.uuid
+    post api_v1_mcp_precheck_path, params: { api_key: plain, request_id: r3, round_id: round }, headers: @auth
+    post api_v1_mcp_confirm_path, params: { api_key: plain, request_id: r3, round_id: round }, headers: @auth
+    assert_equal true, response.parsed_body["merged"]
+    assert_equal 0, response.parsed_body["consumed"]
+    assert_equal round, response.parsed_body["round_id"]
+
+    assert_equal 9, ApiKey.find_by(key_hash: Digest::SHA256.hexdigest(plain)).quota_remaining
+    assert_equal 1, UsageLog.where(status: "confirmed").count
+    assert_equal 2, UsageLog.where(status: "merged").count
+  ensure
+    travel_back
+  end
+
+  test "round_id 优先：上一条为老数据 round_id=nil 时传新 round_id 开新回合" do
+    plain = build_api_key(quota: 10)
+    travel_to Time.current
+
+    # 模拟迁移前老数据：confirmed 记录无 round_id
+    api_key = ApiKey.find_by(key_hash: Digest::SHA256.hexdigest(plain))
+    UsageLog.create!(api_key_id: api_key.id, user_id: api_key.user_id, request_id: SecureRandom.uuid,
+                     tool_name: "holdle_ask", question: "老问题", status: "confirmed",
+                     consumed: 1, confirmed_at: 5.minutes.ago)
+
+    round = SecureRandom.uuid
+    r1 = SecureRandom.uuid
+    post api_v1_mcp_precheck_path, params: { api_key: plain, request_id: r1, round_id: round }, headers: @auth
+    post api_v1_mcp_confirm_path, params: { api_key: plain, request_id: r1, round_id: round }, headers: @auth
+    assert_equal 1, response.parsed_body["consumed"]
+    assert_equal round, response.parsed_body["round_id"]
+
+    assert_equal 9, ApiKey.find_by(key_hash: Digest::SHA256.hexdigest(plain)).quota_remaining
+    assert_equal 2, UsageLog.where(status: "confirmed").count
+  ensure
+    travel_back
+  end
 end
