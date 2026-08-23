@@ -30,3 +30,9 @@ application.register("qrcode", QrcodeController)
 
 import CopyController from "./copy_controller"
 application.register("copy", CopyController)
+
+import CarouselController from "./carousel_controller"
+application.register("carousel", CarouselController)
+
+import VideoPlayerController from "./video_player_controller"
+application.register("video-player", VideoPlayerController)
