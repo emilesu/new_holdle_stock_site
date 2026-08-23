@@ -39,14 +39,22 @@ export default class extends Controller {
     if (track.children.length === 0) return
     const max = track.children.length - 1
     const target = Math.max(0, Math.min(index, max))
-    // scrollIntoView 自动计入卡片间 gap（offsetWidth 不含间距，直接乘会累计偏差）
-    track.children[target].scrollIntoView({ behavior: "smooth", inline: "start", block: "nearest" })
+    // offsetLeft 天然包含卡片间 gap（offsetWidth 累乘会累计偏差，scrollIntoView 在 snap 容器兼容性差）
+    track.scrollTo({ left: track.children[target].offsetLeft, behavior: "smooth" })
   }
 
   _currentIndex() {
-    const card = this.trackTarget.querySelector("[data-carousel-card]")
-    if (!card) return 0
-    return Math.round(this.trackTarget.scrollLeft / card.offsetWidth)
+    const track = this.trackTarget
+    let closest = 0
+    let minDist = Infinity
+    Array.from(track.children).forEach((child, i) => {
+      const dist = Math.abs(child.offsetLeft - track.scrollLeft)
+      if (dist < minDist) {
+        minDist = dist
+        closest = i
+      }
+    })
+    return closest
   }
 
   _sync() {
