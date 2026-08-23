@@ -116,4 +116,62 @@ class Admin::UsageAnalyticsControllerTest < ActionDispatch::IntegrationTest
     assert_response 200
     assert_match %r{总提问数</p>\s*<p class="mt-1 text-hl-22 font-bold text-ink">2</p>}, response.body
   end
+
+  # === 报表 round_id 去重升级（v1.36.4，计数纳入 merged）测试 ===
+
+  test "总提问数：1 个 round 的 1 confirmed + 2 merged 计 1 次" do
+    round = SecureRandom.uuid
+    create_log(@user, "状态A突破", "confirmed", round_id: round)
+    create_log(@user, "状态A突破", "merged", round_id: round)
+    create_log(@user, "状态A突破", "merged", round_id: round)
+
+    get admin_usage_analytics_path
+
+    assert_response 200
+    # 总提问数 = 1（按 round_id 去重），而非 3
+    assert_match %r{总提问数</p>\s*<p class="mt-1 text-hl-22 font-bold text-ink">1</p>}, response.body
+  end
+
+  test "今日提问数按 round_id 去重（merged 纳入计数）" do
+    round = SecureRandom.uuid
+    create_log(@user, "状态A", "confirmed", round_id: round)
+    create_log(@user, "状态A", "merged", round_id: round)
+    create_log(@user, "止损设置", "confirmed", round_id: SecureRandom.uuid)
+
+    get admin_usage_analytics_path
+
+    assert_response 200
+    assert_match %r{今日提问</p>\s*<p class="mt-1 text-hl-22 font-bold text-ink">2</p>}, response.body
+  end
+
+  test "Top 活跃用户按去重后提问数排序（merged 不重复计）" do
+    round = SecureRandom.uuid
+    create_log(@user, "状态A", "confirmed", round_id: round)
+    create_log(@user, "状态A", "merged", round_id: round)
+    create_log(@user, "状态A", "merged", round_id: round) # @user 去重后 1 次
+    create_log(@admin, "止损设置", "confirmed", round_id: SecureRandom.uuid)
+    create_log(@admin, "选股看ROE", "confirmed", round_id: SecureRandom.uuid) # @admin 去重后 2 次
+
+    get admin_usage_analytics_path
+
+    assert_response 200
+    body = response.body
+    # @admin（2 次）应排在 @user（1 次）之前
+    assert body.index("测试用户二") < body.index("测试用户一")
+  end
+
+  test "分类统计不受 merged 记录影响（merged 不重复计入分类）" do
+    round = SecureRandom.uuid
+    create_log(@user, "状态A突破", "confirmed", round_id: round)
+    create_log(@user, "状态A突破", "merged", round_id: round)
+
+    get admin_usage_analytics_path
+
+    assert_response 200
+    body = response.body
+    # 状态A 分类命中 1 条（merged 不重复计入），而非 2 条
+    assert_match "状态A/择时", body
+    assert_match "1 条", body
+    assert_no_match "2 条", body
+  end
 end

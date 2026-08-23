@@ -12,11 +12,14 @@ module Admin
     def index
       @days = [7, 30].include?(params[:days].to_i) ? params[:days].to_i : 7
       @logs = confirmed_logs
+      # 计数口径数据源：confirmed + merged 都算活动（merged 是 90s 合并的同回合补充检索），
+      # 按 round_id 去重计提问；分类/高频词/最近问题仍用 @logs（confirmed，防 merged 重复计入）
+      @count_logs = count_logs
 
-      # 总览卡片（提问数按 round_id 去重：90s 窗口合并后一个回合多条 confirm 算一次；老数据 round_id 为空回退 request_id）
-      @total_questions = @logs.distinct.count("COALESCE(round_id, request_id)")
+      # 总览卡片（提问数按 round_id 去重：一回合 1 confirmed + N merged 计 1 次；老数据 round_id 为空回退 request_id 每条计 1）
+      @total_questions = @count_logs.distinct.count("COALESCE(round_id, request_id)")
       @active_users = @logs.select(:user_id).distinct.count
-      @today_questions = confirmed_logs.where(created_at: Date.current.all_day).distinct.count("COALESCE(round_id, request_id)")
+      @today_questions = count_logs.where(created_at: Date.current.all_day).distinct.count("COALESCE(round_id, request_id)")
       @avg_per_user = @active_users.zero? ? 0 : (@total_questions.to_f / @active_users).round(1)
 
       # 分类统计（一条可命中多类，都计；都不中归其他）
@@ -30,8 +33,10 @@ module Admin
       @recent_questions = @logs.where.not(question: [nil, ""]).includes(:user)
                                .order(created_at: :desc).limit(20)
 
-      # Top 10 活跃用户（一次查用户，避免视图 N+1）
-      user_counts = @logs.group(:user_id).count.sort_by { |_, count| -count }.first(10).to_h
+      # Top 10 活跃用户（按去重后提问数排序，一次查用户避免视图 N+1）
+      user_counts = @count_logs.group(:user_id)
+                               .order(Arel.sql("COUNT(DISTINCT COALESCE(round_id, request_id)) DESC"))
+                               .count.first(10).to_h
       users = User.where(id: user_counts.keys).index_by(&:id)
       @top_users = user_counts.map { |user_id, count| [users[user_id], count] }
                              .reject { |user, _| user.nil? }
@@ -41,6 +46,11 @@ module Admin
 
     def confirmed_logs
       UsageLog.where(status: "confirmed")
+              .where(created_at: @days.days.ago.beginning_of_day..Time.current)
+    end
+
+    def count_logs
+      UsageLog.where(status: %w[confirmed merged])
               .where(created_at: @days.days.ago.beginning_of_day..Time.current)
     end
 
