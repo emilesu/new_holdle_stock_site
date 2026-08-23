@@ -1,0 +1,325 @@
+<% set_page_title "AI 助手教程 - Holdle" %>
+<% set_page_description "AI 投研助手使用教程：5 步安装、怎么提问最省次数、常见问题与风险声明。" %>
+
+<%# 安装 5 步数据（截图 URL 来自 AiAssistantHelper 配置，未填则显示占位） %>
+<% install_steps = [
+  { title: "找到并点击「个人中心」", desc: "登录 holdle.com，右上角进入个人中心" },
+  { title: "复制「安装提示词」", desc: "页面已把你的专属 Key 自动嵌入，一键复制，不用手动填" },
+  { title: "粘贴给 AI，发送安装", desc: "打开你常用的 AI 工具（codex/Claude/WorkBuddy等），粘贴发送；AI 自动完成 MCP 配置 + 数据脚本安装" },
+  { title: "输入问题，开始使用", desc: "例如「按照HOLDLE的方法？帮我解释一下贵州茅台。」" },
+  { title: "AI 生成回答", desc: "基于 HOLDLE 方法论回答，做学习陪练，分析参谋，不荐股不预测" }
+] %>
+
+<%# ========== Section 1 · Hero（左右两栏） ========== %>
+<section class="py-hl-hero bg-white border-b border-line">
+  <div class="container-hl grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+
+    <%# 左栏文案 %>
+    <div>
+      <span class="label-en">AI ASSISTANT</span>
+      <h1 class="text-hl-22 md:text-hl-40 font-bold leading-tight text-ink mb-3">把 HOLDLE 方法论，装进你的 AI 工具</h1>
+      <p class="text-hl-18 text-muted-2 mb-6">能随时问方法、查个股、做复盘。</p>
+      <p class="text-hl-14 text-muted leading-relaxed mb-8">
+        HOLDLE AI 投研助手，是基于 HOLDLE 方法论知识库的智能问答服务。接进你常用的 AI 工具（Codex / Trae / Claude Desktop / WorkBuddy / DeepSeek Harness 等），在学习、分析、实践 HOLDLE 方法的过程中，可随时向它提问。
+      </p>
+      <%= link_to "查看安装方法 ↓", "#install", class: "hl-btn hl-btn-primary" %>
+    </div>
+
+    <%# 右栏视频区块（封面占位 → 点击注入 B站 iframe；视频未发布时仅显示「制作中」） %>
+    <div class="space-y-4">
+      <div class="relative aspect-video bg-bg-mute border border-line rounded overflow-hidden"
+           data-controller="video-player"
+           data-video-player-video-url-value="<%= ai_assistant_bvid.present? ? "https://player.bilibili.com/player.html?bvid=#{ai_assistant_bvid}&page=1" : "" %>">
+        <div data-video-player-target="cover" class="absolute inset-0 flex items-center justify-center">
+          <% if ai_assistant_cover_url.present? %>
+            <%= image_tag ai_assistant_cover_url, alt: "HOLDLE AI 投研助手宣传视频封面", class: "w-full h-full object-cover" %>
+          <% else %>
+            <div class="text-center px-6">
+              <p class="text-hl-14 text-muted-4 mb-2">宣传视频 · 制作中</p>
+              <p class="text-hl-12 text-muted-5">视频发布后自动替换为可播放内容</p>
+            </div>
+          <% end %>
+          <% if ai_assistant_bvid.present? %>
+            <button type="button" data-action="click->video-player#play"
+                    class="absolute inset-0 m-auto w-16 h-16 flex items-center justify-center bg-white border border-line rounded-full text-ink hover:border-ink transition-colors"
+                    aria-label="播放宣传视频">
+              <svg class="w-6 h-6 ml-1" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+            </button>
+          <% end %>
+        </div>
+        <div data-video-player-target="player" class="hidden absolute inset-0"></div>
+      </div>
+
+      <div class="flex flex-wrap gap-3">
+        <% if ai_assistant_bvid.present? %>
+          <%= link_to "在 B站观看", "https://www.bilibili.com/video/#{ai_assistant_bvid}", target: "_blank", rel: "noopener", class: "hl-btn hl-btn-primary" %>
+        <% else %>
+          <button type="button" disabled class="hl-btn hl-btn-primary disabled:opacity-40 disabled:pointer-events-none">在 B站观看</button>
+        <% end %>
+        <% if ai_assistant_youtube_url.present? %>
+          <%= link_to "在 YouTube 观看", ai_assistant_youtube_url, target: "_blank", rel: "noopener", class: "hl-btn hl-btn-line" %>
+        <% else %>
+          <button type="button" disabled class="hl-btn hl-btn-line disabled:opacity-40 disabled:pointer-events-none">在 YouTube 观看</button>
+        <% end %>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<%# ========== Section 2 · 安装方法（5 步横滑卡片组） ========== %>
+<section id="install" class="border-b border-line bg-bg-soft">
+  <div class="container-hl py-16">
+    <div class="text-center max-w-2xl mx-auto mb-10">
+      <span class="label-en">INSTALLATION</span>
+      <h2 class="text-hl-22 font-semibold text-ink mb-3">安装方法</h2>
+      <p class="text-hl-14 text-muted-3 mb-3">只需 5 步，约 2 分钟。没有手动配置——复制一段提示词，AI 替你完成安装。</p>
+      <p class="text-hl-13 text-muted">安装全程「只检查、不调用」——<span class="text-ink font-medium">不会扣你的提问次数</span>。</p>
+    </div>
+
+    <div data-controller="carousel" class="relative">
+      <%# 桌面左右箭头 %>
+      <button type="button" data-carousel-target="prevBtn" data-action="click->carousel#prev"
+              class="hidden md:flex absolute left-0 top-[45%] -translate-y-1/2 -ml-5 z-10 w-10 h-10 items-center justify-center bg-white border border-line rounded-full text-muted hover:text-ink transition-colors disabled:opacity-40 disabled:pointer-events-none"
+              aria-label="上一步">
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+      <button type="button" data-carousel-target="nextBtn" data-action="click->carousel#next"
+              class="hidden md:flex absolute right-0 top-[45%] -translate-y-1/2 -mr-5 z-10 w-10 h-10 items-center justify-center bg-white border border-line rounded-full text-muted hover:text-ink transition-colors disabled:opacity-40 disabled:pointer-events-none"
+              aria-label="下一步">
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+      </button>
+
+      <%# 卡片轨道：CSS scroll-snap 承载触摸滑动 %>
+      <div data-carousel-target="track" class="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <% install_steps.each_with_index do |step, i| %>
+          <div data-carousel-card class="w-[85%] md:w-[62%] lg:w-[560px] shrink-0 snap-start">
+            <div class="hl-card overflow-hidden h-full">
+              <div class="aspect-video bg-bg-mute flex items-center justify-center border-b border-line-soft">
+                <% if (shot = ai_assistant_screenshot_url(i)) %>
+                  <%= image_tag shot, alt: "步骤 #{i + 1}：#{step[:title]}", class: "w-full h-full object-cover" %>
+                <% else %>
+                  <span class="text-hl-12 text-muted-4">截图待补充（步骤 <%= i + 1 %>）</span>
+                <% end %>
+              </div>
+              <div class="p-5">
+                <div class="flex items-center gap-3 mb-2">
+                  <span class="w-6 h-6 shrink-0 flex items-center justify-center bg-ink text-white text-hl-12 rounded font-medium"><%= i + 1 %></span>
+                  <h3 class="text-hl-16 font-semibold text-ink"><%= step[:title] %></h3>
+                </div>
+                <p class="text-hl-13 text-muted leading-relaxed"><%= step[:desc] %></p>
+              </div>
+            </div>
+          </div>
+        <% end %>
+      </div>
+
+      <%# 圆点指示器 %>
+      <div class="flex justify-center gap-2 mt-6">
+        <% install_steps.each_with_index do |_, i| %>
+          <button type="button" data-carousel-target="dot" data-action="click->carousel#select" data-index="<%= i %>"
+                  class="w-2 h-2 rounded-full transition-colors <%= i == 0 ? 'bg-ink' : 'bg-line' %>"
+                  aria-label="跳到第 <%= i + 1 %> 步"></button>
+        <% end %>
+      </div>
+    </div>
+
+    <p class="text-center text-hl-12 text-muted-4 mt-8">⚠️ 安全提示：Key 是你的付费凭证，仅用于本地配置，请勿泄露给他人。若 Key 泄露，登录个人中心点击「重新生成」立即更换。</p>
+  </div>
+</section>
+
+<%# ========== Section 3 · 怎么问（左右对比） ========== %>
+<section class="border-b border-line bg-white">
+  <div class="container-hl py-16">
+    <div class="text-center max-w-2xl mx-auto mb-10">
+      <span class="label-en">HOW TO ASK</span>
+      <h2 class="text-hl-22 font-semibold text-ink mb-3">怎么问，AI 才能帮到你</h2>
+      <p class="text-hl-14 text-muted-3">共同原则：<span class="text-ink font-medium">一次问清一个目标</span> —— 回答质量高，扣次也合理（同一次提问只扣 1 次）。</p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+
+      <%# 左栏 · 推荐这么问 %>
+      <div class="hl-card border-ink p-7">
+        <div class="flex items-center gap-2 mb-6">
+          <span class="w-5 h-5 flex items-center justify-center bg-ink text-white rounded">
+            <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+          </span>
+          <h3 class="text-hl-16 font-semibold text-ink">推荐这么问</h3>
+        </div>
+
+        <div class="mb-7 last:mb-0">
+          <p class="text-hl-13 font-semibold text-ink mb-2">① 问方法 —— 把概念搞懂</p>
+          <div class="bg-bg-soft border border-line rounded px-4 py-3 mb-2">
+            <p class="text-hl-13 text-muted font-mono">「状态A是什么？帮我解释一下」</p>
+          </div>
+          <p class="text-hl-13 text-muted-3 leading-relaxed">好处：回答即教学。AI 会用 HOLDLE 口径讲清概念，比看课程更快定位。</p>
+        </div>
+
+        <div class="mb-7 last:mb-0">
+          <p class="text-hl-13 font-semibold text-ink mb-2">② 问个股 —— 按规则分析</p>
+          <div class="bg-bg-soft border border-line rounded px-4 py-3 mb-2">
+            <p class="text-hl-13 text-muted font-mono">「帮我按 HOLDLE 方法分析 600519（贵州茅台）是不是状态A」</p>
+          </div>
+          <p class="text-hl-13 text-muted-3 leading-relaxed">好处：AI 先查企业质量（ROE≥20%、毛利率≥20% 等门槛），再看状态A（月K MACD 双线 + 红柱），陪你走完整判断流程；涉及价格会注明复权口径，数字和行情软件对得上。</p>
+        </div>
+
+        <div class="mb-7 last:mb-0">
+          <p class="text-hl-13 font-semibold text-ink mb-2">③ 问复盘 —— 回顾操作找对错</p>
+          <div class="bg-bg-soft border border-line rounded px-4 py-3 mb-2">
+            <p class="text-hl-13 text-muted font-mono">「帮我复盘 XX 近十年的入场点」</p>
+          </div>
+          <p class="text-hl-13 text-muted-3 leading-relaxed">好处：回顾历史操作，看方法执行得对不对；复盘长链分析全程一次弄清楚。</p>
+        </div>
+      </div>
+
+      <%# 右栏 · 不推荐这么问 %>
+      <div class="hl-card p-7">
+        <div class="flex items-center gap-2 mb-3">
+          <span class="w-5 h-5 flex items-center justify-center bg-bg-mute text-muted-4 rounded">
+            <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+          </span>
+          <h3 class="text-hl-16 font-semibold text-muted-2">不推荐这么问</h3>
+        </div>
+        <p class="text-hl-13 text-muted-3 leading-relaxed mb-6">这些问法不是不能问——只是问了，AI 大概率会先反过来教你方法，次数也照样算。想省点次数、问得更值，可以这么调整 👇</p>
+
+        <div class="mb-7 last:mb-0">
+          <p class="text-hl-13 font-semibold text-muted-2 mb-2">① 荐股类</p>
+          <div class="bg-bg-soft border border-line rounded px-4 py-3 mb-2">
+            <p class="text-hl-13 text-muted font-mono">「A股哪些股票值得买？」「帮我选一只股票」</p>
+          </div>
+          <p class="text-hl-13 text-muted-3 leading-relaxed mb-1">大概率会发生：AI 不直接给答案，而是先把「怎么筛好公司、怎么等状态A」给你讲一遍——教完，判断还得你自己做。</p>
+          <p class="text-hl-13 text-muted leading-relaxed">更省事：改成「帮我按 HOLDLE 方法，看看 XX 这家公司合不合格」</p>
+        </div>
+
+        <div class="mb-7 last:mb-0">
+          <p class="text-hl-13 font-semibold text-muted-2 mb-2">② 预测类</p>
+          <div class="bg-bg-soft border border-line rounded px-4 py-3 mb-2">
+            <p class="text-hl-13 text-muted font-mono">「明天会涨吗？」「目标价是多少？」</p>
+          </div>
+          <p class="text-hl-13 text-muted-3 leading-relaxed mb-1">大概率会发生：明天的事谁也说不准——AI 会带你回到现在能判断的事上：时机（状态A）合不合适、规则（开窗、止损）怎么用。</p>
+          <p class="text-hl-13 text-muted leading-relaxed">更省事：改成「帮我分析 XX 现在是不是状态A」</p>
+        </div>
+
+        <div class="mb-7 last:mb-0">
+          <p class="text-hl-13 font-semibold text-muted-2 mb-2">③ 批量扫描类</p>
+          <div class="bg-bg-soft border border-line rounded px-4 py-3 mb-2">
+            <p class="text-hl-13 text-muted font-mono">「帮我把全市场筛一遍，选出能买的」</p>
+          </div>
+          <p class="text-hl-13 text-muted-3 leading-relaxed mb-1">大概率会发生：几千只股票一只只翻，提问次数哗哗地没——翻完，「选哪只」还是留给你自己。</p>
+          <p class="text-hl-13 text-muted leading-relaxed">更省事：改成「我关注 茅台、格力、宁德时代……，帮我按 HOLDLE 方法分析一下，哪个更有前途」</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<%# ========== Section 4 · 常见问题（折叠） ========== %>
+<section class="border-b border-line bg-bg-soft">
+  <div class="container-narrow py-16">
+    <div class="text-center mb-10">
+      <span class="label-en">FAQ</span>
+      <h2 class="text-hl-22 font-semibold text-ink">常见问题</h2>
+    </div>
+
+    <div class="hl-card overflow-hidden hl-faq">
+      <details class="hl-faq-item">
+        <summary>
+          <span class="hl-q-badge">Q</span>
+          <span>装好了，第一句先问什么？</span>
+          <span class="hl-faq-icon">+</span>
+        </summary>
+        <div class="hl-faq-content">
+          <p>先问个简单的确认一切就绪：<strong class="text-ink">「状态A是什么？帮我解释一下」</strong>——能收到 HOLDLE 口径的回答，就说明装好了。</p>
+          <p class="mt-2">之后想怎么问，看上面「怎么和 AI 聊」那一节。</p>
+        </div>
+      </details>
+
+      <details class="hl-faq-item">
+        <summary>
+          <span class="hl-q-badge">Q</span>
+          <span>提问怎么计次？</span>
+          <span class="hl-faq-icon">+</span>
+        </summary>
+        <div class="hl-faq-content">
+          <ul>
+            <li class="py-0.5 text-muted relative pl-3.5 list-dot">按「问答回合」计：问一次（发送+回答），扣一次。</li>
+            <li class="py-0.5 text-muted relative pl-3.5 list-dot">安装环节「只检查、不调用」，不扣次。</li>
+            <li class="py-0.5 text-muted relative pl-3.5 list-dot">新用户送 15 次体验；之后按次购买：5元/20次、20元/90次、100元/500次；468 元永久会员 = 无限次。</li>
+            <li class="py-0.5 text-muted relative pl-3.5 list-dot">想知道剩多少？在个人中心查看，或直接问 AI「我还剩多少次」就行。</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="hl-faq-item">
+        <summary>
+          <span class="hl-q-badge">Q</span>
+          <span>价格为什么和行情软件对不上？</span>
+          <span class="hl-faq-icon">+</span>
+        </summary>
+        <div class="hl-faq-content">
+          <ul>
+            <li class="py-0.5 text-muted relative pl-3.5 list-dot">问「当前 / 近期 / 是否状态A」→ 用<strong class="text-ink">前复权</strong>（与你的行情软件显示一致）。</li>
+            <li class="py-0.5 text-muted relative pl-3.5 list-dot">问「过去 / 复盘 / 回测」→ 用<strong class="text-ink">后复权</strong>（历史口径固定不变）。</li>
+            <li class="py-0.5 text-muted relative pl-3.5 list-dot">AI 回答涉及价格都会注明用的是哪种口径——数字对不上，先看是不是口径不同；拿不准时默认前复权。</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="hl-faq-item">
+        <summary>
+          <span class="hl-q-badge">Q</span>
+          <span>AI 回答里的术语看不懂（柱≤DEA、开窗、绿转红、矮转高）？</span>
+          <span class="hl-faq-icon">+</span>
+        </summary>
+        <div class="hl-faq-content">
+          <ul>
+            <li class="py-0.5 text-muted relative pl-3.5 list-dot">这是 HOLDLE 自己的术语体系（不用金叉/死叉/多头/空头那套通用说法）。</li>
+            <li class="py-0.5 text-muted relative pl-3.5 list-dot">直接问 AI「XX 是什么意思」，它会用 HOLDLE 口径解释给你。</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="hl-faq-item">
+        <summary>
+          <span class="hl-q-badge">Q</span>
+          <span>还有其他问题？</span>
+          <span class="hl-faq-icon">+</span>
+        </summary>
+        <div class="hl-faq-content">
+          <p>直接找我们，1 对 1 帮你解决——官网留言（首页 → 留言/联系大苏）或微信公众号 EmileSu 留言（见下方「反馈方式」）。</p>
+        </div>
+      </details>
+    </div>
+  </div>
+</section>
+
+<%# ========== Section 5 · 风险声明 + 反馈 ========== %>
+<section class="bg-white">
+  <div class="container-narrow py-16">
+    <span class="label-en">DISCLAIMER & FEEDBACK</span>
+    <h2 class="text-hl-22 font-semibold text-ink mb-8">风险声明与反馈</h2>
+
+    <div class="hl-callout-dashed mb-10">
+      <p class="text-hl-14 font-semibold text-ink mb-3">⚠️ 风险声明</p>
+      <ul class="space-y-2 text-hl-13 text-muted leading-relaxed">
+        <li class="relative pl-4 list-dot">HOLDLE AI 投研助手基于 HOLDLE 投资方法论提供知识讲解，<span class="text-ink font-medium">不构成投资建议</span>。</li>
+        <li class="relative pl-4 list-dot">本服务<span class="text-ink font-medium">不荐股、不预测、不承诺收益</span>；「过去的战绩不代表未来」。</li>
+        <li class="relative pl-4 list-dot">投资有风险，<span class="text-ink font-medium">所有投资决策请由你独立判断</span>，请谨慎决策。</li>
+        <li class="relative pl-4 list-dot">使用本服务即表示你已阅读并同意 <%= link_to "《用户协议与隐私政策》", terms_path, class: "text-link hover:text-link-hover" %>。</li>
+      </ul>
+    </div>
+
+    <h3 class="text-hl-16 font-semibold text-ink mb-3">反馈方式</h3>
+    <p class="text-hl-14 text-muted mb-4">使用中遇到任何问题，随时留言告诉我：</p>
+    <ul class="space-y-2 text-hl-13 text-muted mb-8">
+      <li class="relative pl-4 list-dot"><span class="text-ink font-medium">官网留言：</span>网站首页 → 留言/联系大苏</li>
+      <li class="relative pl-4 list-dot"><span class="text-ink font-medium">微信公众号：</span>EmileSu（直接留言）</li>
+    </ul>
+
+    <div class="hl-callout">
+      <span class="text-ink font-semibold">特别提醒：</span>如果 AI 回答出现「荐股 / 预测收益」类内容，请第一时间告诉我们——那是错误行为，我们会立即改进。你的每一条反馈都会直接决定这个产品怎么做。
+    </div>
+  </div>
+</section>
