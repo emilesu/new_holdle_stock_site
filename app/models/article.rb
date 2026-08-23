@@ -31,13 +31,7 @@ class Article < ApplicationRecord
 
   def markdown_html
     return '' if content.blank?
-    html = Commonmarker.to_html(content, options: { unsafe: true, highlight: :html })
-    html.gsub!(/<pre\s+style="[^"]*"/, '<pre')
-    html.gsub!(/<code\s+style="[^"]*"/, '<code')
-    html.gsub!(/<span\s+style="[^"]*"/, '<span')
-    html.gsub!(/<table([^>]*)>/i, '<div class="md-table-wrap"><table\1>')
-    html.gsub!(/<\/table>/i, '</table></div>')
-    html
+    MarkdownRenderer.render(content)
   rescue => e
     Rails.logger.error "Article markdown HTML error: #{e.message}"
     content

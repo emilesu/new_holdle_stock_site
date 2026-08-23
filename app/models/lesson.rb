@@ -31,7 +31,7 @@ class Lesson < ApplicationRecord
 
   def markdown_html
     return '' if content.blank?
-    html = Commonmarker.to_html(content, options: { unsafe: true, highlight: :html })
+    html = MarkdownRenderer.render(content)
     html.gsub!(/<img([^>]+)src="([^"]+)"/) do |match|
       attrs = Regexp.last_match(1)
       src = Regexp.last_match(2)
@@ -47,11 +47,6 @@ class Lesson < ApplicationRecord
         end
       end
     end
-    html.gsub!(/<pre\s+style="[^"]*"/, '<pre')
-    html.gsub!(/<code\s+style="[^"]*"/, '<code')
-    html.gsub!(/<span\s+style="[^"]*"/, '<span')
-    html.gsub!(/<table([^>]*)>/i, '<div class="md-table-wrap"><table\1>')
-    html.gsub!(/<\/table>/i, '</table></div>')
     html
   rescue => e
     Rails.logger.error "Markdown rendering error: #{e.message}"
