@@ -52,6 +52,7 @@ Rails.application.routes.draw do
     get :home
     get :join
     get :plans
+    get :ai_assistant
   end
   get "video", to: "pages#video"
   get "about", to: "pages#about"
