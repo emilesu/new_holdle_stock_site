@@ -20,6 +20,17 @@ module ApplicationHelper
     content_for(:page_keywords, kw)
   end
 
+  # 渲染静态 Markdown 内容（关于页等），渲染后做白名单 sanitize 防 XSS
+  def markdown_render(source)
+    html = Commonmarker.to_html(source.to_s, options: { unsafe: true, highlight: :html })
+    html = html.gsub(/<pre\s+style="[^"]*"/, '<pre')
+               .gsub(/<code\s+style="[^"]*"/, '<code')
+               .gsub(/<span\s+style="[^"]*"/, '<span')
+               .gsub(/<table([^>]*)>/i, '<div class="md-table-wrap"><table\1>')
+               .gsub(/<\/table>/i, '</table></div>')
+    sanitize html, tags: %w[p a img ul ol li h1 h2 h3 h4 h5 h6 pre code blockquote table thead tbody tr th td strong em br hr span div], attributes: %w[href src alt class id target rel width height]
+  end
+
   # 便捷方法：一键设置股票详情页的 SEO 元数据
   def set_stock_seo(stock)
     name    = stock.name.presence || stock.symbol

@@ -46,8 +46,9 @@
         加入会员
         <%= tag.span class: "hl-nav-link-active-dot", aria: { hidden: "true" } if controller_name == 'pages' && action_name == 'join' %>
       <% end %>
-      <%= link_to "#", class: "hl-nav-link" do %>
-        关于
+      <%= link_to about_path, class: "hl-nav-link #{'hl-nav-link-active' if controller_name == 'pages' && action_name == 'about'}" do %>
+        关于HOLDLE
+        <%= tag.span class: "hl-nav-link-active-dot", aria: { hidden: "true" } if controller_name == 'pages' && action_name == 'about' %>
       <% end %>
     </div>
 
@@ -150,7 +151,7 @@
         <% end %>
         <%= link_to "AI-投研", articles_path, class: "block px-4 py-2 text-hl-14 rounded #{controller_name == 'articles' ? 'bg-bg-mute text-ink font-medium border-l-2 border-profit' : 'text-muted hover:text-ink hover:bg-bg-mute'}" %>
         <%= link_to "加入会员", join_path, class: "block px-4 py-2 text-hl-14 rounded #{controller_name == 'pages' && action_name == 'join' ? 'bg-bg-mute text-ink font-medium border-l-2 border-profit' : 'text-muted hover:text-ink hover:bg-bg-mute'}" %>
-        <%= link_to "关于", "#", class: "block px-4 py-2 text-hl-14 text-muted hover:text-ink hover:bg-bg-mute rounded" %>
+        <%= link_to "关于HOLDLE", about_path, class: "block px-4 py-2 text-hl-14 rounded #{controller_name == 'pages' && action_name == 'about' ? 'bg-bg-mute text-ink font-medium border-l-2 border-profit' : 'text-muted hover:text-ink hover:bg-bg-mute'}" %>
       </div>
       <div class="pt-4 border-t border-line-soft">
         <% if user_signed_in? %>

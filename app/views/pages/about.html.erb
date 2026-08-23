@@ -1,0 +1,64 @@
+<% set_page_title "关于 HOLDLE - 一个普通人的低频规则化投资方法" %>
+<% set_page_description "HOLDLE 是什么？它优秀在哪里、局限在哪里？适合谁、不适合谁？—— 由 AI 客观拆解、大苏亲自转述的一次坦诚自我剖析。" %>
+
+<%# ========== 页头 ========== %>
+<section class="border-b border-line bg-white">
+  <div class="container-narrow py-14">
+    <div class="label-en">ABOUT HOLDLE</div>
+    <h1 class="text-hl-22 md:text-hl-40 font-bold leading-tight text-ink mb-3">关于 HOLDLE</h1>
+    <p class="text-hl-14 text-muted leading-relaxed">
+      HOLDLE 是一个优秀的投资方法吗？<br class="hidden md:block">
+      这是一次由 AI 客观拆解、由大苏亲手转述的自我剖析。
+    </p>
+  </div>
+</section>
+
+<%# ========== 大苏旁白（作者引导） ========== %>
+<section class="bg-bg-soft pt-10">
+  <div class="container-narrow">
+    <div class="hl-card p-6 sm:p-8">
+      <div class="text-hl-11 text-muted-5 tracking-wide-2 mb-3 font-medium">大苏旁白 · AUTHOR'S NOTE</div>
+      <p class="text-hl-14 text-muted leading-relaxed mb-2">
+        用户问 HOLDLE‑AI：「你觉得 HOLDLE 是一个优秀的投资方法吗？」AI 给出了下面这段回答。
+      </p>
+      <p class="text-hl-14 text-ink font-medium leading-relaxed">
+        看到 AI 客观中立的总结，我很受触动。这几乎就是对「HOLDLE 是什么」最好的解读，建议认真看完。
+      </p>
+    </div>
+  </div>
+</section>
+
+<%# ========== 正文（Markdown 渲染） ========== %>
+<section class="bg-bg-soft py-10">
+  <div class="container-narrow">
+    <div class="hl-card p-6 sm:p-10">
+      <article class="prose prose-gray max-w-none
+        prose-headings:font-semibold prose-headings:text-ink
+        prose-h2:text-hl-18 prose-h3:text-hl-16
+        prose-p:text-hl-14 prose-p:text-muted prose-p:leading-relaxed
+        prose-a:text-link prose-a:no-underline hover:prose-a:text-link-hover
+        prose-strong:text-ink prose-strong:font-semibold
+        prose-table:w-full prose-table:text-hl-13
+        prose-th:bg-bg-soft prose-th:text-muted-2 prose-th:font-medium prose-th:px-4 prose-th:py-2
+        prose-td:px-4 prose-td:py-2 prose-td:border-b prose-td:border-line-soft
+        prose-blockquote:border-l-ink prose-blockquote:text-muted-3 prose-blockquote:not-italic
+        prose-ul:text-muted prose-ol:text-muted
+        prose-li:text-hl-14
+        prose-hr:border-line-soft">
+        <%= markdown_render(@about_markdown) %>
+      </article>
+    </div>
+
+    <%# 结尾 CTA %>
+    <div class="hl-card p-8 mt-6 text-center">
+      <p class="text-hl-14 text-muted leading-relaxed mb-4">
+        如果你认同"用规则对抗情绪"的理念，<br class="hidden md:block">
+        欢迎从交易课开始，一步步建立自己的投资体系。
+      </p>
+      <div class="flex flex-wrap gap-3 justify-center">
+        <%= link_to "开始学习交易课", courses_path, class: "hl-btn hl-btn-primary" %>
+        <%= link_to "了解加入会员", join_path, class: "hl-btn hl-btn-line" %>
+      </div>
+    </div>
+  </div>
+</section>

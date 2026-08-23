@@ -54,6 +54,7 @@ Rails.application.routes.draw do
     get :plans
   end
   get "video", to: "pages#video"
+  get "about", to: "pages#about"
 
   # 微信支付订单
   resources :orders, only: [:new, :create, :show] do
