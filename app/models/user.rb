@@ -64,8 +64,40 @@ class User < ApplicationRecord
     role == "user" && !is_member?
   end
 
+  def was_previously_member?
+    previous_role = saved_changes["role"]&.first
+    previous_role.in?(%w[member admin super_admin])
+  end
+
+  def upgrade_api_key_to_member
+    key = api_keys.active.first
+    return unless key
+    return if key.plan_code == "member_permanent" # 已经是会员套餐，无需升级
+
+    key.convert_to_member!
+    Rails.logger.info "[ApiKey] 角色升级自动转会员 key=#{key.id} user=#{id}"
+  rescue => e
+    Rails.logger.warn "[ApiKey] 升级失败 key=#{key.id} user=#{id}: #{e.message}"
+  end
+
+  def downgrade_api_key_to_visitor
+    key = api_keys.active.first
+    return unless key
+    return if key.plan_code == "welcome" # 已经是访客套餐，无需降级
+
+    welcome_plan = Plan.find_by(plan_code: "welcome")
+    return unless welcome_plan
+
+    key.update!(plan_code: "welcome", quota_remaining: welcome_plan.quota, quota_total: welcome_plan.quota)
+    Rails.logger.info "[ApiKey] 角色降级自动转访客 key=#{key.id} user=#{id}"
+  rescue => e
+    Rails.logger.warn "[ApiKey] 降级失败 key=#{key.id} user=#{id}: #{e.message}"
+  end
+
   before_save :set_default_member_expire_at
   after_create :grant_initial_api_key
+  after_save :upgrade_api_key_to_member, if: -> { saved_change_to_role? && is_member? && !was_previously_member? }
+  after_save :downgrade_api_key_to_visitor, if: -> { saved_change_to_role? && !is_member? && was_previously_member? }
 
   # T7 Phase2：注册即发 key（会员→无限次 / 非会员→welcome 15次），幂等
   def grant_initial_api_key
