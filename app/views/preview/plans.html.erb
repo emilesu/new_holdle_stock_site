@@ -55,7 +55,7 @@
               <%= plan.price_cents.zero? ? "免费" : "¥#{plan.price_cents / 100}" %>
             </span>
             <% unless plan.price_cents.zero? %>
-              <span class="text-hl-12 text-muted-3"></span>
+              <span class="text-hl-12 text-muted-3">一次付费</span>
             <% end %>
           </div>
 
@@ -65,7 +65,7 @@
 
           <ul class="text-hl-13 text-muted space-y-2 mb-6 flex-1">
             <% if plan.is_member_upgrade %>
-              <li class="relative pl-3.5 list-dot-link">AI 助手无限次使用</li>
+              <li class="relative pl-3.5 list-dot-link">AI 助手<span class="text-ink font-medium">无限次</span>使用</li>
               <li class="relative pl-3.5 list-dot-link">AI 助手完整能力</li>
               <li class="relative pl-3.5 list-dot-link">AI 助手配套优化「股票回测专用数据脚本」(省token神器)</li>
               <li class="relative pl-3.5 list-dot-link">进阶课程全解锁</li>
