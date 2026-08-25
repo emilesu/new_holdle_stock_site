@@ -1,0 +1,8 @@
+<div class="flex items-center justify-between mb-6">
+  <h1 class="text-hl-22 font-bold text-ink">编辑视频</h1>
+  <%= link_to "← 返回", admin_videos_path, class: "text-hl-13 text-muted hover:text-link transition-colors" %>
+</div>
+
+<div class="hl-card p-6">
+  <%= render "form", video: @video %>
+</div>

@@ -1,71 +1,92 @@
 <% set_page_title "视频 - Holdle" %>
-<% set_page_description "观看大苏的视频内容，涵盖股票投资、交易策略等主题。" %>
+<% set_page_description "观看大苏的视频内容，涵盖股票投资、交易策略、创业思考等主题。" %>
 
-<section class="border-b border-line">
-  <div class="container-hl py-24 text-center">
-    <div class="mb-8">
-      <span class="inline-block border-2 border-profit text-profit px-4 py-1.5 -rotate-3 text-hl-14 font-medium">VIDEO</span>
+<%# ========== Hero（左右两栏：头像 + 平台入口） ========== %>
+<section class="py-hl-hero bg-white border-b border-line">
+  <div class="container-hl grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+
+    <%# 左栏：圆形头像 + 简短文案 %>
+    <div class="flex flex-col items-center lg:items-start text-center lg:text-left">
+      <div class="w-32 h-32 rounded-full overflow-hidden border border-line bg-bg-mute">
+        <%= image_tag "https://video.holdle.com/image/default/DB438C3A8E5A4422A99C71EB48B1F3B9-6-2.jpg", alt: "大苏", class: "w-full h-full object-cover" %>
+      </div>
+      <h1 class="text-hl-22 md:text-hl-40 font-bold leading-tight text-ink mt-6 mb-3">大苏 EmileSu</h1>
+      <p class="text-hl-14 text-muted leading-relaxed max-w-md">
+        股票投资、交易策略、创业与学习。两个平台同步更新，选你方便的就行。
+      </p>
     </div>
-    <h1 class="text-hl-22 md:text-hl-40 font-bold leading-tight text-ink mb-8">
-      我的视频
-    </h1>
-    <p class="text-hl-14 text-muted max-w-xl mx-auto leading-relaxed">
-      大苏在这里分享投资交易心得、思考和市场观察。<br />
-      也会分享关于创业、学习、生活等主题的视频。<br />
-      两个平台同步更新，选你方便的就行。
-    </p>
+
+    <%# 右栏：两个平台大按钮 %>
+    <div class="space-y-4">
+      <a href="https://space.bilibili.com/270587047" target="_blank" rel="noopener noreferrer"
+         class="hl-card hl-card-hover p-6 flex items-center gap-5">
+        <div class="w-14 h-14 rounded bg-[#FB7299] flex items-center justify-center shrink-0">
+          <svg class="w-8 h-8 text-white" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M19.65 4.5a.75.75 0 0 1 .75.75v13.5a.75.75 0 0 1-.75.75h-14a.75.75 0 0 1-.75-.75V5.25a.75.75 0 0 1 .75-.75h14zM14.75 12l2.5-1.5v3l-2.5-1.5z"/>
+          </svg>
+        </div>
+        <div class="flex-1">
+          <h3 class="text-hl-16 font-semibold text-ink mb-1">Bilibili</h3>
+          <p class="text-hl-12 text-muted">中文为主，国内用户推荐访问 B 站频道</p>
+        </div>
+        <svg class="w-5 h-5 text-muted-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+        </svg>
+      </a>
+
+      <a href="https://www.youtube.com/@EmileSu" target="_blank" rel="noopener noreferrer"
+         class="hl-card hl-card-hover p-6 flex items-center gap-5">
+        <div class="w-14 h-14 rounded bg-red-600 flex items-center justify-center shrink-0">
+          <svg class="w-8 h-8 text-white" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+          </svg>
+        </div>
+        <div class="flex-1">
+          <h3 class="text-hl-16 font-semibold text-ink mb-1">YouTube</h3>
+          <p class="text-hl-12 text-muted">海外用户推荐访问 YouTube 频道</p>
+        </div>
+        <svg class="w-5 h-5 text-muted-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+        </svg>
+      </a>
+    </div>
   </div>
 </section>
 
+<%# ========== 往期视频（3 列卡片网格） ========== %>
 <section class="py-16">
   <div class="container-hl">
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-      <a href="https://www.youtube.com/@EmileSu" target="_blank" rel="noopener noreferrer" class="hl-card p-7 group hover:shadow-lg transition-shadow">
-        <div class="flex items-center gap-4 mb-4">
-          <div class="w-12 h-12 rounded-lg bg-red-600 flex items-center justify-center shrink-0">
-            <svg class="w-7 h-7 text-white" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
-            </svg>
-          </div>
-          <div class="text-left">
-            <h3 class="text-hl-16 font-semibold text-ink group-hover:text-profit transition-colors">YouTube</h3>
-            <p class="text-hl-12 text-muted">@EmileSu</p>
-          </div>
-        </div>
-        <p class="text-hl-13 text-muted leading-relaxed mb-4">
-          「推荐」如果你能科学上网 或 是海外用户，建议你访问YouTube频道。
-        </p>
-        <span class="inline-flex items-center gap-2 text-hl-13 text-link group-hover:underline">
-          访问频道
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
-          </svg>
-        </span>
-      </a>
-
-      <a href="https://space.bilibili.com/270587047" target="_blank" rel="noopener noreferrer" class="hl-card p-7 group hover:shadow-lg transition-shadow">
-        <div class="flex items-center gap-4 mb-4">
-          <div class="w-12 h-12 rounded-lg bg-[#FB7299] flex items-center justify-center shrink-0">
-            <svg class="w-7 h-7 text-white" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M19.65 4.5a.75.75 0 0 1 .75.75v13.5a.75.75 0 0 1-.75.75h-14a.75.75 0 0 1-.75-.75V5.25a.75.75 0 0 1 .75-.75h14zM14.75 12l2.5-1.5v3l-2.5-1.5z"/>
-            </svg>
-          </div>
-          <div class="text-left">
-            <h3 class="text-hl-16 font-semibold text-ink group-hover:text-profit transition-colors">Bilibili</h3>
-            <p class="text-hl-12 text-muted">ID: 270587047</p>
-          </div>
-        </div>
-        <p class="text-hl-13 text-muted leading-relaxed mb-4">
-          中文为主，国内用户，建议你访问Bilibili频道。
-        </p>
-        <span class="inline-flex items-center gap-2 text-hl-13 text-link group-hover:underline">
-          访问频道
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
-          </svg>
-        </span>
-      </a>
+    <div class="mb-8">
+      <span class="label-en">VIDEOS</span>
+      <h2 class="text-hl-22 font-bold text-ink">往期视频</h2>
     </div>
+
+    <% if @videos.any? %>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <% @videos.each do |video| %>
+          <div class="hl-card overflow-hidden flex flex-col">
+            <div class="aspect-video bg-bg-mute overflow-hidden">
+              <%= image_tag video.cover_url, alt: video.title, loading: "lazy", class: "w-full h-full object-cover", onerror: "this.style.display='none'" %>
+            </div>
+            <div class="p-5 flex flex-col flex-1">
+              <h3 class="text-hl-14 font-semibold text-ink mb-4 leading-snug"><%= video.title %></h3>
+              <div class="flex flex-wrap gap-2 mt-auto">
+                <% if video.bilibili_url.present? %>
+                  <a href="<%= video.bilibili_url %>" target="_blank" rel="noopener noreferrer" class="hl-btn hl-btn-line !py-1.5 !px-3 text-hl-12">Bilibili</a>
+                <% end %>
+                <% if video.youtube_url.present? %>
+                  <a href="<%= video.youtube_url %>" target="_blank" rel="noopener noreferrer" class="hl-btn hl-btn-line !py-1.5 !px-3 text-hl-12">YouTube</a>
+                <% end %>
+              </div>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    <% else %>
+      <div class="hl-card p-10 text-center">
+        <p class="text-hl-13 text-muted">视频正在整理中，敬请期待。</p>
+      </div>
+    <% end %>
   </div>
 </section>
 

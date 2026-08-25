@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_08_23_000002) do
+ActiveRecord::Schema[7.1].define(version: 2026_08_25_190946) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -504,6 +504,19 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_23_000002) do
     t.index ["weixin_app_openid"], name: "index_users_on_weixin_app_openid", unique: true
     t.index ["weixin_unionid"], name: "index_users_on_weixin_unionid", unique: true
     t.index ["weixin_web_openid"], name: "index_users_on_weixin_web_openid", unique: true
+  end
+
+  create_table "videos", comment: "视频展示", force: :cascade do |t|
+    t.string "title", null: false, comment: "视频标题"
+    t.string "cover_url", comment: "封面图 URL"
+    t.string "bilibili_url", comment: "B站视频链接"
+    t.string "youtube_url", comment: "YouTube 视频链接"
+    t.boolean "is_published", default: false, comment: "是否发布"
+    t.integer "sort", default: 0, comment: "排序（越小越前）"
+    t.datetime "published_at", comment: "发布时间"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["sort"], name: "index_videos_on_sort"
   end
 
   add_foreign_key "api_key_adjustments", "api_keys"

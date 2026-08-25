@@ -150,6 +150,7 @@ Rails.application.routes.draw do
       end
     end
     resources :articles
+    resources :videos
 
     # 后台订单管理
     resources :orders, only: [:index, :show]

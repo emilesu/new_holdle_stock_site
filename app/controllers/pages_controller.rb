@@ -3,6 +3,7 @@ class PagesController < ApplicationController
   end
 
   def video
+    @videos = Video.published.sorted
   end
 
   def about

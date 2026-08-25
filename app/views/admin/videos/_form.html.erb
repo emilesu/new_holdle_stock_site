@@ -1,0 +1,84 @@
+<%= form_with(model: [:admin, video], class: "space-y-6") do |f| %>
+  <div>
+    <%= f.label :title, "视频标题", class: "block text-sm font-medium text-gray-700 mb-1" %>
+    <%= f.text_field :title, class: "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500" %>
+    <% if video.errors[:title].any? %>
+      <p class="mt-1 text-sm text-red-600"><%= video.errors[:title].join(", ") %></p>
+    <% end %>
+  </div>
+
+  <div>
+    <%= f.label :cover_url, "封面图 URL", class: "block text-sm font-medium text-gray-700 mb-1" %>
+    <%= f.text_field :cover_url, class: "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500", placeholder: "https://..." %>
+    <% if video.errors[:cover_url].any? %>
+      <p class="mt-1 text-sm text-red-600"><%= video.errors[:cover_url].join(", ") %></p>
+    <% end %>
+    <div class="mt-2">
+      <p class="text-xs text-gray-500 mb-1">封面预览：</p>
+      <div id="cover-preview" class="w-48 h-27 bg-gray-100 rounded border border-gray-200 overflow-hidden flex items-center justify-center">
+        <% if video.cover_url.present? %>
+          <img src="<%= video.cover_url %>" alt="封面预览" class="w-full h-full object-cover" />
+        <% else %>
+          <span class="text-xs text-gray-400">输入 URL 后预览</span>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <% if video.errors[:base].any? %>
+    <div class="p-3 bg-red-50 border border-red-200 rounded text-sm text-red-600">
+      <%= video.errors[:base].join(", ") %>
+    </div>
+  <% end %>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div>
+      <%= f.label :bilibili_url, "B站视频链接", class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= f.text_field :bilibili_url, class: "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500", placeholder: "https://www.bilibili.com/video/BV..." %>
+    </div>
+
+    <div>
+      <%= f.label :youtube_url, "YouTube 视频链接", class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= f.text_field :youtube_url, class: "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500", placeholder: "https://www.youtube.com/watch?v=..." %>
+    </div>
+  </div>
+
+  <div class="flex flex-wrap items-center gap-6">
+    <div class="flex items-center space-x-2">
+      <%= f.check_box :is_published, class: "rounded border-gray-300 text-blue-600 focus:ring-blue-500" %>
+      <%= f.label :is_published, "发布", class: "text-sm text-gray-700" %>
+    </div>
+
+    <div>
+      <%= f.label :sort, "排序权重", class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= f.number_field :sort, class: "w-20 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500" %>
+    </div>
+
+    <div>
+      <%= f.label :published_at, "发布时间", class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= f.datetime_field :published_at, class: "px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500" %>
+    </div>
+  </div>
+
+  <div class="flex items-center space-x-3">
+    <%= f.submit "保存", class: "bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700" %>
+    <%= link_to "取消", admin_videos_path, class: "text-sm text-gray-600 hover:text-gray-800" %>
+  </div>
+<% end %>
+
+<script>
+  document.addEventListener("turbo:load", function() {
+    const input = document.getElementById("video_cover_url");
+    const preview = document.getElementById("cover-preview");
+    if (input && preview) {
+      input.addEventListener("input", function() {
+        const url = this.value.trim();
+        if (url) {
+          preview.innerHTML = '<img src="' + url + '" alt="封面预览" class="w-full h-full object-cover" onerror="this.parentNode.innerHTML=\'<span class=\\'text-xs text-gray-400\\'>图片加载失败</span>\'" />';
+        } else {
+          preview.innerHTML = '<span class="text-xs text-gray-400">输入 URL 后预览</span>';
+        }
+      });
+    }
+  });
+</script>
