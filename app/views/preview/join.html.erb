@@ -80,14 +80,14 @@
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
       <%# 免费体验 %>
-      <div class="hl-card p-7">
+      <div class="hl-card p-7 flex flex-col">
         <div class="flex items-baseline justify-between mb-1">
           <h3 class="text-hl-15 font-semibold text-ink">新用户</h3>
           <span class="text-hl-22 font-bold text-ink">免费体验</span>
         </div>
         <p class="text-hl-12 text-muted-3 mb-4">注册即送，无门槛</p>
         <p class="text-hl-22 font-bold text-ink mb-1">15 次</p>
-        <ul class="text-hl-13 text-muted space-y-2 mb-5">
+        <ul class="text-hl-13 text-muted space-y-2 mb-5 flex-1">
           <li class="relative pl-3.5 list-dot-link">先安装试一下</li>
           <li class="relative pl-3.5 list-dot-link">体验完再决定</li>
         </ul>
@@ -95,14 +95,14 @@
       </div>
 
       <%# 尝鲜包 %>
-      <div class="hl-card p-7">
+      <div class="hl-card p-7 flex flex-col">
         <div class="flex items-baseline justify-between mb-1">
           <h3 class="text-hl-15 font-semibold text-ink">尝鲜包</h3>
           <span class="text-hl-22 font-bold text-ink">5 元</span>
         </div>
         <p class="text-hl-12 text-muted-3 mb-4">试试手感</p>
         <p class="text-hl-22 font-bold text-ink mb-1">20 次</p>
-        <ul class="text-hl-13 text-muted space-y-2 mb-5">
+        <ul class="text-hl-13 text-muted space-y-2 mb-5 flex-1">
           <li class="relative pl-3.5 list-dot-link">按次计费</li>
           <li class="relative pl-3.5 list-dot-link">适合先用起来</li>
         </ul>
@@ -110,37 +110,40 @@
       </div>
 
       <%# 轻量包 %>
-      <div class="hl-card p-7">
+      <div class="hl-card p-7 flex flex-col">
         <div class="flex items-baseline justify-between mb-1">
           <h3 class="text-hl-15 font-semibold text-ink">轻量包</h3>
           <span class="text-hl-22 font-bold text-ink">20 元</span>
         </div>
         <p class="text-hl-12 text-muted-3 mb-4">日常够用</p>
         <p class="text-hl-22 font-bold text-ink mb-1">90 次</p>
-        <ul class="text-hl-13 text-muted space-y-2 mb-5">
+        <ul class="text-hl-13 text-muted space-y-2 mb-5 flex-1">
           <li class="relative pl-3.5 list-dot-link">按次计费</li>
           <li class="relative pl-3.5 list-dot-link">初级入门之选</li>
+          <li class="relative pl-3.5 list-dot-link">适合日常投资分析</li>
         </ul>
         <%= link_to "购买", new_order_path(plan: "light"), class: "hl-btn hl-btn-line w-full text-center" %>
       </div>
 
       <%# 标准包 %>
-      <div class="hl-card p-7">
+      <div class="hl-card p-7 flex flex-col">
         <div class="flex items-baseline justify-between mb-1">
           <h3 class="text-hl-15 font-semibold text-ink">标准包</h3>
           <span class="text-hl-22 font-bold text-ink">100 元</span>
         </div>
         <p class="text-hl-12 text-muted-3 mb-4">深入使用</p>
         <p class="text-hl-22 font-bold text-ink mb-1">500 次</p>
-        <ul class="text-hl-13 text-muted space-y-2 mb-5">
+        <ul class="text-hl-13 text-muted space-y-2 mb-5 flex-1">
           <li class="relative pl-3.5 list-dot-link">按次计费</li>
-          <li class="relative pl-3.5 list-dot-link">进阶学习的首选</li>
+          <li class="relative pl-3.5 list-dot-link">进阶学习首选</li>
+          <li class="relative pl-3.5 list-dot-link">支持多次对比分析</li>
+          <li class="relative pl-3.5 list-dot-link">满足深度研究需求</li>
         </ul>
         <%= link_to "购买", new_order_path(plan: "standard"), class: "hl-btn hl-btn-line w-full text-center" %>
       </div>
 
       <%# 永久会员 %>
-      <div class="hl-card p-7 border-2 border-ink">
+      <div class="hl-card p-7 border-2 border-ink flex flex-col">
         <div class="flex items-center justify-between mb-1">
           <h3 class="text-hl-15 font-semibold text-ink">永久会员</h3>
           <span class="inline-block border border-profit text-profit px-2 py-0.5 text-hl-11 font-medium">推荐</span>
@@ -149,7 +152,7 @@
           <span class="text-hl-22 font-bold text-ink">468 元</span>
           <span class="text-hl-12 text-muted-3">一次付费</span>
         </div>
-        <ul class="text-hl-13 text-muted space-y-2 mb-5">
+        <ul class="text-hl-13 text-muted space-y-2 mb-5 flex-1">
           <li class="relative pl-3.5 list-dot-link">AI 助手<span class="text-ink font-medium">无限次</span>使用</li>
           <li class="relative pl-3.5 list-dot-link">AI 助手完整能力</li>
           <li class="relative pl-3.5 list-dot-link">AI 助手配套优化「股票回测专用数据脚本」(省token神器)</li>
