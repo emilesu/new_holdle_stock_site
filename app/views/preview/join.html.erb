@@ -76,7 +76,7 @@
   <div class="container-hl py-16">
     <div class="label-en">PRICING</div>
     <h2 class="text-hl-22 font-bold text-ink mb-2">透明定价，一屏看清</h2>
-    <p class="text-hl-13 text-muted mb-8">从免费体验到永久会员，按你的使用频率选择</p>
+    <p class="text-hl-13 text-muted mb-8">从免费体验到永久会员，可按需选择</p>
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
       <%# 免费体验 %>
@@ -119,7 +119,7 @@
         <p class="text-hl-22 font-bold text-ink mb-1">90 次</p>
         <ul class="text-hl-13 text-muted space-y-2 mb-5">
           <li class="relative pl-3.5 list-dot-link">按次计费</li>
-          <li class="relative pl-3.5 list-dot-link">性价比之选</li>
+          <li class="relative pl-3.5 list-dot-link">初级入门之选</li>
         </ul>
         <%= link_to "购买", new_order_path(plan: "light"), class: "hl-btn hl-btn-line w-full text-center" %>
       </div>
@@ -130,11 +130,11 @@
           <h3 class="text-hl-15 font-semibold text-ink">标准包</h3>
           <span class="text-hl-22 font-bold text-ink">100 元</span>
         </div>
-        <p class="text-hl-12 text-muted-3 mb-4">重度使用</p>
+        <p class="text-hl-12 text-muted-3 mb-4">深入使用</p>
         <p class="text-hl-22 font-bold text-ink mb-1">500 次</p>
         <ul class="text-hl-13 text-muted space-y-2 mb-5">
           <li class="relative pl-3.5 list-dot-link">按次计费</li>
-          <li class="relative pl-3.5 list-dot-link">深度分析选手的首选</li>
+          <li class="relative pl-3.5 list-dot-link">进阶学习的首选</li>
         </ul>
         <%= link_to "购买", new_order_path(plan: "standard"), class: "hl-btn hl-btn-line w-full text-center" %>
       </div>
@@ -151,8 +151,12 @@
         </div>
         <ul class="text-hl-13 text-muted space-y-2 mb-5">
           <li class="relative pl-3.5 list-dot-link">AI 助手<span class="text-ink font-medium">无限次</span>使用</li>
-          <li class="relative pl-3.5 list-dot-link">进阶课程解锁</li>
-          <li class="relative pl-3.5 list-dot-link">金字塔解锁</li>
+          <li class="relative pl-3.5 list-dot-link">AI 助手完整能力</li>
+          <li class="relative pl-3.5 list-dot-link">AI 助手配套优化「股票回测专用数据脚本」(省token神器)</li>
+          <li class="relative pl-3.5 list-dot-link">进阶课程全解锁</li>
+          <li class="relative pl-3.5 list-dot-link">金字塔排名全解锁</li>
+          <li class="relative pl-3.5 list-dot-link">HOLDLE技术交流群</li>
+          <li class="relative pl-3.5 list-dot-link">深度投研必备</li>
         </ul>
         <%= link_to "加入会员", new_order_path(plan: "member_permanent"), class: "hl-btn hl-btn-primary w-full text-center" %>
       </div>

@@ -1,11 +1,11 @@
 <% set_page_title "HOLDLE AI 投研助手 — 把 17 年方法论装进你的 AI" %>
-<% set_page_description "HOLDLE 投资课程已全部免费。基于 HOLDLE 方法论打造的 AI 投研助手，陪你学方法、做分析，新用户免费送 15 次体验。" %>
+<% set_page_description "HOLDLE 投资基础课程已全部免费。基于 HOLDLE 方法论打造的 AI 投研助手，陪你学方法、做分析，新用户免费送 15 次体验。" %>
 
 <%# ========== 1. Hero：首屏即 AI ========== %>
 <section class="py-hl-hero bg-white border-b border-line relative overflow-hidden">
   <div aria-hidden="true" class="absolute inset-0 hidden md:block bg-gradient-to-r from-white/85 via-white/70 to-white/60"></div>
   <div class="container-hl relative z-10">
-    <div class="text-hl-11 text-muted-5 tracking-wide-3 mb-5 font-medium">HOLD LE · 2.0 — 课程免费 + AI陪练</div>
+    <div class="text-hl-11 text-muted-5 tracking-wide-3 mb-5 font-medium">HOLD LE · 2.0 — 基础课程免费 + AI陪练</div>
     <h1 class="text-hl-22 md:text-hl-40 font-bold leading-tight text-ink mb-3">
       HOLD LE <span class="text-profit text-muted-2"> - AI 投研助手 </span>
     </h1>
@@ -18,10 +18,11 @@
       提高你的胜率。<br>
     </p>
     <div class="flex flex-wrap gap-3">
-      <%= link_to "马上登录", new_user_registration_path, class: "hl-btn hl-btn-primary" %>
-      <%= link_to "开始学习", video_path, class: "hl-btn hl-btn-line" %>
+      <%= link_to "使用AI助手", new_user_registration_path, class: "hl-btn hl-btn-primary" %>
+      <%= link_to "加入会员", video_path, class: "hl-btn hl-btn-line" %>
+      <%= link_to "开始学习", preview_plans_path, class: "hl-btn hl-btn-line" %>
       <%= link_to "金字塔排行", preview_plans_path, class: "hl-btn hl-btn-line" %>
-      <button data-action="click->message#open" class="hl-btn hl-btn-line">给大苏写信</button>
+      <%# <button data-action="click->message#open" class="hl-btn hl-btn-line">给大苏写信</button> %>
     </div>
   </div>
 </section>
@@ -247,7 +248,7 @@
         </div>
         <div class="hl-callout-dashed">
           <h4 class="text-hl-12 text-muted-3 font-medium mb-2 tracking-wide-2">关于 HOLDLE 网站</h4>
-          <p class="text-hl-13 text-muted leading-relaxed">我2017年底开始在holdle.com分享这个交易方法，网站至今已经十年。<br>
+          <p class="text-hl-13 text-muted leading-relaxed">我2017年底开始在www.holdle.com分享这个交易方法，网站至今已经十年。<br>
            2026年网站内容、工具重新升级，HOLDLE方法论开始进入AI时代。
         </div>
       </div>
@@ -260,7 +261,7 @@
 <section class="bg-white">
   <div class="container-narrow py-16">
     <div class="label-en">FAQ</div>
-    <h2 class="text-hl-22 font-semibold text-ink mb-8">常见问题关于 AI 投研助手</h2>
+    <h2 class="text-hl-22 font-semibold text-ink mb-8">常见问题</h2>
 
     <div class="hl-card overflow-hidden hl-faq">
       <details class="hl-faq-item">
@@ -344,7 +345,7 @@
           <span class="hl-faq-icon">+</span>
         </summary>
         <div class="hl-faq-content">
-          当前课程已开源免费，还有大量內容供你了解 HOLDLE 的方法论——包括视频、文章和一些在线工具。AI 助手能帮你快速理解并上手。
+          当前基础课程已开源免费，还有大量內容供你了解 HOLDLE 的方法论——包括视频、文章和一些在线工具。AI 助手能帮你快速理解并上手。
         </div>
       </details>
 

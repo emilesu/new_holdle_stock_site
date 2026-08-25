@@ -55,7 +55,7 @@
               <%= plan.price_cents.zero? ? "免费" : "¥#{plan.price_cents / 100}" %>
             </span>
             <% unless plan.price_cents.zero? %>
-              <span class="text-hl-12 text-muted-3">一次</span>
+              <span class="text-hl-12 text-muted-3"></span>
             <% end %>
           </div>
 
@@ -66,14 +66,18 @@
           <ul class="text-hl-13 text-muted space-y-2 mb-6 flex-1">
             <% if plan.is_member_upgrade %>
               <li class="relative pl-3.5 list-dot-link">AI 助手无限次使用</li>
-              <li class="relative pl-3.5 list-dot-link">进阶课程解锁</li>
-              <li class="relative pl-3.5 list-dot-link">金字塔解锁</li>
+              <li class="relative pl-3.5 list-dot-link">AI 助手完整能力</li>
+              <li class="relative pl-3.5 list-dot-link">AI 助手配套优化「股票回测专用数据脚本」(省token神器)</li>
+              <li class="relative pl-3.5 list-dot-link">进阶课程全解锁</li>
+              <li class="relative pl-3.5 list-dot-link">金字塔排名全解锁</li>
+              <li class="relative pl-3.5 list-dot-link">HOLDLE技术交流群</li>
+              <li class="relative pl-3.5 list-dot-link">深度投研必备</li>
             <% elsif plan.plan_code == "welcome" %>
-              <li class="relative pl-3.5 list-dot-link">无门槛体验完整能力</li>
+              <li class="relative pl-3.5 list-dot-link">无门槛体验</li>
               <li class="relative pl-3.5 list-dot-link">用完再决定是否付费</li>
             <% else %>
-              <li class="relative pl-3.5 list-dot-link">HOLDLE 方法论问答</li>
-              <li class="relative pl-3.5 list-dot-link">股票分析助手</li>
+              <li class="relative pl-3.5 list-dot-link">AI 助手方法论问答</li>
+              <li class="relative pl-3.5 list-dot-link">AI 助手股票分析</li>
               <li class="relative pl-3.5 list-dot-link">次数用完可随时叠加</li>
             <% end %>
           </ul>
