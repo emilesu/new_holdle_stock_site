@@ -2,14 +2,13 @@
 # v1.39.0 起教程页已转正（preview/ai_assistant → 正式 /ai-assistant），本配置直接沿用。
 module AiAssistantHelper
   # 宣传视频 BV 号（B站）。空字符串 = 视频未发布，页面显示「制作中」占位。
-  # 视频发布后由运营填入，无需改版。示例：AI_ASSISTANT_BVID = "BV1xx411c7mD"
-  AI_ASSISTANT_BVID = ""
+  AI_ASSISTANT_BVID = "BV1ZF8o6eE8P"
 
   # 宣传视频封面图（16:9，图床 URL）。空 = 未提供，页面显示「制作中」占位块。
-  AI_ASSISTANT_COVER_URL = ""
+  AI_ASSISTANT_COVER_URL = "https://video.holdle.com/image/default/95B29629FC6E4D00B3C4C42B5BF6C327-6-2.jpg"
 
   # 宣传视频 YouTube 地址（海外观众渠道）。空 = 未提供，按钮呈禁用态。
-  AI_ASSISTANT_YOUTUBE_URL = ""
+  AI_ASSISTANT_YOUTUBE_URL = "https://youtu.be/Ff4kyVRO7RI"
 
   # 安装方法 5 张截图（图床 URL，顺序对应 5 个步骤）。元素为空 = 该步骤显示「待补充截图」占位。
   # 注意：站点为 HTTPS（assume_ssl + Nginx SSL 终结），图床必须使用 https:// 前缀，否则浏览器 mixed content 拦截。
