@@ -78,92 +78,45 @@
     <h2 class="text-hl-22 font-bold text-ink mb-2">透明定价，一屏看清</h2>
     <p class="text-hl-13 text-muted mb-8">从免费体验到永久会员，可按需选择</p>
 
+    <%# 定价区动态渲染 Plan.active（v1.40.1 由硬编码改为与 /plans 同源，避免双数据源漂移）；卖点文案按 plan_code 维护 %>
+    <% if Plan.active.any? %>
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-      <%# 免费体验 %>
-      <div class="hl-card p-7 flex flex-col">
-        <div class="flex items-baseline justify-between mb-1">
-          <h3 class="text-hl-15 font-semibold text-ink">新用户</h3>
-          <span class="text-hl-22 font-bold text-ink">免费体验</span>
+      <% pricing_features = {
+        "welcome" => ["先安装试一下", "体验完再决定"],
+        "starter" => ["按次计费", "适合先用起来"],
+        "light" => ["按次计费", "初级入门之选", "适合日常投资分析"],
+        "standard" => ["按次计费", "进阶学习首选", "适合日常投资分析", "支持多次对比分析"],
+        "member_permanent" => ['AI 助手<span class="text-ink font-medium">无限次</span>使用', "AI 助手完整能力", "AI 助手配套优化「股票回测专用数据脚本」(省token神器)", "进阶课程全解锁", "金字塔排名全解锁", "HOLDLE技术交流群", "深度投研必备"]
+      } %>
+      <% Plan.active.order(:price_cents).each do |plan| %>
+        <% unlimited = plan.quota.nil? %>
+        <% is_member = plan.is_member_upgrade %>
+        <div class="hl-card p-7 flex flex-col <%= is_member ? 'border-2 border-ink' : '' %>">
+          <div class="flex items-center justify-between mb-1">
+            <h3 class="text-hl-15 font-semibold text-ink"><%= plan.name %></h3>
+            <% if is_member %>
+              <span class="inline-block border border-profit text-profit px-2 py-0.5 text-hl-11 font-medium">推荐</span>
+            <% end %>
+          </div>
+          <p class="text-hl-12 text-muted-3 mb-4"><%= plan.plan_code == "welcome" ? "注册即送，无门槛" : (is_member ? "一次付费" : "按次付费") %></p>
+          <p class="text-hl-22 font-bold text-ink mb-1"><%= plan.price_cents.zero? ? "免费" : "¥#{format('%g', plan.price_yuan)}" %></p>
+          <p class="text-hl-22 font-bold text-ink mb-4"><%= unlimited ? "无限次" : "#{plan.quota} 次" %></p>
+          <ul class="text-hl-13 text-muted space-y-2 mb-5 flex-1">
+            <% (pricing_features[plan.plan_code] || []).each do |feature| %>
+              <li class="relative pl-3.5 list-dot-link"><%= feature.html_safe %></li>
+            <% end %>
+          </ul>
+          <% if plan.plan_code == "welcome" %>
+            <%= link_to "免费领取", new_user_registration_path, class: "hl-btn hl-btn-line w-full text-center" %>
+          <% else %>
+            <%= link_to is_member ? "加入会员" : "购买", new_order_path(plan: plan.plan_code), class: "hl-btn #{is_member ? 'hl-btn-primary' : 'hl-btn-line'} w-full text-center" %>
+          <% end %>
         </div>
-        <p class="text-hl-12 text-muted-3 mb-4">注册即送，无门槛</p>
-        <p class="text-hl-22 font-bold text-ink mb-1">15 次</p>
-        <ul class="text-hl-13 text-muted space-y-2 mb-5 flex-1">
-          <li class="relative pl-3.5 list-dot-link">先安装试一下</li>
-          <li class="relative pl-3.5 list-dot-link">体验完再决定</li>
-        </ul>
-        <%= link_to "免费领取", new_user_registration_path, class: "hl-btn hl-btn-line w-full text-center" %>
-      </div>
-
-      <%# 尝鲜包 %>
-      <div class="hl-card p-7 flex flex-col">
-        <div class="flex items-baseline justify-between mb-1">
-          <h3 class="text-hl-15 font-semibold text-ink">尝鲜包</h3>
-          <span class="text-hl-22 font-bold text-ink">5 元</span>
-        </div>
-        <p class="text-hl-12 text-muted-3 mb-4">试试手感</p>
-        <p class="text-hl-22 font-bold text-ink mb-1">20 次</p>
-        <ul class="text-hl-13 text-muted space-y-2 mb-5 flex-1">
-          <li class="relative pl-3.5 list-dot-link">按次计费</li>
-          <li class="relative pl-3.5 list-dot-link">适合先用起来</li>
-        </ul>
-        <%= link_to "购买", new_order_path(plan: "starter"), class: "hl-btn hl-btn-line w-full text-center" %>
-      </div>
-
-      <%# 轻量包 %>
-      <div class="hl-card p-7 flex flex-col">
-        <div class="flex items-baseline justify-between mb-1">
-          <h3 class="text-hl-15 font-semibold text-ink">轻量包</h3>
-          <span class="text-hl-22 font-bold text-ink">20 元</span>
-        </div>
-        <p class="text-hl-12 text-muted-3 mb-4">日常够用</p>
-        <p class="text-hl-22 font-bold text-ink mb-1">90 次</p>
-        <ul class="text-hl-13 text-muted space-y-2 mb-5 flex-1">
-          <li class="relative pl-3.5 list-dot-link">按次计费</li>
-          <li class="relative pl-3.5 list-dot-link">初级入门之选</li>
-          <li class="relative pl-3.5 list-dot-link">适合日常投资分析</li>
-        </ul>
-        <%= link_to "购买", new_order_path(plan: "light"), class: "hl-btn hl-btn-line w-full text-center" %>
-      </div>
-
-      <%# 标准包 %>
-      <div class="hl-card p-7 flex flex-col">
-        <div class="flex items-baseline justify-between mb-1">
-          <h3 class="text-hl-15 font-semibold text-ink">标准包</h3>
-          <span class="text-hl-22 font-bold text-ink">100 元</span>
-        </div>
-        <p class="text-hl-12 text-muted-3 mb-4">深入使用</p>
-        <p class="text-hl-22 font-bold text-ink mb-1">500 次</p>
-        <ul class="text-hl-13 text-muted space-y-2 mb-5 flex-1">
-          <li class="relative pl-3.5 list-dot-link">按次计费</li>
-          <li class="relative pl-3.5 list-dot-link">进阶学习首选</li>
-          <li class="relative pl-3.5 list-dot-link">适合日常投资分析</li>
-          <li class="relative pl-3.5 list-dot-link">支持多次对比分析</li>
-        </ul>
-        <%= link_to "购买", new_order_path(plan: "standard"), class: "hl-btn hl-btn-line w-full text-center" %>
-      </div>
-
-      <%# 永久会员 %>
-      <div class="hl-card p-7 border-2 border-ink flex flex-col">
-        <div class="flex items-center justify-between mb-1">
-          <h3 class="text-hl-15 font-semibold text-ink">永久会员</h3>
-          <span class="inline-block border border-profit text-profit px-2 py-0.5 text-hl-11 font-medium">推荐</span>
-        </div>
-        <div class="flex items-baseline gap-1 mb-4">
-          <span class="text-hl-22 font-bold text-ink">468 元</span>
-          <span class="text-hl-12 text-muted-3">一次付费</span>
-        </div>
-        <ul class="text-hl-13 text-muted space-y-2 mb-5 flex-1">
-          <li class="relative pl-3.5 list-dot-link">AI 助手<span class="text-ink font-medium">无限次</span>使用</li>
-          <li class="relative pl-3.5 list-dot-link">AI 助手完整能力</li>
-          <li class="relative pl-3.5 list-dot-link">AI 助手配套优化「股票回测专用数据脚本」(省token神器)</li>
-          <li class="relative pl-3.5 list-dot-link">进阶课程全解锁</li>
-          <li class="relative pl-3.5 list-dot-link">金字塔排名全解锁</li>
-          <li class="relative pl-3.5 list-dot-link">HOLDLE技术交流群</li>
-          <li class="relative pl-3.5 list-dot-link">深度投研必备</li>
-        </ul>
-        <%= link_to "加入会员", new_order_path(plan: "member_permanent"), class: "hl-btn hl-btn-primary w-full text-center" %>
-      </div>
+      <% end %>
     </div>
+    <% else %>
+      <p class="text-hl-14 text-muted-4 text-center py-8">套餐筹备中，请稍后再来</p>
+    <% end %>
 
     <p class="text-hl-12 text-muted-4 text-center mt-6">
       ※ 虚拟服务一经购买不支持退款（购买前请确认需求）；按次套餐用完后可随时续购，次数用完可随时充值。

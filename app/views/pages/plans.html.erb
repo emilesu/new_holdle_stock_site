@@ -52,7 +52,7 @@
 
           <div class="flex items-baseline gap-1 mb-4">
             <span class="text-hl-22 font-bold text-ink">
-              <%= plan.price_cents.zero? ? "免费" : "¥#{plan.price_cents / 100}" %>
+              <%= plan.price_cents.zero? ? "免费" : "¥#{format('%g', plan.price_yuan)}" %>
             </span>
             <% unless plan.price_cents.zero? %>
               <span class="text-hl-12 text-muted-3">一次付费</span>
@@ -92,8 +92,8 @@
     </div>
     <% else %>
       <div class="hl-card px-6 py-16 text-center mb-8">
-        <p class="text-hl-14 text-muted-4">暂无可用套餐</p>
-        <p class="mt-2 text-hl-13 text-muted-3">请在服务器执行 <code>RAILS_ENV=production bin/rails mcp:seed_plans</code> 初始化套餐数据</p>
+        <p class="text-hl-14 text-muted-4">套餐筹备中，请稍后再来</p>
+        <p class="mt-2 text-hl-13 text-muted-3">如需购买或遇到问题，可在首页留言或微信联系站长，会尽快处理</p>
       </div>
     <% end %>
     <p class="text-hl-12 text-muted-4 text-center leading-relaxed">
