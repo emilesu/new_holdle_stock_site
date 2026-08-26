@@ -92,13 +92,32 @@
 <% unless @order.paid? %>
   <%# JSAPI/Native 均轮询：JSAPI 支付成功跳回本页时回调可能未到，轮询到 paid 后 reload 进落地页 %>
   <%= javascript_tag nonce: true do %>
-    document.addEventListener('turbo:load', function() {
+    // 统一清理：定时器 + visibilitychange 监听。
+    // 订单页强制登录且 layout 对登录态注入 turbo-cache-control:no-cache，Turbo 不会触发 turbo:before-cache，
+    // 因此必须同时挂在 turbo:before-render（每次 Turbo 渲染新页面前必触发）上，防止离开订单页后监听器跨页面泄漏。
+    function stopOrderPolling() {
       if (window._orderPollTimer) {
         clearInterval(window._orderPollTimer);
         window._orderPollTimer = null;
       }
+      if (window._orderVisHandler) {
+        document.removeEventListener('visibilitychange', window._orderVisHandler);
+        window._orderVisHandler = null;
+      }
+    }
 
-      var orderId = <%= @order.id %>;
+    // 先移除旧监听再挂载，避免多次访问订单页时 before-render/before-cache 监听器累积
+    if (window._stopOrderPolling) {
+      document.removeEventListener('turbo:before-cache', window._stopOrderPolling);
+      document.removeEventListener('turbo:before-render', window._stopOrderPolling);
+    }
+    window._stopOrderPolling = stopOrderPolling;
+    document.addEventListener('turbo:before-cache', window._stopOrderPolling);
+    document.addEventListener('turbo:before-render', window._stopOrderPolling);
+
+    document.addEventListener('turbo:load', function() {
+      stopOrderPolling();
+
       var paid = <%= @order.paid? %>;
       if (paid) return;
 
@@ -118,20 +137,10 @@
       window._orderPollTimer = setInterval(checkOrderStatus, 3000);
 
       // 扫码支付时页面常处于后台 tab，setInterval 会被浏览器节流；切回页面立即检查一次，避免「刷新才跳转」
-      if (window._orderVisHandler) {
-        document.removeEventListener('visibilitychange', window._orderVisHandler);
-      }
       window._orderVisHandler = function() {
         if (!document.hidden) checkOrderStatus();
       };
       document.addEventListener('visibilitychange', window._orderVisHandler);
-    });
-
-    document.addEventListener('turbo:before-cache', function() {
-      if (window._orderPollTimer) {
-        clearInterval(window._orderPollTimer);
-        window._orderPollTimer = null;
-      }
     });
   <% end %>
 <% end %>
