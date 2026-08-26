@@ -44,6 +44,19 @@ class Users::ProfilesControllerTest < ActionDispatch::IntegrationTest
     assert_select "textarea", %r{https://ai\.holdle\.com/mcp}
   end
 
+  test "disabled key 不展示安装提示词（仅 active key 提供）" do
+    user = users(:one)
+    key = create_key(user)
+    key.disable!
+    sign_in user
+
+    get users_profile_path
+
+    assert_response :success
+    assert_select "button", text: "复制 Key"
+    assert_select "button", text: "复制提示词", count: 0
+  end
+
   test "管理员可见安装提示词，提示词包含 Key 与新地址" do
     user = users(:two) # admin fixture
     create_key(user)
