@@ -102,8 +102,8 @@
       var paid = <%= @order.paid? %>;
       if (paid) return;
 
-      window._orderPollTimer = setInterval(function() {
-        fetch('<%= status_order_path(@order) %>')
+      function checkOrderStatus() {
+        fetch('<%= status_order_path(@order) %>', { headers: { 'Accept': 'application/json' } })
           .then(function(r) { return r.json(); })
           .then(function(data) {
             if (data.paid) {
@@ -111,8 +111,20 @@
               window._orderPollTimer = null;
               window.location.reload();
             }
-          });
-      }, 3000);
+          })
+          .catch(function() { /* 网络抖动忽略，下一轮继续 */ });
+      }
+
+      window._orderPollTimer = setInterval(checkOrderStatus, 3000);
+
+      // 扫码支付时页面常处于后台 tab，setInterval 会被浏览器节流；切回页面立即检查一次，避免「刷新才跳转」
+      if (window._orderVisHandler) {
+        document.removeEventListener('visibilitychange', window._orderVisHandler);
+      }
+      window._orderVisHandler = function() {
+        if (!document.hidden) checkOrderStatus();
+      };
+      document.addEventListener('visibilitychange', window._orderVisHandler);
     });
 
     document.addEventListener('turbo:before-cache', function() {

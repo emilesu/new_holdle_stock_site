@@ -24,31 +24,31 @@
       </div>
     </div>
 
-    <%# ----- 导航链接 ----- %>
+    <%# ----- 导航链接（顺序：AI助手、交易课、金字塔、加入会员、投研文章、视频、关于HOLDLE） ----- %>
     <div class="hl-nav-links hidden md:flex">
-      <%= link_to pyramid_path, class: "hl-nav-link #{'hl-nav-link-active' if controller_name == 'pyramids'}" do %>
-        金字塔
-        <%= tag.span class: "hl-nav-link-active-dot", aria: { hidden: "true" } if controller_name == 'pyramids' %>
+      <%= link_to ai_assistant_path, class: "hl-nav-link hl-nav-link-new flex items-center #{'hl-nav-link-active' if controller_name == 'ai_assistants'}" do %>
+        <span>AI 助手</span>
+        <%= tag.span class: "hl-nav-link-active-dot", aria: { hidden: "true" } if controller_name == 'ai_assistants' %>
       <% end %>
       <%= link_to courses_path, class: "hl-nav-link #{'hl-nav-link-active' if controller_name == 'courses'}" do %>
         交易课
         <%= tag.span class: "hl-nav-link-active-dot", aria: { hidden: "true" } if controller_name == 'courses' %>
       <% end %>
-      <%= link_to video_path, class: "hl-nav-link hl-nav-link-new flex items-center #{'hl-nav-link-active' if controller_name == 'pages' && action_name == 'video'}" do %>
-        <span>视频</span>
-        <%= tag.span class: "hl-nav-link-active-dot", aria: { hidden: "true" } if controller_name == 'pages' && action_name == 'video' %>
+      <%= link_to pyramid_path, class: "hl-nav-link #{'hl-nav-link-active' if controller_name == 'pyramids'}" do %>
+        金字塔
+        <%= tag.span class: "hl-nav-link-active-dot", aria: { hidden: "true" } if controller_name == 'pyramids' %>
+      <% end %>
+      <%= link_to join_path, class: "hl-nav-link #{'hl-nav-link-active' if controller_name == 'pages' && action_name == 'join'}" do %>
+        加入会员
+        <%= tag.span class: "hl-nav-link-active-dot", aria: { hidden: "true" } if controller_name == 'pages' && action_name == 'join' %>
       <% end %>
       <%= link_to articles_path, class: "hl-nav-link #{'hl-nav-link-active' if controller_name == 'articles'}" do %>
         投研文章
         <%= tag.span class: "hl-nav-link-active-dot", aria: { hidden: "true" } if controller_name == 'articles' %>
       <% end %>
-      <%= link_to ai_assistant_path, class: "hl-nav-link hl-nav-link-new flex items-center #{'hl-nav-link-active' if controller_name == 'ai_assistants'}" do %>
-        <span>AI 助手</span>
-        <%= tag.span class: "hl-nav-link-active-dot", aria: { hidden: "true" } if controller_name == 'ai_assistants' %>
-      <% end %>
-      <%= link_to join_path, class: "hl-nav-link #{'hl-nav-link-active' if controller_name == 'pages' && action_name == 'join'}" do %>
-        加入会员
-        <%= tag.span class: "hl-nav-link-active-dot", aria: { hidden: "true" } if controller_name == 'pages' && action_name == 'join' %>
+      <%= link_to video_path, class: "hl-nav-link hl-nav-link-new flex items-center #{'hl-nav-link-active' if controller_name == 'pages' && action_name == 'video'}" do %>
+        <span>视频</span>
+        <%= tag.span class: "hl-nav-link-active-dot", aria: { hidden: "true" } if controller_name == 'pages' && action_name == 'video' %>
       <% end %>
       <%= link_to about_path, class: "hl-nav-link #{'hl-nav-link-active' if controller_name == 'pages' && action_name == 'about'}" do %>
         关于HOLDLE
@@ -147,15 +147,15 @@
        class="md:hidden hidden bg-white border-t border-line overflow-hidden transition-[max-height] duration-200 ease-out">
     <div class="px-4 py-4 space-y-3">
       <div class="space-y-1">
-        <%= link_to "金字塔", pyramid_path, class: "block px-4 py-2 text-hl-14 rounded #{controller_name == 'pyramids' ? 'bg-bg-mute text-ink font-medium border-l-2 border-profit' : 'text-muted hover:text-ink hover:bg-bg-mute'}" %>
+        <%= link_to "AI 助手", ai_assistant_path, class: "block px-4 py-2 text-hl-14 rounded #{controller_name == 'ai_assistants' ? 'bg-bg-mute text-ink font-medium border-l-2 border-profit' : 'text-muted hover:text-ink hover:bg-bg-mute'}" %>
         <%= link_to "交易课", courses_path, class: "block px-4 py-2 text-hl-14 rounded #{controller_name == 'courses' ? 'bg-bg-mute text-ink font-medium border-l-2 border-profit' : 'text-muted hover:text-ink hover:bg-bg-mute'}" %>
+        <%= link_to "金字塔", pyramid_path, class: "block px-4 py-2 text-hl-14 rounded #{controller_name == 'pyramids' ? 'bg-bg-mute text-ink font-medium border-l-2 border-profit' : 'text-muted hover:text-ink hover:bg-bg-mute'}" %>
+        <%= link_to "加入会员", join_path, class: "block px-4 py-2 text-hl-14 rounded #{controller_name == 'pages' && action_name == 'join' ? 'bg-bg-mute text-ink font-medium border-l-2 border-profit' : 'text-muted hover:text-ink hover:bg-bg-mute'}" %>
+        <%= link_to "投研文章", articles_path, class: "block px-4 py-2 text-hl-14 rounded #{controller_name == 'articles' ? 'bg-bg-mute text-ink font-medium border-l-2 border-profit' : 'text-muted hover:text-ink hover:bg-bg-mute'}" %>
         <%= link_to video_path, class: "block px-4 py-2 text-hl-14 rounded #{controller_name == 'pages' && action_name == 'video' ? 'bg-bg-mute text-ink font-medium border-l-2 border-profit' : 'text-muted hover:text-ink hover:bg-bg-mute'} flex items-center" do %>
           视频分享
           <span class="ml-2 w-2 h-2 bg-profit rounded-full"></span>
         <% end %>
-        <%= link_to "投研文章", articles_path, class: "block px-4 py-2 text-hl-14 rounded #{controller_name == 'articles' ? 'bg-bg-mute text-ink font-medium border-l-2 border-profit' : 'text-muted hover:text-ink hover:bg-bg-mute'}" %>
-        <%= link_to "AI 助手", ai_assistant_path, class: "block px-4 py-2 text-hl-14 rounded #{controller_name == 'ai_assistants' ? 'bg-bg-mute text-ink font-medium border-l-2 border-profit' : 'text-muted hover:text-ink hover:bg-bg-mute'}" %>
-        <%= link_to "加入会员", join_path, class: "block px-4 py-2 text-hl-14 rounded #{controller_name == 'pages' && action_name == 'join' ? 'bg-bg-mute text-ink font-medium border-l-2 border-profit' : 'text-muted hover:text-ink hover:bg-bg-mute'}" %>
         <%= link_to "关于HOLDLE", about_path, class: "block px-4 py-2 text-hl-14 rounded #{controller_name == 'pages' && action_name == 'about' ? 'bg-bg-mute text-ink font-medium border-l-2 border-profit' : 'text-muted hover:text-ink hover:bg-bg-mute'}" %>
       </div>
       <div class="pt-4 border-t border-line-soft">

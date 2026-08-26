@@ -51,7 +51,7 @@
           <div class="flex items-center justify-between mb-3">
             <span class="text-hl-12 text-muted-4">AI 投研助手 API Key</span>
             <% if @api_keys.any? %>
-              <%= link_to "购买套餐充值", new_order_path, class: "text-hl-12 text-profit font-medium hover:underline" %>
+              <%= link_to "购买套餐充值", plans_path, class: "text-hl-12 text-profit font-medium hover:underline" %>
             <% end %>
           </div>
           <% if @api_keys.any? %>
@@ -92,7 +92,7 @@
             <p class="text-hl-11 text-muted-4 mt-3">Key 是你的付费凭证，请勿泄露给他人；如泄露请点击上方「重新生成」立即更换，旧 Key 即刻失效。</p>
           <% else %>
             <span class="text-hl-13 text-muted-3">暂无 API Key。</span>
-            <%= link_to "去购买 AI 投研助手套餐", new_order_path, class: "text-hl-13 text-profit font-medium hover:underline ml-1" %>
+            <%= link_to "去购买 AI 投研助手套餐", plans_path, class: "text-hl-13 text-profit font-medium hover:underline ml-1" %>
           <% end %>
         </div>
 
