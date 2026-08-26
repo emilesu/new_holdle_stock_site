@@ -17,17 +17,20 @@ SSHKit.config.default_env = {} if SSHKit.config.default_env.nil?
 SSHKit.config.default_env[:path] = "/home/emilesu/.nvm/versions/node/#{fetch(:nvm_node)}/bin:$PATH"
 
 # 资产预编译前确保 node_modules 已安装
+# 限制 NODE_OPTIONS 内存峰值：3.4G 小内存服务器上 node 默认堆上限接近物理内存，会与 Trae IDE + puma 抢内存触发 OOM
 namespace :deploy do
   before 'deploy:assets:precompile', :install_yarn do
     on roles(:web) do
       within release_path do
-        execute :yarn, "install", "--frozen-lockfile"
+        with 'NODE_OPTIONS' => '--max-old-space-size=768' do
+          execute :yarn, "install", "--frozen-lockfile"
+        end
       end
     end
   end
 end
 
-# 资产预编译时跳过 yarn install（已在前面完成）
+# 资产预编译时跳过 yarn install（已在前面完成）；同样限制 node 内存峰值防 OOM
 Rake::Task['deploy:assets:precompile'].clear_actions
 Rake::Task['deploy:assets:precompile'].enhance do
   on release_roles(fetch(:assets_roles)) do
@@ -35,6 +38,7 @@ Rake::Task['deploy:assets:precompile'].enhance do
       with rails_env: fetch(:rails_env),
           rails_groups: fetch(:rails_assets_groups),
           'SKIP_YARN_INSTALL' => 'true',
+          'NODE_OPTIONS' => '--max-old-space-size=768',
           'PATH' => "/home/emilesu/.nvm/versions/node/#{fetch(:nvm_node)}/bin:/home/emilesu/.rbenv/shims:/home/emilesu/.rbenv/bin:$PATH" do
         execute :rake, "assets:precompile"
       end
