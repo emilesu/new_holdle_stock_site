@@ -71,8 +71,8 @@
           </div>
         <% end %>
 
-        <%# 安装提示词（暂仅管理员可见，与 profile 一致；开放时去掉 is_admin? 包裹） %>
-        <% if @api_key && current_user.is_admin? %>
+        <%# 安装提示词（v1.39.0 起对所有用户开放，与 profile 一致） %>
+        <% if @api_key %>
           <details class="mb-6 border border-line rounded overflow-hidden" open>
             <summary class="px-5 py-3 text-hl-13 font-medium text-ink cursor-pointer select-none">
               安装提示词（复制后粘贴给你的 AI 工具）
@@ -91,7 +91,7 @@
         <%# 引导按钮 %>
         <div class="flex flex-col gap-3">
           <%= link_to "前往个人中心", users_profile_path, class: "hl-btn hl-btn-primary block w-full text-center py-3" %>
-          <%= link_to "看使用教程", video_path, class: "hl-btn hl-btn-line block w-full text-center py-3" %>
+          <%= link_to "看使用教程", ai_assistant_path, class: "hl-btn hl-btn-line block w-full text-center py-3" %>
         </div>
       </div>
 

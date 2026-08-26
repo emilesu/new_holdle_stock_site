@@ -1,5 +1,5 @@
 # AI 助手教程页配置：视频 / 截图资源统一在此维护。
-# 转正（preview/ai_assistant → 正式 /ai-assistant）后视图迁移，本配置直接沿用。
+# v1.39.0 起教程页已转正（preview/ai_assistant → 正式 /ai-assistant），本配置直接沿用。
 module AiAssistantHelper
   # 宣传视频 BV 号（B站）。空字符串 = 视频未发布，页面显示「制作中」占位。
   # 视频发布后由运营填入，无需改版。示例：AI_ASSISTANT_BVID = "BV1xx411c7mD"

@@ -47,12 +47,14 @@ Rails.application.routes.draw do
   get "terms", to: "legal#terms"
   get "privacy", to: "legal#privacy"
 
+  # AI 助手教程页（v1.39.0 由 preview/ai_assistant 转正）
+  get "ai-assistant", to: "ai_assistants#show", as: :ai_assistant
+
   # 暗发布预览：新页面重设计，仅 admin 可见（非 admin 404），确认后删除
   namespace :preview do
     get :home
     get :join
     get :plans
-    get :ai_assistant
   end
   get "video", to: "pages#video"
   get "about", to: "pages#about"

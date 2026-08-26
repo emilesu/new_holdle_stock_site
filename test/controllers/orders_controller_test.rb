@@ -49,7 +49,7 @@ class OrdersControllerTest < ActionDispatch::IntegrationTest
     plain
   end
 
-  test "支付成功订单渲染落地页：普通用户可见 Key 明文与复制按钮，不可见安装提示词" do
+  test "支付成功订单渲染落地页：普通用户可见 Key、复制按钮与安装提示词（v1.39.0 起开放）" do
     plain = build_active_key(users(:one))
     order = users(:one).orders.create!(title: "尝鲜包", amount_cents: 500, plan_code: "starter", quota: 20, status: "paid")
 
@@ -59,7 +59,9 @@ class OrdersControllerTest < ActionDispatch::IntegrationTest
     assert_match "支付成功，已自动开通", response.body
     assert_match plain, response.body
     assert_match "复制 Key", response.body
-    assert_no_match "安装提示词", response.body
+    assert_match "安装提示词", response.body
+    assert_match "ai.holdle.com/mcp", response.body
+    assert_match "使用规则（必须遵守）", response.body
   end
 
   test "支付成功落地页：admin 可见安装提示词（含服务地址）" do

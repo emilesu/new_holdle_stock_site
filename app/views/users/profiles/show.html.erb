@@ -76,16 +76,14 @@
                     </div>
                   </div>
 
-                  <%# 安装提示词 + 复制（暂仅管理员可见，待开放给普通用户时去掉 is_admin? 包裹即可） %>
-                  <% if current_user.is_admin? %>
-                    <div data-controller="copy">
-                      <div class="flex items-center justify-between mb-1.5">
-                        <span class="text-hl-12 text-muted-4">安装提示词（复制后粘贴给你的 AI 工具）</span>
-                        <button type="button" data-action="copy#copy" data-copy-label="复制提示词" class="hl-btn hl-btn-line px-3 py-1.5 text-hl-12">复制提示词</button>
-                      </div>
-                      <textarea readonly rows="20" data-copy-target="source" class="w-full bg-white border border-line rounded px-4 py-3 text-hl-12 text-muted font-mono leading-relaxed focus:outline-none"><%= install_prompt(key.key_plaintext) %></textarea>
+                  <%# 安装提示词 + 复制（v1.39.0 起对普通用户开放） %>
+                  <div data-controller="copy">
+                    <div class="flex items-center justify-between mb-1.5">
+                      <span class="text-hl-12 text-muted-4">安装提示词（复制后粘贴给你的 AI 工具）</span>
+                      <button type="button" data-action="copy#copy" data-copy-label="复制提示词" class="hl-btn hl-btn-line px-3 py-1.5 text-hl-12">复制提示词</button>
                     </div>
-                  <% end %>
+                    <textarea readonly rows="20" data-copy-target="source" class="w-full bg-white border border-line rounded px-4 py-3 text-hl-12 text-muted font-mono leading-relaxed focus:outline-none"><%= install_prompt(key.key_plaintext) %></textarea>
+                  </div>
                 </div>
               <% end %>
             </div>

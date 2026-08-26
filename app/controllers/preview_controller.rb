@@ -9,8 +9,6 @@ class PreviewController < ApplicationController
 
   def plans; end
 
-  def ai_assistant; end
-
   private
 
   def require_admin
