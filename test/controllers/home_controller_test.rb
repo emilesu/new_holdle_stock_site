@@ -14,9 +14,8 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
 
   test "index renders all sections" do
     get root_url
-    assert_match "致七年前认识我的老朋友", @response.body
-    assert_match "WHAT WE OFFER", @response.body
-    assert_match "METHODOLOGY", @response.body
+    assert_match "AI RESEARCH ASSISTANT", @response.body
+    assert_match "THE METHOD BEHIND AI", @response.body
     assert_match "CASE CLOSED", @response.body
     assert_match "ABOUT THE AUTHOR", @response.body
     assert_match "FAQ", @response.body

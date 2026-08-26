@@ -2,6 +2,9 @@ class PagesController < ApplicationController
   def join
   end
 
+  def plans
+  end
+
   def video
     @videos = Video.published.sorted
   end

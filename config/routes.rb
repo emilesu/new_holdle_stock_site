@@ -38,6 +38,8 @@ Rails.application.routes.draw do
   resources :articles, only: [:index, :show]
 
   get "join", to: "pages#join"
+  # SKU 套餐选购页（v1.40.0 由 preview/plans 转正；购买按钮走 orders/new 新流程）
+  get "plans", to: "pages#plans"
 
   # 注册引导（新用户首次注册后进入；admin 可 ?preview=1 预览）
   get "onboarding", to: "onboardings#show", as: :onboarding
@@ -50,12 +52,6 @@ Rails.application.routes.draw do
   # AI 助手教程页（v1.39.0 由 preview/ai_assistant 转正）
   get "ai-assistant", to: "ai_assistants#show", as: :ai_assistant
 
-  # 暗发布预览：新页面重设计，仅 admin 可见（非 admin 404），确认后删除
-  namespace :preview do
-    get :home
-    get :join
-    get :plans
-  end
   get "video", to: "pages#video"
   get "about", to: "pages#about"
 

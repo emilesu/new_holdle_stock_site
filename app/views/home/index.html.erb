@@ -1,90 +1,116 @@
-<% set_page_title "HOLDLE — 概率交易系统与长期投资学习社区" %>
-<% set_page_description "十七年交易经验沉淀。不荐股，不开群，不预测。这里只有一套可重复执行的投资方法和一个陪你成长的投资者社区。" %>
-<% set_page_keywords "股票分析,港股,美股,A股,财务数据,金字塔评分,智能选股,行业对比,投资分析" %>
-<%# ========== 1. Hero ========== %>
+<% set_page_title "HOLDLE AI 投研助手 — 把 17 年方法论装进你的 AI" %>
+<% set_page_description "HOLDLE 投资基础课程已全部免费。基于 HOLDLE 方法论打造的 AI 投研助手，陪你学方法、做分析，新用户免费送 15 次体验。" %>
+
+<%# ========== 1. Hero：首屏即 AI ========== %>
 <section class="py-hl-hero bg-white border-b border-line relative overflow-hidden">
-  <%# <div aria-hidden="true"
-       class="absolute inset-0 hidden md:block bg-no-repeat bg-cover bg-center opacity-60 transition-opacity duration-700"
-       style="background-image: url('https://video.holdle.com/image/default/DF480BC57A704FE0B5269BDCFBDB032E-6-2.png');">
-  </div> %>
-  <div aria-hidden="true"
-       class="absolute inset-0 hidden md:block bg-gradient-to-r from-white/85 via-white/70 to-white/60"></div>
+  <div aria-hidden="true" class="absolute inset-0 hidden md:block bg-gradient-to-r from-white/85 via-white/70 to-white/60"></div>
   <div class="container-hl relative z-10">
-    <div class="text-hl-11 text-muted-5 tracking-wide-3 mb-5 font-medium">HOLD LE · v2.0</div>
-    <h1 class="text-hl-40 font-bold leading-tight text-ink mb-3">
-      HOLD LE <span class="font-normal text-muted-2">（Hold Life）</span>
+    <div class="text-hl-11 text-muted-5 tracking-wide-3 mb-5 font-medium">HOLD LE · 2.0 — 基础课程免费 + AI陪练</div>
+    <h1 class="text-hl-22 md:text-hl-40 font-bold leading-tight text-ink mb-3">
+      HOLD LE <span class="text-profit text-muted-2"> - AI 投研助手 </span>
     </h1>
     <p class="text-hl-18 text-muted-2 mb-7 leading-snug">
-      你不是不会投资股票。<br>
-      而是缺少一套识别、等待最具概率优势时机的体系。
-      </p>
-    <p class="text-hl-14 text-muted max-w-160 leading-relaxed mb-8">
-      我给你分享一套我用了十几年的交易方法。<br>
-      它会重新改变你对股票交易的认知。<br>
-      提高你的胜率。
+      把 17 年方法论，装进你的 AI。
+    </p>
+    <p class="text-hl-14 text-muted max-w-160 leading-relaxed mb-4">
+      你不是不会投资股票，而是缺少一套识别、等待最具概率优势时机的体系。<br><br>
+      会重新改变你对股票交易的认知。<br>
+      提高你的胜率。<br>
     </p>
     <div class="flex flex-wrap gap-3">
-      <%= link_to "我的视频", video_path, class: "hl-btn hl-btn-primary" %>
-      <%= link_to "开始学习", courses_path, class: "hl-btn hl-btn-line" %>
-      <%= link_to "用 HOLD LE 工具", pyramid_path, class: "hl-btn hl-btn-line" %>
-      <button data-action="click->message#open" class="hl-btn hl-btn-line">给大苏写信</button>
+      <%= link_to "使用AI助手", new_user_registration_path, class: "hl-btn hl-btn-primary" %>
+      <%= link_to "加入会员", video_path, class: "hl-btn hl-btn-line" %>
+      <%= link_to "开始学习", plans_path, class: "hl-btn hl-btn-line" %>
+      <%= link_to "金字塔排行", pyramid_path, class: "hl-btn hl-btn-line" %>
+      <%# <button data-action="click->message#open" class="hl-btn hl-btn-line">给大苏写信</button> %>
     </div>
   </div>
 </section>
 
-<%# ========== 3. 三大模块 ========== %>
-<section class="py-16">
-  <div class="container-hl">
-    <div class="label-en">WHAT WE OFFER</div>
-    <h2 class="text-hl-22 font-semibold text-ink mb-2">HOLD LE：把"正确价值观"变成钱的工具</h2>
-    <p class="text-hl-13 text-muted-3 mb-7">不是"每日牛股"，不是"短线秘籍"。是概率交易系统 + 十七年经验 + 一个程序员的固执。</p>
-
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <div class="hl-card hl-card-hover p-7">
-        <div class="text-hl-11 text-muted-5 tracking-wide-2 mb-3">01 / PROBABILITY</div>
-        <h3 class="text-hl-16 font-semibold mb-2">概率交易系统</h3>
-        <p class="text-hl-13 text-muted-3 leading-normal mb-5 min-h-11">抓住具备长期概率优势的机会，靠规则不靠运气。</p>
-        <ul class="mb-5">
-          <li class="py-1 text-hl-13 text-muted relative pl-3.5 list-dot-link">长期概率优势的识别方法</li>
-          <li class="py-1 text-hl-13 text-muted relative pl-3.5 list-dot-link">精准交易提高赢面</li>
-          <li class="py-1 text-hl-13 text-muted relative pl-3.5 list-dot-link">规则化的入场与出场</li>
-        </ul>
-        <%= link_to "进入课程 →", courses_path, class: "text-hl-13 text-link inline-block link-shift" %>
-      </div>
-
-      <div class="hl-card hl-card-hover p-7">
-        <div class="text-hl-11 text-muted-5 tracking-wide-2 mb-3">02 / TOOLS</div>
-        <h3 class="text-hl-16 font-semibold mb-2">HOLD LE 工具表</h3>
-        <p class="text-hl-13 text-muted-3 leading-normal mb-5 min-h-11">把"分析企业"标准化、自动化，不再满网扒财报。</p>
-        <ul class="mb-5">
-          <li class="py-1 text-hl-13 text-muted relative pl-3.5 list-dot-link">企业财务对比分析</li>
-          <li class="py-1 text-hl-13 text-muted relative pl-3.5 list-dot-link">多维雷达图评估</li>
-          <li class="py-1 text-hl-13 text-muted relative pl-3.5 list-dot-link">科技 / 消费行业排行榜</li>
-        </ul>
-        <%= link_to "体验工具 →", pyramid_path, class: "text-hl-13 text-link inline-block link-shift" %>
-      </div>
-
-      <div class="hl-card hl-card-hover p-7">
-        <div class="text-hl-11 text-muted-5 tracking-wide-2 mb-3">03 / CONTENT</div>
-        <h3 class="text-hl-16 font-semibold mb-2">视频 + 文章</h3>
-        <p class="text-hl-13 text-muted-3 leading-normal mb-5 min-h-11">十多年实践的经验和技巧，方法论不藏私。</p>
-        <ul class="mb-5">
-          <li class="py-1 text-hl-13 text-muted relative pl-3.5 list-dot-link">投资交易的认知与方法</li>
-          <li class="py-1 text-hl-13 text-muted relative pl-3.5 list-dot-link">实盘案例拆解</li>
-          <li class="py-1 text-hl-13 text-muted relative pl-3.5 list-dot-link">学会用规则做交易管理</li>
-        </ul>
-        <%= link_to "进入频道 →", video_path, class: "text-hl-13 text-link inline-block link-shift" %>
-      </div>
-    </div>
+<%# ========== 2. 转型声明 ========== %>
+<section class="border-b border-line bg-bg-soft">
+  <div class="container-narrow py-10 text-center">
+    <p class="text-hl-14 text-muted leading-relaxed">
+      HOLDLE 投资课程已<span class="text-ink font-semibold">全部开源</span>。
+      并增加了 <span class="text-profit font-semibold">AI 投研助手</span> ——
+      基于 HOLDLE 方法论，陪你学方法、做分析。
+    </p>
   </div>
 </section>
 
-<%# ========== 4. 方法论 ========== %>
-<section class="py-16  bg-white">
-  <div class="container-hl">
-    <div class="label-en">METHODOLOGY</div>
-    <h2 class="text-hl-22 font-semibold text-ink mb-2">怎么在股市里"先活下来"？</h2>
-    <p class="text-hl-13 text-muted-3 mb-7">把它分成两层概率</p>
+<%# ========== 3. AI 投研助手（核心板块） ========== %>
+<section class="border-b border-line bg-white">
+  <div class="container-hl py-16">
+    <div class="label-en">AI RESEARCH ASSISTANT</div>
+    <h2 class="text-hl-22 font-semibold text-ink mb-2">HOLDLE AI 投研助手</h2>
+    <p class="text-hl-13 text-muted-3 mb-7">把方法论装进你的 AI 工具（Codex / Trae / Claude / Cursor / WorkBuddy 等）</p>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-7">
+      <div class="hl-card hl-card-hover p-7">
+        <div class="text-hl-11 text-muted-5 tracking-wide-2 mb-3">01 / UNDERSTAND</div>
+        <h3 class="text-hl-16 font-semibold mb-2">状态A 不懂？问它</h3>
+        <p class="text-hl-13 text-muted-3 leading-normal mb-5 min-h-11">状态A 的入场时机怎么判断？」</p>
+        <ul class="mb-5">
+          <li class="py-1 text-hl-13 text-muted relative pl-3.5 list-dot-link">带你一步步理解方法论</li>
+          <li class="py-1 text-hl-13 text-muted relative pl-3.5 list-dot-link">讲到你会用为止</li>
+          <li class="py-1 text-hl-13 text-muted relative pl-3.5 list-dot-link">基于 HOLDLE 完整知识库</li>
+        </ul>
+      </div>
+      <div class="hl-card hl-card-hover p-7">
+        <div class="text-hl-11 text-muted-5 tracking-wide-2 mb-3">02 / ANALYZE</div>
+        <h3 class="text-hl-16 font-semibold mb-2">想分析一只股票？</h3>
+        <p class="text-hl-13 text-muted-3 leading-normal mb-5 min-h-11">「帮我按 HOLDLE 方法分析 600519」</p>
+        <ul class="mb-5">
+          <li class="py-1 text-hl-13 text-muted relative pl-3.5 list-dot-link">带你按「选好→等好→管好」走</li>
+          <li class="py-1 text-hl-13 text-muted relative pl-3.5 list-dot-link">企业质量 + 状态A 双判断</li>
+          <li class="py-1 text-hl-13 text-muted relative pl-3.5 list-dot-link">不荐股，教你判断</li>
+        </ul>
+      </div>
+      <div class="hl-card hl-card-hover p-7">
+        <div class="text-hl-11 text-muted-5 tracking-wide-2 mb-3">03 / MANAGE</div>
+        <h3 class="text-hl-16 font-semibold mb-2">止损、仓位、出场？</h3>
+        <p class="text-hl-13 text-muted-3 leading-normal mb-5 min-h-11">「三阶止损怎么设？」</p>
+        <ul class="mb-5">
+          <li class="py-1 text-hl-13 text-muted relative pl-3.5 list-dot-link">交易管理规则随时查</li>
+          <li class="py-1 text-hl-13 text-muted relative pl-3.5 list-dot-link">入场 / 仓位 / 出场全覆盖</li>
+          <li class="py-1 text-hl-13 text-muted relative pl-3.5 list-dot-link">规则化执行，不被情绪左右</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="hl-callout mb-7">
+      HOLDLE 不是荐股工具。 不推荐买卖、不预测涨跌、不承诺收益。它只讲方法，判断权在你。
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-7">
+      <div class="hl-card hl-card-hover p-7">
+        <div class="text-hl-11 text-muted-5 tracking-wide-2 mb-3">STEP 01</div>
+        <h3 class="text-hl-16 font-semibold mb-2">领 Key</h3>
+        <p class="text-hl-13 text-muted-3 leading-normal">注册即送 15 次，个人中心查看</p>
+      </div>
+      <div class="hl-card hl-card-hover p-7">
+        <div class="text-hl-11 text-muted-5 tracking-wide-2 mb-3">STEP 02</div>
+        <h3 class="text-hl-16 font-semibold mb-2">接入工具</h3>
+        <p class="text-hl-13 text-muted-3 leading-normal">Trae / Claude / Codex 等，一键配置</p>
+      </div>
+      <div class="hl-card hl-card-hover p-7">
+        <div class="text-hl-11 text-muted-5 tracking-wide-2 mb-3">STEP 03</div>
+        <h3 class="text-hl-16 font-semibold mb-2">开始提问</h3>
+        <p class="text-hl-13 text-muted-3 leading-normal">从「状态A 是什么」开始</p>
+      </div>
+    </div>
+
+    <%# <div class="flex flex-wrap gap-3"> %>
+    <%# </div> %>
+  </div>
+</section>
+
+<%# ========== 4. 方法论：AI 背后的方法 ========== %>
+<section class="border-b border-line">
+  <div class="container-hl py-16">
+    <div class="label-en">THE METHOD BEHIND AI</div>
+    <h2 class="text-hl-22 font-semibold text-ink mb-2">AI 助手背后，是一套 17 年验证的方法</h2>
+    <p class="text-hl-13 text-muted-3 mb-7"><span class="text-ink font-medium">HOLDLE 方法论：</span>先选对股票，再选对时机。AI 助手的每一个回答，都基于这套体系。</p>
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div class="hl-card p-8">
@@ -112,25 +138,34 @@
       </div>
     </div>
 
-    <div class="hl-quote">
-      <strong>先选对股票，再选对时机。</strong><br>
-      <span class="text-muted-3 text-hl-13">有了这层逻辑打底，你不会轻易怀疑自己的判断，也更容易拿得住。</span>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-10 mb-7">
+      <div class="hl-card hl-card-hover p-7">
+        <div class="text-hl-11 text-muted-5 tracking-wide-2 mb-3">01 / SELECT</div>
+        <h3 class="text-hl-16 font-semibold mb-2">选好</h3>
+        <p class="text-hl-13 text-muted-3 leading-normal">企业质量 · 第一层概率</p>
+      </div>
+      <div class="hl-card hl-card-hover p-7">
+        <div class="text-hl-11 text-muted-5 tracking-wide-2 mb-3">02 / WAIT</div>
+        <h3 class="text-hl-16 font-semibold mb-2">等好</h3>
+        <p class="text-hl-13 text-muted-3 leading-normal">状态A时机 · 第二层概率</p>
+      </div>
+      <div class="hl-card hl-card-hover p-7">
+        <div class="text-hl-11 text-muted-5 tracking-wide-2 mb-3">03 / MANAGE</div>
+        <h3 class="text-hl-16 font-semibold mb-2">管好</h3>
+        <p class="text-hl-13 text-muted-3 leading-normal">交易管理 · 风险控制</p>
+      </div>
     </div>
   </div>
 </section>
 
 <%# ========== 5. 历史战绩 ========== %>
-<section class="py-16">
+<section class="py-16 border-b border-line bg-white">
   <div class="container-hl">
     <div class="label-en">CASE CLOSED · 已结案案例</div>
-    <h2 class="text-hl-22 font-semibold text-ink mb-2">历史战绩</h2>
-    <p class="text-hl-13 text-muted-3 mb-7">按 HOLD LE 策略完整执行的公开案例。每笔都有明确的入场规则和出场规则。</p>
+    <h2 class="text-hl-22 font-semibold text-ink mb-2">方法论的历史验证</h2>
+    <p class="text-hl-13 text-muted-3 mb-7">按 HOLDLE 策略完整执行的公开案例。方法论的有效性是长期可复现的。</p>
 
     <div class="hl-card overflow-hidden">
-      <div class="px-6 py-4 border-b border-line-soft flex justify-between items-center text-hl-12 text-muted-3">
-        <span>已结案案例 · 8 笔</span>
-        <span class="bg-bg-mute text-muted-2 px-2 py-0.5 rounded text-hl-11">已结案</span>
-      </div>
       <div class="overflow-x-auto">
         <table class="w-full border-collapse hl-table">
           <thead>
@@ -170,17 +205,15 @@
         </table>
       </div>
       <div class="px-6 py-4 bg-bg-soft border-t border-line-soft text-hl-12 text-muted-3 leading-relaxed">       
-        ※ 以上案例均为按 HOLDLE 方法论完整执行并已结案的盈利案例。</br>
-        ※ 这些案例里，有些是我自己操作的，有些是会员朋友按方法做的。来源不同，但方法论是同一套。</br>
-        ※ 过去的战绩不代表未来。但方法论的有效性是长期可复现的。</br>
+        ※ 以上案例均为按 HOLDLE 方法论完整执行并已结案的盈利案例。过去的战绩不代表未来，但方法论的有效性是长期可复现的。</br>
         ※ 我希望这套方法能成为你长期使用的工具，而不是短期暴富的承诺。
       </div>
     </div>
   </div>
 </section>
 
-<%# ========== 6. 关于大苏 ========== %>
-<section class="py-16  bg-white">
+<%# ========== 6. 创始人精简 ========== %>
+<section class="py-16 border-b border-line">
   <div class="container-hl">
     <div class="label-en">ABOUT THE AUTHOR</div>
     <h2 class="text-hl-22 font-semibold text-ink mb-2">关于我</h2>
@@ -215,8 +248,7 @@
         </div>
         <div class="hl-callout-dashed">
           <h4 class="text-hl-12 text-muted-3 font-medium mb-2 tracking-wide-2">关于 HOLDLE 网站</h4>
-          <p class="text-hl-13 text-muted leading-relaxed">我2017年底开始在holdle.com分享这个交易方法，网站至今已经十年。<br>十年里，很多人使用或参考了HOLDLE的方法之后，在股市投资中获得了可观的收益。<br><br>
-           中途大苏因个人原因，网站停更了，<strong class="text-ink">但是HOLDLE方法并不会因为停更而失效。</strong>相反，在每次行情中，HOLDLE都能准确击中最佳的时机点位。<br><br>
+          <p class="text-hl-13 text-muted leading-relaxed">我2017年底开始在www.holdle.com分享这个交易方法，网站至今已经十年。<br>
            2026年网站内容、工具重新升级，HOLDLE方法论开始进入AI时代。
         </div>
       </div>
@@ -224,12 +256,12 @@
   </div>
 </section>
 
-<%# ========== 7. Q&A（用 <details> 实现折叠，零 JS） ========== %>
-<section class="py-16">
-  <div class="container-narrow">
+
+<%# ========== 8. FAQ：AI 助手 7 问 ========== %>
+<section class="bg-white">
+  <div class="container-narrow py-16">
     <div class="label-en">FAQ</div>
-    <h2 class="text-hl-22 font-semibold text-ink mb-2">常见问题</h2>
-    <p class="text-hl-13 text-muted-3 mb-7">你可能想问的</p>
+    <h2 class="text-hl-22 font-semibold text-ink mb-8">常见问题</h2>
 
     <div class="hl-card overflow-hidden hl-faq">
       <details class="hl-faq-item">
@@ -298,44 +330,73 @@
       <details class="hl-faq-item">
         <summary>
           <span class="hl-q-badge">Q</span>
-          <span>课程怎么收费？有免费内容先看吗？</span>
-          <span class="hl-faq-icon">+</span>
-        </summary>
-        <div class="hl-faq-content">
-          课程是付费内容，但我们有大量免费的內容供你了解 HOLDLE 的方法论——包括视频、文章和一些在线工具。建议你先看免费内容，确认这套方法适合你，再考虑是否进入系统课程。
-        </div>
-      </details>
-
-      <details class="hl-faq-item">
-        <summary>
-          <span class="hl-q-badge">Q</span>
-          <span>状态 A 是什么意思？看不懂</span>
-          <span class="hl-faq-icon">+</span>
-        </summary>
-        <div class="hl-faq-content">
-          状态 A 是我们的分析框架中的一类价格信号——简单说就是一支股票进入长期上涨周期时的初步特征。它是"状态 A / B / C / D"四类判断中最值得关注的一种。课程中有完整的识别方法。
-        </div>
-      </details>
-
-      <details class="hl-faq-item">
-        <summary>
-          <span class="hl-q-badge">Q</span>
           <span>跟其他投资课程有什么不同？</span>
           <span class="hl-faq-icon">+</span>
         </summary>
         <div class="hl-faq-content">
-          这里不推荐股票、不搞短线交易、不承诺收益。我们的目标不是"让你在下一笔交易里赚钱"，而是帮你建立一套可以自己用的投资体系——从分析企业到判断价格到管理风险，每一步走明白。
+          这里不推荐股票、不搞短线交易、不承诺收益。HOLDLE的目标不是"让你在下一笔交易里赚钱"，而是帮你建立一套可以自己用的投资体系——从分析企业到判断价格到管理风险，每一步走明白。
         </div>
       </details>
 
       <details class="hl-faq-item">
         <summary>
           <span class="hl-q-badge">Q</span>
-          <span>网站重新上线后，老会员还能用之前的账号吗？</span>
+          <span>课程怎么收费？有免费内容先看吗？</span>
           <span class="hl-faq-icon">+</span>
         </summary>
         <div class="hl-faq-content">
-          可以。老数据都在。直接用微信登录即可。如果有问题，可以联系我。
+          当前基础课程已开源免费，还有大量內容供你了解 HOLDLE 的方法论——包括视频、文章和一些在线工具。AI 助手能帮你快速理解并上手。
+        </div>
+      </details>
+
+      <details class="hl-faq-item">
+        <summary>
+          <span class="hl-q-badge">Q</span>
+          <span>HOLDLE AI 投研助手是什么？</span>
+          <span class="hl-faq-icon">+</span>
+        </summary>
+        <div class="hl-faq-content">
+          基于 HOLDLE 方法论知识库的智能问答服务。<br>
+          接入你常用的 AI 工具（Trae/Codex/Claude/Cursor/WorkBuddy 等）即可提问，它按 HOLDLE 完整方法论回答你。<br><br>
+          它是陪练助手，不是荐股工具——不推荐买卖，不预测涨跌。
+        </div>
+      </details>
+
+      <details class="hl-faq-item">
+        <summary>
+          <span class="hl-q-badge">Q</span>
+          <span>AI 助手和课程是什么关系？</span>
+          <span class="hl-faq-icon">+</span>
+        </summary>
+        <div class="hl-faq-content">
+          课程是系统学习 HOLDLE 方法论的完整体系，必须先学习和理解；<br>
+          AI 助手是你的「随行教练」——学完有不懂的随时问，分析个股时带你按方法论走一遍。<br>
+          先学课程打基础，AI 助手陪你实践。
+        </div>
+      </details>
+
+      <details class="hl-faq-item">
+        <summary>
+          <span class="hl-q-badge">Q</span>
+          <span>AI 助手会荐股吗？</span>
+          <span class="hl-faq-icon">+</span>
+        </summary>
+        <div class="hl-faq-content">
+          不会。HOLDLE 是投资学习社区，分享方法。
+          红线是不荐股、不预测、不承诺收益。
+          它是「学习助手、实战陪练」—— 教你「怎么判断」，不替你做决定。<br><br>
+          如果某次回答像在荐股，那是错误的，请告诉我们改进。
+        </div>
+      </details>
+
+      <details class="hl-faq-item">
+        <summary>
+          <span class="hl-q-badge">Q</span>
+          <span>AI 助手会记录我的问题吗？</span>
+          <span class="hl-faq-icon">+</span>
+        </summary>
+        <div class="hl-faq-content">
+          会记录提问内容，仅用于改进 HOLDLE 知识库和回答质量（内部使用，不对外公开）。详情见 <%= link_to "《隐私政策》", privacy_path, class: "underline underline-offset-2 hover:text-profit transition-colors" %>。
         </div>
       </details>
     </div>
