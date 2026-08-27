@@ -14,7 +14,7 @@ module AiAssistantHelper
   # 注意：站点为 HTTPS（assume_ssl + Nginx SSL 终结），图床必须使用 https:// 前缀，否则浏览器 mixed content 拦截。
   AI_ASSISTANT_SCREENSHOTS = [
     "https://video.holdle.com/image/default/8D2890EF768740C7AC3A8FCCCF80FA6B-6-2.png", # 步骤 1 找到并点击「个人中心」
-    "https://video.holdle.com/image/default/5B4425E4CD4C42FDBA5A3E826D42C710-6-2.png", # 步骤 2 复制「安装提示词」
+    "https://video.holdle.com/image/default/853F8F7E3A174E8B8ED7E7E5393E4811-6-2.png", # 步骤 2 复制「安装提示词」
     "https://video.holdle.com/image/default/F1203A6EBFDB4C6CA2EBCBDAD8E5EF98-6-2.png", # 步骤 3 粘贴给 AI，发送安装
     "https://video.holdle.com/image/default/EC6F98955CB44FA28EFAD228976CF1CE-6-2.png", # 步骤 4 输入问题，开始使用
     "https://video.holdle.com/image/default/BEAFD8880C3645AF9C54563C16D3B47C-6-2.png"  # 步骤 5 AI 生成回答
