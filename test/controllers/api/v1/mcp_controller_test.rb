@@ -233,6 +233,27 @@ class Api::V1::McpControllerTest < ActionDispatch::IntegrationTest
     assert_equal "precheck问题", UsageLog.find_by(request_id: request_id).question
   end
 
+  test "confirm 兜底补写 question：merged 分支（同 round 二次请求）也补写" do
+    plain = build_api_key(quota: 10)
+    round = SecureRandom.uuid
+    travel_to Time.current
+
+    r1 = SecureRandom.uuid
+    post api_v1_mcp_precheck_path, params: { api_key: plain, request_id: r1, round_id: round }, headers: @auth
+    post api_v1_mcp_confirm_path, params: { api_key: plain, request_id: r1, round_id: round }, headers: @auth
+    assert_equal 1, response.parsed_body["consumed"]
+
+    # 同 round 二次请求 → merged 分支；precheck 不带 question，confirm 携带 → 补写（后台回填数据源）
+    travel 30.seconds
+    r2 = SecureRandom.uuid
+    post api_v1_mcp_precheck_path, params: { api_key: plain, request_id: r2, round_id: round }, headers: @auth
+    post api_v1_mcp_confirm_path, params: { api_key: plain, request_id: r2, round_id: round, question: "补充检索问题" }, headers: @auth
+    assert_equal true, response.parsed_body["merged"]
+    assert_equal "补充检索问题", UsageLog.find_by(request_id: r2).question
+  ensure
+    travel_back
+  end
+
   # === 扣次粒度修复（90s 滑动窗口）测试 ===
 
   # 单次 precheck+confirm（供 confirm_sequence 复用）
