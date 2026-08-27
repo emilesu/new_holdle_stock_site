@@ -669,4 +669,41 @@ class Api::V1::McpControllerTest < ActionDispatch::IntegrationTest
   ensure
     travel_back
   end
+
+  test "方案③链式：generated→merged（继承 generated）→90s 内显式新 round_id 仍并入（整窗一扣）" do
+    plain = build_api_key(quota: 10)
+    travel_to Time.current
+
+    # 1) 首请求未传 round_id → 分支④ confirmed（generated）
+    r1 = SecureRandom.uuid
+    post api_v1_mcp_precheck_path, params: { api_key: plain, request_id: r1 }, headers: @auth
+    post api_v1_mcp_confirm_path, params: { api_key: plain, request_id: r1 }, headers: @auth
+    assert_equal 1, response.parsed_body["consumed"]
+    round1 = response.parsed_body["round_id"]
+
+    # 2) 显式新 round_id → 场景 A 并入（merged 记录继承 generated 来源）
+    travel 30.seconds
+    r2 = SecureRandom.uuid
+    round2 = SecureRandom.uuid
+    post api_v1_mcp_precheck_path, params: { api_key: plain, request_id: r2, round_id: round2 }, headers: @auth
+    post api_v1_mcp_confirm_path, params: { api_key: plain, request_id: r2, round_id: round2 }, headers: @auth
+    assert_equal true, response.parsed_body["merged"]
+    assert_equal "generated", UsageLog.find_by(request_id: r2).round_id_source
+
+    # 3) 再显式新 round_id（last 为 merged，来源仍 generated）→ 场景 A 继续并入，整窗只扣 1 次
+    travel 30.seconds
+    r3 = SecureRandom.uuid
+    round3 = SecureRandom.uuid
+    post api_v1_mcp_precheck_path, params: { api_key: plain, request_id: r3, round_id: round3 }, headers: @auth
+    post api_v1_mcp_confirm_path, params: { api_key: plain, request_id: r3, round_id: round3 }, headers: @auth
+    assert_equal true, response.parsed_body["merged"]
+    assert_equal 0, response.parsed_body["consumed"]
+    assert_equal round1, response.parsed_body["round_id"] # 第三条仍并入首条回合
+
+    assert_equal 9, ApiKey.find_by(key_hash: Digest::SHA256.hexdigest(plain)).quota_remaining
+    assert_equal 1, UsageLog.where(status: "confirmed").count
+    assert_equal 2, UsageLog.where(status: "merged").count
+  ensure
+    travel_back
+  end
 end
