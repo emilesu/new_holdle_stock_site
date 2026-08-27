@@ -208,6 +208,31 @@ class Api::V1::McpControllerTest < ActionDispatch::IntegrationTest
     assert_nil log.tool_name
   end
 
+  test "confirm 兜底补写 question：precheck 未传时用 confirm 携带的 question" do
+    plain = build_api_key(quota: 10)
+    request_id = SecureRandom.uuid
+
+    post api_v1_mcp_precheck_path, params: { api_key: plain, request_id: request_id }, headers: @auth
+    assert_nil UsageLog.find_by(request_id: request_id).question
+
+    post api_v1_mcp_confirm_path, params: { api_key: plain, request_id: request_id, question: "如何看待突破买入时机" }, headers: @auth
+    assert_response 200
+    log = UsageLog.find_by(request_id: request_id)
+    assert_equal "confirmed", log.status
+    assert_equal "如何看待突破买入时机", log.question
+  end
+
+  test "confirm 不覆盖 precheck 已保存的 question" do
+    plain = build_api_key(quota: 10)
+    request_id = SecureRandom.uuid
+
+    post api_v1_mcp_precheck_path, params: { api_key: plain, request_id: request_id, question: "precheck问题" }, headers: @auth
+    post api_v1_mcp_confirm_path, params: { api_key: plain, request_id: request_id, question: "confirm问题" }, headers: @auth
+    assert_response 200
+
+    assert_equal "precheck问题", UsageLog.find_by(request_id: request_id).question
+  end
+
   # === 扣次粒度修复（90s 滑动窗口）测试 ===
 
   # 单次 precheck+confirm（供 confirm_sequence 复用）

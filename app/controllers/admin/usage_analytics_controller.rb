@@ -31,9 +31,22 @@ module Admin
       @top_questions = @logs.where.not(question: [nil, ""]).group(:question).count
                               .sort_by { |_, count| -count }.first(20)
 
-      # 最近 20 条原始问题
-      @recent_questions = @logs.where.not(question: [nil, ""]).includes(:user)
-                               .order(created_at: :desc).limit(20)
+      # 最近 20 条原始问题（confirmed 且带问题文本；precheck 未传 question 的——新 agent 每轮首请求，
+      # 用同 round 最近一条 merged 的问题文本回填，避免列表停留在旧数据）
+      @recent_questions = @logs.includes(:user).order(created_at: :desc).limit(100)
+      empty_rounds = @recent_questions.filter_map { |l| l.round_id if l.question.blank? && l.round_id.present? }
+      unless empty_rounds.empty?
+        merged_questions = UsageLog.where(status: "merged", round_id: empty_rounds)
+                                   .where.not(question: [nil, ""])
+                                   .order(created_at: :desc)
+                                   .pluck(:round_id, :question)
+                                   .group_by(&:first)
+                                   .transform_values { |pairs| pairs.first.last }
+        @recent_questions.each do |log|
+          log.question = merged_questions[log.round_id] if log.question.blank? && merged_questions[log.round_id]
+        end
+      end
+      @recent_questions = @recent_questions.select { |l| l.question.present? }.first(20)
 
       # Top 10 活跃用户（按去重后提问数排序，一次查用户避免视图 N+1）
       # 注意：不能用 group(:user_id).count（返回 COUNT(*) 行数），须 select 自定义去重聚合列

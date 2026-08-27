@@ -191,4 +191,29 @@ class Admin::UsageAnalyticsControllerTest < ActionDispatch::IntegrationTest
     # 活跃用户与总提问同口径：merged 在窗内 → 该用户计入活跃用户（而非 confirmed 口径的 0）
     assert_match %r{活跃用户</p>\s*<p class="mt-1 text-hl-22 font-bold text-ink">1</p>}, response.body
   end
+
+  test "最近提问：confirmed 缺 question 时回填同 round merged 的问题文本" do
+    round = SecureRandom.uuid
+    create_log(@user, nil, "confirmed", round_id: round)
+    create_log(@user, "状态A突破的完整问题", "merged", round_id: round)
+
+    get admin_usage_analytics_path
+
+    assert_response 200
+    # 回填后能在「最近提问（原始）」中看到 merged 携带的问题文本
+    assert_match "状态A突破的完整问题", response.body
+  end
+
+  test "最近提问：confirmed 缺 question 且同 round merged 也无 question 时不显示该条" do
+    round = SecureRandom.uuid
+    create_log(@user, nil, "confirmed", round_id: round)
+    create_log(@user, nil, "merged", round_id: round)
+
+    get admin_usage_analytics_path
+
+    assert_response 200
+    # 限定在「最近提问（原始）」卡片内断言（昵称在活跃用户 Top10 也会出现，不能全页匹配）
+    recent_card = Nokogiri::HTML(response.body).css(".hl-card").find { |c| c.at_css("h2")&.text&.include?("最近提问") }
+    refute recent_card.text.include?("测试用户一"), "空 question 且无回填的 confirmed 不应出现在最近提问列表"
+  end
 end
