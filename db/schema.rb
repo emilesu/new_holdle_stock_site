@@ -465,6 +465,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_25_190946) do
     t.datetime "created_at", null: false
     t.datetime "confirmed_at", comment: "确认时间"
     t.string "round_id", comment: "回合标识（90s 窗口内合并的请求共用；NULL=老数据）"
+    t.string "round_id_source", comment: "round_id 来源：caller=调用方传入 / generated=Rails 兜底生成（调用方未传）/ NULL=老数据"
     t.index ["api_key_id", "status", "confirmed_at"], name: "index_usage_logs_on_api_key_id_and_status_and_confirmed_at"
     t.index ["created_at"], name: "index_usage_logs_on_created_at"
     t.index ["request_id"], name: "index_usage_logs_on_request_id", unique: true

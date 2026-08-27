@@ -564,4 +564,109 @@ class Api::V1::McpControllerTest < ActionDispatch::IntegrationTest
   ensure
     travel_back
   end
+
+  # === 方案③：confirm 合并判定优化（round_id 多扣次兜底，转 Trae 落地）测试 ===
+
+  test "方案③场景A：上一条 Rails 兜底生成 round_id，90s 内本请求带新 round_id → 并入不重复扣次" do
+    plain = build_api_key(quota: 10)
+    travel_to Time.current
+
+    # 1) get_rules 未传 round_id → 分支④ confirmed（Rails 生成 UUID，source=generated）
+    r1 = SecureRandom.uuid
+    post api_v1_mcp_precheck_path, params: { api_key: plain, request_id: r1, tool_name: "holdle_get_rules" }, headers: @auth
+    post api_v1_mcp_confirm_path, params: { api_key: plain, request_id: r1, tool_name: "holdle_get_rules" }, headers: @auth
+    assert_equal 1, response.parsed_body["consumed"]
+    assert_equal 9, response.parsed_body["remaining"]
+    round1 = response.parsed_body["round_id"]
+    assert_equal "generated", UsageLog.find_by(request_id: r1).round_id_source
+
+    # 2) ask 传了新 UUID（#262/#263 场景）→ 应并入上一条 merged，不再扣次
+    travel 30.seconds
+    r2 = SecureRandom.uuid
+    new_round = SecureRandom.uuid
+    post api_v1_mcp_precheck_path, params: { api_key: plain, request_id: r2, round_id: new_round,
+                                             tool_name: "holdle_ask", question: "帮我分析 300308 是否处于状态A" }, headers: @auth
+    post api_v1_mcp_confirm_path, params: { api_key: plain, request_id: r2, round_id: new_round, tool_name: "holdle_ask" }, headers: @auth
+    assert_equal true, response.parsed_body["merged"]
+    assert_equal 0, response.parsed_body["consumed"]
+    assert_equal round1, response.parsed_body["round_id"] # 并入 get_rules 的回合，沿用其 round_id
+    assert_equal 9, ApiKey.find_by(key_hash: Digest::SHA256.hexdigest(plain)).quota_remaining
+    assert_equal 1, UsageLog.where(status: "confirmed").count
+    assert_equal 1, UsageLog.where(status: "merged").count
+    merged = UsageLog.find_by(request_id: r2)
+    assert_equal round1, merged.round_id
+    assert_equal "generated", merged.round_id_source # 继承来源，报表回填可关联 confirmed 的问题文本
+  ensure
+    travel_back
+  end
+
+  test "方案③边界：上一条 generated 但超过 90 秒 → 本请求带新 round_id 仍扣次开新回合" do
+    plain = build_api_key(quota: 10)
+    travel_to Time.current
+
+    r1 = SecureRandom.uuid
+    post api_v1_mcp_precheck_path, params: { api_key: plain, request_id: r1 }, headers: @auth
+    post api_v1_mcp_confirm_path, params: { api_key: plain, request_id: r1 }, headers: @auth
+    assert_equal 1, response.parsed_body["consumed"]
+
+    travel 120.seconds
+    r2 = SecureRandom.uuid
+    new_round = SecureRandom.uuid
+    post api_v1_mcp_precheck_path, params: { api_key: plain, request_id: r2, round_id: new_round }, headers: @auth
+    post api_v1_mcp_confirm_path, params: { api_key: plain, request_id: r2, round_id: new_round }, headers: @auth
+    assert_equal 1, response.parsed_body["consumed"]
+    assert_equal 8, response.parsed_body["remaining"]
+    assert_equal new_round, response.parsed_body["round_id"]
+    assert_equal "caller", UsageLog.find_by(request_id: r2).round_id_source
+    assert_equal 2, UsageLog.where(status: "confirmed").count
+  ensure
+    travel_back
+  end
+
+  test "方案③不回归：双方显式传不同 round_id（跨轮提问）90s 内仍各自扣次" do
+    plain = build_api_key(quota: 10)
+    travel_to Time.current
+
+    round_a = SecureRandom.uuid
+    r1 = SecureRandom.uuid
+    post api_v1_mcp_precheck_path, params: { api_key: plain, request_id: r1, round_id: round_a }, headers: @auth
+    post api_v1_mcp_confirm_path, params: { api_key: plain, request_id: r1, round_id: round_a }, headers: @auth
+    assert_equal 1, response.parsed_body["consumed"]
+    assert_equal "caller", UsageLog.find_by(request_id: r1).round_id_source
+
+    travel 30.seconds
+    round_b = SecureRandom.uuid
+    r2 = SecureRandom.uuid
+    post api_v1_mcp_precheck_path, params: { api_key: plain, request_id: r2, round_id: round_b }, headers: @auth
+    post api_v1_mcp_confirm_path, params: { api_key: plain, request_id: r2, round_id: round_b }, headers: @auth
+    assert_equal 1, response.parsed_body["consumed"]
+    assert_nil response.parsed_body["merged"]
+    assert_equal round_b, response.parsed_body["round_id"]
+    assert_equal "caller", UsageLog.find_by(request_id: r2).round_id_source
+    assert_equal 8, ApiKey.find_by(key_hash: Digest::SHA256.hexdigest(plain)).quota_remaining
+    assert_equal 2, UsageLog.where(status: "confirmed").count
+  ensure
+    travel_back
+  end
+
+  test "方案③场景B回归：本请求未传 round_id 且 90s 内 → 并入上一条（分支③/场景A兜底，不额外扣次）" do
+    plain = build_api_key(quota: 10)
+    travel_to Time.current
+
+    r1 = SecureRandom.uuid
+    post api_v1_mcp_precheck_path, params: { api_key: plain, request_id: r1 }, headers: @auth
+    post api_v1_mcp_confirm_path, params: { api_key: plain, request_id: r1 }, headers: @auth
+    assert_equal 1, response.parsed_body["consumed"]
+
+    travel 30.seconds
+    r2 = SecureRandom.uuid
+    post api_v1_mcp_precheck_path, params: { api_key: plain, request_id: r2 }, headers: @auth
+    post api_v1_mcp_confirm_path, params: { api_key: plain, request_id: r2 }, headers: @auth
+    assert_equal true, response.parsed_body["merged"]
+    assert_equal 0, response.parsed_body["consumed"]
+    assert_equal 9, ApiKey.find_by(key_hash: Digest::SHA256.hexdigest(plain)).quota_remaining
+    assert_equal "generated", UsageLog.find_by(request_id: r2).round_id_source
+  ensure
+    travel_back
+  end
 end

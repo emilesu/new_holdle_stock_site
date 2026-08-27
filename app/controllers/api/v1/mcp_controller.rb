@@ -70,30 +70,38 @@ module Api
             # 防新 agent 每轮首请求 precheck 不带 question 导致提问分析缺文本）
             question_fill = log.question.presence || params[:question].to_s.strip.presence
 
-            if current_round_id && last && last.round_id == current_round_id
+            if last && last.round_id_source == "generated" && (Time.current - last.confirmed_at) <= 90.seconds
+              # 场景 A（方案③，round_id 多扣次兜底）：上一条 confirmed/merged 是 Rails 兜底生成的
+              #（调用方未传 round_id，如 holdle_get_rules 每轮首请求），90s 内本请求（无论是否显式传
+              # round_id）并入上一条——防 #262/#263 式「get_rules 未传 + ask 传新 UUID」一题两扣；
+              # round_id 沿用上一条保持同回合，报表回填可关联。老数据 source=NULL 不触发，不回改历史。
+              log.update!(status: "merged", consumed: 0, confirmed_at: Time.current,
+                          round_id: last.round_id, round_id_source: "generated", question: question_fill)
+              { merged: true, remaining: api_key.quota_remaining, round_id: last.round_id }
+            elsif current_round_id && last && last.round_id == current_round_id
               # ① 同 round_id → 同回合，合并不扣费（覆盖复盘长链：检索→跑数据→补充检索间隔可 >90s）
               log.update!(status: "merged", consumed: 0, confirmed_at: Time.current,
-                          round_id: current_round_id, question: question_fill)
+                          round_id: current_round_id, round_id_source: last.round_id_source, question: question_fill)
               { merged: true, remaining: api_key.quota_remaining, round_id: current_round_id }
             elsif current_round_id
               # ② 换了 round_id → 新回合正常扣费（即使 <90s，防连问白嫖）；round_id 用 precheck 透传值
               api_key.decrement_quota!
               api_key.touch(:last_used_at)
               log.update!(status: "confirmed", consumed: 1, confirmed_at: Time.current,
-                          round_id: current_round_id, question: question_fill)
+                          round_id: current_round_id, round_id_source: "caller", question: question_fill)
               { merged: false, remaining: api_key.quota_remaining, round_id: current_round_id }
             elsif last && (Time.current - last.confirmed_at) <= 90.seconds
-              # ③ 未传 round_id（旧 agent）→ 90s 滑动窗口兜底合并，沿用 last.round_id
+              # ③ 未传 round_id（旧 agent）→ 90s 滑动窗口兜底合并，沿用 last.round_id 及其来源标记
               log.update!(status: "merged", consumed: 0, confirmed_at: Time.current,
-                          round_id: last.round_id, question: question_fill)
+                          round_id: last.round_id, round_id_source: last.round_id_source, question: question_fill)
               { merged: true, remaining: api_key.quota_remaining, round_id: last.round_id }
             else
-              # ④ 未传 round_id 且超 90s → 新回合，round_id 由 Rails 生成兜底
+              # ④ 未传 round_id 且超 90s → 新回合，round_id 由 Rails 生成兜底（标 generated 供场景 A 识别）
               round_id = SecureRandom.uuid
               api_key.decrement_quota!
               api_key.touch(:last_used_at)
               log.update!(status: "confirmed", consumed: 1, confirmed_at: Time.current,
-                          round_id: round_id, question: question_fill)
+                          round_id: round_id, round_id_source: "generated", question: question_fill)
               { merged: false, remaining: api_key.quota_remaining, round_id: round_id }
             end
           end
