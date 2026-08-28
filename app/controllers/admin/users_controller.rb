@@ -4,10 +4,10 @@ module Admin
                                     :adjust_api_key_quota, :disable_api_key, :enable_api_key, :regenerate_api_key]
 
     def index
-      @users = User.order(created_at: :desc)
+      @users = User.includes(:api_keys).order(created_at: :desc)
       
       if params[:search].present?
-        @users = @users.where("email ILIKE ? OR nickname ILIKE ?", "%#{params[:search]}%", "%#{params[:search]}%")
+        @users = @users.where("nickname ILIKE ?", "%#{params[:search]}%")
       end
       
       if params[:role].present? && params[:role] != 'all'

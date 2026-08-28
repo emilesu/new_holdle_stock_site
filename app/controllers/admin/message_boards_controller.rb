@@ -8,7 +8,7 @@ class Admin::MessageBoardsController < Admin::BaseController
     else
       scope = scope.normal
     end
-    @messages = scope.order(created_at: :desc).page(params[:page]).per(10)
+    @messages = scope.includes(:user).order(created_at: :desc).page(params[:page]).per(10)
   end
 
   def reply

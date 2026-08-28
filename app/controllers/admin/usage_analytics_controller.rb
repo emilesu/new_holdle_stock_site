@@ -13,7 +13,7 @@ module Admin
       @days = [7, 30].include?(params[:days].to_i) ? params[:days].to_i : 7
       @logs = confirmed_logs
       # 计数口径数据源：confirmed + merged 都算活动（merged 是 90s 合并的同回合补充检索），
-      # 按 round_id 去重计提问；分类/高频词/最近问题仍用 @logs（confirmed，防 merged 重复计入）
+      # 按 round_id 去重计提问
       @count_logs = count_logs
 
       # 总览卡片（提问数按 round_id 去重：一回合 1 confirmed + N merged 计 1 次；老数据 round_id 为空回退 request_id 每条计 1）
@@ -24,18 +24,28 @@ module Admin
       @today_questions = count_logs.where(created_at: Date.current.all_day).distinct.count("COALESCE(round_id, request_id)")
       @avg_per_user = @active_users.zero? ? 0 : (@total_questions.to_f / @active_users).round(1)
 
-      # 回填映射：precheck 未传 question 的 confirmed（新 agent 每轮首请求）用同 round 最早一条
-      # 带 question 的 merged 补文本（原始首问更贴切）；分类/高频/最近提问共用，仍只统计 confirmed
-      @question_fallback = question_fallback(@logs)
+      # 高频问题使用 confirmed + merged，按 round_id 去重
+      all_logs_with_question = @count_logs.where.not(question: [nil, ""])
+      deduped_map = {}
+      all_logs_with_question.each do |log|
+        rid = log.round_id.presence || log.request_id
+        deduped_map[rid] ||= log.question
+      end
+      deduped_questions = deduped_map.values
 
-      # 分类统计（一条可命中多类，都计；都不中归其他）
-      @category_counts = category_counts(@logs)
+      # Top 20 问题（去重后分组计数）
+      @top_questions = deduped_questions.tally.sort_by { |_, c| -c }.first(20)
 
-      # Top 20 问题（按回填后的问题原文分组计数）
-      @top_questions = top_questions(@logs)
+      # 分类统计（与 Top 20 同口径，使用去重后的问题列表）
+      @category_counts = category_counts(deduped_questions)
 
-      # 最近 20 条原始问题（已带 question 的 + 缺 question 但可回填的，合并按时间倒序取前 20）
-      @recent_questions = recent_questions(@logs)
+      # 最近提问（仅 confirmed，避免同一问题重复展示；分页）
+      @recent_page = [params[:page].to_i, 1].max
+      @recent_per_page = 20
+      recent_scope = @logs.where.not(question: [nil, ""]).includes(:user).order(created_at: :desc)
+      @recent_total = recent_scope.count
+      @recent_total_pages = (@recent_total.to_f / @recent_per_page).ceil
+      @recent_questions = recent_scope.offset((@recent_page - 1) * @recent_per_page).limit(@recent_per_page)
 
       # Top 10 活跃用户（按去重后提问数排序，一次查用户避免视图 N+1）
       # 注意：不能用 group(:user_id).count（返回 COUNT(*) 行数），须 select 自定义去重聚合列
@@ -61,29 +71,10 @@ module Admin
               .where(created_at: @days.days.ago.beginning_of_day..Time.current)
     end
 
-    # 缺 question 的 confirmed → 同 round 最早一条带 question 的 merged 文本（升序取首条 ≈ 原始首问）
-    def question_fallback(logs)
-      round_ids = logs.filter_map { |l| l.round_id if l.question.blank? && l.round_id.present? }.uniq
-      return {} if round_ids.empty?
-
-      UsageLog.where(status: "merged", round_id: round_ids)
-              .where.not(question: [nil, ""])
-              .order(created_at: :asc)
-              .pluck(:round_id, :question)
-              .group_by(&:first)
-              .transform_values { |pairs| pairs.first.last }
-    end
-
-    # confirmed 记录的有效问题文本：precheck 落库值优先，缺失时用同 round 回填值
-    def effective_question(log)
-      log.question.presence || @question_fallback[log.round_id]
-    end
-
-    def category_counts(logs)
+    def category_counts(questions)
       counts = CATEGORIES.transform_values { |_| 0 }
       counts["其他/闲聊"] = 0
-      logs.each do |log|
-        text = effective_question(log)
+      questions.each do |text|
         next if text.blank?
 
         hit = false
@@ -96,30 +87,6 @@ module Admin
         counts["其他/闲聊"] += 1 unless hit
       end
       counts
-    end
-
-    # Top 20 问题（Ruby 侧按回填后的问题原文分组，复用回填文本）
-    def top_questions(logs)
-      counts = Hash.new(0)
-      logs.each do |log|
-        text = effective_question(log)
-        counts[text] += 1 unless text.blank?
-      end
-      counts.sort_by { |_, count| -count }.first(20)
-    end
-
-    # 最近 20 条原始问题：两段取数（已带 question 的直接取；缺 question 的可回填后取），
-    # 合并按时间倒序取前 20，保证列表优先展示真实问题、不受空 question 记录挤压
-    def recent_questions(logs)
-      with_q = logs.where.not(question: [nil, ""]).includes(:user).order(created_at: :desc).limit(20).to_a
-      blank = logs.where(question: [nil, ""]).where.not(round_id: nil)
-                  .includes(:user).order(created_at: :desc).limit(100).to_a
-      blank.each do |log|
-        log.question = @question_fallback[log.round_id] if @question_fallback[log.round_id]
-      end
-      (with_q + blank.select { |l| l.question.present? })
-        .sort_by { |l| -l.created_at.to_i }
-        .first(20)
     end
   end
 end

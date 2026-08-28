@@ -36,3 +36,6 @@ application.register("carousel", CarouselController)
 
 import VideoPlayerController from "./video_player_controller"
 application.register("video-player", VideoPlayerController)
+
+import FlashController from "./flash_controller"
+application.register("flash", FlashController)

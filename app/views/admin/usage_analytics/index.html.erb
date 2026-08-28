@@ -105,11 +105,11 @@
       </div>
     </div>
 
-    <%# 最近 20 条原始问题 %>
+    <%# 最近提问（分页） %>
     <div class="hl-card">
       <div class="px-5 py-4 border-b border-line">
         <h2 class="text-hl-15 font-semibold text-ink">最近提问（原始）</h2>
-        <p class="mt-0.5 text-hl-12 text-muted-3">最新 20 条，含提问用户</p>
+        <p class="mt-0.5 text-hl-12 text-muted-3">共 <%= @recent_total %> 条，含提问用户</p>
       </div>
       <div class="divide-y divide-line">
         <% @recent_questions.each do |log| %>
@@ -122,6 +122,35 @@
           </div>
         <% end %>
       </div>
+      <% if @recent_total_pages > 1 %>
+        <div class="px-5 py-4 border-t border-line">
+          <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <p class="text-hl-13 text-muted">第 <%= @recent_page %> / <%= @recent_total_pages %> 页</p>
+            <div class="flex items-center gap-2 flex-wrap">
+              <nav class="flex items-center space-x-1">
+                <% if @recent_page > 1 %>
+                  <%= link_to "上一页", admin_usage_analytics_path(days: @days, page: @recent_page - 1),
+                      class: "px-3 py-1.5 text-hl-13 text-muted border border-line rounded hover:bg-bg-mute transition-colors" %>
+                <% end %>
+                <% if @recent_page < @recent_total_pages %>
+                  <%= link_to "下一页", admin_usage_analytics_path(days: @days, page: @recent_page + 1),
+                      class: "px-3 py-1.5 text-hl-13 text-muted border border-line rounded hover:bg-bg-mute transition-colors" %>
+                <% end %>
+                <% if @recent_total_pages > 1 %>
+                  <%= link_to "最后一页", admin_usage_analytics_path(days: @days, page: @recent_total_pages),
+                      class: "px-3 py-1.5 text-hl-13 text-muted border border-line rounded hover:bg-bg-mute transition-colors" %>
+                <% end %>
+              </nav>
+              <form action="<%= admin_usage_analytics_path %>" method="GET" class="flex items-center gap-1">
+                <input type="hidden" name="days" value="<%= @days %>">
+                <input type="number" name="page" min="1" max="<%= @recent_total_pages %>" placeholder="页码"
+                    class="w-16 px-2 py-1.5 text-hl-13 border border-line rounded focus:outline-none focus:border-ink">
+                <button type="submit" class="px-2 py-1.5 text-hl-13 bg-ink text-white rounded hover:opacity-90 transition-opacity">跳转</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      <% end %>
     </div>
   </div>
 <% end %>

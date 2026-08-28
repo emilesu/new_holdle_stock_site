@@ -33,8 +33,8 @@
       <tr class="<%= 'opacity-60 border-l-2 border-profit' if m.deleted_at.present? %>">
         <td class="text-hl-12 text-muted-4 font-mono"><%= m.id %></td>
         <td>
-          <div class="font-medium text-ink text-hl-13"><%= m.username %></div>
-          <div class="text-hl-11 text-muted-4"><%= m.email %></div>
+          <%= link_to m.username, admin_user_path(m.user_id), class: "font-medium text-ink text-hl-13 hover:text-link transition-colors" %>
+          <div class="text-hl-11 text-muted-4"><%= human_role(m.user&.role || 'user') %></div>
         </td>
         <td>
           <p class="text-hl-13 text-ink"><%= m.content %></p>

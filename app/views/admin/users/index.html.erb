@@ -8,7 +8,7 @@
     <div class="flex flex-col sm:flex-row gap-4">
       <form action="<%= admin_users_path %>" method="GET" class="flex flex-1 flex-col sm:flex-row gap-4">
         <div class="flex-1 relative">
-          <input type="text" name="search" placeholder="搜索邮箱或昵称..." value="<%= params[:search] %>"
+          <input type="text" name="search" placeholder="搜索昵称..." value="<%= params[:search] %>"
             class="w-full px-4 py-2.5 border border-line rounded text-hl-13 focus:outline-none focus:border-ink"
             onkeydown="if(event.key === 'Enter') { this.form.submit(); }">
         </div>
@@ -42,9 +42,8 @@
       <thead>
         <tr>
           <th class="px-6 py-3 text-left text-hl-12 font-semibold text-muted uppercase">用户</th>
-          <th class="px-6 py-3 text-left text-hl-12 font-semibold text-muted uppercase">邮箱</th>
           <th class="px-6 py-3 text-left text-hl-12 font-semibold text-muted uppercase">角色</th>
-          <th class="px-6 py-3 text-left text-hl-12 font-semibold text-muted uppercase">会员到期</th>
+          <th class="px-6 py-3 text-left text-hl-12 font-semibold text-muted uppercase">AI KEY 剩余次数</th>
           <th class="px-6 py-3 text-left text-hl-12 font-semibold text-muted uppercase">注册时间</th>
           <th class="px-6 py-3 text-left text-hl-12 font-semibold text-muted uppercase">最后登录</th>
           <th class="px-6 py-3 text-right text-hl-12 font-semibold text-muted uppercase">操作</th>
@@ -53,7 +52,7 @@
       <tbody class="divide-y divide-line">
         <% if @users.empty? %>
           <tr>
-            <td colspan="7" class="px-6 py-12 text-center text-hl-13 text-muted-4">
+            <td colspan="6" class="px-6 py-12 text-center text-hl-13 text-muted-4">
               暂无用户数据
             </td>
           </tr>
@@ -70,9 +69,6 @@
                 </div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
-                <span class="text-hl-13 text-muted-3 truncate max-w-[200px]" title="<%= user.email %>"><%= user.email %></span>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap">
                 <span class="inline-flex items-center px-2.5 py-1 rounded text-hl-12 font-medium
                   <%= case user.role
                        when 'super_admin' then 'bg-red-50 text-profit'
@@ -84,9 +80,14 @@
                 </span>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
-                <span class="text-hl-13 text-muted-3">
-                  <%= user.member_expire_at.present? ? l(user.member_expire_at.to_date) : '-' %>
-                </span>
+                <% active_key = user.api_keys.find { |k| k.status == 'active' } %>
+                <% if active_key %>
+                  <span class="text-hl-13 text-ink font-medium">
+                    <%= active_key.unlimited? ? '无限' : active_key.quota_remaining %>
+                  </span>
+                <% else %>
+                  <span class="text-hl-13 text-muted-4">-</span>
+                <% end %>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
                 <span class="text-hl-13 text-muted-3"><%= l(user.created_at.to_date) %></span>
