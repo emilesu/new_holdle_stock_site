@@ -11,6 +11,9 @@ class Article < ApplicationRecord
     end
   }
 
+  # 已发布且公开的文章 → 异步推送给百度（新原创内容对 SEO 价值最高；失败不影响保存）
+  after_commit :push_to_baidu_if_public, on: [:create, :update], if: -> { ENV["BAIDU_PUSH_TOKEN"].to_s.present? && published? && public? }
+
   def published?
     is_published
   end
@@ -35,5 +38,14 @@ class Article < ApplicationRecord
   rescue => e
     Rails.logger.error "Article markdown HTML error: #{e.message}"
     content
+  end
+
+  private
+
+  # 通知百度抓取已发布公开的文章详情页（异步、静默失败）
+  def push_to_baidu_if_public
+    BaiduPushJob.perform_later(["https://www.holdle.com/articles/#{id}"])
+  rescue => e
+    Rails.logger.error "[Article] 文章推送百度失败 ##{id}: #{e.message}"
   end
 end

@@ -57,7 +57,8 @@ class SitemapsController < ApplicationController
     body = Rails.cache.fetch(cache_key("articles"), expires_in: CACHE_EXPIRES_IN) do
       lastmod = Date.current.iso8601
       entries = +""
-      article_rows = Article.pluck(:id, :updated_at)
+      # 仅列出已发布且公开的文章，避免把草稿/会员付费墙页推给搜索引擎
+      article_rows = Article.published.accessible_by(nil).pluck(:id, :updated_at)
       article_rows.each do |(id, updated_at)|
         entries << url_entry("#{HOST}/articles/#{id}", updated_at&.iso8601 || lastmod, "0.7")
       end
