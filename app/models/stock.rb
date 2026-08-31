@@ -8,6 +8,9 @@ class Stock < ApplicationRecord
   has_many :balance_sheets, through: :financial_reports
   has_many :cash_flows, through: :financial_reports
   has_many :financial_indicators, through: :financial_reports
+
+  # 新收录股票 → 异步推送给百度（新 URL 对 SEO 价值最高；失败不影响入库）
+  after_commit :push_to_baidu_on_create, on: :create, if: -> { ENV["BAIDU_PUSH_TOKEN"].to_s.present? }
   
   attr_accessor :preloaded_income_statements, :preloaded_balance_sheets, :preloaded_cash_flows, :preloaded_financial_indicators
 
@@ -263,6 +266,13 @@ class Stock < ApplicationRecord
   end
 
   private
+
+  # 通知百度抓取新收录的股票详情页（异步、静默失败）
+  def push_to_baidu_on_create
+    BaiduPushJob.perform_later(["https://www.holdle.com/stocks/#{to_param}"])
+  rescue => e
+    Rails.logger.error "[Stock] 新股票推送百度失败 #{symbol}: #{e.message}"
+  end
 
   def set_pinyin_initials
     self.pinyin_initials = if market.in?(%w[CN HK]) && name.present?

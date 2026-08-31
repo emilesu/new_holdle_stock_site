@@ -102,7 +102,8 @@ module DataSources
 
         puts "\n  📊 [#{stock.symbol}] 统计: 成功 #{success_count} 表, 失败 #{fail_count} 表"
 
-        fail_count == 0
+        # success: 是否有报表抓取失败；changed: 是否有报表数据新建/更新了记录
+        { success: fail_count == 0, changed: success_count > 0 }
       end
 
       private

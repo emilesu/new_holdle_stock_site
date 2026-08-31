@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_08_27_160000) do
+ActiveRecord::Schema[7.1].define(version: 2026_08_31_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -56,6 +56,22 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_27_160000) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["published_at"], name: "index_articles_on_published_at"
+  end
+
+  create_table "baidu_push_states", force: :cascade do |t|
+    t.date "push_date", null: false, comment: "对应配额日期"
+    t.integer "remain", default: 0, comment: "当日剩余可推条数（百度返回）"
+    t.boolean "over_quota", default: false, null: false, comment: "当日是否已超配额"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "baidu_push_urls", force: :cascade do |t|
+    t.string "url", null: false, comment: "已推送的绝对 URL"
+    t.datetime "pushed_at", null: false, comment: "推送成功时间"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["url"], name: "index_baidu_push_urls_on_url", unique: true
   end
 
   create_table "balance_sheets", force: :cascade do |t|

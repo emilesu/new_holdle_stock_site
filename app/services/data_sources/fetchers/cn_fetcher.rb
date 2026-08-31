@@ -63,7 +63,8 @@ module DataSources
 
         success_count = results.count { |r| r[:status] == :success }
         fail_count = results.count { |r| r[:status] == :failed }
-        fail_count == 0
+        # success: 是否有报表抓取失败；changed: 是否有报表数据新建/更新了记录
+        { success: fail_count == 0, changed: success_count > 0 }
       end
 
       private

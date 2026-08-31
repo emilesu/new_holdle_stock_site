@@ -44,15 +44,19 @@ module DataSources
 
         success_count = 0
         fail_count = 0
+        changed_symbols = []
 
         stocks.each_with_index do |stock, index|
           puts "\n--- [#{index + 1}/#{batch_size}] #{stock.symbol} | #{stock.name} ---"
 
           begin
-            all_success = fetcher.fetch_all(stock)
+            result = fetcher.fetch_all(stock)
+            all_success = result.is_a?(Hash) ? result[:success] : result
             if all_success
               update_stock_status(stock)
               success_count += 1
+              # 严格按「报表真实新建/更新」判定，作为百度推送数据源
+              changed_symbols << stock.symbol if result.is_a?(Hash) && result[:changed]
               puts "  ✅ [#{stock.symbol}] 全部报表爬取成功"
             else
               fail_count += 1
@@ -64,6 +68,9 @@ module DataSources
             Rails.logger.error "[EastMoneyFinanceService] #{stock.symbol} 处理异常: #{e.message}"
           end
         end
+
+        # 财务数据真实变更的股票 → 异步推送百度（附加动作，失败不影响主流程）
+        push_changed_to_baidu(changed_symbols, market)
 
         puts "\n#{'=' * 70}"
         puts "📊 #{market_name}财务数据爬取任务完成"
@@ -93,13 +100,34 @@ module DataSources
         end
 
         fetcher = fetcher_class.new
-        all_success = fetcher.fetch_all(stock)
+        fetch_result = fetcher.fetch_all(stock)
+        all_success = fetch_result.is_a?(Hash) ? fetch_result[:success] : fetch_result
         update_stock_status(stock) if all_success
+
+        # 单只财务数据真实变更 → 推送百度（附加动作，失败不影响主流程）
+        if fetch_result.is_a?(Hash) && fetch_result[:changed]
+          begin
+            BaiduPushJob.perform_later([BaiduPushService.stock_url(stock)])
+          rescue => e
+            Rails.logger.error "[EastMoneyFinanceService] #{stock.symbol} 百度推送入队失败: #{e.message}"
+          end
+        end
 
         { status: all_success ? :success : :partial, error: nil }
       end
 
       private
+
+      # 收集本次真实变更的股票 URL，异步推送百度；失败仅记日志，绝不中断主流程
+      def push_changed_to_baidu(symbols, _market)
+        return if symbols.empty?
+        stocks = Stock.where(symbol: symbols).index_by(&:symbol)
+        urls = symbols.filter_map { |sym| stocks[sym] && BaiduPushService.stock_url(stocks[sym]) }
+        return if urls.empty?
+        BaiduPushJob.perform_later(urls)
+      rescue => e
+        Rails.logger.error "[EastMoneyFinanceService] 百度推送入队失败: #{e.message}"
+      end
 
       # 尝试多种代码格式查找股票
       def find_stock(symbol, market)
