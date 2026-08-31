@@ -1,5 +1,10 @@
 module ApplicationHelper
-  SITE_NAME = "Holdle"
+  SITE_NAME = "HOLDLE"
+
+  # 品牌 logo（JSON-LD Organization / Article 的 publisher.logo 用）。
+  # 2026-08-31 由 PIL 程序化生成（public/holdle-logo.png，深蓝+金，上升柱+字标）；
+  # 若后续有更好的品牌 logo 图，放 public/ 下替换此处即可。
+  BRAND_LOGO_URL = "https://www.holdle.com/holdle-logo.png"
 
   # ── SEO 辅助方法 ──────────────────────────────────
   # 在视图中调用以设置页面级元数据，例如：
@@ -51,12 +56,21 @@ module ApplicationHelper
 
   def page_description(default_desc = nil)
     d = content_for(:page_description)
-    d.presence || default_desc || "Holdle 提供港股、美股、A股财务数据深度分析，金字塔评分系统、行业对比与智能选股工具，助力投资者做出更明智的决策。"
+    d.presence || default_desc || "HOLDLE 提供港股、美股、A股财务数据深度分析，金字塔评分系统、行业对比与智能选股工具，助力投资者做出更明智的决策。"
   end
 
   def page_keywords(default_kw = nil)
     k = content_for(:page_keywords)
     k.presence || default_kw || "股票分析,港股,美股,A股,财务数据,金字塔评分,智能选股,行业对比,投资分析"
+  end
+
+  # OG 类型：默认 website；文章页等需单独类型时用 set_og_type 覆盖
+  def set_og_type(type)
+    content_for(:og_type, type)
+  end
+
+  def page_og_type
+    content_for(:og_type).presence || "website"
   end
 
   # ── JSON-LD 结构化数据 ──────────────────────────────────
@@ -77,7 +91,7 @@ module ApplicationHelper
       "@type": "Organization",
       "name": "HOLDLE",
       "url": "https://www.holdle.com/",
-      "logo": "https://www.holdle.com/og-default.png",
+      "logo": BRAND_LOGO_URL,
       "description": "HOLDLE 投研助手——把 17 年投资方法论装进你的 AI",
       "sameAs": [
         "https://www.youtube.com/@EmileSu",
@@ -86,24 +100,27 @@ module ApplicationHelper
     }
   end
 
-  # 首页 FAQPage（与页面 FAQ 板块一一对应，文本为页面原文纯文本摘录）
+  # 首页 FAQ 数据（单一数据源）。⚠️ 修改首页 FAQ 区块文案时，请同步更新此常量，
+  # 保证 FAQPage JSON-LD 与页面展示保持一致（见 home/index.html.erb 的 FAQ 区块）。
+  HOME_FAQ_DATA = [
+    ["适合什么人学习？", "对未来有更高追求，希望凭自己的智慧独立去做投资交易的人。萌新手能少走 5 年弯路；多年老手可对比是否殊途同归；所有人都能成为更好的自己。"],
+    ["会不会很难？", "比想象的简单得多。交易无非解决三个问题：买卖什么、什么时候买卖、什么价格买卖。会尽量少用金融术语，用文字加视频让学习轻松易懂。"],
+    ["能学到什么？", "用简单高效的财务分析方法找出具备长期上涨潜力的股票、如何等待最佳交易时机、买卖环节的优化处理、高效率分散投资的方法、避免交易中的各种陷阱，方法也适用于区块链货币交易。"],
+    ["有荐股群吗？", "HOLDLE 有会员微信社区交流群，便于讨论学习和分享方法心得。但没有荐股群，不会开任何每日荐股、牛股推荐群，目的是授人以渔，让你学会一套长期经过实践检验的交易方法。"],
+    ["跟其他投资课程有什么不同？", "不推荐股票、不搞短线交易、不承诺收益。目标是帮你建立一套可以自己用的投资体系，从分析企业到判断价格到管理风险，每一步走明白。"],
+    ["课程怎么收费？有免费内容先看吗？", "当前基础课程已开源免费，还有大量内容供了解 HOLDLE 方法论，包括视频、文章和一些在线工具。AI 助手能帮你快速理解并上手。"],
+    ["HOLDLE AI 投研助手是什么？", "基于 HOLDLE 方法论知识库的智能问答服务，接入常用 AI 工具即可提问，它按 HOLDLE 完整方法论回答。是陪练助手，不是荐股工具，不推荐买卖、不预测涨跌。"],
+    ["AI 助手和课程是什么关系？", "课程是系统学习 HOLDLE 方法论的完整体系，必须先学习理解；AI 助手是随行教练。先学课程打基础，AI 助手陪你实践。"],
+    ["AI 助手会荐股吗？", "不会。HOLDLE 是投资学习社区，分享方法，红线是不荐股、不预测、不承诺收益。它是学习助手、实战陪练，教你判断，不替你做决定。"],
+    ["AI 助手会记录我的问题吗？", "会记录提问内容，仅用于改进 HOLDLE 知识库和回答质量，内部使用不对外公开。详情见隐私政策。"]
+  ].freeze
+
+  # 首页 FAQPage（数据源为上方 HOME_FAQ_DATA 单一常量）
   def home_faq_json_ld
-    faqs = [
-      ["适合什么人学习？", "对未来有更高追求，希望凭自己的智慧独立去做投资交易的人。萌新手能少走 5 年弯路；多年老手可对比是否殊途同归；所有人都能成为更好的自己。"],
-      ["会不会很难？", "比想象的简单得多。交易无非解决三个问题：买卖什么、什么时候买卖、什么价格买卖。会尽量少用金融术语，用文字加视频让学习轻松易懂。"],
-      ["能学到什么？", "用简单高效的财务分析方法找出具备长期上涨潜力的股票、如何等待最佳交易时机、买卖环节的优化处理、高效率分散投资的方法、避免交易中的各种陷阱，方法也适用于区块链货币交易。"],
-      ["有荐股群吗？", "HOLDLE 有会员微信社区交流群，便于讨论学习和分享方法心得。但没有荐股群，不会开任何每日荐股、牛股推荐群，目的是授人以渔，让你学会一套长期经过实践检验的交易方法。"],
-      ["跟其他投资课程有什么不同？", "不推荐股票、不搞短线交易、不承诺收益。目标是帮你建立一套可以自己用的投资体系，从分析企业到判断价格到管理风险，每一步走明白。"],
-      ["课程怎么收费？有免费内容先看吗？", "当前基础课程已开源免费，还有大量内容供了解 HOLDLE 方法论，包括视频、文章和一些在线工具。AI 助手能帮你快速理解并上手。"],
-      ["HOLDLE AI 投研助手是什么？", "基于 HOLDLE 方法论知识库的智能问答服务，接入常用 AI 工具即可提问，它按 HOLDLE 完整方法论回答。是陪练助手，不是荐股工具，不推荐买卖、不预测涨跌。"],
-      ["AI 助手和课程是什么关系？", "课程是系统学习 HOLDLE 方法论的完整体系，必须先学习理解；AI 助手是随行教练。先学课程打基础，AI 助手陪你实践。"],
-      ["AI 助手会荐股吗？", "不会。HOLDLE 是投资学习社区，分享方法，红线是不荐股、不预测、不承诺收益。它是学习助手、实战陪练，教你判断，不替你做决定。"],
-      ["AI 助手会记录我的问题吗？", "会记录提问内容，仅用于改进 HOLDLE 知识库和回答质量，内部使用不对外公开。详情见隐私政策。"]
-    ]
     {
       "@context": "https://schema.org",
       "@type": "FAQPage",
-      "mainEntity": faqs.map do |q, a|
+      "mainEntity": HOME_FAQ_DATA.map do |q, a|
         { "@type": "Question", "name": q, "acceptedAnswer": { "@type": "Answer", "text": a } }
       end
     }
@@ -140,13 +157,13 @@ module ApplicationHelper
       "@context": "https://schema.org",
       "@type": "Article",
       "headline": article.title,
-      "datePublished": article.published_at&.iso8601,
+      "datePublished": (article.published_at || article.created_at)&.iso8601,
       "dateModified": article.updated_at&.iso8601,
       "author": { "@type": "Organization", "name": "HOLDLE" },
       "publisher": {
         "@type": "Organization",
         "name": "HOLDLE",
-        "logo": { "@type": "ImageObject", "url": "https://www.holdle.com/og-default.png" }
+        "logo": { "@type": "ImageObject", "url": BRAND_LOGO_URL }
       },
       "mainEntityOfPage": "https://www.holdle.com/articles/#{article.id}"
     }.compact

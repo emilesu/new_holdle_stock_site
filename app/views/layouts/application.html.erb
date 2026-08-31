@@ -10,7 +10,7 @@
     <link rel="canonical" href="https://www.holdle.com<%= request.path %>">
 
     <%# ===== Open Graph + Twitter Cards（默认跟随该页 title/description；og:url 与 canonical 同源） ===== %>
-    <meta property="og:type" content="website">
+    <meta property="og:type" content="<%= page_og_type %>">
     <meta property="og:site_name" content="HOLDLE">
     <meta property="og:title" content="<%= page_title %>">
     <meta property="og:description" content="<%= page_description %>">
