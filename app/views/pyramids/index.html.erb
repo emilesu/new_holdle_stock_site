@@ -1,6 +1,7 @@
-<% set_page_title "金字塔评分 - 股票智能排行 - Holdle" %>
+<% set_page_title "金字塔评分 - 股票智能排行" %>
 <% set_page_description "查看全市场股票的金字塔评分排名，从财务健康度、盈利能力、成长性等多维度筛选优质股票。" %>
 <% set_page_keywords "金字塔评分,股票排行,智能选股,财务健康,多维度评分" %>
+<% add_json_ld(pyramid_breadcrumb_json_ld) %>
 <div class="min-h-screen bg-bg-soft" id="pyramid-page">
   <style>
     #pyramid-page.radar-fixed .radar-card {
@@ -22,6 +23,7 @@
   </style>
 
   <main class="container-hl py-8">
+    <h1 class="text-hl-22 md:text-hl-40 font-bold leading-tight text-ink mb-6">金字塔评分 - 全市场股票智能排行</h1>
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <div class="radar-column">
         <div class="hl-card radar-card">

@@ -9,6 +9,19 @@
     <%= csp_meta_tag %>
     <link rel="canonical" href="https://www.holdle.com<%= request.path %>">
 
+    <%# ===== Open Graph + Twitter Cards（默认跟随该页 title/description；og:url 与 canonical 同源） ===== %>
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="HOLDLE">
+    <meta property="og:title" content="<%= page_title %>">
+    <meta property="og:description" content="<%= page_description %>">
+    <meta property="og:url" content="https://www.holdle.com<%= request.path %>">
+    <meta property="og:image" content="https://www.holdle.com/og-default.png">
+    <meta name="twitter:card" content="summary_large_image">
+
+    <%# ===== JSON-LD：全站 Organization + 各页自定义结构化数据（页面用 add_json_ld 追加） ===== %>
+    <script type="application/ld+json"><%= raw json_escape(organization_json_ld.to_json) %></script>
+    <%= yield :page_json_ld %>
+
     <%# 登录态页面禁用 Turbo 快照缓存：防止跨账号/登出后恢复旧快照（admin 按钮泄漏、后退弹回） %>
     <% if user_signed_in? %>
       <meta name="turbo-cache-control" content="no-cache">
