@@ -11,6 +11,12 @@ Rails.application.routes.draw do
 
   get "up" => "rails/health#show", as: :rails_health_check
 
+  # sitemap（SEO）
+  get "/sitemap.xml", to: "sitemaps#index", as: :sitemap_index
+  get "/sitemap-static.xml", to: "sitemaps#static", as: :sitemap_static
+  get "/sitemap-articles.xml", to: "sitemaps#articles", as: :sitemap_articles
+  get "/sitemap-stocks-:id.xml", to: "sitemaps#stocks", as: :sitemap_stocks, id: /\d+/
+
   root "home#index"
 
   resources :user_favorites, only: [:create, :destroy]
