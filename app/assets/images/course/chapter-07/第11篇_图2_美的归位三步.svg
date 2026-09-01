@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 440" font-family="'PingFang SC','Microsoft YaHei','Noto Sans CJK SC',sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#8a8f98"/>
+    </marker>
+  </defs>
+
+  <!-- 标题 -->
+  <text x="450" y="36" text-anchor="middle" font-size="18" font-weight="700" fill="#1f2329">美的集团 · ROE 19.7% 归位三步</text>
+  <text x="450" y="62" text-anchor="middle" font-size="12.5" fill="#8a8f98">归位不是查表，是三步走 —— 落档只是第一步</text>
+
+  <!-- ===== 第一步 ===== -->
+  <rect x="40" y="100" width="250" height="210" rx="12" fill="#ffffff" stroke="#3b82c4" stroke-width="1.8"/>
+  <circle cx="70" cy="126" r="13" fill="#2f6fb3"/>
+  <text x="70" y="131" text-anchor="middle" font-size="14" font-weight="700" fill="#ffffff">1</text>
+  <text x="165" y="131" text-anchor="middle" font-size="14.5" font-weight="700" fill="#2f6fb3">数字落哪档？</text>
+  <line x1="56" y1="148" x2="274" y2="148" stroke="#e3e6ea" stroke-width="1"/>
+  <text x="165" y="182" text-anchor="middle" font-size="17" font-weight="700" fill="#1f2329">19.7% → 兜底带</text>
+  <text x="165" y="206" text-anchor="middle" font-size="12.5" fill="#5a6b82">最新年报 ROE，落在 18%~20%</text>
+  <rect x="60" y="228" width="210" height="56" rx="8" fill="#eef4fc" stroke="#bcd3ee" stroke-width="1"/>
+  <text x="165" y="250" text-anchor="middle" font-size="13" font-weight="700" fill="#2f6fb3">不是否决，也不是稳健档</text>
+  <text x="165" y="272" text-anchor="middle" font-size="13" font-weight="700" fill="#2f6fb3">不否决，进入综合判断</text>
+
+  <!-- 箭头 -->
+  <line x1="290" y1="205" x2="328" y2="205" stroke="#8a8f98" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- ===== 第二步 ===== -->
+  <rect x="330" y="100" width="250" height="210" rx="12" fill="#ffffff" stroke="#e8923c" stroke-width="1.8"/>
+  <circle cx="360" cy="126" r="13" fill="#d97b29"/>
+  <text x="360" y="131" text-anchor="middle" font-size="14" font-weight="700" fill="#ffffff">2</text>
+  <text x="455" y="131" text-anchor="middle" font-size="14.5" font-weight="700" fill="#d97b29">成因健康吗？</text>
+  <line x1="346" y1="148" x2="564" y2="148" stroke="#e3e6ea" stroke-width="1"/>
+  <text x="455" y="182" text-anchor="middle" font-size="16" font-weight="700" fill="#1f2329">高分红摊薄净资产</text>
+  <text x="455" y="206" text-anchor="middle" font-size="12.5" font-weight="700" fill="#d97b29">赚钱能力没变，数字变小了</text>
+  <text x="455" y="238" text-anchor="middle" font-size="11" fill="#5a6b82">毛利率 26.4% 稳定　　净利率 9.8% 上升</text>
+  <text x="455" y="260" text-anchor="middle" font-size="11" fill="#5a6b82">现金流 533 亿 ＞ 净利 445 亿　负债率 61% 下行</text>
+  <rect x="350" y="278" width="210" height="22" rx="5" fill="#fdf1e7"/>
+  <text x="455" y="293" text-anchor="middle" font-size="11.5" font-weight="700" fill="#d97b29">赚的是真金白银，结构在变稳</text>
+
+  <!-- 箭头 -->
+  <line x1="580" y1="205" x2="618" y2="205" stroke="#8a8f98" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- ===== 第三步 ===== -->
+  <rect x="620" y="100" width="250" height="210" rx="12" fill="#ffffff" stroke="#17a05e" stroke-width="1.8"/>
+  <circle cx="650" cy="126" r="13" fill="#0e7a46"/>
+  <text x="650" y="131" text-anchor="middle" font-size="14" font-weight="700" fill="#ffffff">3</text>
+  <text x="745" y="131" text-anchor="middle" font-size="14.5" font-weight="700" fill="#0e7a46">同行怎么比？</text>
+  <line x1="636" y1="148" x2="854" y2="148" stroke="#e3e6ea" stroke-width="1"/>
+  <text x="745" y="182" text-anchor="middle" font-size="15.5" font-weight="700" fill="#1f2329">对比优先于绝对值</text>
+  <text x="745" y="206" text-anchor="middle" font-size="12.5" fill="#5a6b82">同行业里处于什么位置</text>
+  <text x="745" y="250" text-anchor="middle" font-size="12.5" font-weight="700" fill="#d9382e">比 19.7% 与 20% 的 0.3 差距</text>
+  <text x="745" y="272" text-anchor="middle" font-size="12.5" font-weight="700" fill="#d9382e">重要得多</text>
+
+  <!-- ===== 归位结论条 ===== -->
+  <rect x="40" y="348" width="830" height="62" rx="10" fill="#e9f7ef" stroke="#17a05e" stroke-width="1.6"/>
+  <text x="455" y="374" text-anchor="middle" font-size="14.5" font-weight="700" fill="#0e7a46">归位结论：19.7% 既不构成否决，也不构成「必买」</text>
+  <text x="455" y="398" text-anchor="middle" font-size="14.5" font-weight="700" fill="#0e7a46">它构成的是「这家公司值得继续认真研究」的理由</text>
+</svg>
