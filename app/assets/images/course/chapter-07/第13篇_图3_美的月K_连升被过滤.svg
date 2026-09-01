@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 860 470" font-family="'PingFang SC','Microsoft YaHei','Noto Sans CJK SC',sans-serif">
+  <!-- 标题 -->
+  <text x="430" y="26" text-anchor="middle" font-size="16" font-weight="700" fill="#1f2329">美的集团 · 连升的红柱，红线前全被过滤</text>
+  <text x="430" y="43" text-anchor="middle" font-size="10.5" fill="#8a8f98">数据：后复权月K · MACD(12,26,9) · 柱高按数值同比例 · 供形态判定，非可交易实盘价</text>
+
+  <!-- 时间轴条：灰段（不满30个月） -->
+  <rect x="150" y="58" width="420" height="34" fill="#e8ebf0"/>
+  <text x="360" y="80" text-anchor="middle" font-size="12.5" font-weight="700" fill="#5a6b82">不满30个月 · 红柱不作数</text>
+  <!-- 绿段（满30个月） -->
+  <rect x="570" y="58" width="154" height="34" fill="#17a05e"/>
+  <text x="647" y="80" text-anchor="middle" font-size="12.5" font-weight="700" fill="#ffffff">满30个月</text>
+
+  <!-- 30个月红线 -->
+  <line x1="570" y1="50" x2="570" y2="345" stroke="#d9382e" stroke-width="2.5"/>
+  <text x="570" y="44" text-anchor="middle" font-size="12.5" font-weight="700" fill="#d9382e">30个月红线</text>
+
+  <!-- 0轴 -->
+  <line x1="130" y1="330" x2="750" y2="330" stroke="#aeb4bc" stroke-width="1.2"/>
+  <text x="138" y="334" font-size="11" fill="#8a8f98">0</text>
+
+  <!-- ===== 红线前：两根灰柱，不作数 ===== -->
+  <!-- 1.38（2013-12，上市第3个月） -->
+  <rect x="178" y="319" width="28" height="11" fill="#c9cdd4" rx="1.5"/>
+  <text x="192" y="313" text-anchor="middle" font-size="11" font-weight="700" fill="#6b7280">1.38</text>
+  <text x="192" y="352" text-anchor="middle" font-size="11" fill="#8a8f98">2013-12 上市第3个月</text>
+  <!-- 9.93（2015-05，连升高点） -->
+  <rect x="416" y="251" width="28" height="79" fill="#c9cdd4" rx="1.5"/>
+  <text x="430" y="266" text-anchor="middle" font-size="11.5" font-weight="700" fill="#6b7280">9.93</text>
+  <text x="430" y="352" text-anchor="middle" font-size="11" fill="#8a8f98">2015-05</text>
+
+  <!-- 灰柱区框：不作数 -->
+  <rect x="170" y="170" width="284" height="168" fill="none" stroke="#aeb4bc" stroke-width="1.5" stroke-dasharray="5 4" rx="6"/>
+  <text x="312" y="164" text-anchor="middle" font-size="12" font-weight="700" fill="#8a8f98">上市初期 · 不作数</text>
+  <!-- 9.93 柱顶红叉 -->
+  <path d="M 425 246 L 435 256 M 435 246 L 425 256" stroke="#d9382e" stroke-width="2"/>
+
+  <!-- 连升箭头：1.38 → 9.93 -->
+  <line x1="200" y1="315" x2="410" y2="265" stroke="#5a6b82" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#arrG)"/>
+  <text x="305" y="296" text-anchor="middle" font-size="12" fill="#5a6b82">柱子连升近一年</text>
+
+  <!-- ===== 红线后：0.51（矮，但合格） ===== -->
+  <rect x="598" y="326" width="28" height="4" fill="#d9382e"/>
+  <rect x="598" y="296" width="44" height="40" fill="none" stroke="#d9382e" stroke-width="1.6" stroke-dasharray="5 4" rx="6"/>
+  <text x="620" y="313" text-anchor="middle" font-size="12" font-weight="700" fill="#d9382e">0.51</text>
+  <line x1="642" y1="316" x2="660" y2="316" stroke="#d9382e" stroke-width="1.2"/>
+  <text x="664" y="312" font-size="12.5" font-weight="700" fill="#d9382e">首个合格开窗</text>
+  <text x="664" y="330" font-size="11" fill="#8a8f98">2016-06 · 上市第33个月</text>
+
+  <!-- ===== 绿段末端：2017-02 入场 +49% ===== -->
+  <text x="724" y="250" text-anchor="middle" font-size="12.5" font-weight="700" fill="#17a05e">2017-02 入场</text>
+  <text x="724" y="270" text-anchor="middle" font-size="11" fill="#8a8f98">约 +49% 离场</text>
+  <text x="724" y="352" text-anchor="middle" font-size="11" fill="#8a8f98">2017-02</text>
+
+  <!-- 底部对照说明 -->
+  <text x="470" y="385" text-anchor="middle" font-size="12" fill="#5a6b82">2016-02 股价 99.2 → 69.9</text>
+  <text x="470" y="405" text-anchor="middle" font-size="11" fill="#8a8f98">被套约30%</text>
+
+  <text x="650" y="385" text-anchor="middle" font-size="12" fill="#5a6b82">2016-06 过线后的第一个合格信号</text>
+  <text x="650" y="405" text-anchor="middle" font-size="11" fill="#8a8f98">柱值0.51，够格就开窗</text>
+
+  <text x="430" y="442" text-anchor="middle" font-size="13" font-weight="700" fill="#1f2329">上市初期的红柱，数值再高也不参与；攒满30个月，才有可靠的信号</text>
+
+  <defs>
+    <marker id="arrG" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#5a6b82"/>
+    </marker>
+  </defs>
+</svg>
