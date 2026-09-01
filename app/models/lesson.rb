@@ -39,10 +39,13 @@ class Lesson < ApplicationRecord
         match
       else
         begin
-          asset_path = ActionController::Base.helpers.image_path(src)
+          # Commonmarker 会把中文等非 ASCII 路径做 URL 编码，而 sprockets manifest key 是原文，
+          # 查找前需先解码，避免 image_path 命中失败导致相对路径残留（生成 /lessons/... 404）
+          decoded_src = URI::DEFAULT_PARSER.unescape(src)
+          asset_path = ActionController::Base.helpers.image_path(decoded_src)
           "<img#{attrs}src=\"#{asset_path}\""
         rescue
-          Rails.logger.warn "Missing asset: #{src}"
+          Rails.logger.warn "Missing asset: #{decoded_src || src}"
           match
         end
       end
