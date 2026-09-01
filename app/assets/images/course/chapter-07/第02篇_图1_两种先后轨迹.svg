@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 840 470" font-family="'PingFang SC','Microsoft YaHei','Noto Sans CJK SC',sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#8a8f98"/>
+    </marker>
+  </defs>
+
+  <!-- 标题 -->
+  <text x="420" y="36" text-anchor="middle" font-size="19" font-weight="700" fill="#1f2329">柱先上：第一根红柱，不作数</text>
+  <text x="420" y="62" text-anchor="middle" font-size="13" fill="#8a8f98">上面一条：线先上0轴（标准剧本）　｜　下面一条：柱先上0轴（本篇重点）</text>
+
+  <!-- ===== 上行：线先上0轴 ===== -->
+  <text x="20" y="112" font-size="13" font-weight="700" fill="#17a05e">线先上0轴</text>
+  <text x="20" y="132" font-size="12" fill="#8a8f98">标准剧本</text>
+
+  <!-- 框1 双线先站上0轴 -->
+  <rect x="130" y="85" width="230" height="72" rx="10" fill="#eef4fc" stroke="#3b82c4" stroke-width="1.5"/>
+  <text x="245" y="115" text-anchor="middle" font-size="18" font-weight="700" fill="#1f2329">双线先站上0轴</text>
+  <text x="245" y="139" text-anchor="middle" font-size="12" fill="#5a6b82">状态A成立</text>
+
+  <!-- 箭头 -->
+  <line x1="360" y1="121" x2="425" y2="121" stroke="#8a8f98" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- 框2 柱子绿转红 = 开窗 -->
+  <rect x="430" y="85" width="280" height="72" rx="10" fill="#fdeeee" stroke="#d9382e" stroke-width="2.5"/>
+  <text x="570" y="115" text-anchor="middle" font-size="18" font-weight="700" fill="#d9382e">柱子绿转红 = 开窗</text>
+  <text x="570" y="139" text-anchor="middle" font-size="12" fill="#5a6b82">状态A、开窗、入场，同一个月</text>
+
+  <!-- ===== 下行：柱先上0轴 ===== -->
+  <text x="20" y="258" font-size="13" font-weight="700" fill="#d9382e">柱先上0轴</text>
+  <text x="20" y="278" font-size="12" fill="#8a8f98">本篇重点</text>
+
+  <!-- 框1 柱子先红 -->
+  <rect x="130" y="230" width="140" height="72" rx="10" fill="#faf6ec" stroke="#d9a441" stroke-width="1.5"/>
+  <text x="200" y="260" text-anchor="middle" font-size="17" font-weight="700" fill="#1f2329">柱子先红</text>
+  <text x="200" y="284" text-anchor="middle" font-size="11.5" fill="#5a6b82">双线还在0轴下</text>
+
+  <!-- 红叉标签：不作数 -->
+  <rect x="130" y="314" width="140" height="26" rx="7" fill="#fdeeee" stroke="#d9382e" stroke-width="1.2"/>
+  <text x="200" y="331" text-anchor="middle" font-size="12.5" font-weight="700" fill="#d9382e">✕ 第一根红柱不作数</text>
+
+  <!-- 箭头 -->
+  <line x1="270" y1="266" x2="300" y2="266" stroke="#8a8f98" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- 框2 双线补上 -->
+  <rect x="305" y="230" width="140" height="72" rx="10" fill="#eef4fc" stroke="#3b82c4" stroke-width="1.5"/>
+  <text x="375" y="260" text-anchor="middle" font-size="17" font-weight="700" fill="#1f2329">双线补上</text>
+  <text x="375" y="284" text-anchor="middle" font-size="11.5" fill="#5a6b82">状态A成立</text>
+
+  <!-- 灰标签：无开窗事件 -->
+  <rect x="305" y="314" width="140" height="26" rx="7" fill="#f4f5f7" stroke="#c2c7cf" stroke-width="1.2"/>
+  <text x="375" y="331" text-anchor="middle" font-size="12" fill="#8a8f98">但无开窗事件</text>
+
+  <!-- 箭头 -->
+  <line x1="445" y1="266" x2="475" y2="266" stroke="#8a8f98" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- 框3 柱子再变 -->
+  <rect x="480" y="230" width="140" height="72" rx="10" fill="#fff7e8" stroke="#e8a13d" stroke-width="1.5"/>
+  <text x="550" y="260" text-anchor="middle" font-size="17" font-weight="700" fill="#1f2329">柱子再变一次</text>
+  <text x="550" y="284" text-anchor="middle" font-size="11.5" fill="#5a6b82">绿转红 / 矮转高</text>
+
+  <!-- 琥珀标签：这次才算数 -->
+  <rect x="480" y="314" width="140" height="26" rx="7" fill="#fff7e8" stroke="#e8a13d" stroke-width="1.2"/>
+  <text x="550" y="331" text-anchor="middle" font-size="12" font-weight="700" fill="#c7791e">这次才算数</text>
+
+  <!-- 箭头 -->
+  <line x1="620" y1="266" x2="650" y2="266" stroke="#8a8f98" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- 框4 开窗 -->
+  <rect x="655" y="230" width="160" height="72" rx="10" fill="#fdeeee" stroke="#d9382e" stroke-width="2.5"/>
+  <text x="735" y="260" text-anchor="middle" font-size="18" font-weight="700" fill="#d9382e">开窗</text>
+  <text x="735" y="284" text-anchor="middle" font-size="12" fill="#5a6b82">才轮到你动手</text>
+
+  <!-- 底部说明 -->
+  <rect x="130" y="400" width="685" height="44" rx="8" fill="#f7f8fa" stroke="#e3e6ea" stroke-width="1"/>
+  <text x="472" y="426" text-anchor="middle" font-size="13" fill="#5a6b82">同样一根红柱：线先上，一步到位；柱先上，只是提醒——双线跟上、柱子再变，才轮到你动手</text>
+</svg>

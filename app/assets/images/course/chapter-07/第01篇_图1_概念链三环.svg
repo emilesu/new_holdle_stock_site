@@ -45,7 +45,7 @@
   <!-- 框2 开窗（高亮） -->
   <rect x="390" y="242" width="200" height="90" rx="10" fill="#fdeeee" stroke="#d9382e" stroke-width="2.5"/>
   <text x="490" y="276" text-anchor="middle" font-size="20" font-weight="700" fill="#d9382e">开窗</text>
-  <text x="490" y="302" text-anchor="middle" font-size="12.5" fill="#d9382e">单次事件 · 那一下</text>
+  <text x="490" y="302" text-anchor="middle" font-size="12.5" fill="#d9382e">单次事件 · 只此一根</text>
   <text x="490" y="320" text-anchor="middle" font-size="12.5" fill="#d9382e">需要单独确认</text>
 
   <!-- 箭头 -->
@@ -58,5 +58,5 @@
 
   <!-- 底部说明 -->
   <rect x="120" y="366" width="700" height="40" rx="8" fill="#f7f8fa" stroke="#e3e6ea" stroke-width="1"/>
-  <text x="470" y="390" text-anchor="middle" font-size="13" fill="#5a6b82">「开窗」是单次事件，发生在「那一下」——状态A 天天都在，开窗一年等不了几次</text>
+  <text x="470" y="390" text-anchor="middle" font-size="13" fill="#5a6b82">「开窗」是单次事件，只发生在柱子状态变化的那根月K——状态A 天天都在，开窗一年等不了几次</text>
 </svg>

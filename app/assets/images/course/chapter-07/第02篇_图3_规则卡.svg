@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 840 420" font-family="'PingFang SC','Microsoft YaHei','Noto Sans CJK SC',sans-serif">
+  <!-- 标题 -->
+  <text x="420" y="38" text-anchor="middle" font-size="19" font-weight="700" fill="#1f2329">规则卡：先看谁上0轴</text>
+  <text x="420" y="62" text-anchor="middle" font-size="13" fill="#8a8f98">线先上 / 柱先上，决定你接下来做什么</text>
+
+  <!-- 表头 -->
+  <rect x="45" y="84" width="750" height="34" rx="8" fill="#eef1f5" stroke="#d9dee6" stroke-width="1"/>
+  <text x="185" y="106" text-anchor="middle" font-size="13" font-weight="700" fill="#1f2329">看到什么</text>
+  <text x="455" y="106" text-anchor="middle" font-size="13" font-weight="700" fill="#1f2329">它是什么</text>
+  <text x="680" y="106" text-anchor="middle" font-size="13" font-weight="700" fill="#1f2329">你的动作</text>
+  <line x1="330" y1="88" x2="330" y2="114" stroke="#c9cfd8" stroke-width="1"/>
+  <line x1="570" y1="88" x2="570" y2="114" stroke="#c9cfd8" stroke-width="1"/>
+
+  <!-- 行1：线先上 · 标准剧本 -->
+  <rect x="45" y="122" width="750" height="46" rx="8" fill="#e9f7ef" stroke="#b7e3cb" stroke-width="1"/>
+  <rect x="45" y="122" width="6" height="46" rx="3" fill="#17a05e"/>
+  <text x="185" y="149" text-anchor="middle" font-size="13" fill="#1f2329">双线先站稳0轴，柱子绿转红</text>
+  <text x="455" y="149" text-anchor="middle" font-size="13" fill="#1f2329">状态A成立 + 开窗，同月</text>
+  <text x="680" y="149" text-anchor="middle" font-size="13" fill="#1f2329">按原课程流程，切日K找入场点</text>
+  <line x1="330" y1="122" x2="330" y2="168" stroke="#c9cfd8" stroke-width="1"/>
+  <line x1="570" y1="122" x2="570" y2="168" stroke="#c9cfd8" stroke-width="1"/>
+
+  <!-- 行2：柱先上 · 红柱不作数 -->
+  <rect x="45" y="172" width="750" height="46" rx="8" fill="#fdeeee" stroke="#f0c4c0" stroke-width="1"/>
+  <rect x="45" y="172" width="6" height="46" rx="3" fill="#d9382e"/>
+  <text x="185" y="199" text-anchor="middle" font-size="13" fill="#1f2329">柱子先红，双线还在0轴下方</text>
+  <text x="455" y="199" text-anchor="middle" font-size="13" fill="#1f2329">状态A未成立，红柱不作数</text>
+  <text x="680" y="199" text-anchor="middle" font-size="13" fill="#1f2329">不参与，继续等双线</text>
+  <line x1="330" y1="172" x2="330" y2="218" stroke="#c9cfd8" stroke-width="1"/>
+  <line x1="570" y1="172" x2="570" y2="218" stroke="#c9cfd8" stroke-width="1"/>
+
+  <!-- 行3：柱先上 · 双线补上 -->
+  <rect x="45" y="222" width="750" height="46" rx="8" fill="#eef4fc" stroke="#bcd6ee" stroke-width="1"/>
+  <rect x="45" y="222" width="6" height="46" rx="3" fill="#3b82c4"/>
+  <text x="185" y="249" text-anchor="middle" font-size="13" fill="#1f2329">柱先上，双线补上0轴</text>
+  <text x="455" y="249" text-anchor="middle" font-size="13" fill="#1f2329">状态A成立，但无开窗事件</text>
+  <text x="680" y="249" text-anchor="middle" font-size="13" fill="#1f2329">继续盯柱子，等状态变化</text>
+  <line x1="330" y1="222" x2="330" y2="268" stroke="#c9cfd8" stroke-width="1"/>
+  <line x1="570" y1="222" x2="570" y2="268" stroke="#c9cfd8" stroke-width="1"/>
+
+  <!-- 行4：柱先上 · 矮转高 + 高优先 -->
+  <rect x="45" y="272" width="750" height="46" rx="8" fill="#fdeeee" stroke="#f0c4c0" stroke-width="1"/>
+  <rect x="45" y="272" width="6" height="46" rx="3" fill="#d9382e"/>
+  <text x="185" y="299" text-anchor="middle" font-size="12.5" fill="#1f2329">柱先上，后矮转高，开窗时双线高于柱</text>
+  <text x="455" y="299" text-anchor="middle" font-size="13" fill="#1f2329">开窗成立（高优先）</text>
+  <text x="680" y="299" text-anchor="middle" font-size="13" fill="#1f2329">切日K找入场点</text>
+  <line x1="330" y1="272" x2="330" y2="318" stroke="#c9cfd8" stroke-width="1"/>
+  <line x1="570" y1="272" x2="570" y2="318" stroke="#c9cfd8" stroke-width="1"/>
+
+  <!-- 行5：柱先上 · 低优先 -->
+  <rect x="45" y="322" width="750" height="46" rx="8" fill="#f4f5f7" stroke="#e3e6ea" stroke-width="1"/>
+  <rect x="45" y="322" width="6" height="46" rx="3" fill="#8a8f98"/>
+  <text x="185" y="349" text-anchor="middle" font-size="12.5" fill="#1f2329">柱先上，后矮转高，开窗时柱高于线</text>
+  <text x="455" y="349" text-anchor="middle" font-size="13" fill="#1f2329">开窗存疑（低优先）</text>
+  <text x="680" y="349" text-anchor="middle" font-size="12.5" fill="#1f2329">最好不参与（进阶篇讲过）</text>
+  <line x1="330" y1="322" x2="330" y2="368" stroke="#c9cfd8" stroke-width="1"/>
+  <line x1="570" y1="322" x2="570" y2="368" stroke="#c9cfd8" stroke-width="1"/>
+
+  <!-- 底部说明 -->
+  <rect x="45" y="376" width="750" height="36" rx="8" fill="#f7f8fa" stroke="#e3e6ea" stroke-width="1"/>
+  <text x="420" y="398" text-anchor="middle" font-size="13" fill="#5a6b82">线先上，红柱一出现就是开窗；柱先上，红柱只是提醒——双线跟上、柱子再变，才轮到你动手</text>
+</svg>

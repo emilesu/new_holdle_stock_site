@@ -1,0 +1,171 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 840 490" font-family="'PingFang SC','Microsoft YaHei','Noto Sans CJK SC',sans-serif">
+  <defs>
+    <marker id="arrB" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#3b82c4"/>
+    </marker>
+  </defs>
+
+  <!-- 标题 -->
+  <text x="410" y="26" text-anchor="middle" font-size="16" font-weight="700" fill="#1f2329">美的集团 · 月K线（后复权）2023-05 ~ 2025-01</text>
+  <text x="410" y="43" text-anchor="middle" font-size="10.5" fill="#8a8f98">数据：TickFlow 后复权月K · MACD(12,26,9) 脚本计算 · 供形态判定，非可交易实盘价</text>
+
+  <!-- 价格网格：300 / 350 / 400 -->
+  <line x1="45" y1="198.9" x2="700" y2="198.9" stroke="#eceff3" stroke-width="1" stroke-dasharray="3 3"/>
+  <line x1="45" y1="158" x2="700" y2="158" stroke="#eceff3" stroke-width="1" stroke-dasharray="3 3"/>
+  <line x1="45" y1="117.1" x2="700" y2="117.1" stroke="#eceff3" stroke-width="1" stroke-dasharray="3 3"/>
+  <text x="38" y="202.9" text-anchor="end" font-size="11" fill="#a9aeb6">300</text>
+  <text x="38" y="162" text-anchor="end" font-size="11" fill="#a9aeb6">350</text>
+  <text x="38" y="121.1" text-anchor="end" font-size="11" fill="#a9aeb6">400</text>
+
+  <!-- ===== K线（21根月K，真实数据，后复权） ===== -->
+  <!-- 1: 23-05 阴 开279.42 高285.42 低249.53 收250.65 -->
+  <line x1="75" y1="210.8" x2="75" y2="240.2" stroke="#17a05e" stroke-width="2"/>
+  <rect x="66" y="215.8" width="18" height="23.5" fill="#17a05e"/>
+  <!-- 2: 23-06 阳·第一根红柱 开251.63 高310.66 低249.11 收302.45 -->
+  <line x1="105" y1="190.2" x2="105" y2="240.6" stroke="#d9382e" stroke-width="2"/>
+  <rect x="96" y="196.9" width="18" height="41.6" fill="#d9382e"/>
+  <!-- 3: 23-07 阳 开302.24 高314.67 低285.77 收304.50 -->
+  <line x1="135" y1="186.9" x2="135" y2="210.6" stroke="#d9382e" stroke-width="2"/>
+  <rect x="126" y="195.2" width="18" height="1.9" fill="#d9382e"/>
+  <!-- 4: 23-08 阴 开304.50 高306.40 低274.16 收290.08 -->
+  <line x1="165" y1="193.7" x2="165" y2="220.1" stroke="#17a05e" stroke-width="2"/>
+  <rect x="156" y="195.2" width="18" height="11.8" fill="#17a05e"/>
+  <!-- 5: 23-09 阴 开292.59 高301.83 低283.40 收284.79 -->
+  <line x1="195" y1="197.4" x2="195" y2="212.5" stroke="#17a05e" stroke-width="2"/>
+  <rect x="186" y="205.0" width="18" height="6.4" fill="#17a05e"/>
+  <!-- 6: 23-10 阴 开284.69 高288.02 低267.08 收271.65 -->
+  <line x1="225" y1="208.7" x2="225" y2="225.8" stroke="#17a05e" stroke-width="2"/>
+  <rect x="216" y="211.4" width="18" height="10.7" fill="#17a05e"/>
+  <!-- 7: 23-11 阴 开271.08 高279.30 低260.15 收265.23 -->
+  <line x1="255" y1="215.9" x2="255" y2="231.5" stroke="#17a05e" stroke-width="2"/>
+  <rect x="246" y="222.6" width="18" height="4.8" fill="#17a05e"/>
+  <!-- 8: 23-12 阳 开268.47 高282.22 低250.24 收280.43 -->
+  <line x1="285" y1="213.5" x2="285" y2="239.6" stroke="#d9382e" stroke-width="2"/>
+  <rect x="276" y="214.9" width="18" height="9.8" fill="#d9382e"/>
+  <!-- 9: 24-01 阳 开280.43 高305.32 低277.71 收299.01 -->
+  <line x1="315" y1="194.6" x2="315" y2="217.1" stroke="#d9382e" stroke-width="2"/>
+  <rect x="306" y="199.7" width="18" height="15.2" fill="#d9382e"/>
+  <!-- 10: 24-02 阳 开298.91 高325.86 低294.18 收321.49 -->
+  <line x1="345" y1="177.8" x2="345" y2="203.7" stroke="#d9382e" stroke-width="2"/>
+  <rect x="336" y="181.3" width="18" height="18.5" fill="#d9382e"/>
+  <!-- 11: 24-03 阳 开325.96 高342.13 低308.66 收329.66 -->
+  <line x1="375" y1="164.4" x2="375" y2="191.8" stroke="#d9382e" stroke-width="2"/>
+  <rect x="366" y="174.6" width="18" height="3.0" fill="#d9382e"/>
+  <!-- 12: 24-04 阳·状态A成立 开331.09 高366.15 低329.04 收358.20 -->
+  <line x1="405" y1="144.8" x2="405" y2="175.2" stroke="#d9382e" stroke-width="2"/>
+  <rect x="396" y="151.3" width="18" height="22.2" fill="#d9382e"/>
+  <!-- 13: 24-05 阴 开361.89 高375.75 低346.00 收347.13 -->
+  <line x1="435" y1="136.9" x2="435" y2="161.3" stroke="#17a05e" stroke-width="2"/>
+  <rect x="426" y="148.3" width="18" height="12.1" fill="#17a05e"/>
+  <!-- 14: 24-06 阴 开347.77 高356.45 低336.62 收345.73 -->
+  <line x1="465" y1="152.7" x2="465" y2="169.0" stroke="#17a05e" stroke-width="2"/>
+  <rect x="456" y="159.8" width="18" height="1.7" fill="#17a05e"/>
+  <!-- 15: 24-07 阴 开344.61 高350.45 低315.72 收341.77 -->
+  <line x1="495" y1="157.6" x2="495" y2="186.0" stroke="#17a05e" stroke-width="2"/>
+  <rect x="486" y="162.4" width="18" height="2.3" fill="#17a05e"/>
+  <!-- 16: 24-08 阳 开341.98 高357.26 低317.54 收347.07 -->
+  <line x1="525" y1="152.1" x2="525" y2="184.6" stroke="#d9382e" stroke-width="2"/>
+  <rect x="516" y="160.4" width="18" height="4.2" fill="#d9382e"/>
+  <!-- 17: 24-09 阳 开345.73 高412.20 低320.00 收407.70 -->
+  <line x1="555" y1="107.1" x2="555" y2="182.5" stroke="#d9382e" stroke-width="2"/>
+  <rect x="546" y="110.8" width="18" height="50.7" fill="#d9382e"/>
+  <!-- 18: 24-10 大阴 开448.49 高448.49 低381.11 收382.83 -->
+  <line x1="585" y1="77.4" x2="585" y2="132.5" stroke="#17a05e" stroke-width="2"/>
+  <rect x="576" y="77.4" width="18" height="53.7" fill="#17a05e"/>
+  <!-- 19: 24-11 阴 开382.93 高401.43 低371.73 收375.91 -->
+  <line x1="615" y1="115.9" x2="615" y2="140.2" stroke="#17a05e" stroke-width="2"/>
+  <rect x="606" y="131.1" width="18" height="5.7" fill="#17a05e"/>
+  <!-- 20: 24-12 阳·矮转高开窗 开376.02 高410.92 低371.09 收403.20 -->
+  <line x1="645" y1="108.2" x2="645" y2="140.7" stroke="#d9382e" stroke-width="2"/>
+  <rect x="636" y="114.5" width="18" height="22.2" fill="#d9382e"/>
+  <!-- 21: 25-01 十字 开396.01 高423.46 低387.44 收396.01 -->
+  <line x1="675" y1="97.9" x2="675" y2="127.4" stroke="#a9aeb6" stroke-width="2"/>
+  <rect x="666" y="119.4" width="18" height="2" fill="#a9aeb6"/>
+
+  <!-- 关键时点高亮与标注 -->
+  <!-- 23-06 第一根红柱不作数 -->
+  <rect x="88" y="186" width="34" height="58" fill="none" stroke="#d9382e" stroke-width="1.8" stroke-dasharray="5 4" rx="5"/>
+  <text x="105" y="60" text-anchor="middle" font-size="12.5" font-weight="700" fill="#d9382e">✕ 第一根红柱不作数</text>
+  <!-- 24-04 状态A成立 -->
+  <rect x="388" y="140" width="34" height="39" fill="none" stroke="#3b82c4" stroke-width="1.8" stroke-dasharray="5 4" rx="5"/>
+  <text x="405" y="132" text-anchor="middle" font-size="12" font-weight="700" fill="#3b82c4">DEA 站上0轴 · 状态A成立</text>
+  <!-- 24-12 矮转高开窗 -->
+  <rect x="628" y="104" width="34" height="40" fill="none" stroke="#d9382e" stroke-width="1.8" stroke-dasharray="5 4" rx="5"/>
+  <text x="645" y="96" text-anchor="middle" font-size="12.5" font-weight="700" fill="#d9382e">矮转高 · 开窗</text>
+
+  <!-- 月份标签 -->
+  <g font-size="9.5" fill="#8a8f98" text-anchor="middle">
+    <text x="75">23-05</text>
+    <text x="105" font-weight="700" fill="#d9382e">23-06</text>
+    <text x="135">23-07</text>
+    <text x="165">23-08</text>
+    <text x="195">23-09</text>
+    <text x="225">23-10</text>
+    <text x="255">23-11</text>
+    <text x="285">23-12</text>
+    <text x="315">24-01</text>
+    <text x="345">24-02</text>
+    <text x="375">24-03</text>
+    <text x="405" font-weight="700" fill="#3b82c4">24-04</text>
+    <text x="435">24-05</text>
+    <text x="465">24-06</text>
+    <text x="495">24-07</text>
+    <text x="525">24-08</text>
+    <text x="555">24-09</text>
+    <text x="585">24-10</text>
+    <text x="615">24-11</text>
+    <text x="645" font-weight="700" fill="#d9382e">24-12</text>
+    <text x="675">25-01</text>
+  </g>
+
+  <!-- ===== MACD 区 ===== -->
+  <text x="48" y="295" font-size="11" fill="#8a8f98">MACD（12,26,9）柱 + DIF / DEA</text>
+  <line x1="45" y1="400" x2="700" y2="400" stroke="#aeb4bc" stroke-width="1.2"/>
+  <text x="55" y="404" font-size="11" fill="#8a8f98">0</text>
+
+  <!-- 红绿柱（真实 MACD 柱值，缩放与 DIF/DEA 线统一：10/3 像素/单位，柱顶严格落在数值对应位置） -->
+  <rect x="65"  y="400"   width="20" height="3.9"  fill="#17a05e"/>
+  <rect x="95"  y="380.9" width="20" height="19.1" fill="#d9382e"/>
+  <rect x="125" y="365.8" width="20" height="34.2" fill="#d9382e"/>
+  <rect x="155" y="363.6" width="20" height="36.4" fill="#d9382e"/>
+  <rect x="185" y="365.7" width="20" height="34.3" fill="#d9382e"/>
+  <rect x="215" y="373.9" width="20" height="26.1" fill="#d9382e"/>
+  <rect x="245" y="382.7" width="20" height="17.3" fill="#d9382e"/>
+  <rect x="275" y="382.1" width="20" height="17.9" fill="#d9382e"/>
+  <rect x="305" y="374.4" width="20" height="25.6" fill="#d9382e"/>
+  <rect x="335" y="361.0" width="20" height="39.0" fill="#d9382e"/>
+  <rect x="365" y="350.9" width="20" height="49.1" fill="#d9382e"/>
+  <rect x="395" y="334.9" width="20" height="65.1" fill="#d9382e"/>
+  <rect x="425" y="333.0" width="20" height="67.0" fill="#d9382e"/>
+  <rect x="455" y="336.0" width="20" height="64.0" fill="#d9382e"/>
+  <rect x="485" y="343.3" width="20" height="56.7" fill="#d9382e"/>
+  <rect x="515" y="349.0" width="20" height="51.0" fill="#d9382e"/>
+  <rect x="545" y="330.0" width="20" height="70.0" fill="#d9382e"/>
+  <rect x="575" y="333.0" width="20" height="67.0" fill="#d9382e"/>
+  <rect x="605" y="342.2" width="20" height="57.8" fill="#d9382e"/>
+  <rect x="635" y="340.4" width="20" height="59.6" fill="#d9382e" stroke="#a52a22" stroke-width="1.6"/>
+  <rect x="665" y="346.6" width="20" height="53.4" fill="#d9382e"/>
+
+  <!-- DIF 线（蓝） -->
+  <polyline points="75,447.3 105,433.4 135,421.6 165,415.9 195,412.7 225,413.6 255,415.8 285,413.3 315,406.2 345,394.7 375,383.5 405,367.4 435,358.0 465,351.5 495,348.1 525,344.6 555,326.3 585,319.5 615,316.9 645,308.5 675,305.0" fill="none" stroke="#3b82c4" stroke-width="1.6"/>
+  <!-- DEA 线（橙），2024-04 上0轴处标点 -->
+  <polyline points="75,445.3 105,442.9 135,438.7 165,434.1 195,429.8 225,426.6 255,424.4 285,422.2 315,419.0 345,414.1 375,408.0 405,399.9 435,391.5 465,383.5 495,376.4 525,370.1 555,361.3 585,352.9 615,345.7 645,338.3 675,331.6" fill="none" stroke="#e8a13d" stroke-width="1.6"/>
+  <circle cx="405" cy="399.9" r="3.2" fill="#e8a13d"/>
+  <text x="420" y="403" font-size="10" fill="#e8a13d">DEA 上0轴</text>
+
+  <!-- 图例 -->
+  <g font-size="10.5" fill="#666">
+    <rect x="690" y="85" width="10" height="10" fill="#d9382e" rx="1.5"/>
+    <text x="704" y="94">阳线 / 红柱</text>
+    <rect x="690" y="103" width="10" height="10" fill="#17a05e" rx="1.5"/>
+    <text x="704" y="112">阴线</text>
+    <line x1="690" y1="126" x2="700" y2="126" stroke="#3b82c4" stroke-width="2"/>
+    <text x="704" y="130">DIF</text>
+    <line x1="690" y1="144" x2="700" y2="144" stroke="#e8a13d" stroke-width="2"/>
+    <text x="704" y="148">DEA</text>
+  </g>
+
+  <!-- 底部说明 -->
+  <rect x="75" y="452" width="605" height="32" rx="8" fill="#f7f8fa" stroke="#e3e6ea" stroke-width="1"/>
+  <text x="377" y="472" text-anchor="middle" font-size="12.5" fill="#5a6b82">第一根红柱不作数 → 状态A成立（无开窗事件）→ 矮转高才开窗：红柱与开窗隔了 18 个月</text>
+</svg>
