@@ -37,22 +37,15 @@
           <% end %>
 
           <%# 课程大纲（小节直展） %>
-          <div class="px-6 sm:px-7 py-4 border-t border-line-soft divide-y divide-line-soft">
+          <div class="divide-y divide-line-soft border-t border-line-soft">
             <% lessons.each do |lesson| %>
-              <%= link_to lesson_path(lesson), class: 'flex items-center gap-3 py-2.5 hover:text-ink transition-colors' do %>
+              <%= link_to lesson_path(lesson), class: 'flex items-center gap-3 px-6 sm:px-7 py-3 hover:bg-bg-soft transition-colors' do %>
                 <span class="shrink-0 w-6 text-right font-mono text-hl-12 text-muted-4"><%= lesson.sort_num %></span>
                 <span class="flex-1 min-w-0 text-hl-13 text-muted hover:text-ink transition-colors"><%= lesson.title %></span>
                 <% if lesson.member_only? %>
                   <span class="shrink-0 inline-flex px-2 py-0.5 text-hl-11 font-medium bg-bg-mute text-muted-3 border border-line-soft rounded">会员</span>
-                <% else %>
-                  <span class="shrink-0 inline-flex px-2 py-0.5 text-hl-11 font-medium bg-bg-soft text-muted-4 border border-line-soft rounded">公开</span>
                 <% end %>
               <% end %>
-            <% end %>
-            <% if lessons.empty? %>
-              <div class="py-4 text-center">
-                <p class="text-hl-13 text-muted-4">暂无小节</p>
-              </div>
             <% end %>
           </div>
         </div>
