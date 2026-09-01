@@ -10,8 +10,10 @@
 
     <div class="grid grid-cols-1 gap-6 md:gap-4">
       <% @courses.each do |course| %>
-        <%= link_to course_path(course), class: 'hl-card hl-card-hover block transition-colors' do %>
-          <div class="p-6 sm:p-7">
+        <% lessons = course.lessons.select(&:published?).sort_by { |l| [l.sort_num, l.id] } %>
+        <div class="hl-card overflow-hidden">
+          <%# 头部（进入课程详情） %>
+          <%= link_to course_path(course), class: 'block px-6 sm:px-7 py-6 sm:py-7 hover:bg-bg-soft transition-colors' do %>
             <div class="flex flex-col sm:flex-row gap-5">
               <% if course.cover_url %>
                 <div class="shrink-0">
@@ -27,13 +29,33 @@
                   <p class="mt-1.5 text-hl-13 text-muted line-clamp-2"><%= course.description %></p>
                 <% end %>
                 <div class="mt-3 flex items-center gap-4 text-hl-12 text-muted-4">
-                  <span><%= course.chapters.size %> 个章节</span>
-                  <span><%= course.lessons.size %> 个小节</span>
+                  <span><%= course.chapters.select(&:published?).size %> 个章节</span>
+                  <span><%= lessons.size %> 个小节</span>
                 </div>
               </div>
             </div>
+          <% end %>
+
+          <%# 课程大纲（小节直展） %>
+          <div class="px-6 sm:px-7 py-4 border-t border-line-soft divide-y divide-line-soft">
+            <% lessons.each do |lesson| %>
+              <%= link_to lesson_path(lesson), class: 'flex items-center gap-3 py-2.5 hover:text-ink transition-colors' do %>
+                <span class="shrink-0 w-6 text-right font-mono text-hl-12 text-muted-4"><%= lesson.sort_num %></span>
+                <span class="flex-1 min-w-0 text-hl-13 text-muted hover:text-ink transition-colors"><%= lesson.title %></span>
+                <% if lesson.member_only? %>
+                  <span class="shrink-0 inline-flex px-2 py-0.5 text-hl-11 font-medium bg-bg-mute text-muted-3 border border-line-soft rounded">会员</span>
+                <% else %>
+                  <span class="shrink-0 inline-flex px-2 py-0.5 text-hl-11 font-medium bg-bg-soft text-muted-4 border border-line-soft rounded">公开</span>
+                <% end %>
+              <% end %>
+            <% end %>
+            <% if lessons.empty? %>
+              <div class="py-4 text-center">
+                <p class="text-hl-13 text-muted-4">暂无小节</p>
+              </div>
+            <% end %>
           </div>
-        <% end %>
+        </div>
       <% end %>
       <% if @courses.empty? %>
         <div class="hl-card py-16 text-center">

@@ -3,7 +3,7 @@ class CoursesController < ApplicationController
   before_action :check_access, only: [:show]
 
   def index
-    @courses = Course.published.sorted
+    @courses = Course.published.sorted.includes(:chapters, :lessons)
   end
 
   def show

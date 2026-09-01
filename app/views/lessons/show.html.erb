@@ -52,18 +52,18 @@
       </article>
     </div>
 
-    <%# 上下篇导航 %>
+    <%# 上下篇导航：按 [sort_num, id] 规范排序（与课程目录一致）取上一课/下一课 %>
+    <% ordered = @course.lessons.published.sort_by { |l| [l.sort_num.to_i, l.id] } %>
+    <% idx = ordered.index { |l| l.id == @lesson.id } %>
+    <% prev_lesson = idx.to_i > 0 ? ordered[idx - 1] : nil %>
+    <% next_lesson = idx && idx < ordered.size - 1 ? ordered[idx + 1] : nil %>
     <div class="hl-card px-6 sm:px-8 py-4 flex items-center justify-between">
-      <% prev_lesson = @course.lessons.published.sorted.where('lessons.sort_num < ?', @lesson.sort_num).last %>
-      <% prev_lesson ||= @chapter.lessons.published.sorted.where('lessons.id < ?', @lesson.id).last %>
       <% if prev_lesson %>
         <%= link_to "← #{prev_lesson.title}", lesson_path(prev_lesson), class: 'text-hl-13 text-muted hover:text-link transition-colors truncate max-w-[45%]' %>
       <% else %>
         <span></span>
       <% end %>
 
-      <% next_lesson = @course.lessons.published.sorted.where('lessons.sort_num > ?', @lesson.sort_num).first %>
-      <% next_lesson ||= @chapter.lessons.published.sorted.where('lessons.id > ?', @lesson.id).first %>
       <% if next_lesson %>
         <%= link_to "#{next_lesson.title} →", lesson_path(next_lesson), class: 'text-hl-13 text-muted hover:text-link transition-colors truncate max-w-[45%]' %>
       <% else %>
