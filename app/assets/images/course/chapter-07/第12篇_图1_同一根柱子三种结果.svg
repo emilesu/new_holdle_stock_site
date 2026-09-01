@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 840 470" font-family="'PingFang SC','Microsoft YaHei','Noto Sans CJK SC',sans-serif">
+  <!-- 标题 -->
+  <text x="420" y="36" text-anchor="middle" font-size="18" font-weight="700" fill="#1f2329">同一根柱子，三个数据源，三种结果</text>
+  <text x="420" y="62" text-anchor="middle" font-size="13" fill="#8a8f98">复权口径的微小差异，在0轴附近把正负号翻了过来</text>
+
+  <!-- 存疑区背景（±0.5 之间） -->
+  <rect x="60" y="100" width="720" height="220" fill="#faf3e0" opacity="0.55"/>
+  <line x1="60" y1="100" x2="780" y2="100" stroke="#e8a13d" stroke-width="1.5" stroke-dasharray="6 4"/>
+  <line x1="60" y1="320" x2="780" y2="320" stroke="#e8a13d" stroke-width="1.5" stroke-dasharray="6 4"/>
+  <text x="776" y="94" text-anchor="end" font-size="12" font-weight="700" fill="#e8a13d">+0.5（方向可靠线）</text>
+  <text x="776" y="340" text-anchor="end" font-size="12" font-weight="700" fill="#e8a13d">-0.5（方向可靠线）</text>
+
+  <!-- 0轴 -->
+  <line x1="60" y1="210" x2="780" y2="210" stroke="#8a8f98" stroke-width="1.2"/>
+
+  <!-- 软件标签 -->
+  <text x="170" y="80" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1f2329">软件A</text>
+  <text x="400" y="80" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1f2329">软件B</text>
+  <text x="630" y="80" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1f2329">软件C</text>
+
+  <!-- 三根柱子（比例 220px/单位，全部落在 ±0.5 存疑区内） -->
+  <rect x="150" y="113" width="40" height="97" fill="#d9382e"/>
+  <rect x="380" y="210" width="40" height="15" fill="#17a05e"/>
+  <rect x="610" y="183.5" width="40" height="26.5" fill="#d9382e"/>
+
+  <!-- 数值与判定 -->
+  <text x="170" y="252" text-anchor="middle" font-size="22" font-weight="700" fill="#d9382e">+0.44</text>
+  <text x="170" y="280" text-anchor="middle" font-size="13" fill="#5a6b82">红柱</text>
+  <text x="400" y="252" text-anchor="middle" font-size="22" font-weight="700" fill="#17a05e">-0.066</text>
+  <text x="400" y="280" text-anchor="middle" font-size="13" fill="#5a6b82">绿柱</text>
+  <text x="630" y="252" text-anchor="middle" font-size="22" font-weight="700" fill="#d9382e">+0.12</text>
+  <text x="630" y="280" text-anchor="middle" font-size="13" fill="#5a6b82">红柱</text>
+
+  <!-- 底部结论 -->
+  <rect x="60" y="380" width="720" height="54" rx="8" fill="#f7f8fa" stroke="#e3e6ea" stroke-width="1"/>
+  <text x="420" y="404" text-anchor="middle" font-size="14" font-weight="700" fill="#1f2329">三根柱子，两种方向——正负不一，方向存疑</text>
+  <text x="420" y="426" text-anchor="middle" font-size="12.5" fill="#5a6b82">同一根柱子，口径差一点，正负号就能翻过来</text>
+</svg>

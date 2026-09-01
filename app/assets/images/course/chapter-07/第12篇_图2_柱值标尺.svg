@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 860 330" font-family="'PingFang SC','Microsoft YaHei','Noto Sans CJK SC',sans-serif">
+  <!-- 标题 -->
+  <text x="430" y="36" text-anchor="middle" font-size="18" font-weight="700" fill="#1f2329">柱值标尺：红了，够不够高</text>
+
+  <!-- 两段横条（只画红柱侧的争议区：0 ~ 0.5 存疑 vs ≥ 0.5 可靠） -->
+  <!-- 琥珀段：存疑区 0 &lt; 柱值 &lt; 0.5 -->
+  <rect x="200" y="160" width="180" height="90" fill="#f2c14e"/>
+  <!-- 绿段：可靠区 柱值 ≥ 0.5 -->
+  <rect x="380" y="160" width="420" height="90" fill="#17a05e"/>
+
+  <!-- 0 起点线 与 0.5 门槛线 -->
+  <line x1="200" y1="160" x2="200" y2="250" stroke="#1f2329" stroke-width="2.5"/>
+  <line x1="380" y1="160" x2="380" y2="250" stroke="#d9382e" stroke-width="2.5"/>
+
+  <!-- 刻度标签 -->
+  <text x="200" y="272" text-anchor="middle" font-size="12" font-weight="700" fill="#1f2329">0</text>
+  <text x="380" y="272" text-anchor="middle" font-size="12" font-weight="700" fill="#d9382e">+0.5</text>
+
+  <!-- 琥珀段文字：存疑区 -->
+  <text x="290" y="190" text-anchor="middle" font-size="15" font-weight="700" fill="#6b4a00">0 &lt; 柱值 &lt; 0.5</text>
+  <text x="290" y="216" text-anchor="middle" font-size="13" fill="#6b4a00">红了但不够高</text>
+  <text x="290" y="238" text-anchor="middle" font-size="12.5" fill="#6b4a00">方向存疑 · 降级不参与</text>
+
+  <!-- 绿段文字：可靠区 -->
+  <text x="590" y="190" text-anchor="middle" font-size="16" font-weight="700" fill="#ffffff">柱值 ≥ 0.5</text>
+  <text x="590" y="216" text-anchor="middle" font-size="13" fill="#ffffff">红得够高 · 方向可靠</text>
+  <text x="590" y="238" text-anchor="middle" font-size="12" fill="#e2f4ec">颜色是市场给的 · 按规则走</text>
+
+  <!-- 底部说明 -->
+  <text x="430" y="298" text-anchor="middle" font-size="12.5" fill="#5a6b82">0.5 这条线只卡一种情况：柱子红了，但红得不够高</text>
+  <text x="430" y="322" text-anchor="middle" font-size="13" font-weight="700" fill="#1f2329">柱子贴在0轴上，颜色是软件说了算；离0轴够远，颜色才是市场说了算</text>
+</svg>
