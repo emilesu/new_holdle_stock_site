@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 860 500" font-family="'PingFang SC','Microsoft YaHei','Noto Sans CJK SC',sans-serif">
+  <!-- 标题 -->
+  <text x="430" y="28" text-anchor="middle" font-size="16" font-weight="700" fill="#1f2329">同一份招行 2016 年报，两把尺子，两种结论</text>
+  <text x="430" y="46" text-anchor="middle" font-size="10.5" fill="#8a8f98">数据：招商银行 600036 · 2016 年报（ROE 16.27% / 净利率 29.8% / 负债率 93.2% / 经营现金流 -1206 亿）</text>
+
+  <!-- 列头 -->
+  <rect x="40" y="62" width="320" height="30" fill="#fdf0ee" rx="6"/>
+  <text x="200" y="82" text-anchor="middle" font-size="13" font-weight="700" fill="#d9382e">实体企业尺子</text>
+  <rect x="500" y="62" width="320" height="30" fill="#eef7f1" rx="6"/>
+  <text x="660" y="82" text-anchor="middle" font-size="13" font-weight="700" fill="#17a05e">银行行业口径</text>
+
+  <!-- 行1：负债率 -->
+  <line x1="40" y1="112" x2="820" y2="112" stroke="#e8ebf0" stroke-width="1"/>
+  <text x="415" y="136" text-anchor="middle" font-size="11" fill="#8a8f98">负债率</text>
+  <text x="415" y="160" text-anchor="middle" font-size="15" font-weight="700" fill="#1f2329">93.2%</text>
+  <text x="130" y="134" text-anchor="middle" font-size="11.5" fill="#8a8f98">60% 就该警惕，93% 基本是资不抵债的边缘</text>
+  <text x="200" y="158" text-anchor="middle" font-size="12.5" font-weight="700" fill="#d9382e">✕ 接近资不抵债</text>
+  <text x="530" y="134" text-anchor="middle" font-size="11.5" fill="#8a8f98">储户的存款就是负债</text>
+  <text x="660" y="158" text-anchor="middle" font-size="12.5" font-weight="700" fill="#17a05e">✓ 90% 以上是行业常态</text>
+
+  <!-- 行2：经营现金流 -->
+  <line x1="40" y1="190" x2="820" y2="190" stroke="#e8ebf0" stroke-width="1"/>
+  <text x="415" y="214" text-anchor="middle" font-size="11" fill="#8a8f98">经营现金流</text>
+  <text x="415" y="238" text-anchor="middle" font-size="15" font-weight="700" fill="#1f2329">-1206 亿</text>
+  <text x="130" y="212" text-anchor="middle" font-size="11.5" fill="#8a8f98">赚的钱没落袋</text>
+  <text x="200" y="236" text-anchor="middle" font-size="12.5" font-weight="700" fill="#d9382e">✕ 现金流为负是大问题</text>
+  <text x="530" y="212" text-anchor="middle" font-size="11.5" fill="#8a8f98">存取款、放贷、拆借的进出</text>
+  <text x="660" y="236" text-anchor="middle" font-size="12.5" font-weight="700" fill="#17a05e">✓ 业务形态，不代表不赚钱</text>
+
+  <!-- 行3：净利率 -->
+  <line x1="40" y1="268" x2="820" y2="268" stroke="#e8ebf0" stroke-width="1"/>
+  <text x="415" y="292" text-anchor="middle" font-size="11" fill="#8a8f98">净利率</text>
+  <text x="415" y="316" text-anchor="middle" font-size="15" font-weight="700" fill="#1f2329">29.8%</text>
+  <text x="130" y="290" text-anchor="middle" font-size="11.5" fill="#8a8f98">30% 已经是暴利</text>
+  <text x="200" y="314" text-anchor="middle" font-size="12.5" font-weight="700" fill="#d9382e">✕ 暴利水平</text>
+  <text x="530" y="290" text-anchor="middle" font-size="11.5" fill="#8a8f98">算法和实体企业完全不同</text>
+  <text x="660" y="314" text-anchor="middle" font-size="12.5" font-weight="700" fill="#17a05e">✓ 不能拿来做跨行业判断</text>
+
+  <!-- 行4：ROE -->
+  <line x1="40" y1="346" x2="820" y2="346" stroke="#e8ebf0" stroke-width="1"/>
+  <text x="415" y="370" text-anchor="middle" font-size="11" fill="#8a8f98">ROE</text>
+  <text x="415" y="394" text-anchor="middle" font-size="15" font-weight="700" fill="#1f2329">16.27%</text>
+  <text x="130" y="368" text-anchor="middle" font-size="11.5" fill="#8a8f98">四档表里是"合格偏上"</text>
+  <text x="200" y="392" text-anchor="middle" font-size="12.5" font-weight="700" fill="#d9382e">✕ 不算稳健档</text>
+  <text x="530" y="368" text-anchor="middle" font-size="11.5" fill="#8a8f98">行业内常年第一梯队</text>
+  <text x="660" y="392" text-anchor="middle" font-size="12.5" font-weight="700" fill="#17a05e">✓ 银行 15% 约等于优秀</text>
+
+  <!-- 结论条 -->
+  <rect x="40" y="412" width="320" height="44" fill="none" stroke="#d9382e" stroke-width="1.5" rx="6"/>
+  <text x="200" y="439" text-anchor="middle" font-size="13.5" font-weight="700" fill="#d9382e">实体尺子读出：快破产了</text>
+  <rect x="500" y="412" width="320" height="44" fill="none" stroke="#17a05e" stroke-width="1.5" rx="6"/>
+  <text x="660" y="439" text-anchor="middle" font-size="13.5" font-weight="700" fill="#17a05e">银行尺子读出：银行业的优等生</text>
+
+  <!-- 金句 -->
+  <text x="430" y="482" text-anchor="middle" font-size="13" font-weight="700" fill="#1f2329">尺子没错，是量错了东西 —— 同一组数字，两套结论</text>
+</svg>

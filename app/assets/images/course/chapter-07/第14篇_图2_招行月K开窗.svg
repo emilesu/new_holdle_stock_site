@@ -1,0 +1,114 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 860 505" font-family="'PingFang SC','Microsoft YaHei','Noto Sans CJK SC',sans-serif">
+  <!-- 标题 -->
+  <text x="430" y="26" text-anchor="middle" font-size="16" font-weight="700" fill="#1f2329">招商银行 · 2017年5月月K：绿转红，状态A成立，高优先开窗</text>
+  <text x="430" y="44" text-anchor="middle" font-size="10.5" fill="#8a8f98">数据：后复权月K · MACD(12,26,9) · 柱高按数值同比例，贴近 0 轴的微柱按最小可见高度绘制 · 供形态判定，非可交易实盘价</text>
+
+  <!-- 0轴 -->
+  <line x1="60" y1="330" x2="800" y2="330" stroke="#aeb4bc" stroke-width="1.2"/>
+  <text x="52" y="334" font-size="11" fill="#8a8f98">0</text>
+
+  <!-- ===== 开窗前 11 根柱（2016-06 ~ 2017-04）：贴着0轴，不作数 ===== -->
+  <!-- -0.88 -->
+  <rect x="80" y="340.56" width="16" height="10.56" fill="#c9cdd4" rx="1"/>
+  <!-- -0.77 -->
+  <rect x="108" y="339.24" width="16" height="9.24" fill="#c9cdd4" rx="1"/>
+  <!-- -0.05（微柱，最小可见高度） -->
+  <rect x="136" y="330" width="16" height="1" fill="#c9cdd4" rx="0.5"/>
+  <!-- -0.00（≈0，微柱示意贴0轴） -->
+  <rect x="164" y="330" width="16" height="1" fill="#c9cdd4" rx="0.5"/>
+  <!-- -0.14 -->
+  <rect x="192" y="331.68" width="16" height="1.68" fill="#c9cdd4" rx="0.8"/>
+  <!-- 0.01（微柱，最小可见高度） -->
+  <rect x="220" y="330" width="16" height="1" fill="#c9cdd4" rx="0.5"/>
+  <!-- -0.46 -->
+  <rect x="248" y="335.52" width="16" height="5.52" fill="#c9cdd4" rx="1"/>
+  <!-- -0.15 -->
+  <rect x="276" y="331.8" width="16" height="1.8" fill="#c9cdd4" rx="0.8"/>
+  <!-- 0.17 -->
+  <rect x="304" y="327.96" width="16" height="2.04" fill="#c9cdd4" rx="0.8"/>
+  <!-- 0.13 -->
+  <rect x="332" y="328.44" width="16" height="1.56" fill="#c9cdd4" rx="0.8"/>
+  <!-- -0.02（微柱，最小可见高度） -->
+  <rect x="360" y="330" width="16" height="1" fill="#c9cdd4" rx="0.5"/>
+
+  <!-- 开窗前区域框 -->
+  <rect x="72" y="248" width="312" height="118" fill="none" stroke="#aeb4bc" stroke-width="1.5" stroke-dasharray="5 4" rx="6"/>
+  <text x="228" y="242" text-anchor="middle" font-size="12" font-weight="700" fill="#8a8f98">开窗前：柱子贴着 0 轴反复 · 绿转红也降级不作数</text>
+
+  <!-- ===== 2017-05 开窗（红柱 1.40） ===== -->
+  <rect x="388" y="313.2" width="16" height="16.8" fill="#d9382e" rx="1.5"/>
+  <!-- 引线：柱顶 → 上方标注框 -->
+  <line x1="396" y1="313" x2="396" y2="200" stroke="#d9382e" stroke-width="1.2"/>
+  <line x1="396" y1="200" x2="405" y2="200" stroke="#d9382e" stroke-width="1.2"/>
+  <!-- 标注框（开窗柱正上方空白区，不覆盖任何柱子） -->
+  <rect x="330" y="105" width="150" height="95" fill="#fdf3f2" stroke="#d9382e" stroke-width="1.6" rx="8"/>
+  <text x="405" y="131" text-anchor="middle" font-size="13" font-weight="700" fill="#d9382e">2017-05 绿转红</text>
+  <text x="405" y="155" text-anchor="middle" font-size="11.5" fill="#5a6b82">状态A成立 · 高优先</text>
+  <text x="405" y="176" text-anchor="middle" font-size="10.5" fill="#8a8f98">DIF 6.46 / DEA 5.76</text>
+  <text x="405" y="191" text-anchor="middle" font-size="10.5" fill="#8a8f98">双线在 0 轴上方</text>
+
+  <!-- ===== 开窗后 13 根柱（2017-06 ~ 2018-06） ===== -->
+  <!-- 3.25 -->
+  <rect x="416" y="291" width="16" height="39" fill="#d9382e" rx="1.5"/>
+  <!-- 4.97 -->
+  <rect x="444" y="270.36" width="16" height="59.64" fill="#d9382e" rx="1.5"/>
+  <!-- 6.26 -->
+  <rect x="472" y="254.88" width="16" height="75.12" fill="#d9382e" rx="1.5"/>
+  <!-- 6.00 -->
+  <rect x="500" y="258" width="16" height="72" fill="#d9382e" rx="1.5"/>
+  <!-- 6.15 -->
+  <rect x="528" y="256.2" width="16" height="73.8" fill="#d9382e" rx="1.5"/>
+  <!-- 6.73 -->
+  <rect x="556" y="249.24" width="16" height="80.76" fill="#d9382e" rx="1.5"/>
+  <!-- 6.57 -->
+  <rect x="584" y="251.16" width="16" height="78.84" fill="#d9382e" rx="1.5"/>
+  <!-- 8.43 -->
+  <rect x="612" y="228.84" width="16" height="101.16" fill="#d9382e" rx="1.5"/>
+  <!-- 7.09 -->
+  <rect x="640" y="244.92" width="16" height="85.08" fill="#d9382e" rx="1.5"/>
+  <!-- 5.03 -->
+  <rect x="668" y="269.64" width="16" height="60.36" fill="#d9382e" rx="1.5"/>
+  <!-- 3.36 -->
+  <rect x="696" y="289.68" width="16" height="40.32" fill="#d9382e" rx="1.5"/>
+  <!-- 1.60 -->
+  <rect x="724" y="310.8" width="16" height="19.2" fill="#d9382e" rx="1.5"/>
+  <!-- -1.03 -->
+  <rect x="752" y="342.36" width="16" height="12.36" fill="#17a05e" rx="1.5"/>
+
+  <!-- 月份标签 -->
+  <text x="88" y="374" text-anchor="middle" font-size="8.5" fill="#8a8f98">16-06</text>
+  <text x="116" y="374" text-anchor="middle" font-size="8.5" fill="#8a8f98">16-07</text>
+  <text x="144" y="374" text-anchor="middle" font-size="8.5" fill="#8a8f98">16-08</text>
+  <text x="172" y="374" text-anchor="middle" font-size="8.5" fill="#8a8f98">16-09</text>
+  <text x="200" y="374" text-anchor="middle" font-size="8.5" fill="#8a8f98">16-10</text>
+  <text x="228" y="374" text-anchor="middle" font-size="8.5" fill="#8a8f98">16-11</text>
+  <text x="256" y="374" text-anchor="middle" font-size="8.5" fill="#8a8f98">16-12</text>
+  <text x="284" y="374" text-anchor="middle" font-size="8.5" fill="#8a8f98">17-01</text>
+  <text x="312" y="374" text-anchor="middle" font-size="8.5" fill="#8a8f98">17-02</text>
+  <text x="340" y="374" text-anchor="middle" font-size="8.5" fill="#8a8f98">17-03</text>
+  <text x="368" y="374" text-anchor="middle" font-size="8.5" fill="#8a8f98">17-04</text>
+  <text x="396" y="374" text-anchor="middle" font-size="8.5" font-weight="700" fill="#d9382e">17-05</text>
+  <text x="424" y="374" text-anchor="middle" font-size="8.5" fill="#8a8f98">17-06</text>
+  <text x="452" y="374" text-anchor="middle" font-size="8.5" fill="#8a8f98">17-07</text>
+  <text x="480" y="374" text-anchor="middle" font-size="8.5" fill="#8a8f98">17-08</text>
+  <text x="508" y="374" text-anchor="middle" font-size="8.5" fill="#8a8f98">17-09</text>
+  <text x="536" y="374" text-anchor="middle" font-size="8.5" fill="#8a8f98">17-10</text>
+  <text x="564" y="374" text-anchor="middle" font-size="8.5" fill="#8a8f98">17-11</text>
+  <text x="592" y="374" text-anchor="middle" font-size="8.5" fill="#8a8f98">17-12</text>
+  <text x="620" y="374" text-anchor="middle" font-size="8.5" fill="#8a8f98">18-01</text>
+  <text x="648" y="374" text-anchor="middle" font-size="8.5" fill="#8a8f98">18-02</text>
+  <text x="676" y="374" text-anchor="middle" font-size="8.5" fill="#8a8f98">18-03</text>
+  <text x="704" y="374" text-anchor="middle" font-size="8.5" fill="#8a8f98">18-04</text>
+  <text x="732" y="374" text-anchor="middle" font-size="8.5" fill="#8a8f98">18-05</text>
+  <text x="760" y="374" text-anchor="middle" font-size="8.5" fill="#17a05e">18-06</text>
+
+  <!-- 底部对照说明 -->
+  <text x="245" y="412" text-anchor="middle" font-size="12" fill="#5a6b82">2016 年报：负债率 93.2% · 经营现金流 -1206 亿</text>
+  <text x="245" y="432" text-anchor="middle" font-size="11.5" font-weight="700" fill="#d9382e">选股这一关过不了 → 不参与</text>
+
+  <text x="645" y="412" text-anchor="middle" font-size="12" fill="#5a6b82">2017-05 收 86.5 → 2021 初 220+</text>
+  <text x="645" y="432" text-anchor="middle" font-size="11.5" fill="#8a8f98">约 +158%，但规则不赌这一次</text>
+
+  <!-- 金句 -->
+  <text x="430" y="478" text-anchor="middle" font-size="13" font-weight="700" fill="#1f2329">开窗合格，尺子不合格。宁可错过，不用看不懂的尺子硬套。</text>
+</svg>
