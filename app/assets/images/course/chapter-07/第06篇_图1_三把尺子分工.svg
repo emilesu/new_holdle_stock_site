@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 860 512" font-family="'PingFang SC','Microsoft YaHei','Noto Sans CJK SC',sans-serif">
+  <!-- 标题 -->
+  <text x="430" y="28" text-anchor="middle" font-size="19" font-weight="700" fill="#1f2329">换尺子的时机：买入前和买入后</text>
+  <text x="430" y="50" text-anchor="middle" font-size="12.5" fill="#8a8f98">买入前用月K、日K 定计划，买入后用周K 做执行 —— 分界线是「买入」那一刻</text>
+
+  <!-- ===== 买入前区（左） ===== -->
+  <rect x="30" y="66" width="494" height="352" rx="12" fill="#f7f8fa" stroke="#dfe3e9" stroke-width="1.2"/>
+  <rect x="44" y="78" width="4" height="14" rx="2" fill="#3b82c4"/>
+  <text x="56" y="90" font-size="13.5" font-weight="700" fill="#5a6b82">买入前 · 定计划（月K、日K）</text>
+  <line x1="30" y1="106" x2="524" y2="106" stroke="#e3e6ea" stroke-width="1"/>
+
+  <!-- 月K卡 -->
+  <rect x="46" y="122" width="200" height="218" rx="9" fill="#ffffff" stroke="#c9d8ea" stroke-width="1.5"/>
+  <rect x="46" y="122" width="200" height="5" fill="#3b82c4" rx="2"/>
+  <text x="146" y="160" text-anchor="middle" font-size="24" font-weight="800" fill="#1f2329">月K</text>
+  <text x="146" y="187" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1f2329">管方向 · 能不能关注</text>
+  <line x1="60" y1="201" x2="232" y2="201" stroke="#eef1f5" stroke-width="1"/>
+  <text x="146" y="224" text-anchor="middle" font-size="12" fill="#5a6b82">状态A确认、开窗判定</text>
+  <text x="146" y="243" text-anchor="middle" font-size="11" fill="#8a8f98">都绑在月这个尺度上</text>
+  <text x="146" y="280" text-anchor="middle" font-size="11" fill="#8a8f98">一根 = 一个月</text>
+  <text x="146" y="300" text-anchor="middle" font-size="11" fill="#8a8f98">和财报同频，方向一眼看清</text>
+  <text x="146" y="322" text-anchor="middle" font-size="11" fill="#8a8f98">趋势向下的，不进关注名单</text>
+
+  <!-- 日K卡 -->
+  <rect x="300" y="122" width="200" height="218" rx="9" fill="#ffffff" stroke="#e3c077" stroke-width="1.5"/>
+  <rect x="300" y="122" width="200" height="5" fill="#d9a441" rx="2"/>
+  <text x="400" y="160" text-anchor="middle" font-size="24" font-weight="800" fill="#1f2329">日K</text>
+  <text x="400" y="187" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1f2329">管入场点 · 什么时候下手</text>
+  <line x1="314" y1="201" x2="486" y2="201" stroke="#fdf3e6" stroke-width="1"/>
+  <text x="400" y="224" text-anchor="middle" font-size="11.5" fill="#8a8f98">顺序不能反：</text>
+  <text x="400" y="247" text-anchor="middle" font-size="13" font-weight="700" fill="#1f2329">绿柱回撤 → 确认前高</text>
+  <text x="400" y="268" text-anchor="middle" font-size="13" font-weight="700" fill="#d9382e">→ 突破买入</text>
+  <text x="400" y="291" text-anchor="middle" font-size="10.5" fill="#8a8f98">前高不是事先预设的</text>
+  <text x="400" y="307" text-anchor="middle" font-size="10.5" fill="#8a8f98">是回撤出现后回头确认的</text>
+
+  <!-- 区底注：先月K再日K -->
+  <text x="277" y="356" text-anchor="middle" font-size="11.5" fill="#5a6b82">先月K 确认方向、开窗，再切日K 找入场点</text>
+  <text x="277" y="376" text-anchor="middle" font-size="11" fill="#8a8f98">方向没确认之前，日K 看得再细也没有意义</text>
+
+  <!-- ===== 买入分隔（红）：胶囊置于两区之间（原在顶部 y=36 会盖住副标题文字，下移避开） ===== -->
+  <rect x="521" y="200" width="54" height="30" rx="15" fill="#d9382e"/>
+  <text x="548" y="220" text-anchor="middle" font-size="14" font-weight="700" fill="#ffffff">买入</text>
+  <line x1="548" y1="78" x2="548" y2="200" stroke="#d9382e" stroke-width="2.2" stroke-dasharray="6 5"/>
+  <line x1="548" y1="230" x2="548" y2="422" stroke="#d9382e" stroke-width="2.2" stroke-dasharray="6 5"/>
+
+  <!-- ===== 买入后区（右） ===== -->
+  <rect x="566" y="66" width="264" height="352" rx="12" fill="#eef4fc" stroke="#c9d8ea" stroke-width="1.2"/>
+  <rect x="578" y="78" width="4" height="14" rx="2" fill="#17a05e"/>
+  <text x="590" y="90" font-size="13.5" font-weight="700" fill="#3b82c4">买入后 · 执行管理（周K）</text>
+  <line x1="566" y1="106" x2="830" y2="106" stroke="#d8e2ee" stroke-width="1"/>
+
+  <!-- 周K卡（高 224：末行文字 y338 原底 340.6 超出 h=218 卡底，加高防贴边） -->
+  <rect x="584" y="122" width="228" height="224" rx="9" fill="#ffffff" stroke="#8fd0b0" stroke-width="1.5"/>
+  <rect x="584" y="122" width="228" height="5" fill="#17a05e" rx="2"/>
+  <text x="698" y="160" text-anchor="middle" font-size="24" font-weight="800" fill="#1f2329">周K</text>
+  <text x="698" y="187" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1f2329">管出场 · 什么时候走</text>
+  <line x1="598" y1="201" x2="798" y2="201" stroke="#eaf7f0" stroke-width="1"/>
+  <text x="698" y="226" text-anchor="middle" font-size="12" fill="#5a6b82">先三阶止损管理</text>
+  <text x="698" y="245" text-anchor="middle" font-size="11" fill="#8a8f98">三阶止损未破，再交棒周K</text>
+  <text x="698" y="278" text-anchor="middle" font-size="12" fill="#5a6b82">周K低点动态出场</text>
+  <text x="698" y="298" text-anchor="middle" font-size="11" fill="#8a8f98">低点不破，就不动</text>
+  <text x="698" y="322" text-anchor="middle" font-size="11" fill="#8a8f98">一根 = 一周</text>
+  <text x="698" y="338" text-anchor="middle" font-size="10.5" fill="#8a8f98">容得下正常回撤，比日K稳</text>
+
+  <!-- 区底注：买入后只看周K -->
+  <text x="698" y="370" text-anchor="middle" font-size="11.5" fill="#3b82c4">买入后，月K 退出视线，只看周K</text>
+  <text x="698" y="390" text-anchor="middle" font-size="11" fill="#8a8f98">再回头看月K，只会干扰管理</text>
+
+  <!-- 底部红线说明 -->
+  <rect x="30" y="440" width="800" height="42" rx="8" fill="#fdf3f2" stroke="#d9382e" stroke-width="1.4"/>
+  <text x="430" y="466" text-anchor="middle" font-size="13" font-weight="700" fill="#d9382e">禁止跨周期套用：日K 看不了方向，月K 管不了出场，周K 不是选股工具</text>
+
+  <!-- 金句 -->
+  <text x="430" y="502" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1f2329">三把尺子各量各的，一把尺子量不了全程</text>
+</svg>
