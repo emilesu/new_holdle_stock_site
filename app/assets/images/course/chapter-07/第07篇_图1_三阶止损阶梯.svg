@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 860 560" font-family="'PingFang SC','Microsoft YaHei','Noto Sans CJK SC',sans-serif">
+  <!-- 标题 -->
+  <text x="430" y="28" text-anchor="middle" font-size="19" font-weight="700" fill="#1f2329">三阶止损：防线只上抬，不下降</text>
+  <text x="430" y="48" text-anchor="middle" font-size="12.5" fill="#8a8f98">买入价100元：-20% → -10% → 保本。触发后防线单向抬升，不回调。示意 · 非真实数据</text>
+
+  <!-- 图表区 -->
+  <!-- 入场价虚线 -->
+  <line x1="100" y1="307.27" x2="510" y2="307.27" stroke="#e8ebf0" stroke-width="1.5" stroke-dasharray="6 4"/>
+  <text x="90" y="307.27" text-anchor="end" font-size="11" fill="#5a6b82" dominant-baseline="middle">100</text>
+
+  <!-- 竖虚线：触发二档 -->
+  <line x1="340" y1="75" x2="340" y2="373.64" stroke="#d9382e" stroke-width="1.2" stroke-dasharray="4 3" opacity="0.35"/>
+  <circle cx="340" cy="241.82" r="3.5" fill="#d9382e"/>
+
+  <!-- 竖虚线：触发三档 -->
+  <line x1="520" y1="75" x2="520" y2="340.45" stroke="#d9382e" stroke-width="1.2" stroke-dasharray="4 3" opacity="0.35"/>
+  <circle cx="520" cy="205.68" r="3.5" fill="#d9382e"/>
+
+  <!-- 止损阶梯线：整体虚线，当前段（保本）用实线覆盖 -->
+  <polyline points="100,373.64 340,373.64 340,340.45 520,340.45 520,307.27 760,307.27" fill="none" stroke="#d9382e" stroke-width="2.8" stroke-dasharray="8 5" stroke-linejoin="round" stroke-linecap="round"/>
+  <line x1="520" y1="307.27" x2="760" y2="307.27" stroke="#d9382e" stroke-width="2.8"/>
+
+  <!-- 阶梯线端数值标签（贴各段上方，右侧标签列清场） -->
+  <text x="220" y="358" text-anchor="middle" font-size="11" fill="#d9382e">80（-20%）</text>
+  <text x="430" y="325" text-anchor="middle" font-size="11" fill="#d9382e">90（-10%）</text>
+  <text x="570" y="292" text-anchor="middle" font-size="11" fill="#d9382e" font-weight="700">100（保本）</text>
+
+  <!-- 买入标注 -->
+  <text x="100" y="295" text-anchor="end" font-size="11" fill="#1f2329" font-weight="700">买入 100元</text>
+  <circle cx="100" cy="307.27" r="3" fill="#1f2329"/>
+
+  <!-- 价格走势折线 -->
+  <polyline points="100,307.27 160,300.64 220,287.27 280,267.27 340,241.82 400,248.64 460,228.73 520,205.68 580,215.45 640,257.73 700,291.36 760,267.27" fill="none" stroke="#3b82c4" stroke-width="2.2" stroke-linejoin="round"/>
+
+  <!-- 价格走势数据点 -->
+  <circle cx="100" cy="307.27" r="2.2" fill="#3b82c4"/>
+  <circle cx="340" cy="241.82" r="2.2" fill="#3b82c4"/>
+  <circle cx="520" cy="205.68" r="2.2" fill="#3b82c4"/>
+  <circle cx="700" cy="291.36" r="2.2" fill="#3b82c4"/>
+
+  <!-- 触发一标注 -->
+  <polyline points="340,241.82 360,160 420,160" fill="none" stroke="#d9382e" stroke-width="1"/>
+  <circle cx="420" cy="160" r="2" fill="#d9382e"/>
+  <text x="425" y="155" font-size="11.5" fill="#d9382e" font-weight="700">涨超120</text>
+  <text x="425" y="170" font-size="10.5" fill="#5a6b82">止损提到90（-10%）</text>
+
+  <!-- 触发二标注 -->
+  <polyline points="520,205.68 540,115 560,115" fill="none" stroke="#d9382e" stroke-width="1"/>
+  <circle cx="560" cy="115" r="2" fill="#d9382e"/>
+  <text x="565" y="110" font-size="11.5" fill="#d9382e" font-weight="700">涨超130</text>
+  <text x="565" y="125" font-size="10.5" fill="#5a6b82">止损提到100（保本）</text>
+
+  <!-- 末尾说明：跌回105 止损仍停在100 -->
+  <polyline points="700,291.36 735,370 755,370" fill="none" stroke="#5a6b82" stroke-width="1"/>
+  <circle cx="755" cy="370" r="2" fill="#5a6b82"/>
+  <text x="760" y="365" font-size="10.5" fill="#5a6b82">最低跌至105</text>
+  <text x="760" y="380" font-size="10.5" fill="#d9382e" font-weight="700">止损仍停在100</text>
+
+  <!-- 底部说明条 -->
+  <rect x="30" y="470" width="800" height="42" rx="8" fill="#fdf3f2" stroke="#d9382e" stroke-width="1.4"/>
+  <text x="430" y="498" text-anchor="middle" font-size="13" font-weight="700" fill="#d9382e">止损线锚定入场价，不是最高价；防线一旦抬上去，就不再降下来</text>
+
+  <!-- 金句 -->
+  <text x="430" y="536" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1f2329">三档防线都锚着入场价，涨得越多，最坏结果越小</text>
+</svg>

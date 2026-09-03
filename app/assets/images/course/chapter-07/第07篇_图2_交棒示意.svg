@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 860 500" font-family="'PingFang SC','Microsoft YaHei','Noto Sans CJK SC',sans-serif">
+  <!-- 标题 -->
+  <text x="430" y="28" text-anchor="middle" font-size="19" font-weight="700" fill="#1f2329">交棒：有效低点站上入场价，出场管理切换</text>
+  <text x="430" y="48" text-anchor="middle" font-size="12.5" fill="#8a8f98">三阶止损与周K低点互斥，同一时刻只有一套在管。示意 · 非真实数据</text>
+
+  <!-- 顶部阶段色带 -->
+  <rect x="100" y="68" width="450" height="32" rx="5" fill="#fdf3f2" stroke="#d9382e" stroke-width="1"/>
+  <text x="325" y="88" text-anchor="middle" font-size="12" font-weight="700" fill="#d9382e">三阶止损在管（锚定入场价）</text>
+
+  <rect x="550" y="68" width="210" height="32" rx="5" fill="#eaf7f0" stroke="#17a05e" stroke-width="1"/>
+  <text x="655" y="88" text-anchor="middle" font-size="12" font-weight="700" fill="#17a05e">周K低点动态出场</text>
+
+  <!-- 交棒竖线 -->
+  <line x1="550" y1="68" x2="550" y2="400" stroke="#1f2329" stroke-width="1.6" stroke-dasharray="5 4"/>
+  <text x="550" y="62" text-anchor="middle" font-size="11" font-weight="700" fill="#d9382e">低点①=120 &gt; 入场价100</text>
+  <text x="550" y="415" text-anchor="middle" font-size="11" font-weight="700" fill="#1f2329">交棒</text>
+
+  <!-- 价格走势折线 -->
+  <polyline points="100,340 160,316 220,286 280,256 340,220 400,244 460,280 520,232 550,190 580,205 640,160 700,145 760,130" fill="none" stroke="#3b82c4" stroke-width="2.2" stroke-linejoin="round"/>
+
+  <!-- 关键数据点 -->
+  <circle cx="100" cy="340" r="2.5" fill="#3b82c4"/>
+  <circle cx="340" cy="220" r="2.5" fill="#3b82c4"/>
+  <circle cx="460" cy="280" r="2.5" fill="#3b82c4"/>
+  <circle cx="550" cy="190" r="2.5" fill="#3b82c4"/>
+  <circle cx="700" cy="145" r="2.5" fill="#3b82c4"/>
+
+  <!-- 买入标注 -->
+  <text x="100" y="328" text-anchor="end" font-size="11" fill="#1f2329" font-weight="700">买入 100元</text>
+  <circle cx="100" cy="340" r="3" fill="#1f2329"/>
+
+  <!-- 前高、低点① 标注 -->
+  <polyline points="340,220 360,165 390,165" fill="none" stroke="#d9382e" stroke-width="1"/>
+  <circle cx="390" cy="165" r="2" fill="#d9382e"/>
+  <text x="395" y="160" font-size="10.5" fill="#d9382e" font-weight="700">前高=140</text>
+
+  <polyline points="460,280 430,310 390,310" fill="none" stroke="#17a05e" stroke-width="1"/>
+  <circle cx="390" cy="310" r="2" fill="#17a05e"/>
+  <text x="360" y="315" font-size="10.5" fill="#17a05e" font-weight="700">低点①=120</text>
+
+  <!-- 三阶止损线（入场价） -->
+  <line x1="100" y1="340" x2="550" y2="340" stroke="#d9382e" stroke-width="1.8" stroke-dasharray="6 4"/>
+  <text x="540" y="355" text-anchor="end" font-size="10.5" fill="#d9382e">入场价100（三阶锚定）</text>
+
+  <!-- 周K参考价线（低点①） -->
+  <line x1="550" y1="280" x2="760" y2="280" stroke="#17a05e" stroke-width="2.2"/>
+  <text x="760" y="275" text-anchor="end" font-size="10.5" fill="#17a05e" font-weight="700">参考价=低点①=120</text>
+
+  <!-- 停用标注 -->
+  <text x="540" y="375" text-anchor="end" font-size="10.5" fill="#8a8f98">三阶止损停用</text>
+  <text x="560" y="375" font-size="10.5" fill="#8a8f98">百分比线不再生效</text>
+
+  <!-- 底部金句 -->
+  <text x="430" y="462" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1f2329">同一时刻只有一套规则在管，切到周K，百分比止损就停用</text>
+</svg>

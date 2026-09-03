@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 860 560" font-family="'PingFang SC','Microsoft YaHei','Noto Sans CJK SC',sans-serif">
+  <!-- 标题 -->
+  <text x="430" y="28" text-anchor="middle" font-size="19" font-weight="700" fill="#1f2329">周K有效低点怎么找：三个条件，顺序不能乱</text>
+  <text x="430" y="48" text-anchor="middle" font-size="12.5" fill="#8a8f98">单轮示意：出绿柱 → 回头定前高 → 突破后取低点。示意 · 非真实数据</text>
+
+  <!-- 价格区 -->
+  <!-- 区间底色块：前高~新高之间 -->
+  <rect x="200" y="70" width="300" height="190" fill="#e8ebf0" opacity="0.35"/>
+
+  <!-- 价格走势折线 -->
+  <polyline points="80,228.33 140,204.58 200,133.33 260,152.33 320,172.92 380,188.75 440,165.00 500,130.17 560,109.58 620,120.67 680,101.67 740,109.58 780,117.50" fill="none" stroke="#3b82c4" stroke-width="2.2" stroke-linejoin="round"/>
+
+  <!-- 数据点 -->
+  <circle cx="80" cy="228.33" r="2.2" fill="#3b82c4"/>
+  <circle cx="200" cy="133.33" r="2.2" fill="#3b82c4"/>
+  <circle cx="320" cy="172.92" r="2.2" fill="#3b82c4"/>
+  <circle cx="380" cy="188.75" r="2.2" fill="#3b82c4"/>
+  <circle cx="500" cy="130.17" r="2.2" fill="#3b82c4"/>
+  <circle cx="560" cy="109.58" r="2.2" fill="#3b82c4"/>
+
+  <!-- 最低点高亮 -->
+  <circle cx="380" cy="188.75" r="5" fill="none" stroke="#1f2329" stroke-width="1.5"/>
+
+  <!-- ① 回落中出周K绿柱：指向第一根绿柱对应价格点 -->
+  <polyline points="320,172.92 360,172.92 360,255 385,255" fill="none" stroke="#17a05e" stroke-width="1"/>
+  <text x="390" y="250" font-size="11" fill="#17a05e" font-weight="700">① 回落中出周K绿柱</text>
+
+  <!-- ② 回头确认前高 -->
+  <polyline points="200,133.33 240,95 280,95" fill="none" stroke="#d9382e" stroke-width="1"/>
+  <circle cx="280" cy="95" r="2" fill="#d9382e"/>
+  <text x="285" y="90" font-size="11" fill="#d9382e" font-weight="700">② 回头确认前高 = 140</text>
+
+  <!-- ③ 突破后取低点 -->
+  <polyline points="380,188.75 460,230 500,230" fill="none" stroke="#1f2329" stroke-width="1"/>
+  <circle cx="500" cy="230" r="2" fill="#1f2329"/>
+  <text x="505" y="225" font-size="11" fill="#1f2329" font-weight="700">③ 前高~新高之间最低价 = 有效低点</text>
+  <text x="505" y="240" font-size="10" fill="#5a6b82">（本轮回撤最低点 105）</text>
+
+  <!-- MACD 柱带区 -->
+  <line x1="80" y1="305" x2="780" y2="305" stroke="#dfe3e9" stroke-width="1"/>
+  <text x="70" y="308" text-anchor="end" font-size="9" fill="#8a8f98">0</text>
+  <text x="75" y="280" text-anchor="end" font-size="9" fill="#8a8f98">MACD</text>
+
+  <!-- 13根柱（宽8，居中于x） -->
+  <rect x="76" y="299" width="8" height="6" fill="#d9382e"/>
+  <rect x="136" y="293" width="8" height="12" fill="#d9382e"/>
+  <rect x="196" y="287" width="8" height="18" fill="#d9382e"/>
+  <rect x="256" y="300" width="8" height="5" fill="#d9382e"/>
+  <rect x="316" y="305" width="8" height="4" fill="#17a05e"/>
+  <rect x="376" y="305" width="8" height="20" fill="#17a05e"/>
+  <rect x="436" y="305" width="8" height="10" fill="#17a05e"/>
+  <rect x="496" y="303" width="8" height="2" fill="#d9382e"/>
+  <rect x="556" y="291" width="8" height="14" fill="#d9382e"/>
+  <rect x="616" y="295" width="8" height="10" fill="#d9382e"/>
+  <rect x="676" y="287" width="8" height="18" fill="#d9382e"/>
+  <rect x="736" y="297" width="8" height="8" fill="#d9382e"/>
+  <rect x="776" y="302" width="8" height="3" fill="#d9382e"/>
+
+  <!-- MACD 绿柱标注 -->
+  <text x="320" y="345" text-anchor="middle" font-size="10" fill="#17a05e">绿柱出现</text>
+
+  <!-- 底部说明条 -->
+  <rect x="30" y="400" width="800" height="42" rx="8" fill="#f7f8fa" stroke="#dfe3e9" stroke-width="1.2"/>
+  <text x="430" y="428" text-anchor="middle" font-size="13" fill="#1f2329">第一步和第二步不能调换顺序。前高不是事先预设的，是绿柱出现之后回头确认的。</text>
+
+  <!-- 金句 -->
+  <text x="430" y="478" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1f2329">前高是回撤之后回头确认的，不是事先预设的</text>
+</svg>

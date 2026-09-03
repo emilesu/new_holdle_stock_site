@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 860 560" font-family="'PingFang SC','Microsoft YaHei','Noto Sans CJK SC',sans-serif">
+  <!-- 标题 -->
+  <text x="430" y="28" text-anchor="middle" font-size="19" font-weight="700" fill="#1f2329">循环上移：参考价越抬越高</text>
+  <text x="430" y="48" text-anchor="middle" font-size="12.5" fill="#8a8f98">低点①②③④逐轮确认，参考价一段比一段高。示意 · 非真实数据</text>
+
+  <!-- 价格走势折线 -->
+  <polyline points="80,388.18 140,292.73 200,348.41 260,229.09 320,300.68 380,165.45 440,236.82 500,101.82 560,156.36 620,133.64 680,70 740,110" fill="none" stroke="#3b82c4" stroke-width="2.2" stroke-linejoin="round"/>
+
+  <!-- 数据点 -->
+  <circle cx="80" cy="388.18" r="2.2" fill="#3b82c4"/>
+  <circle cx="200" cy="348.41" r="2.2" fill="#3b82c4"/>
+  <circle cx="320" cy="300.68" r="2.2" fill="#3b82c4"/>
+  <circle cx="440" cy="236.82" r="2.2" fill="#3b82c4"/>
+  <circle cx="560" cy="156.36" r="2.2" fill="#3b82c4"/>
+
+  <!-- 三阶止损线（入场价100，仅到交棒前） -->
+  <line x1="80" y1="388.18" x2="200" y2="388.18" stroke="#8a8f98" stroke-width="1.5" stroke-dasharray="5 4"/>
+  <text x="190" y="405" text-anchor="end" font-size="10" fill="#8a8f98">入场价100（三阶）</text>
+
+  <!-- 参考价阶梯线：当前生效段（绿实线） -->
+  <polyline points="200,348.41 320,348.41 320,300.68 440,300.68 440,236.82 560,236.82 560,156.36 620,156.36" fill="none" stroke="#17a05e" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>
+
+  <!-- 当前参考价标签 -->
+  <text x="630" y="151" font-size="11" fill="#17a05e" font-weight="700">当前参考价 = 低点④ = 245</text>
+
+  <!-- 低点标注 -->
+  <text x="200" y="340" text-anchor="middle" font-size="10.5" fill="#17a05e" font-weight="700">低点①=125</text>
+  <text x="320" y="292" text-anchor="middle" font-size="10.5" fill="#17a05e" font-weight="700">低点②=155</text>
+  <text x="440" y="228" text-anchor="middle" font-size="10.5" fill="#17a05e" font-weight="700">低点③=195</text>
+  <text x="560" y="148" text-anchor="middle" font-size="10.5" fill="#17a05e" font-weight="700">低点④=245</text>
+
+  <!-- 弃用标注（竖虚线+文字） -->
+  <line x1="320" y1="348.41" x2="320" y2="365" stroke="#8a8f98" stroke-width="1" stroke-dasharray="3 2"/>
+  <text x="320" y="378" text-anchor="middle" font-size="9.5" fill="#8a8f98">低点①弃用</text>
+
+  <line x1="440" y1="300.68" x2="440" y2="317" stroke="#8a8f98" stroke-width="1" stroke-dasharray="3 2"/>
+  <text x="440" y="330" text-anchor="middle" font-size="9.5" fill="#8a8f98">低点②弃用</text>
+
+  <line x1="560" y1="236.82" x2="560" y2="253" stroke="#8a8f98" stroke-width="1" stroke-dasharray="3 2"/>
+  <text x="560" y="266" text-anchor="middle" font-size="9.5" fill="#8a8f98">低点③弃用</text>
+
+  <!-- 交棒标注 -->
+  <text x="200" y="425" text-anchor="middle" font-size="10" fill="#d9382e" font-weight="700">低点①&gt;入场价 → 交棒</text>
+
+  <!-- 底部说明条 -->
+  <rect x="30" y="460" width="800" height="42" rx="8" fill="#f7f8fa" stroke="#dfe3e9" stroke-width="1.2"/>
+  <text x="430" y="488" text-anchor="middle" font-size="13" fill="#1f2329">参考价只往上抬，旧低点一旦被淘汰就不再生效。低点不破就不动。</text>
+
+  <!-- 金句 -->
+  <text x="430" y="536" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1f2329">参考价越抬越高，不是越放越低</text>
+</svg>
