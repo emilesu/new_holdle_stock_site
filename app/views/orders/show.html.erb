@@ -68,8 +68,8 @@
             }
           });
         <% end %>
-      <% elsif @order.payment_method == "alipay_wap" %>
-        <%# 支付宝手机网站支付：自动跳转唤起 App（未装则进 H5 收银台） %>
+      <% elsif @order.payment_method == "alipay_wap" || @order.payment_method == "alipay_page" %>
+        <%# 支付宝手机网站支付（唤起 App）/ 电脑网站支付（进入收银台）：自动跳转 %>
         <div class="hl-card p-7 mb-6">
           <div class="mb-6">
             <div class="w-16 h-16 mx-auto mb-4 bg-bg-mute rounded-full flex items-center justify-center">
@@ -77,7 +77,7 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
               </svg>
             </div>
-            <h2 id="ali-pay-title" class="text-hl-18 font-bold text-ink mb-2">正在拉起支付宝...</h2>
+            <h2 id="ali-pay-title" class="text-hl-18 font-bold text-ink mb-2"><%= @order.payment_method == "alipay_page" ? "正在进入支付宝收银台..." : "正在拉起支付宝..." %></h2>
             <p id="ali-pay-sub" class="text-hl-13 text-muted">如果未自动跳转，请点击下方按钮</p>
           </div>
 

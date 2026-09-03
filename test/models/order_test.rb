@@ -132,7 +132,7 @@ class OrderTest < ActiveSupport::TestCase
       quota: quota,
       title: plan.name,
       amount_cents: plan.price_cents,
-      payment_method: "alipay_native"
+      payment_method: "alipay_page"
     )
   end
 

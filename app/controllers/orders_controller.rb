@@ -136,16 +136,16 @@ class OrdersController < ApplicationController
     "#{base}/wechat/pay_callbacks"
   end
 
-  # ===== 支付宝支付（订单码扫码 + 手机网站支付）=====
+  # ===== 支付宝支付（电脑网站支付 + 手机网站支付）=====
 
-  # 支付宝下单：按 UA 区分通道（手机浏览器→唤起 App；桌面→扫码）
+  # 支付宝下单：按 UA 区分通道（手机浏览器→手机网站支付；桌面→电脑网站支付）
   def create_alipay_order(plan)
     unless ALIPAY_CLIENT
       Rails.logger.error "[Alipay] ALIPAY_CLIENT 未配置（缺少 ALIPAY_APP_ID）"
       redirect_to new_order_path(plan: plan.plan_code), alert: "支付宝支付暂未开通，请稍后再试" and return
     end
 
-    payment_method = mobile_ua? ? "alipay_wap" : "alipay_native"
+    payment_method = mobile_ua? ? "alipay_wap" : "alipay_page"
 
     begin
       order = current_user.orders.create!(
@@ -180,25 +180,20 @@ class OrdersController < ApplicationController
         order.update!(code_url: url)
         redirect_to order_path(order)
       else
-        # 订单码支付：生成付款二维码（PC 扫码）
-        resp = ALIPAY_CLIENT.execute(
-          method: "alipay.trade.precreate",
+        # 电脑网站支付：桌面浏览器跳转支付宝收银台（可扫码或登录账号支付）
+        url = ALIPAY_CLIENT.page_execute_url(
+          method: "alipay.trade.page.pay",
+          return_url: alipay_return_url,
           notify_url: alipay_notify_url,
           biz_content: JSON.generate({
             out_trade_no: order.order_no,
+            product_code: "FAST_INSTANT_TRADE_PAY",
             total_amount: format("%.2f", order.amount_yuan),
-            subject: order.title,
-            timeout_express: "30m"
+            subject: order.title
           }, ascii_only: true)
         )
-        body = JSON.parse(resp)["alipay_trade_precreate_response"]
-        if body["code"] == "10000"
-          order.update!(code_url: body["qr_code"])
-          redirect_to order_path(order)
-        else
-          Rails.logger.error "[Alipay] order #{order.order_no} precreate failed: code=#{body["code"]} sub_code=#{body["sub_code"]} #{alipay_safe_message(body["sub_msg"] || body["msg"])}"
-          redirect_to new_order_path(plan: plan.plan_code), alert: "订单创建失败：#{alipay_safe_message(body["sub_msg"] || body["msg"])}"
-        end
+        order.update!(code_url: url)
+        redirect_to order_path(order)
       end
     rescue => e
       Rails.logger.error "[Alipay] order #{order&.order_no || "?"} API error: #{e.class} #{e.message}"
@@ -219,17 +214,6 @@ class OrdersController < ApplicationController
   def mobile_ua?
     ua = request.user_agent.to_s.downcase
     ua.match?(/android|iphone|ipad|mobile|micromessenger|alipayclient|ucbrowser/i)
-  end
-
-  # 支付宝接口返回的 message 偶发是 GBK 字节却被标记为 UTF-8（sub_msg 非法编码），直接塞进 flash →
-  # session 序列化会抛 JSON::GeneratorError；原样写日志又会被 journald 丢弃。这里先判定编码合法性，
-  # 非法则按 GBK 还原再转 UTF-8，再清理换行，保证安全可写且中文可读。
-  def alipay_safe_message(raw)
-    str = raw.to_s.dup
-    unless str.valid_encoding?
-      str = str.force_encoding("GBK").encode("UTF-8", invalid: :replace, undef: :replace, replace: "")
-    end
-    str.encode("UTF-8", invalid: :replace, undef: :replace, replace: "").gsub(/[\r\n]+/, " ").strip
   end
 
   def auto_auth_form(auth_url)

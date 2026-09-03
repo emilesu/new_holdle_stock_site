@@ -42,7 +42,7 @@
       <div>
         <label class="text-hl-12 text-muted block mb-1">支付方式</label>
         <%= select_tag :payment_method,
-              options_for_select([["全部方式", ""], ["微信·扫码", "wechat_native"], ["微信·JSAPI", "wechat_jsapi"], ["支付宝·扫码", "alipay_native"], ["支付宝·手机", "alipay_wap"]], params[:payment_method]),
+              options_for_select([["全部方式", ""], ["微信·扫码", "wechat_native"], ["微信·JSAPI", "wechat_jsapi"], ["支付宝·扫码", "alipay_native"], ["支付宝·电脑", "alipay_page"], ["支付宝·手机", "alipay_wap"]], params[:payment_method]),
               class: "w-full border border-line rounded px-3 py-2 text-hl-13 bg-white focus:outline-none focus:ring-1 focus:ring-profit" %>
       </div>
       <div>
@@ -101,6 +101,7 @@
                   when "wechat_native" then "微信·扫码"
                   when "wechat_jsapi" then "微信·JSAPI"
                   when "alipay_native" then "支付宝·扫码"
+                  when "alipay_page" then "支付宝·电脑"
                   when "alipay_wap" then "支付宝·手机"
                   else order.payment_method
                 end %>

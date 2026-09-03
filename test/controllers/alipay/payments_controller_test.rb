@@ -18,7 +18,7 @@ class Alipay::PaymentsControllerTest < ActionDispatch::IntegrationTest
 
   test "notify 验签通过且 TRADE_SUCCESS 标记到账" do
     stub_verify(true)
-    order = users(:one).orders.create!(title: "尝鲜包", amount_cents: 500, plan_code: "starter", quota: 20, payment_method: "alipay_native")
+    order = users(:one).orders.create!(title: "尝鲜包", amount_cents: 500, plan_code: "starter", quota: 20, payment_method: "alipay_page")
 
     post alipay_notify_path, params: {
       app_id: @app_id,
@@ -36,7 +36,7 @@ class Alipay::PaymentsControllerTest < ActionDispatch::IntegrationTest
 
   test "notify 重复回调幂等，不重复发放" do
     stub_verify(true)
-    order = users(:one).orders.create!(title: "尝鲜包", amount_cents: 500, plan_code: "starter", quota: 20, payment_method: "alipay_native")
+    order = users(:one).orders.create!(title: "尝鲜包", amount_cents: 500, plan_code: "starter", quota: 20, payment_method: "alipay_page")
 
     params = { app_id: @app_id, out_trade_no: order.order_no, trade_no: "ali-2002", trade_status: "TRADE_SUCCESS", total_amount: "5.00" }
     post alipay_notify_path, params: params
@@ -48,7 +48,7 @@ class Alipay::PaymentsControllerTest < ActionDispatch::IntegrationTest
 
   test "notify 金额不匹配拒绝到账" do
     stub_verify(true)
-    order = users(:one).orders.create!(title: "尝鲜包", amount_cents: 500, plan_code: "starter", quota: 20, payment_method: "alipay_native")
+    order = users(:one).orders.create!(title: "尝鲜包", amount_cents: 500, plan_code: "starter", quota: 20, payment_method: "alipay_page")
 
     post alipay_notify_path, params: {
       app_id: @app_id,
@@ -64,7 +64,7 @@ class Alipay::PaymentsControllerTest < ActionDispatch::IntegrationTest
 
   test "notify 验签失败拒绝到账" do
     stub_verify(false)
-    order = users(:one).orders.create!(title: "尝鲜包", amount_cents: 500, plan_code: "starter", quota: 20, payment_method: "alipay_native")
+    order = users(:one).orders.create!(title: "尝鲜包", amount_cents: 500, plan_code: "starter", quota: 20, payment_method: "alipay_page")
 
     post alipay_notify_path, params: {
       app_id: @app_id,

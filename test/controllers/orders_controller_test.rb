@@ -134,9 +134,6 @@ class OrdersControllerTest < ActionDispatch::IntegrationTest
     if active
       stub_client = Class.new do
         def page_execute_url(**); "https://openapi.alipay.com/gateway.do?app_id=wap"; end
-        def execute(**)
-          JSON.generate("alipay_trade_precreate_response" => { "code" => "10000", "qr_code" => "https://qr.alipay.com/test" })
-        end
       end.new
       # 在控制器自身命名空间内遮蔽顶层 ALIPAY_CLIENT（false 不查祖先，避免命中顶层 nil）
       OrdersController.send(:remove_const, :ALIPAY_CLIENT) if OrdersController.const_defined?(:ALIPAY_CLIENT, false)
@@ -160,7 +157,7 @@ class OrdersControllerTest < ActionDispatch::IntegrationTest
     assert order.code_url.present?
   end
 
-  test "支付宝下单（桌面 UA）生成 native 扫码订单并跳转" do
+  test "支付宝下单（桌面 UA）生成电脑网站支付订单并跳转" do
     stub_alipay_client
     sign_in users(:one)
     post orders_path, params: {
@@ -172,34 +169,8 @@ class OrdersControllerTest < ActionDispatch::IntegrationTest
     order = users(:one).orders.order(:created_at).last
     assert_response :redirect
     assert_redirected_to order_path(order)
-    assert_equal "alipay_native", order.payment_method
-    assert_equal "https://qr.alipay.com/test", order.code_url
-  end
-
-  test "支付宝 precreate 业务失败且 sub_msg 含非法 UTF-8 时，安全重定向不抛 JSON::GeneratorError（回归）" do
-    ENV["ALIPAY_APP_ID"] = "test-alipay-app"
-    # 模拟支付宝返回体：msg 值是「部分参数校验失败」的 GBK 字节，被（正确地）声明为 UTF-8 → 产生非法 UTF-8 字节
-    gbk_msg = "部分参数校验失败".encode("GBK").force_encoding("UTF-8")
-    json_body = "{\"alipay_trade_precreate_response\":{\"code\":\"40004\",\"msg\":\"Business Failed\",\"sub_msg\":\"#{gbk_msg}\"}}"
-    stub_client = Class.new do
-      define_method(:execute) do |**|
-        json_body
-      end
-    end.new
-    OrdersController.send(:remove_const, :ALIPAY_CLIENT) if OrdersController.const_defined?(:ALIPAY_CLIENT, false)
-    OrdersController.const_set(:ALIPAY_CLIENT, stub_client)
-
-    sign_in users(:one)
-    post orders_path, params: {
-      plan: "starter",
-      payment_method: "alipay",
-      authenticity_token: "x"
-    }, headers: { "User-Agent" => "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120" }
-
-    # 关键断言：不抛 JSON::GeneratorError，返回 302 且 flash 安全写入
-    assert_response :redirect
-    assert_redirected_to new_order_path(plan: "starter")
-    assert flash[:alert].start_with?("订单创建失败") # flash 已成功序列化，无崩溃
+    assert_equal "alipay_page", order.payment_method
+    assert_equal "https://openapi.alipay.com/gateway.do?app_id=wap", order.code_url
   end
 
   test "支付宝未配置（ALIPAY_CLIENT 为 nil）时提交，重定向回带 plan 的下单页而非回退 468（回归）" do
@@ -215,7 +186,7 @@ class OrdersControllerTest < ActionDispatch::IntegrationTest
     }, headers: { "User-Agent" => "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120" }
 
     # 不应创建订单（未配置直接返回）
-    assert_equal 0, users(:one).orders.where(payment_method: "alipay_native").count
+    assert_equal 0, users(:one).orders.where(payment_method: "alipay_page").count
     # 重定向到带 plan=starter 的下单页（而非回退 468 / 无参罕见页）
     assert_redirected_to new_order_path(plan: "starter")
   end
