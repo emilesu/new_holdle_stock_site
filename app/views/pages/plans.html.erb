@@ -1,5 +1,5 @@
 <% set_page_title "选择 AI 投研助手套餐" %>
-<% set_page_description "HOLDLE AI 投研助手套餐：新用户免费 15 次，尝鲜包 5 元/20 次，轻量包 20 元/90 次，标准包 100 元/500 次，永久会员 468 元无限次。" %>
+<% set_page_description "HOLDLE AI 投研助手套餐：新用户免费 15 次体验，HOLDLE 会员 468 元进阶实战 + AI 无限次。" %>
 
 <% plans = Plan.active.order(:price_cents) %>
 
@@ -11,8 +11,8 @@
       选择适合你的 <span class="text-profit">AI 投研助手</span> 套餐
     </h1>
     <p class="text-hl-14 text-muted max-w-2xl mx-auto leading-relaxed mb-8">
-      按次付费，用完可随时充值；也可以一次加入永久会员，无限使用。<br />
-      新用户注册即送 <span class="text-ink font-medium">15 次免费体验</span>，先试再买。
+      新用户 <span class="text-ink font-medium">15 次免费体验</span>，先试再买；<br />
+      468 元会员 = 进阶实战 + AI 无限次。
     </p>
 
     <% if current_user && current_user.api_keys.active.any? %>
@@ -23,9 +23,8 @@
           <% if key.quota_remaining.nil? %>
             <span class="text-profit font-medium">无限次</span>
           <% else %>
-            剩余 <span class="text-ink font-medium"><%= key.quota_remaining %></span> 次
+            剩余 <span class="text-ink font-medium"><%= key.quota_remaining %></span> 次（免费体验）
           <% end %>
-          （购买次数包将自动叠加到这把 Key）
         </div>
       </div>
     <% end %>
@@ -36,7 +35,7 @@
 <section class="border-b border-line">
   <div class="container-hl py-16">
     <% if plans.any? %>
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mb-8">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-3xl mx-auto mb-8">
       <% plans.each do |plan| %>
         <% unlimited = plan.quota.nil? %>
         <div class="hl-card p-7 flex flex-col <%= plan.is_member_upgrade ? 'border-2 border-ink' : '' %>">
@@ -68,7 +67,7 @@
               <li class="relative pl-3.5 list-dot-link">AI 助手<span class="text-ink font-medium">无限次</span>使用</li>
               <li class="relative pl-3.5 list-dot-link">AI 助手完整能力</li>
               <li class="relative pl-3.5 list-dot-link">AI 助手配套优化「股票回测专用数据脚本」(省token神器)</li>
-              <li class="relative pl-3.5 list-dot-link">进阶课程全解锁</li>
+              <li class="relative pl-3.5 list-dot-link">进阶实战内容 全解锁</li>
               <li class="relative pl-3.5 list-dot-link">金字塔排名全解锁</li>
               <li class="relative pl-3.5 list-dot-link">HOLDLE技术交流群</li>
               <li class="relative pl-3.5 list-dot-link">深度投研必备</li>
@@ -97,7 +96,7 @@
       </div>
     <% end %>
     <p class="text-hl-12 text-muted-4 text-center leading-relaxed">
-      购买后由系统自动发放专属 Key（注册用户已自动拥有）；次数包自动叠加到现有 Key，永久会员将 Key 转为无限次。<br />
+      购买后由系统自动发放专属 Key（注册用户已自动拥有）；升级会员将同一把 Key 转为无限次。<br />
       虚拟服务一经购买不支持退款；支付成功即自动开通，无需人工确认。
     </p>
   </div>
@@ -122,19 +121,19 @@
       <details class="hl-faq-item">
         <summary>
           <span class="hl-q-badge">Q</span>
-          <span>次数包和永久会员有什么区别？</span>
+          <span>免费体验和会员有什么区别？</span>
           <span class="hl-faq-icon">+</span>
         </summary>
-        <div class="hl-faq-content">次数包按次计费、用完可叠加，适合低频用户；永久会员 468 元一次付费，AI 助手无限次 + 全部课程解锁 + 会员交流群，适合长期学习者。</div>
+        <div class="hl-faq-content">免费体验 15 次，适合先试用；468 元 HOLDLE 会员一次付费 = AI 助手无限次 + 进阶实战全解锁 + 会员交流群，适合长期学习者。</div>
       </details>
 
       <details class="hl-faq-item">
         <summary>
           <span class="hl-q-badge">Q</span>
-          <span>买了次数包，会不会重复发放 Key？</span>
+          <span>升级会员，会不会重复发放 Key？</span>
           <span class="hl-faq-icon">+</span>
         </summary>
-        <div class="hl-faq-content">不会。每个账号只有一把 Key，购买次数包自动叠加到现有 Key 上；升级永久会员则把同一把 Key 转为无限次。</div>
+        <div class="hl-faq-content">不会。每个账号只有一把 Key；升级会员把同一把 Key 转为无限次。</div>
       </details>
 
       <details class="hl-faq-item">

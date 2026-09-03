@@ -76,17 +76,14 @@
   <div class="container-hl py-16">
     <div class="label-en">PRICING</div>
     <h2 class="text-hl-22 font-bold text-ink mb-2">透明定价，一屏看清</h2>
-    <p class="text-hl-13 text-muted mb-8">从免费体验到永久会员，可按需选择</p>
+    <p class="text-hl-13 text-muted mb-8">从免费体验到会员，进阶实战 + AI 无限次</p>
 
     <%# 定价区动态渲染 Plan.active（v1.40.1 由硬编码改为与 /plans 同源，避免双数据源漂移）；卖点文案按 plan_code 维护 %>
     <% if Plan.active.any? %>
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-3xl mx-auto">
       <% pricing_features = {
         "welcome" => ["先安装试一下", "体验完再决定"],
-        "starter" => ["按次计费", "适合先用起来"],
-        "light" => ["按次计费", "初级入门之选", "适合日常投资分析"],
-        "standard" => ["按次计费", "进阶学习首选", "适合日常投资分析", "支持多次对比分析"],
-        "member_permanent" => ['AI 助手<span class="text-ink font-medium">无限次</span>使用', "AI 助手完整能力", "AI 助手配套优化「股票回测专用数据脚本」(省token神器)", "进阶课程全解锁", "金字塔排名全解锁", "HOLDLE技术交流群", "深度投研必备"]
+        "member_permanent" => ['AI 助手<span class="text-ink font-medium">无限次</span>使用', "AI 助手完整能力", "AI 助手配套优化「股票回测专用数据脚本」(省token神器)", "进阶实战内容 全解锁", "金字塔排名 全解锁", "HOLDLE技术交流群", "深度投研必备"]
       } %>
       <% Plan.active.order(:price_cents).each do |plan| %>
         <% unlimited = plan.quota.nil? %>
@@ -109,7 +106,7 @@
           <% if plan.plan_code == "welcome" %>
             <%= link_to "免费领取", new_user_registration_path, class: "hl-btn hl-btn-line w-full text-center" %>
           <% else %>
-            <%= link_to is_member ? "加入会员" : "购买", new_order_path(plan: plan.plan_code), class: "hl-btn #{is_member ? 'hl-btn-primary' : 'hl-btn-line'} w-full text-center" %>
+            <%= link_to is_member ? "解锁进阶实战 · 无限次" : "购买", new_order_path(plan: plan.plan_code), class: "hl-btn #{is_member ? 'hl-btn-primary' : 'hl-btn-line'} w-full text-center" %>
           <% end %>
         </div>
       <% end %>
@@ -119,7 +116,7 @@
     <% end %>
 
     <p class="text-hl-12 text-muted-4 text-center mt-6">
-      ※ 虚拟服务一经购买不支持退款（购买前请确认需求）；按次套餐用完后可随时续购，次数用完可随时充值。
+      ※ 虚拟服务一经购买不支持退款（购买前请确认需求）；15 次免费体验，满意再升级会员（无限次）。
     </p>
   </div>
 </section>
@@ -175,9 +172,8 @@
         </summary>
         <div class="hl-faq-content">
           按提问次数计算：<br><br>
-          新注册用户免费送 15 次体验；<br>
-          之后按次付费：5元/20次、20元/90次、100元/500次；<br>
-          468 元永久会员 = 无限次使用 + 金字塔排行 + 进阶课解锁。<br><br>
+          新注册免费送 15 次体验；<br>
+          468 元会员 = 进阶实战解锁 + AI 无限次使用（含金字塔排名、回测数据脚本、技术交流群）。<br><br>
           虚拟服务一经购买不支持退款。
         </div>
       </details>
@@ -189,7 +185,7 @@
           <span class="hl-faq-icon">+</span>
         </summary>
         <div class="hl-faq-content">
-          次数用完去购买套餐充值即可；Key 泄露可在个人中心自助重新生成，旧 Key 立即失效。每个账号默认 1 个 Key，请勿分享。
+          次数用完可升级 468 会员（无限次）；Key 泄露可在个人中心自助重新生成，旧 Key 立即失效。每个账号默认 1 个 Key，请勿分享。
         </div>
       </details>
 
@@ -199,7 +195,7 @@
           <span>支持退款吗？</span>
           <span class="hl-faq-icon">+</span>
         </summary>
-        <div class="hl-faq-content">虚拟服务，购买前请确认需求，一经购买不支持退款。详见 <%= link_to "《服务协议》", terms_path, class: "underline underline-offset-2 hover:text-profit transition-colors" %>。</div>
+        <div class="hl-faq-content">虚拟服务，购买前请确认需求，一经购买不支持退款。15 次免费体验，体验后再决定。详见 <%= link_to "《服务协议》", terms_path, class: "underline underline-offset-2 hover:text-profit transition-colors" %>。</div>
       </details>
     </div>
   </div>
