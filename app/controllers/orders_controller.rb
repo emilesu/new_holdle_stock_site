@@ -196,7 +196,7 @@ class OrdersController < ApplicationController
           order.update!(code_url: body["qr_code"])
           redirect_to order_path(order)
         else
-          Rails.logger.error "[Alipay] order #{order.order_no} precreate failed: code=#{body["code"]} #{body["sub_msg"]}"
+          Rails.logger.error "[Alipay] order #{order.order_no} precreate failed: code=#{body["code"]} sub_code=#{body["sub_code"]} #{alipay_safe_message(body["sub_msg"] || body["msg"])}"
           redirect_to new_order_path(plan: plan.plan_code), alert: "订单创建失败：#{alipay_safe_message(body["sub_msg"] || body["msg"])}"
         end
       end
@@ -221,10 +221,15 @@ class OrdersController < ApplicationController
     ua.match?(/android|iphone|ipad|mobile|micromessenger|alipayclient|ucbrowser/i)
   end
 
-  # 支付宝接口返回的 message 可能含非 UTF-8 字节（GBK 等）或换行，直接塞进 flash → session 序列化会抛
-  # JSON::GeneratorError。此方法强制转成合法 UTF-8 并清理，保证能安全写入 cookie。
+  # 支付宝接口返回的 message 偶发是 GBK 字节却被标记为 UTF-8（sub_msg 非法编码），直接塞进 flash →
+  # session 序列化会抛 JSON::GeneratorError；原样写日志又会被 journald 丢弃。这里先判定编码合法性，
+  # 非法则按 GBK 还原再转 UTF-8，再清理换行，保证安全可写且中文可读。
   def alipay_safe_message(raw)
-    raw.to_s.encode("UTF-8", invalid: :replace, undef: :replace, replace: "").gsub(/[\r\n]+/, " ").strip
+    str = raw.to_s.dup
+    unless str.valid_encoding?
+      str = str.force_encoding("GBK").encode("UTF-8", invalid: :replace, undef: :replace, replace: "")
+    end
+    str.encode("UTF-8", invalid: :replace, undef: :replace, replace: "").gsub(/[\r\n]+/, " ").strip
   end
 
   def auto_auth_form(auth_url)
