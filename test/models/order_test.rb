@@ -120,4 +120,63 @@ class OrderTest < ActiveSupport::TestCase
     assert admin.reload.admin?, "管理员不应被支付回调降级"
     assert_equal "member_permanent", admin.api_keys.active.first.plan_code
   end
+
+  # ===== 支付宝渠道 =====
+
+  def build_alipay_order(user, plan_code: "starter", quota: 20)
+    plan = Plan.find_by!(plan_code: plan_code)
+    Order.create!(
+      user: user,
+      product_code: plan_code,
+      plan_code: plan_code,
+      quota: quota,
+      title: plan.name,
+      amount_cents: plan.price_cents,
+      payment_method: "alipay_native"
+    )
+  end
+
+  test "支付宝订单支付成功存入 alipay_trade_no 并发放 key" do
+    user = users(:one)
+    order = build_alipay_order(user)
+
+    order.mark_as_paid!(transaction_id: "ali-trade-1", notify_data: {})
+
+    key = user.api_keys.active.first
+    assert key.present?, "支付成功后应有 active key"
+    assert_equal "starter", key.plan_code
+    assert_equal 20, key.quota_remaining
+    assert_nil order.wechat_transaction_id, "支付宝订单不应写微信交易号"
+    assert_equal "ali-trade-1", order.alipay_trade_no
+  end
+
+  test "支付宝订单幂等：重复 mark_as_paid! 不重复发放" do
+    user = users(:one)
+    order = build_alipay_order(user)
+
+    order.mark_as_paid!(transaction_id: "ali-trade-2", notify_data: {})
+    order.mark_as_paid!(transaction_id: "ali-trade-2", notify_data: {})
+
+    assert_equal 1, user.api_keys.active.count
+    assert_equal 20, user.api_keys.active.first.quota_remaining
+  end
+
+  test "支付宝手机唤起订单（alipay_wap）支付成功同样到账" do
+    user = users(:one)
+    plan = Plan.find_by!(plan_code: "starter")
+    order = Order.create!(
+      user: user,
+      product_code: "starter",
+      plan_code: "starter",
+      quota: 20,
+      title: plan.name,
+      amount_cents: plan.price_cents,
+      payment_method: "alipay_wap"
+    )
+
+    order.mark_as_paid!(transaction_id: "ali-trade-3", notify_data: {})
+
+    assert order.paid?
+    assert_equal "ali-trade-3", order.alipay_trade_no
+  end
 end

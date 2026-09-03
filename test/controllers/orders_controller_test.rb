@@ -119,4 +119,53 @@ class OrdersControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_no_match "支付成功，已自动开通", response.body
   end
+
+  # ===== 支付宝下单 =====
+
+  def stub_alipay_client(active: true)
+    ENV["ALIPAY_APP_ID"] = "test-alipay-app" if active
+    if active
+      stub_client = Class.new do
+        def page_execute_url(**); "https://openapi.alipay.com/gateway.do?app_id=wap"; end
+        def execute(**)
+          JSON.generate("alipay_trade_precreate_response" => { "code" => "10000", "qr_code" => "https://qr.alipay.com/test" })
+        end
+      end.new
+      # 在控制器自身命名空间内遮蔽顶层 ALIPAY_CLIENT（false 不查祖先，避免命中顶层 nil）
+      OrdersController.send(:remove_const, :ALIPAY_CLIENT) if OrdersController.const_defined?(:ALIPAY_CLIENT, false)
+      OrdersController.const_set(:ALIPAY_CLIENT, stub_client)
+    end
+  end
+
+  test "支付宝下单（手机 UA）生成 wap 订单并跳转" do
+    stub_alipay_client
+    sign_in users(:one)
+    post orders_path, params: {
+      plan: "starter",
+      payment_method: "alipay",
+      authenticity_token: "x"
+    }, headers: { "User-Agent" => "Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) Safari" }
+
+    order = users(:one).orders.order(:created_at).last
+    assert_response :redirect
+    assert_redirected_to order_path(order)
+    assert_equal "alipay_wap", order.payment_method
+    assert order.code_url.present?
+  end
+
+  test "支付宝下单（桌面 UA）生成 native 扫码订单并跳转" do
+    stub_alipay_client
+    sign_in users(:one)
+    post orders_path, params: {
+      plan: "starter",
+      payment_method: "alipay",
+      authenticity_token: "x"
+    }, headers: { "User-Agent" => "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120" }
+
+    order = users(:one).orders.order(:created_at).last
+    assert_response :redirect
+    assert_redirected_to order_path(order)
+    assert_equal "alipay_native", order.payment_method
+    assert_equal "https://qr.alipay.com/test", order.code_url
+  end
 end
