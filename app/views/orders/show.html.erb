@@ -68,23 +68,6 @@
             }
           });
         <% end %>
-      <% elsif @order.payment_method == "alipay_wap" && wechat_in_app_browser? %>
-        <%# 微信内置浏览器：腾讯拦截支付宝唤起，引导用户在系统浏览器打开 %>
-        <div class="hl-card p-7 mb-6">
-          <div class="mb-6">
-            <div class="w-16 h-16 mx-auto mb-4 bg-bg-mute rounded-full flex items-center justify-center">
-              <svg class="w-8 h-8 text-muted-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-              </svg>
-            </div>
-            <h2 class="text-hl-18 font-bold text-ink mb-2">请在浏览器中打开完成支付</h2>
-            <p class="text-hl-13 text-muted">微信内无法直接唤起支付宝，请点击右上角「···」菜单，选择「在浏览器打开」后继续完成付款。</p>
-          </div>
-          <div class="bg-bg-soft rounded px-5 py-4 text-hl-13 text-muted space-y-1.5">
-            <p>订单金额：<span class="text-profit font-semibold">¥<%= @order.amount_yuan %></span></p>
-            <p>订单编号：<span class="text-ink font-medium"><%= @order.order_no %></span></p>
-          </div>
-        </div>
       <% elsif @order.payment_method == "alipay_wap" || @order.payment_method == "alipay_page" %>
         <%# 支付宝手机网站支付（唤起 App）/ 电脑网站支付（进入收银台）：自动跳转 %>
         <div class="hl-card p-7 mb-6">
@@ -94,8 +77,8 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
               </svg>
             </div>
-            <h2 id="ali-pay-title" class="text-hl-18 font-bold text-ink mb-2"><%= @order.payment_method == "alipay_page" ? "正在进入支付宝收银台..." : "正在拉起支付宝..." %></h2>
-            <p id="ali-pay-sub" class="text-hl-13 text-muted">如果未自动跳转，请点击下方按钮</p>
+            <h2 id="ali-pay-title" class="text-hl-18 font-bold text-ink mb-2"><%= wechat_in_app_browser? ? "请点右上角「···」在浏览器打开" : (@order.payment_method == "alipay_page" ? "正在进入支付宝收银台..." : "正在拉起支付宝...") %></h2>
+            <p id="ali-pay-sub" class="text-hl-13 text-muted"><%= wechat_in_app_browser? ? "微信内无法直接唤起支付宝，点右上角「···」→「在浏览器打开」即可付款" : "如果未自动跳转，请点击下方按钮" %></p>
           </div>
 
           <a id="ali-pay-btn" href="<%= @order.code_url %>"
