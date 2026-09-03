@@ -7,6 +7,15 @@ class OrdersControllerTest < ActionDispatch::IntegrationTest
     sign_in users(:one)
     Plan.create!(plan_code: "starter", name: "尝鲜包", price_cents: 500, quota: 20)
     Plan.create!(plan_code: "member_permanent", name: "永久会员", price_cents: 46_800, quota: nil, is_member_upgrade: true)
+    @original_alipay_client = OrdersController.const_get(:ALIPAY_CLIENT) if OrdersController.const_defined?(:ALIPAY_CLIENT, false)
+  end
+
+  # 防止 const_set/remove_const 污染同 worker 进程后续测试：每个用例后恢复原常量
+  teardown do
+    if @original_alipay_client
+      OrdersController.send(:remove_const, :ALIPAY_CLIENT) if OrdersController.const_defined?(:ALIPAY_CLIENT, false)
+      OrdersController.const_set(:ALIPAY_CLIENT, @original_alipay_client)
+    end
   end
 
   test "合法 plan 渲染下单页" do
@@ -167,5 +176,23 @@ class OrdersControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to order_path(order)
     assert_equal "alipay_native", order.payment_method
     assert_equal "https://qr.alipay.com/test", order.code_url
+  end
+
+  test "支付宝未配置（ALIPAY_CLIENT 为 nil）时提交，重定向回带 plan 的下单页而非回退 468（回归）" do
+    # 在控制器命名空间内显式遮蔽 ALIPAY_CLIENT 为 nil（与 stub_alipay_client 同模式），
+    # 使 unless ALIPAY_CLIENT 触发「未配置」分支
+    OrdersController.send(:remove_const, :ALIPAY_CLIENT) if OrdersController.const_defined?(:ALIPAY_CLIENT, false)
+    OrdersController.const_set(:ALIPAY_CLIENT, nil)
+    sign_in users(:one)
+    post orders_path, params: {
+      plan: "starter",
+      payment_method: "alipay",
+      authenticity_token: "x"
+    }, headers: { "User-Agent" => "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120" }
+
+    # 不应创建订单（未配置直接返回）
+    assert_equal 0, users(:one).orders.where(payment_method: "alipay_native").count
+    # 重定向到带 plan=starter 的下单页（而非回退 468 / 无参罕见页）
+    assert_redirected_to new_order_path(plan: "starter")
   end
 end

@@ -42,11 +42,14 @@ class Alipay::PaymentsController < ApplicationController
 
   # 支付宝同步跳转（native/wap 共用）。仅做 UX 跳转，到账以 notify + 订单页轮询为准。
   def return_url
-    if ALIPAY_CLIENT && ALIPAY_CLIENT.verify?(request.query_parameters)
-      order = Order.find_by(order_no: params["out_trade_no"])
-      redirect_to order_path(order) if order
-      return if order
+    # 只要 out_trade_no 能查到订单就先跳订单页（验签仅作 UX，不应因验签失败阻断跳转），
+    # 避免无参回退到默认 468 永久会员下单页。
+    if (order = Order.find_by(order_no: params["out_trade_no"]))
+      redirect_to order_path(order)
+      return
     end
-    redirect_to new_order_path, alert: "支付结果确认中，请稍后在订单页查看"
+
+    # 查不到订单（如页面过期/手动访问）→ 跳套餐页，杜绝 new_order_path 无 plan 回退高价
+    redirect_to plans_path, alert: "支付结果确认中，请稍后在订单页查看"
   end
 end

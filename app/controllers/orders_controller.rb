@@ -43,7 +43,7 @@ class OrdersController < ApplicationController
       )
     rescue ActiveRecord::RecordInvalid => e
       Rails.logger.error "[WxPay] Order creation failed: #{e.message}"
-      redirect_to new_order_path, alert: "订单创建失败，请重试"
+      redirect_to new_order_path(plan: plan.plan_code), alert: "订单创建失败，请重试"
       return
     end
 
@@ -67,7 +67,7 @@ class OrdersController < ApplicationController
       result = WxPay::Service.invoke_unifiedorder(wx_params)
     rescue => e
       Rails.logger.error "[WxPay] order #{order.order_no} API error: #{e.class} #{e.message}"
-      redirect_to new_order_path, alert: "微信支付服务暂时不可用，请稍后重试"
+      redirect_to new_order_path(plan: plan.plan_code), alert: "微信支付服务暂时不可用，请稍后重试"
       return
     end
 
@@ -81,7 +81,7 @@ class OrdersController < ApplicationController
       end
     else
       Rails.logger.error "[WxPay] order #{order.order_no} failed: #{result["err_code_des"] || result["return_msg"]}"
-      redirect_to new_order_path, alert: "订单创建失败：#{result["err_code_des"] || result["return_msg"]}"
+      redirect_to new_order_path(plan: plan.plan_code), alert: "订单创建失败：#{result["err_code_des"] || result["return_msg"]}"
     end
   end
 
@@ -142,7 +142,7 @@ class OrdersController < ApplicationController
   def create_alipay_order(plan)
     unless ALIPAY_CLIENT
       Rails.logger.error "[Alipay] ALIPAY_CLIENT 未配置（缺少 ALIPAY_APP_ID）"
-      redirect_to new_order_path, alert: "支付宝支付暂未开通，请稍后再试" and return
+      redirect_to new_order_path(plan: plan.plan_code), alert: "支付宝支付暂未开通，请稍后再试" and return
     end
 
     payment_method = mobile_ua? ? "alipay_wap" : "alipay_native"
@@ -158,7 +158,7 @@ class OrdersController < ApplicationController
       )
     rescue ActiveRecord::RecordInvalid => e
       Rails.logger.error "[Alipay] Order creation failed: #{e.message}"
-      redirect_to new_order_path, alert: "订单创建失败，请重试"
+      redirect_to new_order_path(plan: plan.plan_code), alert: "订单创建失败，请重试"
       return
     end
 
@@ -197,12 +197,12 @@ class OrdersController < ApplicationController
           redirect_to order_path(order)
         else
           Rails.logger.error "[Alipay] order #{order.order_no} precreate failed: code=#{body["code"]} #{body["sub_msg"]}"
-          redirect_to new_order_path, alert: "订单创建失败：#{body["sub_msg"] || body["msg"]}"
+          redirect_to new_order_path(plan: plan.plan_code), alert: "订单创建失败：#{body["sub_msg"] || body["msg"]}"
         end
       end
     rescue => e
       Rails.logger.error "[Alipay] order #{order&.order_no || "?"} API error: #{e.class} #{e.message}"
-      redirect_to new_order_path, alert: "支付宝支付服务暂时不可用，请稍后重试"
+      redirect_to new_order_path(plan: plan.plan_code), alert: "支付宝支付服务暂时不可用，请稍后重试"
     end
   end
 
