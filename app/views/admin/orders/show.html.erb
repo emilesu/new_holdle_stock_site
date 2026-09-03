@@ -50,13 +50,13 @@
           <div class="flex justify-between">
             <span class="text-muted">支付方式</span>
             <span class="font-medium text-ink">
-              <% case @order.payment_method %>
-              <% when "wechat_native" then %>微信·扫码
-              <% when "wechat_jsapi" then %>微信·JSAPI
-              <% when "alipay_native" then %>支付宝·扫码
-              <% when "alipay_wap" then %>支付宝·手机
-              <% else %><%= @order.payment_method %>
-              <% end %>
+              <%= case @order.payment_method
+                    when "wechat_native" then "微信·扫码"
+                    when "wechat_jsapi" then "微信·JSAPI"
+                    when "alipay_native" then "支付宝·扫码"
+                    when "alipay_wap" then "支付宝·手机"
+                    else @order.payment_method
+                  end %>
             </span>
           </div>
           <div class="flex justify-between">

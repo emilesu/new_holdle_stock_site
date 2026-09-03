@@ -97,13 +97,13 @@
             </span>
           </td>
           <td class="text-hl-12">
-            <% case order.payment_method %>
-            <% when "wechat_native" then %>微信·扫码
-            <% when "wechat_jsapi" then %>微信·JSAPI
-            <% when "alipay_native" then %>支付宝·扫码
-            <% when "alipay_wap" then %>支付宝·手机
-            <% else %><%= order.payment_method %>
-            <% end %>
+            <%= case order.payment_method
+                  when "wechat_native" then "微信·扫码"
+                  when "wechat_jsapi" then "微信·JSAPI"
+                  when "alipay_native" then "支付宝·扫码"
+                  when "alipay_wap" then "支付宝·手机"
+                  else order.payment_method
+                end %>
           </td>
           <td class="text-hl-12"><%= order.created_at ? l(order.created_at, format: :short) : "-" %></td>
           <td class="text-hl-12"><%= order.paid_at ? l(order.paid_at, format: :short) : "-" %></td>
