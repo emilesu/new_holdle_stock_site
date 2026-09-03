@@ -77,4 +77,18 @@ class Alipay::PaymentsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "failure", response.body
     assert_not order.reload.paid?
   end
+
+  test "return_url 已登录跳订单页查看 Key" do
+    order = users(:one).orders.create!(title: "尝鲜包", amount_cents: 500, plan_code: "starter", quota: 20, payment_method: "alipay_wap")
+    sign_in users(:one)
+    get alipay_return_path, params: { out_trade_no: order.order_no }
+    assert_redirected_to order_path(order)
+  end
+
+  test "return_url 未登录渲染公开结果页，不回跳登录页" do
+    order = users(:one).orders.create!(title: "尝鲜包", amount_cents: 500, plan_code: "starter", quota: 20, payment_method: "alipay_wap")
+    get alipay_return_path, params: { out_trade_no: order.order_no }
+    assert_response :success
+    assert_match "支付结果确认中", response.body
+  end
 end

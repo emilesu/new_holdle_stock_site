@@ -141,7 +141,7 @@ class OrdersControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
-  test "支付宝下单（手机 UA）生成 wap 订单并跳转" do
+  test "支付宝下单（手机 UA）生成 wap 订单并直接跳转支付宝 H5" do
     stub_alipay_client
     sign_in users(:one)
     post orders_path, params: {
@@ -152,9 +152,9 @@ class OrdersControllerTest < ActionDispatch::IntegrationTest
 
     order = users(:one).orders.order(:created_at).last
     assert_response :redirect
-    assert_redirected_to order_path(order)
+    assert_redirected_to "https://openapi.alipay.com/gateway.do?app_id=wap"
     assert_equal "alipay_wap", order.payment_method
-    assert order.code_url.present?
+    assert_equal "https://openapi.alipay.com/gateway.do?app_id=wap", order.code_url
   end
 
   test "支付宝下单（桌面 UA）生成电脑网站支付订单并跳转" do

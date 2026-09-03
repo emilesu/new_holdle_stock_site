@@ -1,0 +1,38 @@
+<% set_page_title "支付结果" %>
+
+<section class="bg-bg-soft min-h-screen">
+  <div class="container-hl py-12">
+    <div class="max-w-lg mx-auto text-center">
+      <div class="hl-card p-7 mb-6">
+        <div class="w-16 h-16 mx-auto mb-4 bg-bg-mute rounded-full flex items-center justify-center">
+          <% if @order.paid? %>
+            <svg class="w-8 h-8 text-profit" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 13l4 4L19 7"/>
+            </svg>
+          <% else %>
+            <svg class="w-8 h-8 text-muted-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+          <% end %>
+        </div>
+
+        <h1 class="text-hl-18 font-bold text-ink mb-2">
+          <%= @order.paid? ? "支付成功" : "支付结果确认中" %>
+        </h1>
+
+        <div class="bg-bg-soft rounded px-5 py-4 text-hl-13 text-muted space-y-1.5 mb-6">
+          <p>订单金额：<span class="text-profit font-semibold">¥<%= @order.amount_yuan %></span></p>
+          <p>订单编号：<span class="text-ink font-medium"><%= @order.order_no %></span></p>
+        </div>
+
+        <% if @order.paid? %>
+          <p class="text-hl-13 text-muted mb-4">你的会员已到账，请登录 HOLDLE 查看专属 Key。</p>
+        <% else %>
+          <p class="text-hl-12 text-muted-4 mb-4">若你已完成付款，到账可能有短暂延迟，请稍后刷新本页。</p>
+        <% end %>
+
+        <%= link_to "返回 HOLDLE 首页", root_path, class: "hl-btn hl-btn-primary block w-full text-center py-3" %>
+      </div>
+    </div>
+  </div>
+</section>

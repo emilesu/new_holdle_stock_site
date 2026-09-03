@@ -45,7 +45,12 @@ class Alipay::PaymentsController < ApplicationController
     # 只要 out_trade_no 能查到订单就先跳订单页（验签仅作 UX，不应因验签失败阻断跳转），
     # 避免无参回退到默认 468 永久会员下单页。
     if (order = Order.find_by(order_no: params["out_trade_no"]))
-      redirect_to order_path(order)
+      # 已登录（桌面/普通手机浏览器）→ 跳订单页看 Key；微信内「在浏览器打开」支付的用户在
+      # 系统浏览器无 session，跳订单页会被 authenticate_user! 拦截，改渲染公开的结果页。
+      return redirect_to order_path(order) if user_signed_in?
+
+      @order = order
+      render :result
       return
     end
 
