@@ -49,12 +49,26 @@
         <div class="space-y-3">
           <div class="flex justify-between">
             <span class="text-muted">支付方式</span>
-            <span class="font-medium text-ink"><%= @order.payment_method %></span>
+            <span class="font-medium text-ink">
+              <% case @order.payment_method %>
+              <% when "wechat_native" then %>微信·扫码
+              <% when "wechat_jsapi" then %>微信·JSAPI
+              <% when "alipay_native" then %>支付宝·扫码
+              <% when "alipay_wap" then %>支付宝·手机
+              <% else %><%= @order.payment_method %>
+              <% end %>
+            </span>
           </div>
           <div class="flex justify-between">
             <span class="text-muted">微信单号</span>
             <span class="font-medium text-ink font-mono text-hl-12">
               <%= @order.wechat_transaction_id || "-" %>
+            </span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-muted">支付宝单号</span>
+            <span class="font-medium text-ink font-mono text-hl-12">
+              <%= @order.alipay_trade_no || "-" %>
             </span>
           </div>
           <div class="flex justify-between">
@@ -100,7 +114,7 @@
 
     <% if @order.notify_raw.present? %>
     <div class="mt-6 bg-bg-soft rounded p-5">
-      <h3 class="text-hl-13 font-medium text-muted mb-3">微信回调原始数据</h3>
+      <h3 class="text-hl-13 font-medium text-muted mb-3">支付回调原始数据</h3>
       <pre class="text-hl-12 text-muted-3 overflow-x-auto max-h-48"><%= JSON.pretty_generate(@order.notify_raw) %></pre>
     </div>
     <% end %>

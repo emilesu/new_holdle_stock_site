@@ -84,6 +84,7 @@ GEM
       public_suffix (>= 2.0.2, < 8.0)
     airbrussh (1.6.1)
       sshkit (>= 1.6.1, != 1.7.0)
+    alipay (0.16.0)
     anonymous_loader (0.1.1)
       version_gem (~> 1.1, >= 1.1.12)
     auth-sanitizer (0.2.2)
@@ -449,6 +450,7 @@ PLATFORMS
   x86_64-linux-musl
 
 DEPENDENCIES
+  alipay (~> 0.16.0)
   bcrypt_pbkdf (>= 1.0, < 2.0)
   bootsnap
   brakeman
@@ -502,6 +504,7 @@ CHECKSUMS
   activesupport (7.1.6) sha256=7f12140a813b1c4922a322663e547129aef1840fc512fa262378f6d7e7fd3a7c
   addressable (2.9.0) sha256=7fdf6ac3660f7f4e867a0838be3f6cf722ace541dd97767fa42bc6cfa980c7af
   airbrussh (1.6.1) sha256=9a5fc95583cefe722054a016d26ff0338cf00072b031b829086dde2039d5836a
+  alipay (0.16.0) sha256=fe69a10179f4449338ccc0a59fecde2dc5d9d0be0e99d6634e33b9df2254a3c7
   anonymous_loader (0.1.1) sha256=b765191e2eadd6e9da52e4eb41ab44f83241fa013fadddb7a8c1374f71157662
   auth-sanitizer (0.2.2) sha256=300112debb67fe5e7a4f67a697790cea09744970e816745afb1f4235d6f27bae
   base64 (0.3.0) sha256=27337aeabad6ffae05c265c450490628ef3ebd4b67be58257393227588f5a97b

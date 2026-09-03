@@ -68,10 +68,51 @@
             }
           });
         <% end %>
-      <% else %>
-        <%# Native 扫码支付 %>
+      <% elsif @order.payment_method == "alipay_wap" %>
+        <%# 支付宝手机网站支付：自动跳转唤起 App（未装则进 H5 收银台） %>
         <div class="hl-card p-7 mb-6">
-          <h2 class="text-hl-18 font-bold text-ink mb-4">请使用微信扫码支付</h2>
+          <div class="mb-6">
+            <div class="w-16 h-16 mx-auto mb-4 bg-bg-mute rounded-full flex items-center justify-center">
+              <svg class="w-8 h-8 text-muted-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+            </div>
+            <h2 id="ali-pay-title" class="text-hl-18 font-bold text-ink mb-2">正在拉起支付宝...</h2>
+            <p id="ali-pay-sub" class="text-hl-13 text-muted">如果未自动跳转，请点击下方按钮</p>
+          </div>
+
+          <a id="ali-pay-btn" href="<%= @order.code_url %>"
+             class="hl-btn hl-btn-primary block w-full text-center py-3">
+            去支付宝付款 ¥<%= @order.amount_yuan %>
+          </a>
+        </div>
+
+        <%= javascript_tag nonce: true do %>
+          document.addEventListener('turbo:load', function() {
+            var btn = document.getElementById('ali-pay-btn');
+            if (!btn) return;
+            var orderId = <%= @order.id %>;
+            var invokedKey = 'hl_alipay_' + orderId;
+            var alreadyInvoked = false;
+            try { alreadyInvoked = sessionStorage.getItem(invokedKey) === '1'; } catch(e) {}
+            if (!alreadyInvoked) {
+              try { sessionStorage.setItem(invokedKey, '1'); } catch(e) {}
+              window.location.href = btn.href;
+            } else {
+              // 已跳转过一次（支付成功跳回本页、回调未到），切为确认中文案
+              var titleEl = document.getElementById('ali-pay-title');
+              var subEl = document.getElementById('ali-pay-sub');
+              if (titleEl) titleEl.textContent = '正在确认支付结果...';
+              if (subEl) subEl.textContent = '如已完成支付，页面将自动跳转；未支付请点击上方按钮';
+            }
+          });
+        <% end %>
+      <% else %>
+        <%# Native 扫码支付（微信 / 支付宝通用） %>
+        <div class="hl-card p-7 mb-6">
+          <h2 class="text-hl-18 font-bold text-ink mb-4">
+            <%= @order.payment_method == "alipay_native" ? "请使用支付宝扫码支付" : "请使用微信扫码支付" %>
+          </h2>
           <div class="flex justify-center mb-6">
             <div id="qrcode-container" data-controller="qrcode"
                  data-qrcode-url="<%= @order.code_url %>"

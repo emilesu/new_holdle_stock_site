@@ -14,17 +14,26 @@ class Order < ApplicationRecord
     status == "paid"
   end
 
-  # 支付成功（幂等：已 paid 直接返回，防止微信回调重复触发重复发放）
+  # 支付成功（幂等：已 paid 直接返回，防止回调重复触发重复发放）
   def mark_as_paid!(transaction_id:, notify_data:)
     with_lock do
       return if paid?
 
-      update!(
-        status: "paid",
-        wechat_transaction_id: transaction_id,
-        paid_at: Time.current,
-        notify_raw: notify_data
-      )
+      if payment_method.start_with?("alipay")
+        update!(
+          status: "paid",
+          alipay_trade_no: transaction_id,
+          paid_at: Time.current,
+          notify_raw: notify_data
+        )
+      else
+        update!(
+          status: "paid",
+          wechat_transaction_id: transaction_id,
+          paid_at: Time.current,
+          notify_raw: notify_data
+        )
+      end
       handle_payment!
     end
   end

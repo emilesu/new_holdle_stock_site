@@ -6,11 +6,11 @@ class Admin::OrdersController < Admin::BaseController
     # 筛选（全部可空，非法值忽略）
     @orders = @orders.where(status: params[:status]) if params[:status].present? && %w[pending paid].include?(params[:status])
     @orders = @orders.where(plan_code: params[:plan_code]) if params[:plan_code].present?
-    @orders = @orders.where(payment_method: params[:payment_method]) if params[:payment_method].present? && %w[wechat_jsapi wechat_native].include?(params[:payment_method])
+    @orders = @orders.where(payment_method: params[:payment_method]) if params[:payment_method].present? && %w[wechat_native wechat_jsapi alipay_native alipay_wap].include?(params[:payment_method])
 
     if params[:q].present?
       q = "%#{params[:q].strip}%"
-      @orders = @orders.where("orders.order_no ILIKE ? OR orders.wechat_transaction_id ILIKE ? OR users.nickname ILIKE ?", q, q, q)
+      @orders = @orders.where("orders.order_no ILIKE ? OR orders.wechat_transaction_id ILIKE ? OR orders.alipay_trade_no ILIKE ? OR users.nickname ILIKE ?", q, q, q, q)
     end
 
     if params[:from].present? && valid_date?(params[:from])

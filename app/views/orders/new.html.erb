@@ -1,5 +1,19 @@
 <% set_page_title "开通会员" %>
 
+<%= javascript_tag nonce: true do %>
+  document.addEventListener('turbo:load', function() {
+    var labels = document.querySelectorAll('[data-payment-label]');
+    labels.forEach(function(label) {
+      var radio = label.querySelector('input[type=radio]');
+      radio.addEventListener('change', function() {
+        labels.forEach(function(l) {
+          l.classList.toggle('border-ink', l.querySelector('input[type=radio]').checked);
+        });
+      });
+    });
+  });
+<% end %>
+
 <section class="bg-bg-soft min-h-screen">
   <div class="container-hl py-12">
     <div class="max-w-lg mx-auto">
@@ -16,7 +30,7 @@
           </div>
           <div class="flex justify-between text-hl-13">
             <span class="text-muted">支付方式</span>
-            <span class="text-ink font-medium">微信支付</span>
+            <span class="text-ink font-medium">微信支付 / 支付宝</span>
           </div>
           <div class="w-full h-px bg-line"></div>
           <div class="flex justify-between text-hl-16">
@@ -50,6 +64,22 @@
         <form action="<%= orders_path %>" method="post" data-turbo="false">
           <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
           <input type="hidden" name="plan" value="<%= @plan.plan_code %>">
+
+          <%# 支付方式选择：微信 / 支付宝 %>
+          <div class="mb-6">
+            <p class="text-hl-12 text-muted mb-3">选择支付方式</p>
+            <label class="hl-card flex items-center gap-3 px-4 py-3 mb-3 cursor-pointer border-ink" data-payment-label="wechat">
+              <input type="radio" name="payment_method" value="wechat" class="accent-ink" checked>
+              <span class="text-hl-14 font-medium text-ink">微信支付</span>
+              <span class="text-hl-12 text-muted-4 ml-auto">微信扫码 / 微信内拉起</span>
+            </label>
+            <label class="hl-card flex items-center gap-3 px-4 py-3 cursor-pointer" data-payment-label="alipay">
+              <input type="radio" name="payment_method" value="alipay" class="accent-ink">
+              <span class="text-hl-14 font-medium text-ink">支付宝</span>
+              <span class="text-hl-12 text-muted-4 ml-auto">支付宝扫码 / 唤起支付宝 App</span>
+            </label>
+          </div>
+
           <button type="submit" class="hl-btn hl-btn-primary block w-full text-center py-3">
             确认支付 ¥<%= @plan.price_cents / 100 %>
           </button>

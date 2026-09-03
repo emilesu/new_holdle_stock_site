@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_08_31_120000) do
+ActiveRecord::Schema[7.1].define(version: 2026_09_03_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -302,6 +302,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_31_120000) do
     t.datetime "updated_at", null: false
     t.string "plan_code", default: "member_permanent", null: false, comment: "购买套餐编码"
     t.integer "quota", comment: "本次购买次数（member_permanent=nil 表示无限）"
+    t.string "alipay_trade_no", comment: "支付宝交易号"
     t.index ["order_no"], name: "index_orders_on_order_no", unique: true
     t.index ["status"], name: "index_orders_on_status"
     t.index ["user_id"], name: "index_orders_on_user_id"

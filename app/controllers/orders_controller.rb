@@ -15,6 +15,10 @@ class OrdersController < ApplicationController
     unless plan
       redirect_to join_path, alert: plan_unavailable_message(params[:plan]) and return
     end
+
+    # 下单页自选支付方式：alipay → 支付宝（按 UA 区分扫码/手机唤起），否则走微信
+    return create_alipay_order(plan) if params[:payment_method] == "alipay"
+
     payment_method = detect_payment_method
 
     # JSAPI 支付需要 openid，优先公众号，回退到开放平台
@@ -130,6 +134,91 @@ class OrdersController < ApplicationController
   def wechat_pay_notify_url
     base = Rails.env.production? ? "https://www.holdle.com" : "http://8.210.33.72:3001"
     "#{base}/wechat/pay_callbacks"
+  end
+
+  # ===== 支付宝支付（订单码扫码 + 手机网站支付）=====
+
+  # 支付宝下单：按 UA 区分通道（手机浏览器→唤起 App；桌面→扫码）
+  def create_alipay_order(plan)
+    unless ALIPAY_CLIENT
+      Rails.logger.error "[Alipay] ALIPAY_CLIENT 未配置（缺少 ALIPAY_APP_ID）"
+      redirect_to new_order_path, alert: "支付宝支付暂未开通，请稍后再试" and return
+    end
+
+    payment_method = mobile_ua? ? "alipay_wap" : "alipay_native"
+
+    begin
+      order = current_user.orders.create!(
+        product_code: plan.plan_code,
+        plan_code: plan.plan_code,
+        quota: plan.quota,
+        title: plan.name,
+        amount_cents: plan.price_cents,
+        payment_method: payment_method
+      )
+    rescue ActiveRecord::RecordInvalid => e
+      Rails.logger.error "[Alipay] Order creation failed: #{e.message}"
+      redirect_to new_order_path, alert: "订单创建失败，请重试"
+      return
+    end
+
+    begin
+      if payment_method == "alipay_wap"
+        # 手机网站支付：唤起支付宝 App（未装则进 H5 收银台）
+        url = ALIPAY_CLIENT.page_execute_url(
+          method: "alipay.trade.wap.pay",
+          return_url: alipay_return_url,
+          notify_url: alipay_notify_url,
+          biz_content: JSON.generate({
+            out_trade_no: order.order_no,
+            product_code: "QUICK_WAP_WAY",
+            total_amount: format("%.2f", order.amount_yuan),
+            subject: order.title,
+            quit_url: alipay_return_url
+          }, ascii_only: true)
+        )
+        order.update!(code_url: url)
+        redirect_to order_path(order)
+      else
+        # 订单码支付：生成付款二维码（PC 扫码）
+        resp = ALIPAY_CLIENT.execute(
+          method: "alipay.trade.precreate",
+          notify_url: alipay_notify_url,
+          biz_content: JSON.generate({
+            out_trade_no: order.order_no,
+            total_amount: format("%.2f", order.amount_yuan),
+            subject: order.title,
+            timeout_express: "30m"
+          }, ascii_only: true)
+        )
+        body = JSON.parse(resp)["alipay_trade_precreate_response"]
+        if body["code"] == "10000"
+          order.update!(code_url: body["qr_code"])
+          redirect_to order_path(order)
+        else
+          Rails.logger.error "[Alipay] order #{order.order_no} precreate failed: code=#{body["code"]} #{body["sub_msg"]}"
+          redirect_to new_order_path, alert: "订单创建失败：#{body["sub_msg"] || body["msg"]}"
+        end
+      end
+    rescue => e
+      Rails.logger.error "[Alipay] order #{order&.order_no || "?"} API error: #{e.class} #{e.message}"
+      redirect_to new_order_path, alert: "支付宝支付服务暂时不可用，请稍后重试"
+    end
+  end
+
+  def alipay_notify_url
+    base = Rails.env.production? ? "https://www.holdle.com" : "http://8.210.33.72:3001"
+    "#{base}/alipay/notify"
+  end
+
+  def alipay_return_url
+    base = Rails.env.production? ? "https://www.holdle.com" : "http://8.210.33.72:3001"
+    "#{base}/alipay/return"
+  end
+
+  def mobile_ua?
+    ua = request.user_agent.to_s.downcase
+    ua.match?(/android|iphone|ipad|mobile|micromessenger|alipayclient|ucbrowser/i)
   end
 
   def auto_auth_form(auth_url)

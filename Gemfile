@@ -51,6 +51,8 @@ gem 'omniauth-google-oauth2'
 
 # 微信支付
 gem 'wx_pay'
+# 支付宝支付（订单码扫码 + 手机网站支付）
+gem 'alipay', '~> 0.16.0'
 # wx_pay 依赖 rexml 解析 XML（Rails 7.1+ 不再默认包含）
 gem 'rexml'
 

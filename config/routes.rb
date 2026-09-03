@@ -73,6 +73,12 @@ Rails.application.routes.draw do
     post "pay_callbacks", to: "pay_callbacks#create"
   end
 
+  # 支付宝支付回调（订单码扫码 + 手机网站支付）
+  namespace :alipay do
+    post "notify", to: "payments#notify"
+    get "return", to: "payments#return_url", as: :return
+  end
+
   # T7 计费后台：MCP 服务三步扣次接口（内部 token 鉴权，见 03_T7计费后台设计_v0.2.md）
   namespace :api do
     namespace :v1 do

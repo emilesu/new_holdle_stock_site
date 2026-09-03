@@ -42,7 +42,7 @@
       <div>
         <label class="text-hl-12 text-muted block mb-1">支付方式</label>
         <%= select_tag :payment_method,
-              options_for_select([["全部方式", ""], ["JSAPI（微信内）", "wechat_jsapi"], ["Native（扫码）", "wechat_native"]], params[:payment_method]),
+              options_for_select([["全部方式", ""], ["微信·扫码", "wechat_native"], ["微信·JSAPI", "wechat_jsapi"], ["支付宝·扫码", "alipay_native"], ["支付宝·手机", "alipay_wap"]], params[:payment_method]),
               class: "w-full border border-line rounded px-3 py-2 text-hl-13 bg-white focus:outline-none focus:ring-1 focus:ring-profit" %>
       </div>
       <div>
@@ -96,7 +96,15 @@
               <%= order.paid? ? "已支付" : "待支付" %>
             </span>
           </td>
-          <td class="text-hl-12"><%= order.payment_method == "wechat_jsapi" ? "JSAPI" : "Native" %></td>
+          <td class="text-hl-12">
+            <% case order.payment_method %>
+            <% when "wechat_native" then %>微信·扫码
+            <% when "wechat_jsapi" then %>微信·JSAPI
+            <% when "alipay_native" then %>支付宝·扫码
+            <% when "alipay_wap" then %>支付宝·手机
+            <% else %><%= order.payment_method %>
+            <% end %>
+          </td>
           <td class="text-hl-12"><%= order.created_at ? l(order.created_at, format: :short) : "-" %></td>
           <td class="text-hl-12"><%= order.paid_at ? l(order.paid_at, format: :short) : "-" %></td>
           <td class="text-right">
