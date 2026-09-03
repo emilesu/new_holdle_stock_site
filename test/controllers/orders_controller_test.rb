@@ -7,15 +7,13 @@ class OrdersControllerTest < ActionDispatch::IntegrationTest
     sign_in users(:one)
     Plan.create!(plan_code: "starter", name: "尝鲜包", price_cents: 500, quota: 20)
     Plan.create!(plan_code: "member_permanent", name: "永久会员", price_cents: 46_800, quota: nil, is_member_upgrade: true)
-    @original_alipay_client = OrdersController.const_get(:ALIPAY_CLIENT) if OrdersController.const_defined?(:ALIPAY_CLIENT, false)
   end
 
-  # 防止 const_set/remove_const 污染同 worker 进程后续测试：每个用例后恢复原常量
+  # 应用初始化定义的 ALIPAY_CLIENT 是顶层常量（Object::ALIPAY_CLIENT）。个别用例会把
+  # const_set 到 OrdersController 命名空间以遮蔽它。teardown 必须清除该遮蔽常量，让后续
+  # 测试回落回顶层真实值，防止污染同 worker 进程。顶层常量本身从不被测试改动，无需恢复。
   teardown do
-    if @original_alipay_client
-      OrdersController.send(:remove_const, :ALIPAY_CLIENT) if OrdersController.const_defined?(:ALIPAY_CLIENT, false)
-      OrdersController.const_set(:ALIPAY_CLIENT, @original_alipay_client)
-    end
+    OrdersController.send(:remove_const, :ALIPAY_CLIENT) if OrdersController.const_defined?(:ALIPAY_CLIENT, false)
   end
 
   test "合法 plan 渲染下单页" do
@@ -176,6 +174,32 @@ class OrdersControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to order_path(order)
     assert_equal "alipay_native", order.payment_method
     assert_equal "https://qr.alipay.com/test", order.code_url
+  end
+
+  test "支付宝 precreate 业务失败且 sub_msg 含非法 UTF-8 时，安全重定向不抛 JSON::GeneratorError（回归）" do
+    ENV["ALIPAY_APP_ID"] = "test-alipay-app"
+    # 模拟支付宝返回体：msg 值是「部分参数校验失败」的 GBK 字节，被（正确地）声明为 UTF-8 → 产生非法 UTF-8 字节
+    gbk_msg = "部分参数校验失败".encode("GBK").force_encoding("UTF-8")
+    json_body = "{\"alipay_trade_precreate_response\":{\"code\":\"40004\",\"msg\":\"Business Failed\",\"sub_msg\":\"#{gbk_msg}\"}}"
+    stub_client = Class.new do
+      define_method(:execute) do |**|
+        json_body
+      end
+    end.new
+    OrdersController.send(:remove_const, :ALIPAY_CLIENT) if OrdersController.const_defined?(:ALIPAY_CLIENT, false)
+    OrdersController.const_set(:ALIPAY_CLIENT, stub_client)
+
+    sign_in users(:one)
+    post orders_path, params: {
+      plan: "starter",
+      payment_method: "alipay",
+      authenticity_token: "x"
+    }, headers: { "User-Agent" => "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120" }
+
+    # 关键断言：不抛 JSON::GeneratorError，返回 302 且 flash 安全写入
+    assert_response :redirect
+    assert_redirected_to new_order_path(plan: "starter")
+    assert flash[:alert].start_with?("订单创建失败") # flash 已成功序列化，无崩溃
   end
 
   test "支付宝未配置（ALIPAY_CLIENT 为 nil）时提交，重定向回带 plan 的下单页而非回退 468（回归）" do

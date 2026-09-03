@@ -197,7 +197,7 @@ class OrdersController < ApplicationController
           redirect_to order_path(order)
         else
           Rails.logger.error "[Alipay] order #{order.order_no} precreate failed: code=#{body["code"]} #{body["sub_msg"]}"
-          redirect_to new_order_path(plan: plan.plan_code), alert: "订单创建失败：#{body["sub_msg"] || body["msg"]}"
+          redirect_to new_order_path(plan: plan.plan_code), alert: "订单创建失败：#{alipay_safe_message(body["sub_msg"] || body["msg"])}"
         end
       end
     rescue => e
@@ -219,6 +219,12 @@ class OrdersController < ApplicationController
   def mobile_ua?
     ua = request.user_agent.to_s.downcase
     ua.match?(/android|iphone|ipad|mobile|micromessenger|alipayclient|ucbrowser/i)
+  end
+
+  # 支付宝接口返回的 message 可能含非 UTF-8 字节（GBK 等）或换行，直接塞进 flash → session 序列化会抛
+  # JSON::GeneratorError。此方法强制转成合法 UTF-8 并清理，保证能安全写入 cookie。
+  def alipay_safe_message(raw)
+    raw.to_s.encode("UTF-8", invalid: :replace, undef: :replace, replace: "").gsub(/[\r\n]+/, " ").strip
   end
 
   def auto_auth_form(auth_url)
