@@ -1,6 +1,7 @@
 class OrdersController < ApplicationController
   before_action :authenticate_user!
   before_action :redirect_if_already_member, only: [:new, :create]
+  helper_method :wechat_in_app_browser?
 
   def new
     @plan = find_purchasable_plan(params[:plan])
@@ -214,6 +215,13 @@ class OrdersController < ApplicationController
   def mobile_ua?
     ua = request.user_agent.to_s.downcase
     ua.match?(/android|iphone|ipad|mobile|micromessenger|alipayclient|ucbrowser/i)
+  end
+
+  # 微信内置浏览器（MicroMessenger WebView）：腾讯会拦截支付宝 scheme 与收银台域名，
+  # 无法直接唤起支付宝，需引导用户在系统浏览器打开。排除 AlipayClient 以免支付宝回跳场景误判。
+  def wechat_in_app_browser?
+    ua = request.user_agent.to_s.downcase
+    ua.include?("micromessenger") && !ua.include?("alipayclient")
   end
 
   def auto_auth_form(auth_url)

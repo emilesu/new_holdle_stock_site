@@ -78,6 +78,9 @@
               <span class="text-hl-14 font-medium text-ink">支付宝</span>
               <span class="text-hl-12 text-muted-4 ml-auto">支付宝扫码 / 唤起支付宝 App</span>
             </label>
+            <% if wechat_in_app_browser? %>
+              <p class="text-hl-12 text-muted-4 mt-2">提示：微信内无法直接唤起支付宝，请点击右上角「···」→「在浏览器打开」后选择支付宝支付</p>
+            <% end %>
           </div>
 
           <button type="submit" class="hl-btn hl-btn-primary block w-full text-center py-3">
