@@ -1,5 +1,5 @@
-<% set_page_title "选择 AI 投研助手套餐" %>
-<% set_page_description "HOLDLE AI 投研助手套餐：新用户免费 15 次体验，HOLDLE 会员 468 元进阶实战 + AI 无限次。" %>
+<% set_page_title "选择 AI 投研助手·加入HOLDLE会员" %>
+<% set_page_description "新用户免费 15 次体验，HOLDLE 会员 468 元进阶实战 + AI 无限次。" %>
 
 <% plans = Plan.active.order(:price_cents) %>
 
@@ -8,7 +8,7 @@
   <div class="container-hl py-16 text-center">
     <div class="label-en">CHOOSE YOUR PLAN</div>
     <h1 class="text-hl-22 md:text-hl-40 font-bold leading-tight text-ink mb-4">
-      选择适合你的 <span class="text-profit">AI 投研助手</span> 套餐
+      选择 <span class="text-profit">AI 投研助手</span> · 加入<span class="text-profit">HOLDLE会员</span>
     </h1>
     <p class="text-hl-14 text-muted max-w-2xl mx-auto leading-relaxed mb-8">
       新用户 <span class="text-ink font-medium">15 次免费体验</span>，先试再买；<br />
@@ -54,7 +54,7 @@
               <%= plan.price_cents.zero? ? "免费" : "¥#{format('%g', plan.price_yuan)}" %>
             </span>
             <% unless plan.price_cents.zero? %>
-              <span class="text-hl-12 text-muted-3">一次付费</span>
+              <span class="text-hl-12 text-muted-3">一次付费，长期使用</span>
             <% end %>
           </div>
 
@@ -67,24 +67,20 @@
               <li class="relative pl-3.5 list-dot-link">AI 助手<span class="text-ink font-medium">无限次</span>使用</li>
               <li class="relative pl-3.5 list-dot-link">AI 助手完整能力</li>
               <li class="relative pl-3.5 list-dot-link">AI 助手配套优化「股票回测专用数据脚本」(省token神器)</li>
-              <li class="relative pl-3.5 list-dot-link">进阶实战内容 全解锁</li>
-              <li class="relative pl-3.5 list-dot-link">金字塔排名全解锁</li>
-              <li class="relative pl-3.5 list-dot-link">HOLDLE技术交流群</li>
-              <li class="relative pl-3.5 list-dot-link">深度投研必备</li>
+              <li class="relative pl-3.5 list-dot-link">进阶实战课程 + 易错避坑解析（会员专享·干货必学）</li>
+              <li class="relative pl-3.5 list-dot-link">金字塔排名 全解锁（快速筛选值得参与的股票）</li>
+              <li class="relative pl-3.5 list-dot-link">加入HOLDLE技术交流群，与会员互动</li>
+              <li class="relative pl-3.5 list-dot-link">未来更多内容……</li>
             <% elsif plan.plan_code == "welcome" %>
-              <li class="relative pl-3.5 list-dot-link">无门槛体验</li>
-              <li class="relative pl-3.5 list-dot-link">用完再决定是否付费</li>
-            <% else %>
-              <li class="relative pl-3.5 list-dot-link">AI 助手方法论问答</li>
-              <li class="relative pl-3.5 list-dot-link">AI 助手股票分析</li>
-              <li class="relative pl-3.5 list-dot-link">次数用完可随时叠加</li>
+              <li class="relative pl-3.5 list-dot-link">先安装试一下，把方法尝个鲜。</li>
+              <li class="relative pl-3.5 list-dot-link">满意再升级。</li>
             <% end %>
           </ul>
 
           <% if plan.plan_code == "welcome" %>
             <%= link_to "免费领取", new_user_registration_path, class: "hl-btn hl-btn-line w-full text-center" %>
           <% else %>
-            <%= link_to "立即购买", new_order_path(plan: plan.plan_code), class: "hl-btn #{plan.is_member_upgrade ? 'hl-btn-primary' : 'hl-btn-line'} w-full text-center" %>
+            <%= link_to "解锁进阶实战 · AI投研助手无限次", new_order_path(plan: plan.plan_code), class: "hl-btn #{plan.is_member_upgrade ? 'hl-btn-primary' : 'hl-btn-line'} w-full text-center" %>
           <% end %>
         </div>
       <% end %>
