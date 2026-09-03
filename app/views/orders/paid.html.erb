@@ -16,7 +16,7 @@
           <h2 class="text-hl-22 font-bold text-ink mb-2">支付成功，已自动开通</h2>
           <p class="text-hl-13 text-muted">
             <% if plan&.is_member_upgrade %>
-              永久会员已生效，你的 Key 已转为无限次使用
+              <%= plan&.name.presence || "HOLDLE会员" %>已生效，你的 Key 已转为无限次使用
             <% else %>
               次数已到账，可立即开始提问
             <% end %>

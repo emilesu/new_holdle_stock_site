@@ -95,7 +95,7 @@
               <span class="inline-block border border-profit text-profit px-2 py-0.5 text-hl-11 font-medium">推荐</span>
             <% end %>
           </div>
-          <p class="text-hl-12 text-muted-3 mb-4"><%= plan.plan_code == "welcome" ? "注册即送，无门槛" : (is_member ? "一次付费" : "按次付费") %></p>
+          <p class="text-hl-12 text-muted-3 mb-4"><%= plan.plan_code == "welcome" ? "注册即送，无门槛" : "一次付费" %></p>
           <p class="text-hl-22 font-bold text-ink mb-1"><%= plan.price_cents.zero? ? "免费" : "¥#{format('%g', plan.price_yuan)}" %></p>
           <p class="text-hl-22 font-bold text-ink mb-4"><%= unlimited ? "无限次" : "#{plan.quota} 次" %></p>
           <ul class="text-hl-13 text-muted space-y-2 mb-5 flex-1">

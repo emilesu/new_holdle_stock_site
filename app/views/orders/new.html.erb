@@ -26,7 +26,7 @@
         <div class="space-y-3 mb-6">
           <div class="flex justify-between text-hl-13">
             <span class="text-muted">套餐类型</span>
-            <span class="text-ink font-medium"><%= @plan.unlimited? ? "永久会员（无限次）" : "#{@plan.quota} 次" %></span>
+            <span class="text-ink font-medium"><%= @plan.unlimited? ? "无限次" : "#{@plan.quota} 次" %></span>
           </div>
           <div class="flex justify-between text-hl-13">
             <span class="text-muted">支付方式</span>
