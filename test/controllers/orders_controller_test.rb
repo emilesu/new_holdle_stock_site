@@ -1,4 +1,5 @@
 require "test_helper"
+require "minitest/mock"
 
 class OrdersControllerTest < ActionDispatch::IntegrationTest
   include Devise::Test::IntegrationHelpers
@@ -141,19 +142,23 @@ class OrdersControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
-  test "支付宝下单（手机 UA）生成 wap 订单并直接跳转支付宝 H5" do
+  test "支付宝下单（手机 UA）生成 wap 订单并直接跳转支付宝 H5 收银台" do
     stub_alipay_client
     sign_in users(:one)
-    post orders_path, params: {
-      plan: "starter",
-      payment_method: "alipay",
-      authenticity_token: "x"
-    }, headers: { "User-Agent" => "Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) Safari" }
+    cashier = "https://mclient.alipay.com/h5pay/h5RouteAppSenior/index.html?cookieToken=xx"
+    AlipayWapResolver.stub(:resolve, cashier) do
+      post orders_path, params: {
+        plan: "starter",
+        payment_method: "alipay",
+        authenticity_token: "x"
+      }, headers: { "User-Agent" => "Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) Safari" }
+    end
 
     order = users(:one).orders.order(:created_at).last
     assert_response :redirect
-    assert_redirected_to "https://openapi.alipay.com/gateway.do?app_id=wap"
+    assert_redirected_to "https://mclient.alipay.com/h5pay/h5RouteAppSenior/index.html?cookieToken=xx"
     assert_equal "alipay_wap", order.payment_method
+    # 数据库仍保存原始网关 URL，收银台地址仅作为跳转临场使用
     assert_equal "https://openapi.alipay.com/gateway.do?app_id=wap", order.code_url
   end
 

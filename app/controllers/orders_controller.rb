@@ -179,9 +179,10 @@ class OrdersController < ApplicationController
           }, ascii_only: true)
         )
         order.update!(code_url: url)
-        # 手机网站支付：服务端直接 302 到支付宝 H5。避免经过需登录的订单页，
-        # 微信内「···在浏览器打开」才能直接落在公开的支付宝域名上唤起 App，而非跳 HOLDLE 登录页。
-        redirect_to url, allow_other_host: true
+        # 手机网站支付：网关 URL (openapi.alipay.com) 会被微信拦截，服务端先跟随重定向拿到
+        # mclient.alipay.com 收银台地址，再 302 过去，微信内也能正常唤起支付宝。
+        wap_url = AlipayWapResolver.resolve(url, user_agent: request.user_agent)
+        redirect_to wap_url, allow_other_host: true
       else
         # 电脑网站支付：桌面浏览器跳转支付宝收银台（可扫码或登录账号支付）
         url = ALIPAY_CLIENT.page_execute_url(
