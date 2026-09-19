@@ -190,6 +190,8 @@ class StocksController < ApplicationController
       stock_name: stock.name,
       indicator_key: indicator_key,
       indicator_name: info[:name],
+      # 供弹窗区分年报/季报口径（季报为累计值，需提示不可直接比较）
+      scope: scope,
       data_points: data_points,
       description: info[:description],
       formula: info[:formula],

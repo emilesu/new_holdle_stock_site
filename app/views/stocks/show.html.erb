@@ -150,7 +150,7 @@
           <div class="px-6 py-4 border-b border-line">
             <h2 class="text-hl-16 font-semibold text-ink"><%= table[:title] %> <span class="text-hl-12 text-muted-4 ml-2"><%= table[:en] %></span><% if table[:unit_note] %> <span class="text-hl-12 text-muted-4 ml-2"><%= table[:unit_note] %></span><% end %></h2>
           </div>
-          <div class="overflow-x-auto financial-scroll" data-financial-table-target="scroll" data-action="mouseover->financial-table#zoneEnter mouseleave->financial-table#zoneLeave">
+          <div class="overflow-x-auto" data-financial-table-target="scroll" data-action="mouseover->financial-table#zoneEnter mouseleave->financial-table#zoneLeave">
             <table class="w-full">
               <thead>
                 <tr>
@@ -162,8 +162,9 @@
                   <% else %>
                     <th class="px-6 py-3 text-center text-hl-13 text-muted-4">暂无数据</th>
                   <% end %>
+                  <%# 季报两列固定 120px：sticky 偏移 right-30 必须与列宽严格一致，宽度不足会导致两列重叠 %>
                   <% @quarter_columns.each_with_index do |column, index| %>
-                    <th class="w-hl-hero min-w-hl-hero px-4 py-3 text-right text-hl-11 font-semibold text-ink-soft whitespace-nowrap sticky z-20 <%= market_col[:head] %> <%= index.zero? ? 'shadow-[-6px_0_6px_-6px_rgba(0,0,0,0.12)]' : '' %> <%= index == last_quarter_index ? 'right-0' : 'right-hl-hero' %>"><%= column[:label] %></th>
+                    <th class="w-30 min-w-30 px-4 py-3 text-right text-hl-11 font-semibold text-ink-soft whitespace-nowrap sticky z-20 <%= market_col[:head] %> <%= index.zero? ? 'shadow-[-6px_0_6px_-6px_rgba(0,0,0,0.12)]' : '' %> <%= index == last_quarter_index ? 'right-0' : 'right-30' %>"><%= column[:label] %></th>
                   <% end %>
                 </tr>
               </thead>
@@ -179,7 +180,7 @@
                       <td class="px-6 py-3 text-center text-hl-13 text-muted-4">-</td>
                     <% end %>
                     <% @quarter_columns.each_with_index do |column, index| %>
-                      <td class="w-hl-hero min-w-hl-hero px-4 py-3 text-right text-hl-13 text-muted-2 sticky z-20 <%= market_col[:cell] %> <%= index.zero? ? 'shadow-[-6px_0_6px_-6px_rgba(0,0,0,0.12)]' : '' %> <%= index == last_quarter_index ? 'right-0' : 'right-hl-hero' %>" data-scope="quarter" data-hover-zone="quarter"><%= format_value(column[:data][indicator_key], indicator_key) %></td>
+                      <td class="w-30 min-w-30 px-4 py-3 text-right text-hl-13 text-muted-2 sticky z-20 <%= market_col[:cell] %> <%= index.zero? ? 'shadow-[-6px_0_6px_-6px_rgba(0,0,0,0.12)]' : '' %> <%= index == last_quarter_index ? 'right-0' : 'right-30' %>" data-scope="quarter" data-hover-zone="quarter"><%= format_value(column[:data][indicator_key], indicator_key) %></td>
                     <% end %>
                   </tr>
                 <% end %>
@@ -190,7 +191,7 @@
         <% end %>
 
         <% if @quarter_columns.any? %>
-          <p class="text-hl-11 text-muted-4 px-1">右侧两列为报告期累计口径同比（左：去年同期同一期次，右：最近一期定期报告）；周转率类指标为报告期累计值，未做年化。</p>
+          <p class="text-hl-11 text-muted-4 px-1">右侧两列为报告期累计口径同比（左：去年同期同一期次，右：最近一期季报，年报期次已在左侧列展示）；周转率类指标为报告期累计值，未做年化。</p>
         <% end %>
       </div>
 
@@ -571,6 +572,10 @@ document.addEventListener('turbo:load', function() {
     const points = data.data_points || [];
     // 后端直接给出 x 轴文案：年报为年份（2025），季报为期次（2026中报）
     const labels = points.map(p => p.label);
+
+    // 季报口径提示：同一折线混排 3/6/9 个月累计值，需明确告知不可直接比较
+    const scopeNote = document.getElementById('indicator-scope-note');
+    if (scopeNote) scopeNote.classList.toggle('hidden', data.scope !== 'quarter');
     
     const isCashFlowIndicator = ['net_income', 'operating_cash_flow', 'investing_cash_flow', 'financing_cash_flow', 'net_cash_change', 'cash_and_cash_equivalents'].includes(data.indicator_key);
     const isAssetTurnover = data.indicator_key === 'asset_turnover_ratio';
@@ -753,7 +758,9 @@ document.addEventListener('turbo:load', function() {
           <canvas id="indicator-chart"></canvas>
         </div>
       </div>
-      
+
+      <p id="indicator-scope-note" class="hidden text-hl-11 text-muted-4 mb-4 md:mb-6">季报为报告期累计口径（一季报 3 个月 / 中报 6 个月 / 三季报 9 个月），不同期次的数值不可直接比较。</p>
+
       <div id="content-container" class="overflow-hidden">
         <div class="mb-4 md:mb-6">
           <h4 class="font-semibold text-muted text-hl-13 mb-2 md:mb-3 truncate">指标定义</h4>

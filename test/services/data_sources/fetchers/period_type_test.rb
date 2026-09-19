@@ -115,6 +115,36 @@ module DataSources
         FinancialReport.where(stock_id: stock&.id).delete_all
         stock&.destroy!
       end
+
+      test "cleanup_stale_records: 期次返回不完整时跳过清理，不误删有效记录" do
+        stock = Stock.create!(
+          symbol: "PERIOD_PARTIAL", name: "Period Partial Stock", market: "CN",
+          exchange: "SH", sector: "消费", status: "active"
+        )
+        # 库里已有 2025 年报 + 2025 中报，均为有效数据
+        [ [ Date.new(2025, 12, 31), "annual" ], [ Date.new(2025, 6, 30), "h1" ] ].each do |date, period_type|
+          report = FinancialReport.create!(
+            stock: stock, report_date: date, market: "CN",
+            report_type: "CN_ANNUAL", currency: "CNY", period_type: period_type
+          )
+          FinancialIndicator.create!(
+            financial_report: report, stock: stock, report_date: date,
+            market: "CN", period_type: period_type, roe_avg: 10.0
+          )
+        end
+
+        # 本次只返回了更早的中报（模拟接口返回不完整）
+        removed = CnFetcher.new.send(
+          :cleanup_stale_records, stock, "CN", [ { report_date: Date.new(2025, 6, 30), period_type: "h1" } ]
+        )
+
+        assert_equal 0, removed
+        assert_equal 2, FinancialIndicator.where(stock_id: stock.id).count
+      ensure
+        FinancialIndicator.where(stock_id: stock&.id).delete_all
+        FinancialReport.where(stock_id: stock&.id).delete_all
+        stock&.destroy!
+      end
     end
   end
 end

@@ -160,6 +160,17 @@ module DataSources
       # 只比日期无法剔除「中报/季报被标成年报」的误标记录，会污染 get_financial_data_by_year 的年报取数
       def cleanup_stale_records(stock, market, periods)
         allowed = periods.map { |p| [ p[:period_type], p[:report_date] ] }.to_set
+
+        # 防护：本次返回的最新期次早于库里已有的最新期次，说明期次接口这次返回不完整
+        # （限流/截断/只取到部分分页），此时按 allowed 删除会把仍在保留期内的有效记录误删，
+        # 且要等下次抓取成功才能恢复，故直接跳过本次清理
+        latest_allowed = allowed.map(&:last).max
+        latest_existing = existing_period_pairs(stock, market).map(&:last).max
+        if latest_allowed.nil? || (latest_existing && latest_allowed < latest_existing)
+          Rails.logger.warn "[#{self.class}] #{stock.symbol} 期次返回不完整（最新 #{latest_allowed} < 现有 #{latest_existing}），跳过清理"
+          return 0
+        end
+
         removed = 0
 
         CHILD_MODELS.each do |model|
@@ -179,6 +190,13 @@ module DataSources
 
         Rails.logger.info "[#{self.class}] #{stock.symbol} 清理非保留期次记录 #{removed} 条" if removed > 0
         removed
+      end
+
+      # 该股票当前库里已有的 (period_type, report_date) 期次集合（清理前的完整性基线）
+      def existing_period_pairs(stock, market)
+        CHILD_MODELS.flat_map do |model|
+          model.where(stock_id: stock.id, market: market).distinct.pluck(:period_type, :report_date)
+        end.to_set
       end
 
       # 取出 (period_type, report_date) 不在保留期次内的记录 id

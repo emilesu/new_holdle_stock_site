@@ -2,17 +2,7 @@ module CacheableFinancialData
   extend ActiveSupport::Concern
 
   included do
-    def cached_financial_data
-      Rails.cache.fetch([self, :financial_data, updated_at.to_i], expires_in: 1.hour) do
-        data = {}
-        financial_years.each do |year|
-          data[year] = get_financial_data_by_year(year)
-        end
-        data
-      end
-    end
-
-    # 详情页财务列表：近 20 年年报 + 右侧同比两列（左=去年同期同一期次，右=最近一期定期报告）
+    # 详情页财务列表：近 20 年年报 + 右侧同比两列（左=去年同期同一期次，右=最近一期季报）
     # v2：结构由「年份 => 数据」升级为 { annual:, quarters: }，并纳入季报口径，升级版本号避免命中旧缓存
     def cached_detail_financials
       Rails.cache.fetch([self, :financial_detail, "v2", updated_at.to_i], expires_in: 1.hour) do

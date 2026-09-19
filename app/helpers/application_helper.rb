@@ -189,20 +189,14 @@ module ApplicationHelper
     end
   end
 
-  # 财务表右侧季报同比两列的市场主题底色：表头用 100 档（与徽章一致），单元格用 50 档（大面积浅底保证数字可读）
-  def market_column_head_bg_class(market)
+  # 财务表右侧季报同比两列的市场主题样式
+  # head：表头底色（100 档，与徽章一致）；cell：单元格底色（50 档，大面积浅底保证数字可读）；
+  # hover：该市场列 hover 加深时用的 CSS 变量类（配合 application.tailwind.css 的 .financial-row 分区高亮）
+  def market_financial_column_classes(market)
     case market
-    when "CN" then "bg-green-100"
-    when "HK" then "bg-amber-100"
-    else "bg-blue-100"
-    end
-  end
-
-  def market_column_bg_class(market)
-    case market
-    when "CN" then "bg-green-50 group-hover:bg-green-100"
-    when "HK" then "bg-amber-50 group-hover:bg-amber-100"
-    else "bg-blue-50 group-hover:bg-blue-100"
+    when "CN" then { head: "bg-green-100", cell: "bg-green-50", hover: "hl-quarter-hover-cn" }
+    when "HK" then { head: "bg-amber-100", cell: "bg-amber-50", hover: "hl-quarter-hover-hk" }
+    else { head: "bg-blue-100", cell: "bg-blue-50", hover: "hl-quarter-hover-us" }
     end
   end
 

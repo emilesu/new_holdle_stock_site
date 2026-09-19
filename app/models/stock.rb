@@ -3,8 +3,6 @@ class Stock < ApplicationRecord
 
   # 详情页年报列上限（方案：展示最近 20 年年报，不足则全显示）
   MAX_ANNUAL_YEARS = 20
-  # 季报趋势图/同比数据保留期数（近 16 期 ≈ 4 年，与抓取层保留策略一致）
-  MAX_QUARTERS_BACK = 16
   # 期次中文标签（annual/q1/h1/q3，累计口径）
   PERIOD_TYPE_LABELS = { "annual" => "年报", "q1" => "一季报", "h1" => "中报", "q3" => "三季报" }.freeze
 
@@ -259,7 +257,8 @@ class Stock < ApplicationRecord
   end
 
   # 近 N 期季报（非年报，累计口径），按报告期升序，用于季报趋势图
-  def recent_quarter_periods(limit = MAX_QUARTERS_BACK)
+  # 期数上限直接复用抓取层保留策略常量，避免两处各写一个 16 造成漂移
+  def recent_quarter_periods(limit = DataSources::Fetchers::BaseFetcher::MAX_QUARTERS_BACK)
     financial_indicators
       .where.not(period_type: "annual")
       .where.not(report_date: nil)
