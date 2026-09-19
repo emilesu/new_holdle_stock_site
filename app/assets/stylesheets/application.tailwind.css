@@ -739,6 +739,26 @@
   }
 }
 
+/* ============ 财务表行 hover 分区独立高亮 ============
+   鼠标在年报区只高亮年报区（指标列 + 年份列），在季报区只高亮季报区（最右两列），两侧互不联动。
+   区域由 financial_table_controller 写在行的 data-hover-zone-active 上，这里只按属性取色
+   （不用 :has(:hover)，其动态失效行为在各浏览器上不一致）。
+   必须放在 @layer 之外：Tailwind v4 层级顺序为 theme < base < components < utilities，
+   若写在 components 层，单元格上的 bg-* 工具类（utilities 层）会永久压过这里的 hover 底色。 */
+.financial-row > [data-hover-zone] {
+  transition: background-color 0.12s ease;
+}
+.financial-row[data-hover-zone-active="annual"] > [data-hover-zone="annual"] {
+  background-color: var(--color-bg-mute);
+}
+.financial-row[data-hover-zone-active="quarter"] > [data-hover-zone="quarter"] {
+  background-color: var(--hl-quarter-hover);
+}
+/* 季报列 hover 加深色，按市场主题取色；类名由 market_financial_column_classes 输出到表格卡片上 */
+.hl-quarter-hover-cn { --hl-quarter-hover: var(--color-green-100); }
+.hl-quarter-hover-hk { --hl-quarter-hover: var(--color-amber-100); }
+.hl-quarter-hover-us { --hl-quarter-hover: var(--color-blue-100); }
+
 /* ==================== 让 footer 始终在底部（极简 flex 布局） ==================== */
 @layer utilities {
   body {

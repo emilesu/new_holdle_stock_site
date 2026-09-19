@@ -142,16 +142,15 @@
             }
           ]
           last_quarter_index = @quarter_columns.size - 1
-          market_col_bg = market_column_bg_class(@stock.market)
-          market_col_head_bg = market_column_head_bg_class(@stock.market)
+          market_col = market_financial_column_classes(@stock.market)
         %>
 
         <% financial_tables.each do |table| %>
-        <div class="bg-white hl-card overflow-hidden" data-controller="financial-table">
+        <div class="bg-white hl-card overflow-hidden <%= market_col[:hover] %>" data-controller="financial-table">
           <div class="px-6 py-4 border-b border-line">
             <h2 class="text-hl-16 font-semibold text-ink"><%= table[:title] %> <span class="text-hl-12 text-muted-4 ml-2"><%= table[:en] %></span><% if table[:unit_note] %> <span class="text-hl-12 text-muted-4 ml-2"><%= table[:unit_note] %></span><% end %></h2>
           </div>
-          <div class="overflow-x-auto financial-scroll" data-financial-table-target="scroll">
+          <div class="overflow-x-auto financial-scroll" data-financial-table-target="scroll" data-action="mouseover->financial-table#zoneEnter mouseleave->financial-table#zoneLeave">
             <table class="w-full">
               <thead>
                 <tr>
@@ -164,23 +163,23 @@
                     <th class="px-6 py-3 text-center text-hl-13 text-muted-4">暂无数据</th>
                   <% end %>
                   <% @quarter_columns.each_with_index do |column, index| %>
-                    <th class="w-hl-hero min-w-hl-hero px-4 py-3 text-right text-hl-11 font-semibold text-ink-soft whitespace-nowrap sticky z-20 <%= market_col_head_bg %> <%= index.zero? ? 'shadow-[-6px_0_6px_-6px_rgba(0,0,0,0.12)]' : '' %> <%= index == last_quarter_index ? 'right-0' : 'right-hl-hero' %>"><%= column[:label] %></th>
+                    <th class="w-hl-hero min-w-hl-hero px-4 py-3 text-right text-hl-11 font-semibold text-ink-soft whitespace-nowrap sticky z-20 <%= market_col[:head] %> <%= index.zero? ? 'shadow-[-6px_0_6px_-6px_rgba(0,0,0,0.12)]' : '' %> <%= index == last_quarter_index ? 'right-0' : 'right-hl-hero' %>"><%= column[:label] %></th>
                   <% end %>
                 </tr>
               </thead>
               <tbody class="divide-y divide-line-soft">
                 <% table[:rows].each do |row_label, indicator_key| %>
-                  <tr class="group hover:bg-bg-mute cursor-pointer indicator-row transition-colors" data-indicator="<%= indicator_key %>">
-                    <td class="px-6 py-3 text-hl-13 text-muted font-medium whitespace-nowrap sticky left-0 z-20 bg-white group-hover:bg-bg-mute"><%= row_label %></td>
+                  <tr class="cursor-pointer indicator-row financial-row" data-indicator="<%= indicator_key %>">
+                    <td class="px-6 py-3 text-hl-13 text-muted font-medium whitespace-nowrap sticky left-0 z-20 bg-white" data-hover-zone="annual"><%= row_label %></td>
                     <% if @financial_years.any? %>
                       <% @financial_years.each do |year| %>
-                        <td class="w-hl-hero min-w-hl-hero px-4 py-3 text-right text-hl-13 text-muted-2" data-scope="annual"><%= format_value(@financial_data_by_year[year][indicator_key], indicator_key) %></td>
+                        <td class="w-hl-hero min-w-hl-hero px-4 py-3 text-right text-hl-13 text-muted-2" data-scope="annual" data-hover-zone="annual"><%= format_value(@financial_data_by_year[year][indicator_key], indicator_key) %></td>
                       <% end %>
                     <% else %>
                       <td class="px-6 py-3 text-center text-hl-13 text-muted-4">-</td>
                     <% end %>
                     <% @quarter_columns.each_with_index do |column, index| %>
-                      <td class="w-hl-hero min-w-hl-hero px-4 py-3 text-right text-hl-13 text-muted-2 sticky z-20 <%= market_col_bg %> <%= index.zero? ? 'shadow-[-6px_0_6px_-6px_rgba(0,0,0,0.12)]' : '' %> <%= index == last_quarter_index ? 'right-0' : 'right-hl-hero' %>" data-scope="quarter"><%= format_value(column[:data][indicator_key], indicator_key) %></td>
+                      <td class="w-hl-hero min-w-hl-hero px-4 py-3 text-right text-hl-13 text-muted-2 sticky z-20 <%= market_col[:cell] %> <%= index.zero? ? 'shadow-[-6px_0_6px_-6px_rgba(0,0,0,0.12)]' : '' %> <%= index == last_quarter_index ? 'right-0' : 'right-hl-hero' %>" data-scope="quarter" data-hover-zone="quarter"><%= format_value(column[:data][indicator_key], indicator_key) %></td>
                     <% end %>
                   </tr>
                 <% end %>
