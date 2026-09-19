@@ -189,6 +189,23 @@ module ApplicationHelper
     end
   end
 
+  # 财务表右侧季报同比两列的市场主题底色：表头用 100 档（与徽章一致），单元格用 50 档（大面积浅底保证数字可读）
+  def market_column_head_bg_class(market)
+    case market
+    when "CN" then "bg-green-100"
+    when "HK" then "bg-amber-100"
+    else "bg-blue-100"
+    end
+  end
+
+  def market_column_bg_class(market)
+    case market
+    when "CN" then "bg-green-50 group-hover:bg-green-100"
+    when "HK" then "bg-amber-50 group-hover:bg-amber-100"
+    else "bg-blue-50 group-hover:bg-blue-100"
+    end
+  end
+
   # ── 设备检测 ─────────────────────────────────────
 
   def mobile_device?

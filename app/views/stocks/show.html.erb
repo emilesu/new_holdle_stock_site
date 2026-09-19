@@ -142,11 +142,9 @@
             }
           ]
           last_quarter_index = @quarter_columns.size - 1
+          market_col_bg = market_column_bg_class(@stock.market)
+          market_col_head_bg = market_column_head_bg_class(@stock.market)
         %>
-
-        <% if @quarter_columns.any? %>
-          <p class="text-hl-11 text-muted-4 px-1">右侧两列为报告期累计口径同比（左：去年同期同一期次，右：最近一期定期报告）；周转率类指标为报告期累计值，未做年化。</p>
-        <% end %>
 
         <% financial_tables.each do |table| %>
         <div class="bg-white hl-card overflow-hidden" data-controller="financial-table">
@@ -166,7 +164,7 @@
                     <th class="px-6 py-3 text-center text-hl-13 text-muted-4">暂无数据</th>
                   <% end %>
                   <% @quarter_columns.each_with_index do |column, index| %>
-                    <th class="w-hl-hero min-w-hl-hero px-4 py-3 text-right text-hl-11 font-semibold text-ink-soft whitespace-nowrap bg-bg-soft border-l border-line sticky z-20 shadow-[-6px_0_6px_-6px_rgba(0,0,0,0.12)] <%= index == last_quarter_index ? 'right-0' : 'right-hl-hero' %>"><%= column[:label] %></th>
+                    <th class="w-hl-hero min-w-hl-hero px-4 py-3 text-right text-hl-11 font-semibold text-ink-soft whitespace-nowrap sticky z-20 <%= market_col_head_bg %> <%= index.zero? ? 'shadow-[-6px_0_6px_-6px_rgba(0,0,0,0.12)]' : '' %> <%= index == last_quarter_index ? 'right-0' : 'right-hl-hero' %>"><%= column[:label] %></th>
                   <% end %>
                 </tr>
               </thead>
@@ -182,7 +180,7 @@
                       <td class="px-6 py-3 text-center text-hl-13 text-muted-4">-</td>
                     <% end %>
                     <% @quarter_columns.each_with_index do |column, index| %>
-                      <td class="w-hl-hero min-w-hl-hero px-4 py-3 text-right text-hl-13 text-muted-2 border-l border-line sticky z-20 bg-white group-hover:bg-bg-mute shadow-[-6px_0_6px_-6px_rgba(0,0,0,0.12)] <%= index == last_quarter_index ? 'right-0' : 'right-hl-hero' %>" data-scope="quarter"><%= format_value(column[:data][indicator_key], indicator_key) %></td>
+                      <td class="w-hl-hero min-w-hl-hero px-4 py-3 text-right text-hl-13 text-muted-2 sticky z-20 <%= market_col_bg %> <%= index.zero? ? 'shadow-[-6px_0_6px_-6px_rgba(0,0,0,0.12)]' : '' %> <%= index == last_quarter_index ? 'right-0' : 'right-hl-hero' %>" data-scope="quarter"><%= format_value(column[:data][indicator_key], indicator_key) %></td>
                     <% end %>
                   </tr>
                 <% end %>
@@ -190,6 +188,10 @@
             </table>
           </div>
         </div>
+        <% end %>
+
+        <% if @quarter_columns.any? %>
+          <p class="text-hl-11 text-muted-4 px-1">右侧两列为报告期累计口径同比（左：去年同期同一期次，右：最近一期定期报告）；周转率类指标为报告期累计值，未做年化。</p>
         <% end %>
       </div>
 
