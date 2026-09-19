@@ -5,7 +5,7 @@ import { Controller } from "@hotwired/stimulus"
 // 用法：data-controller="financial-table"，滚动容器加 data-financial-table-target="scroll"
 // 与 data-action="mouseover->financial-table#zoneEnter mouseleave->financial-table#zoneLeave"；
 // 单元格加 data-hover-zone="annual" 或 "quarter"，行加 .financial-row。
-// 离开用 mouseleave（只在真正离开滚动容器时触发一次、不冒泡），比 mouseout 跨容器时可靠。
+// 注意：mouseleave 只在离开整个滚动容器时触发，跨行移动不会触发，所以清标记主要靠 zoneEnter。
 export default class extends Controller {
   static targets = ["scroll"]
 
@@ -15,21 +15,34 @@ export default class extends Controller {
     })
   }
 
-  // 鼠标进入某个区域时，把该区域记到整行上（CSS 据此只高亮该区域）
+  // 鼠标进入某个区域时，把该区域记到整行上（CSS 据此只高亮该区域），并清掉上一行的标记
   zoneEnter(event) {
-    const cell = event.target.closest("[data-hover-zone]")
     const row = event.target.closest(".financial-row")
-    if (!cell || !row) return
+    const cell = row && event.target.closest("[data-hover-zone]")
+
+    // 移到表头、空白处等非数据区域时，直接清空当前行标记
+    if (!row || !cell) {
+      this.clearActiveRow()
+      return
+    }
+
+    if (row !== this.activeRow) {
+      this.clearActiveRow()
+      this.activeRow = row
+    }
 
     row.dataset.hoverZoneActive = cell.dataset.hoverZone
   }
 
-  // 鼠标完全离开滚动容器时，清空容器内所有行的区域标记
-  zoneLeave(event) {
-    this.scrollTargets.forEach((container) => {
-      container.querySelectorAll(".financial-row").forEach((row) => {
-        delete row.dataset.hoverZoneActive
-      })
-    })
+  // 鼠标完全离开滚动容器时清空标记
+  zoneLeave() {
+    this.clearActiveRow()
+  }
+
+  clearActiveRow() {
+    if (!this.activeRow) return
+
+    delete this.activeRow.dataset.hoverZoneActive
+    this.activeRow = null
   }
 }
