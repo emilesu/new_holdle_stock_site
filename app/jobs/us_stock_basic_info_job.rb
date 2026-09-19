@@ -1,5 +1,6 @@
 class UsStockBasicInfoJob < ApplicationJob
-  queue_as :default
+  # 同 CrawlerJob：全量美股基础信息爬取耗时可达数小时，走爬虫专用队列
+  queue_as :crawlers
 
   def perform
     start_time = Time.current

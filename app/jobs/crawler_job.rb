@@ -1,5 +1,7 @@
 class CrawlerJob < ApplicationJob
-  queue_as :default
+  # 爬虫长任务（财务/列表爬取，单次可能跑数小时）独立队列，
+  # 由 config/queue.yml 中专用 worker 串行消费，避免占满 default 队列线程导致定时任务积压
+  queue_as :crawlers
 
   def perform(task_name:, service_name:, execution_id:, method_name: "call", args: [], kwargs: {},
               single_mode: false, single_limit: nil, single_market: nil)

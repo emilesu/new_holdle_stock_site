@@ -14,5 +14,28 @@ development:
 test:
   <<: *default
 
+# 生产：爬虫长任务与常规/定时任务分队列、分 worker
+# 背景：单个财务爬取任务可连续运行数小时，此前 default 队列仅 1 个线程被其占满，
+#       导致 ReleaseStalePrechecksJob（每 1 分钟）等定时任务在队列中积压停摆（2026-09-19）。
+# 注意：① 非通配的队列名按「实际入库名」精确匹配，必须带 active_job.queue_name_prefix
+#         （config/environments/production.rb: "stock_website_production"）；
+#       ② queues 必须写成 YAML 数组，Solid Queue 不解析逗号分隔字符串；
+#       ③ 新增队列时需同步补充到下面的列表，否则不会有 worker 消费。
 production:
-  <<: *default
+  dispatchers:
+    - polling_interval: 1
+      batch_size: 500
+  workers:
+    # 爬虫长任务专用：单线程串行消费，避免多市场爬取并发抢占 CPU
+    - queues:
+        - stock_website_production_crawlers
+      threads: 1
+      processes: 1
+      polling_interval: 1
+    # 常规任务 + 定时任务（Solid Queue 内部 command 类任务落在 solid_queue_recurring 队列）
+    - queues:
+        - stock_website_production_default
+        - stock_website_production_solid_queue_recurring
+      threads: 1
+      processes: 1
+      polling_interval: 1
