@@ -44,6 +44,10 @@ Rails.application.configure do
   # ActionMailer::Base.deliveries array.
   config.action_mailer.delivery_method = :test
 
+  # 后台任务只入队不执行：默认的 :async 适配器会在后台线程真跑任务（如 Stock after_commit 触发的
+  # 百度推送），该线程使用独立数据库连接，会污染事务性测试导致 InFailedSqlTransaction。
+  config.active_job.queue_adapter = :test
+
   # Print deprecation notices to the stderr.
   config.active_support.deprecation = :stderr
 

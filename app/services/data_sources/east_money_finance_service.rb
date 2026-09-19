@@ -62,6 +62,8 @@ module DataSources
               fail_count += 1
               puts "  ⚠️  [#{stock.symbol}] 部分报表爬取失败"
             end
+            # 财务数据真实变更 → touch 股票，使详情页缓存（cached_financial_data / cached_detail_financials）立即失效
+            touch_if_changed(stock, result)
           rescue => e
             fail_count += 1
             puts "  ❌ [#{stock.symbol}] 处理异常: #{e.message}"
@@ -103,6 +105,7 @@ module DataSources
         fetch_result = fetcher.fetch_all(stock)
         all_success = fetch_result.is_a?(Hash) ? fetch_result[:success] : fetch_result
         update_stock_status(stock) if all_success
+        touch_if_changed(stock, fetch_result)
 
         # 单只财务数据真实变更 → 推送百度（附加动作，失败不影响主流程）
         if fetch_result.is_a?(Hash) && fetch_result[:changed]
@@ -117,6 +120,14 @@ module DataSources
       end
 
       private
+
+      # 财务数据真实变更时 touch 股票，使详情页缓存立即失效（缓存 key 含 updated_at）
+      def touch_if_changed(stock, result)
+        return unless result.is_a?(Hash) && result[:changed]
+        stock.touch
+      rescue => e
+        Rails.logger.error "[EastMoneyFinanceService] #{stock.symbol} touch 失败: #{e.message}"
+      end
 
       # 收集本次真实变更的股票 URL，异步推送百度；失败仅记日志，绝不中断主流程
       def push_changed_to_baidu(symbols, _market)

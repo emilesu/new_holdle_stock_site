@@ -76,6 +76,17 @@ module DataSources
 
       REPORT_TYPE_CODE = "HK_ANNUAL".freeze
 
+      # 现金流量汇总表的 REPORT_TYPE 文本 → period_type（累计口径）
+      REPORT_TYPE_MAP = {
+        "年报" => "annual",
+        "三季报" => "q3",
+        "中报" => "h1",
+        "一季报" => "q1"
+      }.freeze
+
+      # 东财 DATE_TYPE_CODE → period_type（与 A 股口径一致）
+      DATE_TYPE_MAP = { "001" => "annual", "002" => "h1", "003" => "q1", "004" => "q3" }.freeze
+
       def fetch_all(stock)
         symbol = stock.symbol.sub(/\.\w+$/, "")  # 移除后缀：00700.HK → 00700
         market = stock.market
@@ -83,24 +94,28 @@ module DataSources
         puts "📊 港股财务数据: #{stock.symbol} | #{stock.name}"
         puts "#{'=' * 60}"
 
-        # Step 1: 获取年报日期列表
-        year_dates = fetch_annual_report_dates(symbol)
-        unless year_dates.any?
-          log_progress(stock, "年报日期", :failed, "未获取到年报日期")
+        # Step 1: 获取全部报告期次（年报近 20 年 + 季报近 16 期）
+        periods = fetch_report_periods(symbol)
+        unless periods.any?
+          log_progress(stock, "报告期次", :failed, "未获取到报告期次")
           return false
         end
-        puts "  📅 获取到 #{year_dates.size} 个年报日期"
+        annual_count = periods.count { |p| p[:period_type] == "annual" }
+        puts "  📅 获取到 #{periods.size} 个报告期次（其中年报 #{annual_count} 期）"
 
         results = []
-        results << fetch_and_save_income(stock, symbol, market, year_dates)
-        results << fetch_and_save_balance(stock, symbol, market, year_dates)
-        results << fetch_and_save_cashflow(stock, symbol, market, year_dates)
-        results << fetch_and_save_indicator(stock, symbol, market, year_dates)
+        results << fetch_and_save_income(stock, symbol, market, periods)
+        results << fetch_and_save_balance(stock, symbol, market, periods)
+        results << fetch_and_save_cashflow(stock, symbol, market, periods)
+        results << fetch_and_save_indicator(stock, symbol, market, periods)
 
         success_count = results.count { |r| r[:status] == :success }
         fail_count = results.count { |r| r[:status] == :failed }
 
         puts "\n  📊 [#{stock.symbol}] 统计: 成功 #{success_count} 表, 失败 #{fail_count} 表"
+
+        # 清理不在保留期次内的历史残留记录（历史抓取曾把中报当成年报入库）
+        cleanup_stale_records(stock, market, periods)
 
         # success: 是否有报表抓取失败；changed: 是否有报表数据新建/更新了记录
         { success: fail_count == 0, changed: success_count > 0 }
@@ -108,31 +123,24 @@ module DataSources
 
       private
 
-      # 获取港股年报日期列表
-      # 主数据源: RPT_CUSTOM_HKSK_APPFN_CASHFLOW_SUMMARY
-      # 备选数据源: RPT_HKF10_FN_INCOME_PC（用于腾讯系/阿里系等非标准财年股票）
-      def fetch_annual_report_dates(symbol)
-        dates = fetch_annual_dates_from_cashflow_summary(symbol)
-        return dates unless dates.empty?
+      # 获取全部报告期次（含季报），并按保留策略过滤
+      # 主数据源: RPT_CUSTOM_HKSK_APPFN_CASHFLOW_SUMMARY（REPORT_LIST 内含全部期次，无需分页）
+      # 备选数据源: RPT_HKF10_FN_INCOME_PC（需分页，按 DATE_TYPE_CODE 判期次）
+      # 返回 [{ report_date: Date, period_type: String }, ...]，按报告日期倒序
+      def fetch_report_periods(symbol)
+        entries = fetch_periods_from_cashflow_summary(symbol)
+        entries = fetch_periods_from_income_pc(symbol) if entries.empty?
+        return [] if entries.empty?
 
-        dates = fetch_annual_dates_from_income_pc(symbol)
-        return dates unless dates.empty?
-
-        # 终极方案：从利润表全量数据获取所有日期
-        items = fetch_statement(symbol, "RPT_HKF10_FN_INCOME_PC", [])
-        return [] unless items.any?
-
-        cutoff_date = MAX_YEARS_BACK.years.ago.to_date
-        items
-          .map { |item| item["REPORT_DATE"].to_s.split(" ").first }
-          .select { |d| d.present? && Date.parse(d) >= cutoff_date }
-          .uniq
-          .sort
-          .reverse
+        allowed = retention_period_set(entries)
+        entries.select { |e| allowed.include?([ e[:period_type], e[:report_date] ]) }
+               .uniq { |e| e[:report_date] }
+               .sort_by { |e| e[:report_date] }
+               .reverse
       end
 
-      # 从现金流量汇总表获取年报日期（主流港股）
-      def fetch_annual_dates_from_cashflow_summary(symbol)
+      # 从现金流量汇总表获取全部报告期次（主流港股，含非 12 月财年）
+      def fetch_periods_from_cashflow_summary(symbol)
         params = {
           reportName: "RPT_CUSTOM_HKSK_APPFN_CASHFLOW_SUMMARY",
           columns: "SECUCODE,SECURITY_CODE,SECURITY_NAME_ABBR,START_DATE,REPORT_DATE,FISCAL_YEAR,REPORT_TYPE",
@@ -144,48 +152,70 @@ module DataSources
         data = extract_data_list(response)
         return [] if data.empty?
 
-        cutoff_date = MAX_YEARS_BACK.years.ago.to_date
         report_list = data.first["REPORT_LIST"] || []
-        report_list
-          .select { |r| r["REPORT_TYPE"] == "年报" }
-          .map { |r| r["REPORT_DATE"].to_s.split(" ").first }
-          .select { |d| d.present? && Date.parse(d) >= cutoff_date }
-          .uniq
-          .sort
-          .reverse
+        report_list.filter_map do |r|
+          period_type = REPORT_TYPE_MAP[r["REPORT_TYPE"].to_s]
+          date_str = r["REPORT_DATE"].to_s.split(" ").first
+          next if period_type.nil? || date_str.empty?
+          { report_date: Date.parse(date_str), period_type: period_type }
+        rescue ArgumentError
+          nil
+        end
       rescue
         []
       end
 
-      # 从利润表获取年报日期（用于阿里等非标准财年股票）
-      def fetch_annual_dates_from_income_pc(symbol)
-        params = {
-          reportName: "RPT_HKF10_FN_INCOME_PC",
-          columns: "SECUCODE,REPORT_DATE,FISCAL_YEAR",
-          filter: %((SECUCODE="#{symbol}.HK")),
-          pageNumber: 1, pageSize: 500,
-          sortTypes: -1, sortColumns: "REPORT_DATE",
-          source: "F10", client: "PC"
-        }
+      # 备选：从利润表全量数据获取报告期次（分页拉取，按 DATE_TYPE_CODE 判期次）
+      def fetch_periods_from_income_pc(symbol)
+        entries = []
+        page = 1
+        loop do
+          params = {
+            reportName: "RPT_HKF10_FN_INCOME_PC",
+            columns: "SECUCODE,REPORT_DATE,DATE_TYPE_CODE,FISCAL_YEAR",
+            filter: %((SECUCODE="#{symbol}.HK")),
+            pageNumber: page, pageSize: 500,
+            sortTypes: -1, sortColumns: "REPORT_DATE",
+            source: "F10", client: "PC"
+          }
+          response = http_get(BASE_URL, params: params)
+          items = extract_data_list(response)
+          break if items.empty?
 
-        response = http_get(BASE_URL, params: params)
-        items = extract_data_list(response)
-        return [] unless items.any?
+          items.each do |item|
+            date_str = item["REPORT_DATE"].to_s.split(" ").first
+            next if date_str.empty?
+            begin
+              date = Date.parse(date_str)
+            rescue ArgumentError
+              next
+            end
+            period_type = DATE_TYPE_MAP[item["DATE_TYPE_CODE"].to_s] || period_type_for_date(date)
+            entries << { report_date: date, period_type: period_type }
+          end
 
-        cutoff_date = MAX_YEARS_BACK.years.ago.to_date
-        items
-          .map { |item| item["REPORT_DATE"].to_s.split(" ").first }
-          .select { |d| d.present? && Date.parse(d) >= cutoff_date }
-          .uniq
-          .sort
-          .reverse
+          total_pages = response.dig("result", "pages").to_i
+          break if total_pages <= page
+          page += 1
+        end
+        entries
       rescue
         []
+      end
+
+      # 期次日期字符串集合（用于报表请求过滤与保存判定）
+      def period_date_strings(periods)
+        periods.map { |p| p[:report_date].to_s }
+      end
+
+      # 报告日期字符串 → period_type
+      def period_type_map(periods)
+        periods.each_with_object({}) { |p, h| h[p[:report_date].to_s] = p[:period_type] }
       end
 
       # === 利润表 ===
-      def fetch_and_save_income(stock, symbol, market, year_dates)
-        items = fetch_statement(symbol, "RPT_HKF10_FN_INCOME_PC", year_dates)
+      def fetch_and_save_income(stock, symbol, market, periods)
+        items = fetch_statement(symbol, "RPT_HKF10_FN_INCOME_PC", period_date_strings(periods))
         unless items.any?
           log_progress(stock, "利润表", :failed, "API 无返回数据")
           return { status: :failed }
@@ -193,13 +223,17 @@ module DataSources
 
         # 按 REPORT_DATE 聚合科目
         grouped = group_items_by_date(items, INCOME_MAPPING.keys)
+        period_map = period_type_map(periods)
 
         saved_count = 0
         skipped_count = 0
         grouped.each do |date_str, field_values|
+          period_type = period_map[date_str]
+          next if period_type.nil?
           report_date = Date.parse(date_str)
           financial_report = find_or_create_financial_report(
-            stock, report_date: report_date, report_type: REPORT_TYPE_CODE, market: market
+            stock, report_date: report_date, report_type: REPORT_TYPE_CODE, market: market,
+            period_type: period_type
           )
 
           financial_data = {}
@@ -209,7 +243,8 @@ module DataSources
           end
 
           result = save_model_record(
-            stock, financial_report, IncomeStatement, report_date, market, financial_data
+            stock, financial_report, IncomeStatement, report_date, market, financial_data,
+            period_type: period_type
           )
           case result
           when :success then saved_count += 1
@@ -227,21 +262,25 @@ module DataSources
       end
 
       # === 资产负债表 ===
-      def fetch_and_save_balance(stock, symbol, market, year_dates)
-        items = fetch_statement(symbol, "RPT_HKF10_FN_BALANCE_PC", year_dates)
+      def fetch_and_save_balance(stock, symbol, market, periods)
+        items = fetch_statement(symbol, "RPT_HKF10_FN_BALANCE_PC", period_date_strings(periods))
         unless items.any?
           log_progress(stock, "资产负债表", :failed, "API 无返回数据")
           return { status: :failed }
         end
 
         grouped = group_items_by_date(items, BALANCE_MAPPING.keys)
+        period_map = period_type_map(periods)
 
         saved_count = 0
         skipped_count = 0
         grouped.each do |date_str, field_values|
+          period_type = period_map[date_str]
+          next if period_type.nil?
           report_date = Date.parse(date_str)
           financial_report = find_or_create_financial_report(
-            stock, report_date: report_date, report_type: REPORT_TYPE_CODE, market: market
+            stock, report_date: report_date, report_type: REPORT_TYPE_CODE, market: market,
+            period_type: period_type
           )
 
           financial_data = {}
@@ -258,7 +297,8 @@ module DataSources
           end
 
           result = save_model_record(
-            stock, financial_report, BalanceSheet, report_date, market, financial_data
+            stock, financial_report, BalanceSheet, report_date, market, financial_data,
+            period_type: period_type
           )
           case result
           when :success then saved_count += 1
@@ -276,21 +316,25 @@ module DataSources
       end
 
       # === 现金流量表 ===
-      def fetch_and_save_cashflow(stock, symbol, market, year_dates)
-        items = fetch_statement(symbol, "RPT_HKF10_FN_CASHFLOW_PC", year_dates)
+      def fetch_and_save_cashflow(stock, symbol, market, periods)
+        items = fetch_statement(symbol, "RPT_HKF10_FN_CASHFLOW_PC", period_date_strings(periods))
         unless items.any?
           log_progress(stock, "现金流量表", :failed, "API 无返回数据")
           return { status: :failed }
         end
 
         grouped = group_items_by_date(items, CASHFLOW_MAPPING.keys)
+        period_map = period_type_map(periods)
 
         saved_count = 0
         skipped_count = 0
         grouped.each do |date_str, field_values|
+          period_type = period_map[date_str]
+          next if period_type.nil?
           report_date = Date.parse(date_str)
           financial_report = find_or_create_financial_report(
-            stock, report_date: report_date, report_type: REPORT_TYPE_CODE, market: market
+            stock, report_date: report_date, report_type: REPORT_TYPE_CODE, market: market,
+            period_type: period_type
           )
 
           financial_data = {}
@@ -311,7 +355,8 @@ module DataSources
           end
 
           result = save_model_record(
-            stock, financial_report, CashFlow, report_date, market, financial_data
+            stock, financial_report, CashFlow, report_date, market, financial_data,
+            period_type: period_type
           )
           case result
           when :success then saved_count += 1
@@ -329,7 +374,7 @@ module DataSources
       end
 
       # === 财务指标 ===
-      def fetch_and_save_indicator(stock, symbol, market, year_dates)
+      def fetch_and_save_indicator(stock, symbol, market, periods)
         # API请求间隔，避免频率限制
         sleep 0.3
 
@@ -350,7 +395,7 @@ module DataSources
           return { status: :failed }
         end
 
-        cutoff_date = MAX_YEARS_BACK.years.ago.to_date
+        period_map = period_type_map(periods)
 
         saved_count = 0
         skipped_count = 0
@@ -359,12 +404,13 @@ module DataSources
           next unless report_date_str.present?
 
           report_date = Date.parse(report_date_str) rescue next
-          # 港股财年结束日不固定（腾讯12-31，阿里03-31），仅保留 year_dates 中的年报日期
-          next if report_date < cutoff_date
-          next unless year_dates.include?(report_date_str)
+          # 港股财年结束日不固定（腾讯12-31，阿里03-31），仅保留 periods 中的期次
+          period_type = period_map[report_date_str]
+          next if period_type.nil?
 
           financial_report = find_or_create_financial_report(
-            stock, report_date: report_date, report_type: REPORT_TYPE_CODE, market: market
+            stock, report_date: report_date, report_type: REPORT_TYPE_CODE, market: market,
+            period_type: period_type
           )
 
           financial_data = {
@@ -382,7 +428,8 @@ module DataSources
           }
 
           result = save_model_record(
-            stock, financial_report, FinancialIndicator, report_date, market, financial_data
+            stock, financial_report, FinancialIndicator, report_date, market, financial_data,
+            period_type: period_type
           )
           case result
           when :success then saved_count += 1
@@ -442,22 +489,35 @@ module DataSources
       # === 通用方法 ===
 
       # 调用东财 API 获取某张报表的原始数据
-      def fetch_statement(symbol, report_name, year_dates)
-        date_filter = year_dates.map { |d| %("#{d}") }.join(",")
-        filter_val = %[(SECUCODE="#{symbol}.HK") and (REPORT_DATE in (#{date_filter}))]
-        params = {
-          reportName: report_name,
-          columns: "SECUCODE,SECURITY_CODE,SECURITY_NAME_ABBR,REPORT_DATE,FISCAL_YEAR," \
-                   "STD_ITEM_CODE,STD_ITEM_NAME,AMOUNT",
-          filter: filter_val,
-          pageNumber: 1, pageSize: 5000,
-          sortTypes: -1,
-          sortColumns: "REPORT_DATE",
-          source: "F10", client: "PC"
-        }
+      # 注意：东财接口不支持 `REPORT_DATE in (...)` 语法（会被静默忽略），只能用单值等值或范围过滤
+      def fetch_statement(symbol, report_name, date_strings)
+        return [] if date_strings.empty?
 
-        response = http_get(BASE_URL, params: params)
-        extract_data_list(response)
+        min_date = date_strings.min
+        items = []
+        page = 1
+        loop do
+          params = {
+            reportName: report_name,
+            columns: "SECUCODE,SECURITY_CODE,SECURITY_NAME_ABBR,REPORT_DATE,FISCAL_YEAR," \
+                     "STD_ITEM_CODE,STD_ITEM_NAME,AMOUNT",
+            filter: %((SECUCODE="#{symbol}.HK")(REPORT_DATE>='#{min_date}')),
+            pageNumber: page, pageSize: 5000,
+            sortTypes: -1,
+            sortColumns: "REPORT_DATE",
+            source: "F10", client: "PC"
+          }
+
+          response = http_get(BASE_URL, params: params)
+          batch = extract_data_list(response)
+          break if batch.empty?
+
+          items.concat(batch)
+          total_pages = response.dig("result", "pages").to_i
+          break if total_pages <= page
+          page += 1
+        end
+        items
       end
 
       # 按 REPORT_DATE 和科目名聚合数据

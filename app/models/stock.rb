@@ -1,6 +1,13 @@
 class Stock < ApplicationRecord
   include CacheableFinancialData
 
+  # 详情页年报列上限（方案：展示最近 20 年年报，不足则全显示）
+  MAX_ANNUAL_YEARS = 20
+  # 季报趋势图/同比数据保留期数（近 16 期 ≈ 4 年，与抓取层保留策略一致）
+  MAX_QUARTERS_BACK = 16
+  # 期次中文标签（annual/q1/h1/q3，累计口径）
+  PERIOD_TYPE_LABELS = { "annual" => "年报", "q1" => "一季报", "h1" => "中报", "q3" => "三季报" }.freeze
+
   has_many :user_favorites, dependent: :destroy
   has_many :favorite_users, through: :user_favorites, source: :user
   has_many :financial_reports
@@ -34,9 +41,12 @@ class Stock < ApplicationRecord
     reports = FinancialReport.where(stock_id: ids).includes(:financial_indicators, :income_statements).group_by(&:stock_id)
     stocks.each do |s|
       rs = reports[s.id] || []
-      # 无财务数据的股票用 [nil] 哨兵，确保 financial_years 走内存分支而非触发查询
-      s.preloaded_income_statements = rs.empty? ? [nil] : rs.flat_map { |r| r.income_statements.to_a }
-      s.preloaded_financial_indicators = rs.empty? ? [nil] : rs.flat_map { |r| r.financial_indicators.to_a }
+      # 仅装载年报口径：金字塔评分/警示标签只认年报，季报会污染近5年取数与评分
+      incomes = rs.flat_map { |r| r.income_statements.to_a }.select { |i| i.period_type == "annual" }
+      indicators = rs.flat_map { |r| r.financial_indicators.to_a }.select { |i| i.period_type == "annual" }
+      # 无年报数据的股票用 [nil] 哨兵，确保 financial_years 走内存分支而非触发查询
+      s.preloaded_income_statements = incomes.empty? ? [nil] : incomes
+      s.preloaded_financial_indicators = indicators.empty? ? [nil] : indicators
     end
   end
 
@@ -170,60 +180,114 @@ class Stock < ApplicationRecord
     balance_sheet.property_plant_equipment.to_f / income_statement.total_revenue.to_f
   end
 
+  # 年报口径财务数据（仅 annual）：金字塔评分、雷达图、近五年ROE 均依赖本方法
   def get_financial_data_by_year(year)
     year_str = year.to_s
-    
+
     income_collection = preloaded_income_statements.presence || income_statements
     balance_collection = preloaded_balance_sheets.presence || balance_sheets
     cash_collection = preloaded_cash_flows.presence || cash_flows
     indicator_collection = preloaded_financial_indicators.presence || financial_indicators
-    
-    income = income_collection.detect { |i| i.report_date&.strftime('%Y') == year_str }
-    balance = balance_collection.detect { |b| b.report_date&.strftime('%Y') == year_str }
-    cash = cash_collection.detect { |c| c.report_date&.strftime('%Y') == year_str }
-    indicator = indicator_collection.detect { |i| i.report_date&.strftime('%Y') == year_str }
 
-    {
+    income = detect_annual_record(income_collection, year_str)
+    balance = detect_annual_record(balance_collection, year_str)
+    cash = detect_annual_record(cash_collection, year_str)
+    indicator = detect_annual_record(indicator_collection, year_str)
+
+    build_financial_data(
       year: year,
+      label: year_str,
+      period_type: "annual",
+      report_date: income&.report_date || indicator&.report_date,
       income_statement: income,
       balance_sheet: balance,
       cash_flow: cash,
-      indicator: indicator,
-      gross_margin: calculate_gross_margin(income, indicator),
-      net_profit_margin: calculate_net_profit_margin(income, indicator),
-      net_income: calculate_net_income(income),
-      asset_liab_ratio: calculate_asset_liab_ratio(balance, indicator),
-      asset_turnover_ratio: calculate_asset_turnover_ratio(income, balance),
-      # 财务结构
-      cash_to_assets_ratio: calculate_cash_to_assets_ratio(balance),
-      # 经营能力
-      receivable_turnover: calculate_receivable_turnover(income, balance),
-      avg_collection_days: calculate_avg_collection_days(income, balance),
-      fixed_asset_turnover: calculate_fixed_asset_turnover(income, balance),
-      # 现金流量表
-      cash_and_cash_equivalents: balance&.cash_and_cash_equivalents,
-      operating_cash_flow: cash&.operating_cash_flow,
-      investing_cash_flow: cash&.investing_cash_flow,
-      financing_cash_flow: cash&.financing_cash_flow,
-      net_cash_change: cash&.net_cash_change,
-      roe: indicator&.roe_avg || calculate_roe(income, balance),
-      roa: calculate_roa(income, balance),
-      eps: indicator&.basic_eps,
-      cash_flow_ps: indicator&.ncf_from_oa_ps,
-      operating_margin: indicator&.operating_margin
-    }
+      indicator: indicator
+    )
+  end
+
+  # 指定期次（季报/年报）的财务数据，用于详情页右侧同比两列
+  def get_financial_data_by_period(period_type, report_date)
+    return nil if period_type.blank? || report_date.blank?
+
+    date = report_date.to_date
+    income = income_statements.where(period_type: period_type, report_date: date).first
+    balance = balance_sheets.where(period_type: period_type, report_date: date).first
+    cash = cash_flows.where(period_type: period_type, report_date: date).first
+    indicator = financial_indicators.where(period_type: period_type, report_date: date).first
+
+    build_financial_data(
+      year: nil,
+      label: period_label(period_type, date),
+      period_type: period_type,
+      report_date: date,
+      income_statement: income,
+      balance_sheet: balance,
+      cash_flow: cash,
+      indicator: indicator
+    )
+  end
+
+  # 最近一期季报（非年报，以财务指标表为主表，避免展示整列空值）
+  def latest_quarter_period
+    financial_indicators
+      .where.not(period_type: "annual")
+      .where.not(report_date: nil)
+      .order(report_date: :desc, id: :desc)
+      .first
+  end
+
+  # 去年同期同一期次：距 report_date - 1.year 最近的一条同 period_type 记录（容差 120 天，兼容非 12 月财年）
+  def prior_year_same_period(period)
+    return nil unless period&.report_date
+
+    target = period.report_date - 1.year
+    candidates = financial_indicators
+      .where(period_type: period.period_type)
+      .where(report_date: (target - 120.days)..(target + 120.days))
+      .to_a
+    candidates.min_by { |record| (record.report_date - target).abs }
+  end
+
+  # 详情页右侧同比两列：左=去年同期同一期次，右=最近一期季报
+  # 无季报数据（如仅披露年报，或数据尚未重爬）时返回空数组，视图不出这两列
+  def period_comparison_periods
+    latest = latest_quarter_period
+    return [] unless latest
+
+    [ prior_year_same_period(latest), latest ].compact
+  end
+
+  # 近 N 期季报（非年报，累计口径），按报告期升序，用于季报趋势图
+  def recent_quarter_periods(limit = MAX_QUARTERS_BACK)
+    financial_indicators
+      .where.not(period_type: "annual")
+      .where.not(report_date: nil)
+      .order(report_date: :desc)
+      .limit(limit)
+      .to_a
+      .sort_by(&:report_date)
+  end
+
+  # 期次中文标签，如 2026中报 / 2025年报
+  def period_label(period_type, report_date)
+    return nil if report_date.blank?
+
+    "#{report_date.year}#{PERIOD_TYPE_LABELS[period_type] || period_type}"
   end
 
   def financial_years
     # 只从 financial_indicators 表获取年份（四张表中数据最核心的表）
     # 避免其他表有数据但指标表缺失时，页面显示全是空值的列
-    dates = if preloaded_income_statements.present?
+    # 仅取年报口径（annual），季报由右侧同比两列单独展示
+    if preloaded_income_statements.present?
       # 无财务数据股票 preload 时写入 [nil] 哨兵，需 compact 容错，避免对 nil 调用 report_date
-      preloaded_financial_indicators&.compact&.map(&:report_date) || []
+      annual = preloaded_financial_indicators&.compact&.select { |i| i.period_type == "annual" }
+      dates = annual&.map(&:report_date) || []
     else
-      financial_indicators.pluck(:report_date)
+      dates = financial_indicators.where(period_type: "annual").pluck(:report_date)
     end
-    dates.compact.map { |d| d.strftime('%Y') }.uniq.sort.reverse.first(8).sort
+    dates.compact.map { |d| d.strftime('%Y') }.uniq.sort.reverse.first(MAX_ANNUAL_YEARS).sort
   end
 
   def get_radar_data
@@ -266,6 +330,52 @@ class Stock < ApplicationRecord
   end
 
   private
+
+  # 在（可能已预加载的）集合中取指定年份的年报记录，兼容 [nil] 哨兵
+  def detect_annual_record(collection, year_str)
+    collection.detect { |record| record&.period_type == "annual" && record.report_date&.strftime('%Y') == year_str }
+  end
+
+  # 统一组装财务指标 hash：年报与季报共用，避免两处口径漂移
+  def build_financial_data(income_statement:, balance_sheet:, cash_flow:, indicator:,
+                           year: nil, label: nil, period_type: nil, report_date: nil)
+    income = income_statement
+    balance = balance_sheet
+    cash = cash_flow
+
+    {
+      year: year,
+      label: label,
+      period_type: period_type,
+      report_date: report_date,
+      income_statement: income,
+      balance_sheet: balance,
+      cash_flow: cash,
+      indicator: indicator,
+      gross_margin: calculate_gross_margin(income, indicator),
+      net_profit_margin: calculate_net_profit_margin(income, indicator),
+      net_income: calculate_net_income(income),
+      asset_liab_ratio: calculate_asset_liab_ratio(balance, indicator),
+      asset_turnover_ratio: calculate_asset_turnover_ratio(income, balance),
+      # 财务结构
+      cash_to_assets_ratio: calculate_cash_to_assets_ratio(balance),
+      # 经营能力
+      receivable_turnover: calculate_receivable_turnover(income, balance),
+      avg_collection_days: calculate_avg_collection_days(income, balance),
+      fixed_asset_turnover: calculate_fixed_asset_turnover(income, balance),
+      # 现金流量表
+      cash_and_cash_equivalents: balance&.cash_and_cash_equivalents,
+      operating_cash_flow: cash&.operating_cash_flow,
+      investing_cash_flow: cash&.investing_cash_flow,
+      financing_cash_flow: cash&.financing_cash_flow,
+      net_cash_change: cash&.net_cash_change,
+      roe: indicator&.roe_avg || calculate_roe(income, balance),
+      roa: calculate_roa(income, balance),
+      eps: indicator&.basic_eps,
+      cash_flow_ps: indicator&.ncf_from_oa_ps,
+      operating_margin: indicator&.operating_margin
+    }
+  end
 
   # 通知百度抓取新收录的股票详情页（异步、静默失败）
   def push_to_baidu_on_create

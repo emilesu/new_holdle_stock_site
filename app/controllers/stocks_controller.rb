@@ -8,6 +8,9 @@ class StocksController < ApplicationController
   
   before_action :set_stock, only: [:show, :indicator_detail]
 
+  # 财务指标格式化统一走 format_value，视图单元格与弹窗接口口径一致
+  helper_method :format_value
+
   def autocomplete
     query = params[:q].to_s.squish
     
@@ -39,8 +42,12 @@ class StocksController < ApplicationController
   end
 
   def show
-    @financial_data_by_year = @stock.cached_financial_data
+    @detail_financials = @stock.cached_detail_financials
+    # 年报列（最多 20 年，可横向滚动）
+    @financial_data_by_year = @detail_financials[:annual]
     @financial_years = @financial_data_by_year.keys.sort
+    # 右侧同比两列：[去年同期同一期次, 最近一期定期报告]
+    @quarter_columns = @detail_financials[:quarters]
 
     # 会员/管理员才享有金字塔分值排序；访客与非会员保持近五年ROE排序（原有体验）
     @is_member = user_signed_in? && current_user.is_member?
@@ -115,12 +122,12 @@ class StocksController < ApplicationController
 
     # 金字塔警示标签（数据<5年 / 亏损年份 / 次新股），与金字塔列表口径一致
     @pyramid_tags = @stock.pyramid_tags
-
-    preformat_financial_data
   end
 
   def indicator_detail
     indicator_key = params[:indicator_key].presence
+    # annual：年报趋势（最多 20 年）；quarter：季报趋势（近 16 期）
+    scope = params[:scope].presence_in(%w[annual quarter]) || "annual"
 
     unless @stock
       render json: { success: false, error: "股票不存在" }, status: :not_found
@@ -138,10 +145,10 @@ class StocksController < ApplicationController
     end
     
     data = Rails.cache.fetch(
-      [@stock, :indicator_detail, indicator_key, @stock.updated_at.to_i],
+      [@stock, :indicator_detail, indicator_key, scope, @stock.updated_at.to_i],
       expires_in: 6.hours
     ) do
-      fetch_indicator_detail(@stock, indicator_key)
+      fetch_indicator_detail(@stock, indicator_key, scope)
     end
     
     render json: { success: true, data: data }
@@ -164,16 +171,16 @@ class StocksController < ApplicationController
     valid_indicators.include?(key.to_sym)
   end
 
-  def fetch_indicator_detail(stock, indicator_key)
-    years = stock.financial_years.last(8)
-    data_points = years.map do |year|
-      data = stock.get_financial_data_by_year(year)
-      value = data[indicator_key.to_sym]
-      {
-        year: year,
-        value: value,
-        formatted: format_value(value, indicator_key)
-      }
+  def fetch_indicator_detail(stock, indicator_key, scope)
+    data_points = if scope == "quarter"
+      stock.recent_quarter_periods.map do |period|
+        label = stock.period_label(period.period_type, period.report_date)
+        build_data_point(label, stock.get_financial_data_by_period(period.period_type, period.report_date), indicator_key)
+      end
+    else
+      stock.financial_years.map do |year|
+        build_data_point(year, stock.get_financial_data_by_year(year), indicator_key)
+      end
     end
 
     info = get_indicator_info(indicator_key)
@@ -188,6 +195,16 @@ class StocksController < ApplicationController
       formula: info[:formula],
       interpretation: info[:interpretation],
       unit: info[:unit]
+    }
+  end
+
+  # 趋势图单点：label 为 x 轴显示文案（年报 2025 / 季报 2026中报）
+  def build_data_point(label, data, indicator_key)
+    value = data&.[](indicator_key.to_sym)
+    {
+      label: label,
+      value: value,
+      formatted: format_value(value, indicator_key)
     }
   end
 
@@ -444,21 +461,6 @@ class StocksController < ApplicationController
         values: values,
         name: stock.name,
         display_name: stock.display_name_for_comparison
-      }
-    end
-  end
-
-  def preformat_financial_data
-    @formatted_financial_data = @financial_data_by_year.transform_values do |data|
-      {
-        roe: data[:roe].present? ? "%.2f%%" % data[:roe] : '-',
-        gross_margin: data[:gross_margin].present? ? "%.2f%%" % data[:gross_margin] : '-',
-        net_profit_margin: data[:net_profit_margin].present? ? "%.2f%%" % data[:net_profit_margin] : '-',
-        eps: data[:eps].present? ? "%.2f" % data[:eps] : '-',
-        cash_to_assets_ratio: data[:cash_to_assets_ratio].present? ? "%.2f%%" % data[:cash_to_assets_ratio] : '-',
-        asset_liab_ratio: data[:asset_liab_ratio].present? ? "%.2f%%" % data[:asset_liab_ratio] : '-',
-        asset_turnover_ratio: data[:asset_turnover_ratio].present? ? "%.2f" % data[:asset_turnover_ratio] : '-',
-        operating_margin: data[:operating_margin].present? ? "%.2f%%" % data[:operating_margin] : '-'
       }
     end
   end

@@ -83,6 +83,11 @@ module DataSources
 
       REPORT_TYPE_CODE = "US_ANNUAL".freeze
 
+      # 期次类型文本 → period_type（东财部分报表直接给中文标准期次）
+      # 资产负债表（RPT_USF10_FN_BALANCE）用「一季报/中报/三季报」而非「单季报/累计季报」，
+      # 此时 REPORT 中的 Qn 不可按月数解析（如 2026/Q1 实为 3 个月），须优先按文本判定
+      PERIOD_TYPE_BY_LABEL = { "一季报" => "q1", "中报" => "h1", "三季报" => "q3" }.freeze
+
       def fetch_all(stock)
         symbol = stock.symbol
         market = stock.market
@@ -99,27 +104,32 @@ module DataSources
         end
         puts "  SECUCODE: #{secucode}"
 
-        # Step 2: 获取年报日期列表
-        year_dates = fetch_annual_report_dates(secucode)
-        unless year_dates.any?
-          log_progress(stock, "年报日期", :failed, "未获取到年报日期")
+        # Step 2: 获取全部报告期次（年报近 20 年 + 季报近 16 期）
+        periods = fetch_report_periods(secucode)
+        unless periods.any?
+          log_progress(stock, "报告期次", :failed, "未获取到报告期次")
           return false
         end
-        puts "  获取到 #{year_dates.size} 个年报日期"
+        annual_count = periods.count { |p| p[:period_type] == "annual" }
+        puts "  获取到 #{periods.size} 个报告期次（其中年报 #{annual_count} 期）"
 
         results = []
         results << fetch_and_save_report(stock, secucode, market, "RPT_USF10_FN_INCOME",
-                                         IncomeStatement, INCOME_MAPPING, year_dates, "利润表")
+                                         IncomeStatement, INCOME_MAPPING, periods, "利润表")
         results << fetch_and_save_report(stock, secucode, market, "RPT_USF10_FN_BALANCE",
-                                         BalanceSheet, BALANCE_MAPPING, year_dates, "资产负债表")
+                                         BalanceSheet, BALANCE_MAPPING, periods, "资产负债表")
         results << fetch_and_save_report(stock, secucode, market, "RPT_USSK_FN_CASHFLOW",
-                                         CashFlow, CASHFLOW_MAPPING, year_dates, "现金流量表")
-        results << fetch_and_save_indicator(stock, secucode, market, year_dates)
+                                         CashFlow, CASHFLOW_MAPPING, periods, "现金流量表")
+        results << fetch_and_save_indicator(stock, secucode, market, periods)
 
         success_count = results.count { |r| r[:status] == :success }
         fail_count = results.count { |r| r[:status] == :failed }
 
         puts "  [#{stock.symbol}] 统计: 成功 #{success_count} 表, 失败 #{fail_count} 表"
+
+        # 清理不在保留期次内的历史残留记录（历史抓取未记录期次，中报/季报被标成年报）
+        cleanup_stale_records(stock, market, periods)
+
         # success: 是否有报表抓取失败；changed: 是否有报表数据新建/更新了记录
         { success: fail_count == 0, changed: success_count > 0 }
       end
@@ -152,13 +162,17 @@ module DataSources
         data.first&.dig("SECUCODE")
       end
 
-      # 获取美股年报日期
-      # 注意：美股公司财年结束日不一定是12月31日（如AAPL在9月，MSFT在6月）
-      # 因此不能用 keep_annual_report_date?（硬编码12月31日）
-      def fetch_annual_report_dates(secucode)
+      # 获取美股全部报告期次（年报近 20 年 + 季报近 16 期）
+      # 东财美股数据特点：
+      #   - REPORT_TYPE = 年报 / 累计季报 / 单季报
+      #   - REPORT = 期次标签（如 2025/FY、2026/Q9、2026/Q3）
+      #   - 同一报告日期会同时返回「单季报」与「累计季报」两个变体，本系统统一采用累计口径
+      #   - 财年结束日不固定（AAPL 9 月、MSFT 6 月），不能用 12-31 判定
+      # 返回 [{ report_date: Date, period_type: String }, ...]，按报告日期倒序
+      def fetch_report_periods(secucode)
         params = {
           reportName: "RPT_USF10_FN_INCOME",
-          columns: "REPORT_DATE,REPORT",
+          columns: "REPORT_DATE,REPORT,REPORT_TYPE",
           filter: %((SECUCODE="#{secucode}")),
           pageNumber: 1, pageSize: 5000,
           sortTypes: -1, sortColumns: "REPORT_DATE",
@@ -169,16 +183,43 @@ module DataSources
         data = extract_data_list(response)
         return [] if data.empty?
 
-        cutoff_date = MAX_YEARS_BACK.years.ago.to_date
+        entries = data.filter_map do |item|
+          date_str = item["REPORT_DATE"].to_s.split(" ").first
+          next if date_str.empty?
+          period_type = us_period_type(item["REPORT"], item["REPORT_TYPE"])
+          next if period_type.nil?
+          { report_date: Date.parse(date_str), period_type: period_type }
+        rescue ArgumentError
+          nil
+        end
 
-        # 只保留年报 (FY)，不限定12月31日
-        data
-          .select { |item| item["REPORT"]&.include?("FY") }
-          .map { |item| item["REPORT_DATE"].to_s.split(" ").first }
-          .select { |d| d.present? && Date.parse(d) >= cutoff_date }
-          .uniq
-          .sort
-          .reverse
+        allowed = retention_period_set(entries)
+        entries.select { |e| allowed.include?([ e[:period_type], e[:report_date] ]) }
+               .uniq { |e| e[:report_date] }
+               .sort_by { |e| e[:report_date] }
+               .reverse
+      end
+
+      # 美股期次判定
+      # period_label: 期次标签（2025/FY、2026/Q9、2026/Q3）
+      # type_label:   期次类型文本（年报 / 累计季报 / 单季报 / 一季报 / 中报 / 三季报）
+      # 说明：累计季报的 Qn 中 n 即累计月数；单季报的 Qn 中 n 为财季序号（×3 = 月数），
+      #       但只有 Q1（3 个月）本身属于累计口径，其余单季报变体一律排除
+      def us_period_type(period_label, type_label)
+        return nil if period_label.blank?
+        return "annual" if type_label == "年报" || period_label.include?("FY")
+        return PERIOD_TYPE_BY_LABEL[type_label] if PERIOD_TYPE_BY_LABEL.key?(type_label)
+
+        n = period_label.to_s.split("/").last.to_s.delete("Q").to_i
+        months = type_label == "单季报" ? n * 3 : n
+        return nil if type_label == "单季报" && months != 3
+
+        { 3 => "q1", 6 => "h1", 9 => "q3", 12 => "annual" }[months]
+      end
+
+      # 报告日期字符串 → period_type
+      def period_type_map(periods)
+        periods.each_with_object({}) { |p, h| h[p[:report_date].to_s] = p[:period_type] }
       end
 
       # 通用三大报表获取与保存
@@ -186,10 +227,10 @@ module DataSources
       # 通过 dedup 逻辑优先选择年报(FY)合并数据
       # 注意：东财API不支持REPORT_DATE IN (...)过滤，需在代码层面过滤
       def fetch_and_save_report(stock, secucode, market, report_name,
-                                model_class, field_mapping, year_dates, statement_name)
+                                model_class, field_mapping, periods, statement_name)
         params = {
           reportName: report_name,
-          columns: "SECUCODE,REPORT_DATE,REPORT,STD_ITEM_CODE,AMOUNT,ITEM_NAME",
+          columns: "SECUCODE,REPORT_DATE,REPORT,REPORT_TYPE,STD_ITEM_CODE,AMOUNT,ITEM_NAME",
           filter: %((SECUCODE="#{secucode}")),
           pageNumber: 1, pageSize: 5000,
           sortTypes: -1,
@@ -197,19 +238,34 @@ module DataSources
           source: "SECURITIES", client: "PC"
         }
 
-        response = http_get(BASE_URL, params: params)
-        items = extract_data_list(response)
+        # 分页拉取（老牌公司历史数据行数可能超过单页上限）
+        items = []
+        page = 1
+        loop do
+          params[:pageNumber] = page
+          response = http_get(BASE_URL, params: params)
+          batch = extract_data_list(response)
+          break if batch.empty?
+
+          items.concat(batch)
+          total_pages = response.dig("result", "pages").to_i
+          break if total_pages <= page
+          page += 1
+        end
 
         unless items.any?
           log_progress(stock, statement_name, :failed, "API 无返回数据")
           return { status: :failed }
         end
 
-        # 在代码层面过滤：只保留年报日期范围的数据
-        year_dates_set = year_dates.to_set
+        # 在代码层面过滤：仅保留保留期次内、且期次口径一致的记录
+        # （同一日期会返回「单季报」与「累计季报」两个变体，只取累计口径的那一条）
+        period_map = period_type_map(periods)
         items = items.select do |item|
           date_str = item["REPORT_DATE"].to_s.split(" ").first
-          date_str.present? && year_dates_set.include?(date_str)
+          period_type = period_map[date_str]
+          next false if period_type.nil?
+          us_period_type(item["REPORT"], item["REPORT_TYPE"]) == period_type
         end
 
         # 按(日期, ITEM_NAME)聚合，自动去重：
@@ -249,8 +305,10 @@ module DataSources
         skipped_count = 0
         grouped.each do |date_str, field_values|
           report_date = Date.parse(date_str)
+          period_type = period_map[date_str]
           financial_report = find_or_create_financial_report(
-            stock, report_date: report_date, report_type: REPORT_TYPE_CODE, market: market
+            stock, report_date: report_date, report_type: REPORT_TYPE_CODE, market: market,
+            period_type: period_type
           )
 
           financial_data = {}
@@ -267,7 +325,8 @@ module DataSources
           end
 
           result = save_model_record(
-            stock, financial_report, model_class, report_date, market, financial_data
+            stock, financial_report, model_class, report_date, market, financial_data,
+            period_type: period_type
           )
           case result
           when :success then saved_count += 1
@@ -285,15 +344,16 @@ module DataSources
       end
 
       # 美股财务指标
+      # 注意：API 的期次字段与其他报表相反——DATE_TYPE 为期次类型文本，REPORT_TYPE 为期次标签
       # 注意：API可能返回同一DATE多条记录（不同合并层面），
       # 通过按日期分组后取 BASIC_EPS 最大的记录（合并报表级别 > 分部级别）
-      def fetch_and_save_indicator(stock, secucode, market, year_dates)
+      def fetch_and_save_indicator(stock, secucode, market, periods)
         params = {
           reportName: "RPT_USF10_FN_GMAININDICATOR",
-          columns: "SECUCODE,REPORT_DATE,BASIC_EPS,DILUTED_EPS,ROE_AVG,ROA," \
+          columns: "SECUCODE,REPORT_DATE,DATE_TYPE,REPORT_TYPE,BASIC_EPS,DILUTED_EPS,ROE_AVG,ROA," \
                    "GROSS_PROFIT_RATIO,NET_PROFIT_RATIO,CURRENT_RATIO,SPEED_RATIO,DEBT_ASSET_RATIO",
           filter: %((SECUCODE="#{secucode}")),
-          pageNumber: 1, pageSize: 500,
+          pageNumber: 1, pageSize: 1000,
           sortTypes: -1, sortColumns: "REPORT_DATE",
           source: "SECURITIES", client: "PC"
         }
@@ -309,34 +369,22 @@ module DataSources
           return { status: :failed }
         end
 
-        cutoff_date = MAX_YEARS_BACK.years.ago.to_date
+        period_map = period_type_map(periods)
 
-        # 按日期分组，优先选择 REPORT 含"FY"的合并数据
+        # 按日期分组，仅保留保留期次内、且口径一致的记录
         grouped = {}
         items.each do |item|
           report_date_str = item["REPORT_DATE"].to_s.split(" ").first
           next unless report_date_str.present?
-          report_date = Date.parse(report_date_str) rescue next
-          next if report_date < cutoff_date
-          next if year_dates.any? && !year_dates.include?(report_date_str)
+          period_type = period_map[report_date_str]
+          next if period_type.nil?
+          next unless us_period_type(item["REPORT_TYPE"], item["DATE_TYPE"]) == period_type
 
-          report = item["REPORT"] || ""
           basic_eps = parse_decimal(item["BASIC_EPS"]) || BigDecimal("0")
           abs_eps = basic_eps.abs
 
-          if grouped[report_date_str].nil?
-            grouped[report_date_str] = { item: item, report: report, abs_eps: abs_eps }
-          else
-            existing = grouped[report_date_str]
-            existing_is_fy = existing[:report].include?("FY")
-            current_is_fy = report.include?("FY")
-
-            # 优先级：FY > 非FY；同级别选绝对值大的（合并数据 > 分部数据）
-            if current_is_fy && !existing_is_fy
-              grouped[report_date_str] = { item: item, report: report, abs_eps: abs_eps }
-            elsif current_is_fy == existing_is_fy && abs_eps > existing[:abs_eps]
-              grouped[report_date_str] = { item: item, report: report, abs_eps: abs_eps }
-            end
+          if grouped[report_date_str].nil? || abs_eps > grouped[report_date_str][:abs_eps]
+            grouped[report_date_str] = { item: item, abs_eps: abs_eps }
           end
         end
 
@@ -346,9 +394,11 @@ module DataSources
           next unless entry[:item]
           item = entry[:item]
           report_date = Date.parse(report_date_str)
+          period_type = period_map[report_date_str]
 
           financial_report = find_or_create_financial_report(
-            stock, report_date: report_date, report_type: REPORT_TYPE_CODE, market: market
+            stock, report_date: report_date, report_type: REPORT_TYPE_CODE, market: market,
+            period_type: period_type
           )
           financial_data = {
             report_type: REPORT_TYPE_CODE,
@@ -362,7 +412,10 @@ module DataSources
             quick_ratio: parse_decimal(item["SPEED_RATIO"]),
             asset_liab_ratio: parse_decimal(item["DEBT_ASSET_RATIO"]),
           }
-          result = save_model_record(stock, financial_report, FinancialIndicator, report_date, market, financial_data)
+          result = save_model_record(
+            stock, financial_report, FinancialIndicator, report_date, market, financial_data,
+            period_type: period_type
+          )
           case result
           when :success then saved_count += 1
           when :skipped then skipped_count += 1

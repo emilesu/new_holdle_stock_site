@@ -1,3 +1,5 @@
+require "set"
+
 module DataSources
   module Fetchers
     # 东方财富财务数据抓取器基类
@@ -7,7 +9,9 @@ module DataSources
       TIMEOUT = 15
       RETRY_MAX = 3
       RETRY_DELAY = 2
-      MAX_YEARS_BACK = 10
+      MAX_YEARS_BACK = 20
+      # 季报只保留近 16 期（约 4 年），满足「最近一期 + 去年同期 + 近 16 期趋势图」
+      MAX_QUARTERS_BACK = 16
 
       EASTMONEY_HEADERS = {
         "User-Agent" => "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
@@ -49,7 +53,8 @@ module DataSources
       end
 
       # 获取或创建 FinancialReport 主记录
-      def find_or_create_financial_report(stock, report_date:, report_type:, market:)
+      # period_type 仅作为属性写入，不参与唯一键（同一报告日期只保留一条主记录）
+      def find_or_create_financial_report(stock, report_date:, report_type:, market:, period_type: "annual")
         financial_report = FinancialReport.find_or_initialize_by(
           stock_id: stock.id,
           report_date: report_date,
@@ -57,6 +62,7 @@ module DataSources
           market: market
         )
         financial_report.market = market
+        financial_report.period_type = period_type
         financial_report.save!
         financial_report
       end
@@ -95,18 +101,21 @@ module DataSources
         financial_report&.update(retry_count: (financial_report.retry_count || 0) + 1)
       end
 
-      # 判断是否为近10年年报
-      def keep_annual_report_date?(report_date_str)
-        return false unless report_date_str.present?
-        begin
-          date = Date.parse(report_date_str)
-          # 仅保留年报（12月31日）
-          return false unless date.month == 12 && date.day == 31
-          # 仅保留近10年
-          date >= MAX_YEARS_BACK.years.ago.to_date
-        rescue
-          false
+      # 按报告日期推断 A 股期次类型（A 股财年固定 12-31）
+      # 报表类型由 DATE_TYPE_CODE 优先判定；此方法作为兜底（如无类型字段的指标表）
+      def period_type_for_date(report_date)
+        return "annual" unless report_date.respond_to?(:month)
+        case report_date.month
+        when 3 then "q1"
+        when 6 then "h1"
+        when 9 then "q3"
+        else "annual"
         end
+      end
+
+      # 通用年限过滤：报告日期是否在最近 years 年内
+      def within_years?(report_date, years)
+        report_date >= years.years.ago.to_date
       end
 
       # 打印进度
@@ -130,10 +139,60 @@ module DataSources
         data.is_a?(Array) ? data : []
       end
 
+      # 保留策略：年报近 MAX_YEARS_BACK 年 + 季报近 MAX_QUARTERS_BACK 期
+      # entries: [{ report_date: Date, period_type: String }, ...]
+      # 返回允许入库的期次集合，元素为 [period_type, report_date]
+      def retention_period_set(entries)
+        annual_cutoff = MAX_YEARS_BACK.years.ago.to_date
+        annual = entries.select { |e| e[:period_type] == "annual" && e[:report_date] >= annual_cutoff }
+        quarters = entries.reject { |e| e[:period_type] == "annual" }
+                          .uniq { |e| e[:report_date] }
+                          .sort_by { |e| e[:report_date] }
+                          .last(MAX_QUARTERS_BACK)
+        (annual + quarters).map { |e| [ e[:period_type], e[:report_date] ] }.to_set
+      end
+
+      # 引用 financial_report 的子表模型（清理残留记录时用于引用检查）
+      CHILD_MODELS = [ IncomeStatement, BalanceSheet, CashFlow, FinancialIndicator ].freeze
+
+      # 清理该股票不在保留期次内的记录
+      # 按 (period_type, report_date) 组合判定：历史抓取时 period_type 尚未存在（默认 annual），
+      # 只比日期无法剔除「中报/季报被标成年报」的误标记录，会污染 get_financial_data_by_year 的年报取数
+      def cleanup_stale_records(stock, market, periods)
+        allowed = periods.map { |p| [ p[:period_type], p[:report_date] ] }.to_set
+        removed = 0
+
+        CHILD_MODELS.each do |model|
+          stale_ids = stale_ids_for(model, stock, market, allowed)
+          removed += model.where(id: stale_ids).delete_all if stale_ids.any?
+        end
+
+        # 主记录最后清理：仅删除已无子表引用的孤儿记录，避免外键约束报错
+        stale_report_ids = stale_ids_for(FinancialReport, stock, market, allowed)
+        if stale_report_ids.any?
+          referenced = CHILD_MODELS.flat_map do |model|
+            model.where(financial_report_id: stale_report_ids).distinct.pluck(:financial_report_id)
+          end
+          removable = stale_report_ids - referenced
+          removed += FinancialReport.where(id: removable).delete_all if removable.any?
+        end
+
+        Rails.logger.info "[#{self.class}] #{stock.symbol} 清理非保留期次记录 #{removed} 条" if removed > 0
+        removed
+      end
+
+      # 取出 (period_type, report_date) 不在保留期次内的记录 id
+      def stale_ids_for(model, stock, market, allowed)
+        model.where(stock_id: stock.id, market: market)
+             .pluck(:id, :period_type, :report_date)
+             .reject { |(_id, period_type, report_date)| allowed.include?([ period_type, report_date ]) }
+             .map(&:first)
+      end
+
       # 统一保存逻辑：检测存在/变更，新建或更新
       # 使用 (stock_id, report_date, market) 唯一约束进行查找，避免重复插入
       # 子类必须定义 REPORT_TYPE_CODE 常量
-      def save_model_record(stock, financial_report, model_class, report_date, market, financial_data)
+      def save_model_record(stock, financial_report, model_class, report_date, market, financial_data, period_type: "annual")
         report_type = financial_data.delete(:report_type) || self.class::REPORT_TYPE_CODE
 
         record = model_class.find_or_initialize_by(
@@ -145,25 +204,30 @@ module DataSources
         if record.new_record?
           record.assign_attributes(
             financial_report_id: financial_report.id,
-            report_type: report_type
+            report_type: report_type,
+            period_type: period_type
           )
           financial_data.each { |k, v| record.send("#{k}=", v) }
           save_with_overflow_protection(record, financial_data)
           mark_crawled(financial_report)
-          Rails.logger.info "[#{self.class}] #{model_class} 新建记录: stock=#{stock.symbol}, date=#{report_date}, market=#{market}"
+          Rails.logger.info "[#{self.class}] #{model_class} 新建记录: stock=#{stock.symbol}, date=#{report_date}, period=#{period_type}, market=#{market}"
           :success
         else
-          new_data = financial_data.merge(report_type: report_type)
+          new_data = financial_data.merge(report_type: report_type, period_type: period_type)
 
           if data_changed?(record, new_data)
             record.financial_report_id = financial_report.id
-            new_data.each { |k, v| record.send("#{k}=", v) if financial_data.key?(k) }
+            financial_data.each { |k, v| record.send("#{k}=", v) }
+            # report_type / period_type 不在 financial_data 中，需显式写入：
+            # 否则历史误标期次（如把中报当年报入库）永远无法被修正
+            record.report_type = report_type
+            record.period_type = period_type
             save_with_overflow_protection(record, financial_data)
             mark_crawled(financial_report)
-            Rails.logger.info "[#{self.class}] #{model_class} 更新记录: stock=#{stock.symbol}, date=#{report_date}, market=#{market}"
+            Rails.logger.info "[#{self.class}] #{model_class} 更新记录: stock=#{stock.symbol}, date=#{report_date}, period=#{period_type}, market=#{market}"
             :success
           else
-            Rails.logger.info "[#{self.class}] #{model_class} 跳过记录: stock=#{stock.symbol}, date=#{report_date}, market=#{market} (数据无变化，字段数=#{new_data.size})"
+            Rails.logger.info "[#{self.class}] #{model_class} 跳过记录: stock=#{stock.symbol}, date=#{report_date}, period=#{period_type}, market=#{market} (数据无变化，字段数=#{new_data.size})"
             :skipped
           end
         end

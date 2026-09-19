@@ -63,11 +63,65 @@ module DataSources
 
         success_count = results.count { |r| r[:status] == :success }
         fail_count = results.count { |r| r[:status] == :failed }
+
+        # 清理不在保留期次内的历史残留记录（历史抓取未记录期次，中报/季报被标成年报）
+        periods = fetch_report_periods(secucode)
+        cleanup_stale_records(stock, market, periods) if periods.any?
+
         # success: 是否有报表抓取失败；changed: 是否有报表数据新建/更新了记录
         { success: fail_count == 0, changed: success_count > 0 }
       end
 
       private
+
+      # 获取全部报告期次（含季报），并按保留策略过滤
+      # 返回 [{ report_date: Date, period_type: String }, ...]，按报告日期倒序
+      def fetch_report_periods(secucode)
+        params = {
+          reportName: "RPT_DMSK_FN_INCOME",
+          columns: "REPORT_DATE,DATE_TYPE_CODE",
+          filter: %((SECUCODE="#{secucode}")),
+          pageNumber: 1, pageSize: 500,
+          sortTypes: -1, sortColumns: "REPORT_DATE",
+          source: "WEB", client: "WEB"
+        }
+        response = http_get(CN_DATA_URL, params: params)
+        entries = cn_periods(extract_data_list(response), "REPORT_DATE")
+        return [] if entries.empty?
+
+        allowed = retention_period_set(entries)
+        entries.select { |e| allowed.include?([ e[:period_type], e[:report_date] ]) }
+               .uniq { |e| e[:report_date] }
+               .sort_by { |e| e[:report_date] }
+               .reverse
+      rescue => e
+        Rails.logger.error "[CnFetcher] #{secucode} 获取报告期次失败: #{e.message}"
+        []
+      end
+
+      # 解析返回项的期次信息，返回 [{ report_date:, period_type: }, ...]
+      def cn_periods(items, date_key)
+        items.filter_map do |item|
+          str = item[date_key].to_s.split(" ").first
+          next if str.empty?
+          date = Date.parse(str)
+          { report_date: date, period_type: cn_period_type(item, date) }
+        rescue ArgumentError
+          nil
+        end
+      end
+
+      # 期次判定：优先 DATE_TYPE_CODE（001年报/002中报/003一季报/004三季报）
+      # 指标接口无该字段，按报告日期月日推导（A 股财年固定 12-31）
+      def cn_period_type(item, date)
+        case item["DATE_TYPE_CODE"].to_s
+        when "001" then "annual"
+        when "002" then "h1"
+        when "003" then "q1"
+        when "004" then "q3"
+        else period_type_for_date(date)
+        end
+      end
 
       def fetch_income(stock, secucode, market)
         items = fetch_cn_data("RPT_DMSK_FN_INCOME", secucode)
@@ -117,21 +171,26 @@ module DataSources
           log_progress(stock, statement_name, :failed, "no data")
           return { status: :failed }
         end
+        allowed_periods = retention_period_set(cn_periods(items, "REPORT_DATE"))
         saved_count = 0
         skipped_count = 0
         items.each do |item|
           report_date_str = item["REPORT_DATE"].to_s.split(" ").first
-          next unless keep_annual_report_date?(report_date_str)
+          next if report_date_str.empty?
           report_date = Date.parse(report_date_str)
+          period_type = cn_period_type(item, report_date)
+          next unless allowed_periods.include?([ period_type, report_date ])
           financial_report = find_or_create_financial_report(
-            stock, report_date: report_date, report_type: REPORT_TYPE_CODE, market: market
+            stock, report_date: report_date, report_type: REPORT_TYPE_CODE, market: market,
+            period_type: period_type
           )
           financial_data = {}
           field_mapping.each do |api_field, model_field|
             financial_data[model_field] = parse_decimal(item[api_field])
           end
           result = save_model_record(
-            stock, financial_report, model_class, report_date, market, financial_data
+            stock, financial_report, model_class, report_date, market, financial_data,
+            period_type: period_type
           )
           case result
           when :success then saved_count += 1
@@ -158,12 +217,16 @@ module DataSources
         end
         saved_count = 0
         skipped_count = 0
+        allowed_periods = retention_period_set(cn_periods(items, "REPORT_DATE"))
         items.each do |item|
           report_date_str = item["REPORT_DATE"].to_s.split(" ").first
-          next unless keep_annual_report_date?(report_date_str)
+          next if report_date_str.empty?
           report_date = Date.parse(report_date_str)
+          period_type = cn_period_type(item, report_date)
+          next unless allowed_periods.include?([ period_type, report_date ])
           financial_report = find_or_create_financial_report(
-            stock, report_date: report_date, report_type: REPORT_TYPE_CODE, market: market
+            stock, report_date: report_date, report_type: REPORT_TYPE_CODE, market: market,
+            period_type: period_type
           )
           financial_data = {}
           INCOME_FIELDS.each do |api_field, model_field|
@@ -184,7 +247,8 @@ module DataSources
           # operating_revenue 与 total_revenue 取同一值
           financial_data[:operating_revenue] = financial_data[:total_revenue]
           result = save_model_record(
-            stock, financial_report, IncomeStatement, report_date, market, financial_data
+            stock, financial_report, IncomeStatement, report_date, market, financial_data,
+            period_type: period_type
           )
           case result
           when :success then saved_count += 1
@@ -207,12 +271,16 @@ module DataSources
         end
         saved_count = 0
         skipped_count = 0
+        allowed_periods = retention_period_set(cn_periods(items, "REPORTDATE"))
         items.each do |item|
           report_date_str = item["REPORTDATE"].to_s.split(" ").first
-          next unless keep_annual_report_date?(report_date_str)
+          next if report_date_str.empty?
           report_date = Date.parse(report_date_str)
+          period_type = cn_period_type(item, report_date)
+          next unless allowed_periods.include?([ period_type, report_date ])
           financial_report = find_or_create_financial_report(
-            stock, report_date: report_date, report_type: REPORT_TYPE_CODE, market: market
+            stock, report_date: report_date, report_type: REPORT_TYPE_CODE, market: market,
+            period_type: period_type
           )
           financial_data = { report_type: REPORT_TYPE_CODE }
           INDICATOR_FIELDS.each do |api_field, model_field|
@@ -258,7 +326,8 @@ module DataSources
           end
 
           result = save_model_record(
-            stock, financial_report, FinancialIndicator, report_date, market, financial_data
+            stock, financial_report, FinancialIndicator, report_date, market, financial_data,
+            period_type: period_type
           )
           case result
           when :success then saved_count += 1
