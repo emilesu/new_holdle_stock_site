@@ -52,7 +52,8 @@ class SignOutTest < ActionDispatch::IntegrationTest
 
     get root_path
     assert_response :success
-    assert_select "a[href='#{new_user_session_path}']"
+    # 登录入口链接会带 ?return_to=...（登录后回原页面），故用前缀匹配
+    assert_select "a[href^='#{new_user_session_path}']"
   end
 
   test "signed out user cannot access protected page" do

@@ -1,7 +1,7 @@
 Rails.application.routes.draw do
 
   # Devise OAuth回调路由
-  devise_for :users, controllers: { registrations: 'users/registrations', omniauth_callbacks: 'users/omniauth_callbacks' }
+  devise_for :users, controllers: { sessions: 'sessions', registrations: 'users/registrations', omniauth_callbacks: 'users/omniauth_callbacks' }
 
   # OAuth失败跳转路由
   get '/users/oauth_failure', to: 'sessions#oauth_failure', as: :oauth_failure

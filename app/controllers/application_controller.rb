@@ -51,7 +51,7 @@ class ApplicationController < ActionController::Base
 
     # 注册引导兜底：新注册用户（onboarded_at 为空）除引导页外，一律先进引导页
     # 仅拦截 GET：POST 等写操作放行，避免新用户收藏/留言等动作被 302 静默丢弃
-    # （Devise 控制器不继承本类，天然不受影响，无需单独排除）
+    # 注：Devise 控制器继承本类（config.parent_controller 未改），登录/注册等 GET 页同样受此守卫约束
     def redirect_to_onboarding_if_needed
         return unless user_signed_in?
         return if current_user.is_admin?
