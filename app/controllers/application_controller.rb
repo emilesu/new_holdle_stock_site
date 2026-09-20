@@ -57,9 +57,14 @@ class ApplicationController < ActionController::Base
         return if current_user.is_admin?
         return if current_user.onboarded_at.present?
         return unless request.get?
-        return if controller_name == "onboardings"
         # 带了来源页登录/注册的新用户：放行本次目的页（一次性），引导延后到下次导航
-        return if session.delete(:skip_onboarding_once)
+        # 标记在此处即被消费，避免跨多次导航残留；此处能走到说明用户尚未完成引导，
+        # 顺带补一条免费额度提示，弥补被跳过的引导页告知
+        if session.delete(:skip_onboarding_once)
+          flash.now[:notice] = "15 次 AI 投研助手免费体验已到账，可在个人中心查看你的 Key" unless controller_name == "onboardings"
+          return
+        end
+        return if controller_name == "onboardings"
         redirect_to onboarding_path
     end
 end

@@ -47,6 +47,24 @@
   <body data-controller="message">
     <%= render "shared/navbar" %>
 
+    <%# 全站 flash 提示：前台此前没有渲染位置，notice/alert 写了却看不见 %>
+    <% if notice || alert %>
+      <div class="container-hl pt-4">
+        <% if notice %>
+          <div data-controller="flash" class="mb-2 bg-bg-mute border border-line text-muted px-4 py-3 rounded flex items-center justify-between text-hl-13">
+            <span><%= notice %></span>
+            <button data-action="flash#dismiss" class="ml-4 text-muted-3 hover:text-ink transition-colors">&times;</button>
+          </div>
+        <% end %>
+        <% if alert %>
+          <div data-controller="flash" class="mb-2 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded flex items-center justify-between text-hl-13">
+            <span><%= alert %></span>
+            <button data-action="flash#dismiss" class="ml-4 text-red-400 hover:text-red-700 transition-colors">&times;</button>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
+
     <!-- 主内容区 -->
     <main class="min-h-screen" id="main-content">
       <%= yield %>
