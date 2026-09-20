@@ -78,7 +78,7 @@
           </ul>
 
           <% if plan.plan_code == "welcome" %>
-            <%= link_to "免费领取", new_user_registration_path, class: "hl-btn hl-btn-line w-full text-center" %>
+            <%= link_to "免费领取", new_user_registration_path(return_to: request.fullpath), class: "hl-btn hl-btn-line w-full text-center" %>
           <% else %>
             <%= link_to "解锁进阶实战 · AI投研助手无限次", new_order_path(plan: plan.plan_code), class: "hl-btn #{plan.is_member_upgrade ? 'hl-btn-primary' : 'hl-btn-line'} w-full text-center" %>
           <% end %>

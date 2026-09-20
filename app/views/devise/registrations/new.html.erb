@@ -60,7 +60,7 @@
       <div class="mt-7 pt-5 border-t border-line-soft text-center">
         <p class="text-hl-13 text-muted-3">
           已有账号？
-          <%= link_to "立即登录", new_session_path(resource_name), class: "text-link hover:text-link-hover font-medium transition-colors" %>
+          <%= link_to "立即登录", new_session_path(resource_name, return_to: params[:return_to]), class: "text-link hover:text-link-hover font-medium transition-colors" %>
         </p>
       </div>
 

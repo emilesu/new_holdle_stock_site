@@ -22,6 +22,21 @@ class ApplicationController < ActionController::Base
 
     private
 
+    # 登录/注册后要跳回的页面：入口链接带 return_to（导航栏「登录」等），登录页/注册页渲染时暂存进 session，
+    # Devise 默认的 after_sign_in_path_for 会读取（stored_location_for）并跳回，读取后自动清除。
+    # 只接受站内路径（url_from 拒绝外域与 // 协议相对地址），并排除登录注册自身，避免跳转循环。
+    RETURN_TO_EXCLUDED_PREFIXES = %w[/users/].freeze
+
+    def store_return_to_location(location = params[:return_to])
+        location = url_from(location)
+        return if location.blank?
+        return if RETURN_TO_EXCLUDED_PREFIXES.any? { |prefix| location.start_with?(prefix) }
+
+        store_location_for(:user, location)
+        # 未完成引导的新用户：放行本次目的页（引导延后一次），避免刚登录就被守卫拉去引导页
+        session[:skip_onboarding_once] = true
+    end
+
     # 鉴权/个性化页面输出 private, no-store：CDN 收到后不缓存，避免会员内容/302 响应被公共缓存。
     # 注意：Nginx 必须透传该头（不能 proxy_hide_header Cache-Control 覆盖成 public），否则不生效。
     def set_private_cache_headers
@@ -43,6 +58,8 @@ class ApplicationController < ActionController::Base
         return if current_user.onboarded_at.present?
         return unless request.get?
         return if controller_name == "onboardings"
+        # 带了来源页登录/注册的新用户：放行本次目的页（一次性），引导延后到下次导航
+        return if session.delete(:skip_onboarding_once)
         redirect_to onboarding_path
     end
 end

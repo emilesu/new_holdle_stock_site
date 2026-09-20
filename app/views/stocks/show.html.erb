@@ -80,7 +80,7 @@
                   <%= button_to "收藏股票", user_favorites_path(stock_id: @stock.id), method: :post,
                     class: "w-full hl-btn hl-btn-primary mt-4" %>
                 <% else %>
-                  <%= link_to "收藏股票", new_user_session_path,
+                  <%= link_to "收藏股票", new_user_session_path(return_to: request.fullpath),
                     class: "w-full hl-btn hl-btn-primary mt-4 text-center block" %>
                 <% end %>
               <% end %>
@@ -264,7 +264,7 @@
                 <%= button_to "收藏股票", user_favorites_path(stock_id: @stock.id), method: :post,
                   class: "w-full py-2 text-left text-hl-13 text-muted-2 hover:text-link hover:bg-bg-mute rounded transition-colors" %>
               <% else %>
-                <%= link_to "收藏股票", new_user_session_path,
+                <%= link_to "收藏股票", new_user_session_path(return_to: request.fullpath),
                   class: "w-full py-2 text-left text-hl-13 text-muted-2 hover:text-link hover:bg-bg-mute rounded transition-colors block" %>
               <% end %>
             <% end %>

@@ -1,9 +1,12 @@
 class Users::RegistrationsController < Devise::RegistrationsController
   before_action :configure_permitted_parameters, only: [:create]
+  # 注册页入口带 return_to：暂存目标页，注册成功后跳回该页（无来源页时仍进引导页）
+  before_action :store_return_to_location, only: [:new]
 
-  # 注册成功后先进注册引导页（onboarding），而不是直接回首页
+  # 注册成功后：带来源页的回来源页（引导延后一次，见 ApplicationController#redirect_to_onboarding_if_needed），
+  # 否则先进注册引导页（onboarding）
   def after_sign_up_path_for(_resource)
-    onboarding_path
+    stored_location_for(:user) || onboarding_path
   end
 
   private

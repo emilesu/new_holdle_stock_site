@@ -186,10 +186,11 @@ class Users::OmniauthCallbacksController < Devise::OmniauthCallbacksController
       current_user.update!(onboarded_at: Time.current) if new_user && current_user.onboarded_at.blank?
       redirect_to new_order_path, notice: "已授权，请重新点击微信支付"
     elsif new_user
-      # 微信新注册用户先进注册引导页
-      redirect_to onboarding_path, notice: notice
+      # 微信新注册用户：带了来源页（return_to）就回来源页，否则先进注册引导页
+      redirect_to stored_location_for(:user) || onboarding_path, notice: notice
     else
-      redirect_to root_path, notice: notice
+      # 回到登录前所在页面（无来源页则回首页）
+      redirect_to stored_location_for(:user) || root_path, notice: notice
     end
   end
 
@@ -227,7 +228,7 @@ class Users::OmniauthCallbacksController < Devise::OmniauthCallbacksController
       # sign_in 后验证 session 是否已正确设置
       sign_in user
       Rails.logger.info "[OmniAuth Google] sign_in completed, session user_id=#{session['warden.user.user.key']&.first&.first}"
-      redirect_to root_path, notice: "Google登录成功"
+      redirect_to stored_location_for(:user) || root_path, notice: "Google登录成功"
     else
       # 无邮箱匹配则新建账号
       random_pw = Devise.friendly_token(20)
@@ -248,7 +249,7 @@ class Users::OmniauthCallbacksController < Devise::OmniauthCallbacksController
       Rails.logger.info "[OmniAuth Google] new user created id=#{user.id}"
       sign_in user
       Rails.logger.info "[OmniAuth Google] sign_in completed, session user_id=#{session['warden.user.user.key']&.first&.first}"
-      redirect_to onboarding_path, notice: "Google注册登录成功"
+      redirect_to stored_location_for(:user) || onboarding_path, notice: "Google注册登录成功"
     end
   end
 

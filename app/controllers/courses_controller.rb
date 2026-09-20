@@ -20,7 +20,7 @@ class CoursesController < ApplicationController
       return
     end
     if @course.member_only? && !user_signed_in?
-      store_location_for(:user, request.fullpath)
+      store_return_to_location(request.fullpath)
       redirect_to new_user_session_path, alert: '该课程仅限会员访问，请先登录'
       return
     end
