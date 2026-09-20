@@ -144,8 +144,9 @@ class StocksController < ApplicationController
       return
     end
     
+    # v3：季报恢复单线扁平格式（点附带 period_type 供前端逐点着色），升级 key 使分组格式缓存失效
     data = Rails.cache.fetch(
-      [@stock, :indicator_detail, indicator_key, scope, @stock.updated_at.to_i],
+      [@stock, :indicator_detail, :v3, indicator_key, scope, @stock.updated_at.to_i],
       expires_in: 6.hours
     ) do
       fetch_indicator_detail(@stock, indicator_key, scope)
@@ -173,9 +174,11 @@ class StocksController < ApplicationController
 
   def fetch_indicator_detail(stock, indicator_key, scope)
     data_points = if scope == "quarter"
+      # 季报：所有期次串成一条线，每点附带 period_type 供前端按类型逐点着色
       stock.recent_quarter_periods.map do |period|
         label = stock.period_label(period.period_type, period.report_date)
-        build_data_point(label, stock.get_financial_data_by_period(period.period_type, period.report_date), indicator_key)
+        data = stock.get_financial_data_by_period(period.period_type, period.report_date)
+        build_data_point(label, data, indicator_key).merge(period_type: period.period_type)
       end
     else
       stock.financial_years.map do |year|
@@ -190,7 +193,6 @@ class StocksController < ApplicationController
       stock_name: stock.name,
       indicator_key: indicator_key,
       indicator_name: info[:name],
-      # 供弹窗区分年报/季报口径（季报为累计值，需提示不可直接比较）
       scope: scope,
       data_points: data_points,
       description: info[:description],

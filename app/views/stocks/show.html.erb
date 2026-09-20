@@ -494,7 +494,8 @@ document.addEventListener('turbo:load', function() {
 
   function getCachedData(indicatorKey, scope) {
     try {
-      const cacheKey = `indicator_${STOCK_PARAM}_${indicatorKey}_${scope}`;
+      // v3 缓存 key：季报点附带 period_type，升级 key 避免命中旧格式缓存
+      const cacheKey = `indicator_${STOCK_PARAM}_${indicatorKey}_${scope}_v3`;
       const cached = localStorage.getItem(cacheKey);
       if (cached) {
         const data = JSON.parse(cached);
@@ -510,7 +511,8 @@ document.addEventListener('turbo:load', function() {
 
   function cacheData(indicatorKey, scope, payload) {
     try {
-      const cacheKey = `indicator_${STOCK_PARAM}_${indicatorKey}_${scope}`;
+      // v3 缓存 key：季报点附带 period_type，升级 key 避免命中旧格式缓存
+      const cacheKey = `indicator_${STOCK_PARAM}_${indicatorKey}_${scope}_v3`;
       localStorage.setItem(cacheKey, JSON.stringify({
         timestamp: Date.now(),
         payload: payload
@@ -525,8 +527,8 @@ document.addEventListener('turbo:load', function() {
     const contentContainer = document.getElementById('content-container');
     const errorContainer = document.getElementById('error-container');
 
-    // 显示内容区域
-    chartContainer.innerHTML = '<div style="height: 256px; overflow: hidden;"><canvas id="indicator-chart"></canvas></div>';
+    // 显示内容区域（220px：无图例，但季报期次标签需旋转留高）
+    chartContainer.innerHTML = '<div style="height: 220px; overflow: hidden;"><canvas id="indicator-chart"></canvas></div>';
     contentContainer.classList.remove('hidden');
     errorContainer.classList.add('hidden');
 
@@ -569,73 +571,64 @@ document.addEventListener('turbo:load', function() {
     const ctx = document.getElementById('indicator-chart');
     if (!ctx) return;
 
-    const points = data.data_points || [];
-    // 后端直接给出 x 轴文案：年报为年份（2025），季报为期次（2026中报）
-    const labels = points.map(p => p.label);
-
-    // 季报口径提示：同一折线混排 3/6/9 个月累计值，需明确告知不可直接比较
-    const scopeNote = document.getElementById('indicator-scope-note');
-    if (scopeNote) scopeNote.classList.toggle('hidden', data.scope !== 'quarter');
-    
     const isCashFlowIndicator = ['net_income', 'operating_cash_flow', 'investing_cash_flow', 'financing_cash_flow', 'net_cash_change', 'cash_and_cash_equivalents'].includes(data.indicator_key);
     const isAssetTurnover = data.indicator_key === 'asset_turnover_ratio';
-    
-    const values = points.map(p => {
-      if (!p.value) return null;
-      let val = parseFloat(p.value);
-      if (isCashFlowIndicator) {
-        return val / 100000000;
-      }
-      if (isAssetTurnover) {
-        return val * 100;
-      }
-      return val;
-    });
-    
-    const validValues = values.filter(v => v !== null && !isNaN(v));
-    const dataMin = validValues.length > 0 ? Math.min(...validValues) : 0;
-    const dataMax = validValues.length > 0 ? Math.max(...validValues) : 100;
-    const dataRange = dataMax - dataMin;
-    
-    let yMin, yMax;
-    if (dataRange > 0) {
-      const padding = dataRange * 0.15;
-      const absMax = Math.max(Math.abs(dataMin), Math.abs(dataMax));
-      if (dataRange / absMax < 0.05) {
-        yMin = dataMin - padding;
-        yMax = dataMax + padding;
-      } else {
-        yMin = dataMin - padding;
-        yMax = dataMax + padding;
-      }
-    } else {
-      yMin = dataMin - 1;
-      yMax = dataMax + 1;
-    }
-    
-    const formatted = points.map(p => p.formatted);
     const unit = isCashFlowIndicator ? '亿' : (data.unit || '');
+
+    // 季报口径提示
+    const scopeNote = document.getElementById('indicator-scope-note');
+    if (scopeNote) scopeNote.classList.toggle('hidden', data.scope !== 'quarter');
+
+    // 转换数值的辅助函数
+    function convertValue(val) {
+      if (!val) return null;
+      let v = parseFloat(val);
+      if (isCashFlowIndicator) return v / 100000000;
+      if (isAssetTurnover) return v * 100;
+      return v;
+    }
+
+    // 计算 Y 轴范围的辅助函数
+    function calcYRange(allValues) {
+      const validValues = allValues.filter(v => v !== null && !isNaN(v));
+      const dataMin = validValues.length > 0 ? Math.min(...validValues) : 0;
+      const dataMax = validValues.length > 0 ? Math.max(...validValues) : 100;
+      const dataRange = dataMax - dataMin;
+      if (dataRange > 0) {
+        const padding = dataRange * 0.15;
+        return { yMin: dataMin - padding, yMax: dataMax + padding };
+      }
+      return { yMin: dataMin - 1, yMax: dataMax + 1 };
+    }
+
+    // 单条线串联所有数据点；季报点按类型着色（一季报蓝 / 中报红 / 三季报绿），年报点保持蓝色
+    const PERIOD_POINT_COLORS = { q1: 'rgb(59, 130, 246)', h1: 'rgb(239, 68, 68)', q3: 'rgb(34, 197, 94)' };
+    const points = data.data_points || [];
+    const labels = points.map(p => p.label);
+    const formatted = points.map(p => p.formatted);
+    const values = points.map(p => convertValue(p.value));
+    const { yMin, yMax } = calcYRange(values);
+    const pointColors = points.map(p => PERIOD_POINT_COLORS[p.period_type] || 'rgb(59, 130, 246)');
+
+    const datasets = [{
+      label: data.indicator_name,
+      data: values,
+      borderColor: 'rgb(59, 130, 246)',
+      backgroundColor: 'rgba(59, 130, 246, 0.08)',
+      fill: true,
+      tension: 0.3,
+      pointRadius: 4,
+      pointHoverRadius: 8,
+      pointBackgroundColor: pointColors,
+      pointBorderColor: '#fff',
+      pointBorderWidth: 2,
+      borderWidth: 2,
+      pointHoverBorderWidth: 3
+    }];
 
     chartInstance = new Chart(ctx.getContext('2d'), {
       type: 'line',
-      data: {
-        labels: labels,
-        datasets: [{
-          label: data.indicator_name,
-          data: values,
-          borderColor: 'rgb(59, 130, 246)',
-          backgroundColor: 'rgba(59, 130, 246, 0.08)',
-          fill: true,
-          tension: 0.3,
-          pointRadius: 4,
-          pointHoverRadius: 8,
-          pointBackgroundColor: 'rgb(59, 130, 246)',
-          pointBorderColor: '#fff',
-          pointBorderWidth: 2,
-          borderWidth: 2,
-          pointHoverBorderWidth: 3
-        }]
-      },
+      data: { labels, datasets },
       options: {
         responsive: true,
         maintainAspectRatio: false,
@@ -685,7 +678,10 @@ document.addEventListener('turbo:load', function() {
             ticks: {
               color: '#555555',
               font: { size: 9, weight: '500' },
-              padding: 4
+              padding: 4,
+              maxRotation: 60,
+              autoSkip: true,
+              autoSkipPadding: 8
             }
           }
         },
@@ -754,12 +750,12 @@ document.addEventListener('turbo:load', function() {
       <div id="error-container" class="hidden"></div>
       
       <div id="chart-container" class="mb-4 md:mb-6 overflow-hidden">
-        <div class="w-full" style="height: 180px; overflow: hidden;">
+        <div class="w-full" style="height: 220px; overflow: hidden;">
           <canvas id="indicator-chart"></canvas>
         </div>
       </div>
 
-      <p id="indicator-scope-note" class="hidden text-hl-11 text-muted-4 mb-4 md:mb-6">季报为报告期累计口径（一季报 3 个月 / 中报 6 个月 / 三季报 9 个月），不同期次的数值不可直接比较。</p>
+      <p id="indicator-scope-note" class="hidden text-hl-11 text-muted-4 mb-4 md:mb-6">季报为报告期累计口径，不同期次的数值不可直接比较。点位颜色区分类型：蓝色=一季报、红色=中报、绿色=三季报。</p>
 
       <div id="content-container" class="overflow-hidden">
         <div class="mb-4 md:mb-6">
