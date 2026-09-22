@@ -729,8 +729,14 @@ document.addEventListener('turbo:load', function initPyramidPage() {
   let scrollObserver = null;
   let scrollIsLoading = false;
   let scrollCurrentPage = 1;  // 用 JS 变量取代 DOM data 属性维护当前页码
+  // 本闭包失效标记（页面被 Turbo 整页替换 / 进入页面缓存时置位）：
+  // loadNextPage 每次都重新 getElementById 取哨兵，若不失效，旧闭包会「复活」并按新哨兵的
+  // 筛选条件继续加载，把分块重复追加到新页面的列表尾部
+  let scrollDisposed = false;
 
   const setupScrollObserver = () => {
+    if (scrollDisposed) return;
+
     if (scrollObserver) {
       scrollObserver.disconnect();
       scrollObserver = null;
@@ -762,8 +768,8 @@ document.addEventListener('turbo:load', function initPyramidPage() {
 
   const loadNextPage = async () => {
     const sentinel = document.getElementById('pyramid-scroll-sentinel');
-    if (!sentinel || scrollIsLoading) {
-      console.log('[Scroll] loadNextPage 跳过: sentinel=' + !!sentinel + ', isLoading=' + scrollIsLoading);
+    if (scrollDisposed || !sentinel || scrollIsLoading) {
+      console.log('[Scroll] loadNextPage 跳过: disposed=' + scrollDisposed + ', sentinel=' + !!sentinel + ', isLoading=' + scrollIsLoading);
       return;
     }
 
@@ -804,6 +810,13 @@ document.addEventListener('turbo:load', function initPyramidPage() {
       if (!response.ok) throw new Error('请求失败');
 
       const html = await response.text();
+      // 响应期间页面可能已被 Turbo 整页替换（如恢复筛选触发的 Turbo.visit），或列表容器被 updateList 换掉：
+      // 此时哨兵已不是发起请求时的那个元素，必须丢弃本次响应，否则会追加到新页面的列表里造成重复
+      if (scrollDisposed || document.getElementById('pyramid-scroll-sentinel') !== sentinel) {
+        console.log('[Scroll] 页面已切换，丢弃本次响应 page=' + nextPage);
+        scrollIsLoading = false;
+        return;
+      }
       console.log('[Scroll] 收到响应，长度=' + html.length + ' chars');
       
       window.Turbo.renderStreamMessage(html);
@@ -835,6 +848,8 @@ document.addEventListener('turbo:load', function initPyramidPage() {
       // 主动检查：Turbo 异步 append 后，sentinel 可能已被推出视口
       // IntersectionObserver 不会对已在视口外的元素触发，需手动检测
       setTimeout(() => {
+        if (scrollDisposed) return;
+
         const checkSentinel = document.getElementById('pyramid-scroll-sentinel');
         if (checkSentinel && !scrollIsLoading && scrollCurrentPage < parseInt(checkSentinel.dataset.totalPages || 1)) {
           const rect = checkSentinel.getBoundingClientRect();
@@ -949,6 +964,9 @@ document.addEventListener('turbo:load', function initPyramidPage() {
   function cleanupBeforeCache() {
     // 移除初始化标记，确保 Turbo 恢复缓存页面时能重新初始化
     pyramidPage.removeAttribute('data-_initialized');
+    // 失效本闭包：在途的 fetch 与已排队的定时器 / 观察器回调都不再允许写入 DOM，
+    // 否则页面被整页替换后旧闭包会把分块追加到新页面的列表里（尾部重复）
+    scrollDisposed = true;
     if (scrollObserver) {
       scrollObserver.disconnect();
       scrollObserver = null;

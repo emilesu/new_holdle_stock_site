@@ -1,7 +1,8 @@
 <%# 筛选结果表：仿股票详情页财务表，年份为列、指标为行；每只股票按启用指标占多行，股票信息列跨行合并 %>
 <%# 会员真实结果与非会员示例共用（示例传 masked: true 把指标数值打码），保证表头与列结构与真实结果始终一致 %>
-<%# locals: stocks, conditions, metrics, indicator_rows, year_range, fmt, fmt_yi, display_name；masked 可选 %>
+<%# locals: stocks, conditions, metrics, indicator_rows, year_range, fmt, fmt_yi, display_name, favorite_stock_ids；masked 可选 %>
 <% masked = local_assigns.fetch(:masked, false) %>
+<% favorite_ids = local_assigns.fetch(:favorite_stock_ids, []) %>
 <% muted = masked ? 'text-muted-3' : '' %>
 <%# 仿股票详情页：前导五列定宽吸附左侧（lg 及以上），仅年份与数据区表内横滑；手机端只吸股票列避免小屏挤爆 %>
 <%# 吸附偏移 = 各列定宽累计：股票208 + 板块128 + 行业144 + 金字塔分96 + 指标112 %>
@@ -44,7 +45,7 @@
                     </span>
                   <% end %>
                   <%# 已收藏标记：实心星，颜色跟随链接色 %>
-                  <% if @favorite_stock_ids.include?(stock.id) %>
+                  <% if favorite_ids.include?(stock.id) %>
                     <span class="ml-1.5 shrink-0 inline-flex text-link cursor-help" title="已收藏"
                           aria-label="已收藏" role="img" data-screener-no-open>
                       <%= favorite_icon_tag %>
