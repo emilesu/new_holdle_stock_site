@@ -51,7 +51,9 @@ class StockScreenerService
   end
 
   def initialize(params)
-    @params = params
+    # 统一为字符串键：兼容 ActionController::Parameters（未 permit 时 to_h 会抛异常）与普通 Hash（符号键）
+    raw = params.respond_to?(:to_unsafe_h) ? params.to_unsafe_h : params.to_h
+    @params = raw.to_h.transform_keys(&:to_s)
     @result = Result.new
     @margin_conditions = []
   end
@@ -61,8 +63,9 @@ class StockScreenerService
     return @result unless @result.ok?
 
     ids_scope = base_scope
-    ids_scope = ids_scope.where(id: margin_ids_sql) unless @margin_conditions.empty?
-    ids_scope = ids_scope.where(id: growth_ids_sql) if @growth_mode
+    # 子查询 SQL 已由 sanitize_sql_array 完成参数化，可安全内联；不能用 where(id: 字符串)，那会被当作字面值绑定
+    ids_scope = ids_scope.where("stocks.id IN (#{margin_ids_sql})") unless @margin_conditions.empty?
+    ids_scope = ids_scope.where("stocks.id IN (#{growth_ids_sql})") if @growth_mode
 
     @result.total_count = ids_scope.count
     @result.total_pages = (@result.total_count.to_f / PER_PAGE).ceil
@@ -80,13 +83,13 @@ class StockScreenerService
   # ---------- 参数解析与校验 ----------
 
   def parse!
-    @market = @params[:market].to_s
+    @market = @params['market'].to_s
     unless MARKETS.include?(@market)
       @result.errors << '请选择有效的市场'
       return
     end
 
-    @sector = @params[:sector].to_s.strip
+    @sector = @params['sector'].to_s.strip
     @sector = nil if @sector.empty? || @sector == 'all'
 
     latest_year = Date.current.year - 1 # 当年年报未披露完毕，默认区间截至上一完整财年
@@ -103,7 +106,7 @@ class StockScreenerService
     end
     @year_span = @year_to - @year_from + 1
 
-    @margin_mode = @params[:margin_mode].to_s
+    @margin_mode = @params['margin_mode'].to_s
     @margin_mode = 'all' if @margin_mode.empty?
     unless MARGIN_MODES.include?(@margin_mode)
       @result.errors << '盈利判定口径无效'
@@ -113,7 +116,7 @@ class StockScreenerService
     parse_margin_conditions
     return unless @result.ok?
 
-    @growth_mode = @params[:growth_mode].to_s.presence
+    @growth_mode = @params['growth_mode'].to_s.presence
     if @growth_mode.present? && !GROWTH_MODES.include?(@growth_mode)
       @result.errors << '净利润增长模式无效'
       return
@@ -134,7 +137,7 @@ class StockScreenerService
       return
     end
 
-    @sort = @params[:sort].to_s.presence || 'pyramid'
+    @sort = @params['sort'].to_s.presence || 'pyramid'
     unless SORTS.include?(@sort)
       @result.errors << '排序方式无效'
       return
@@ -174,7 +177,7 @@ class StockScreenerService
   end
 
   def int_param(name)
-    raw = @params[name].to_s.strip
+    raw = @params[name.to_s].to_s.strip
     return nil if raw.empty?
     Integer(raw, 10)
   rescue ArgumentError
@@ -182,7 +185,7 @@ class StockScreenerService
   end
 
   def float_param(name)
-    raw = @params[name].to_s.strip
+    raw = @params[name.to_s].to_s.strip
     return nil if raw.empty?
     parse_float(raw)
   end
