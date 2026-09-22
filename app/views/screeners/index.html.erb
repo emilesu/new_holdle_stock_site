@@ -4,7 +4,8 @@
 <%
   # 表单回填值：已筛选时用服务端解析后的条件，否则用默认值
   c = (@result&.conditions if @screened) || {}
-  sel_sector = c[:sector].to_s
+  sel_sector = @sector.to_s
+  sel_industry = @industry.to_s
   sel_from = (c[:year_from] || @default_year_from).to_i
   sel_to = (c[:year_to] || @latest_year).to_i
   sel_mode = c[:margin_mode] || 'all'
@@ -14,6 +15,7 @@
   sel_sort = c[:sort] || 'pyramid'
   years = (StockScreenerService::MIN_YEAR..@latest_year).to_a.reverse
   fmt = ->(val) { val.nil? ? '—' : "#{number_with_precision(val, precision: 2)}%" }
+  fmt_yi = ->(val) { val.nil? ? '—' : number_with_precision(val / 1e8, precision: 2) }
   display_name = ->(stock) { stock.market == 'US' && stock.name&.include?('|') ? stock.name.split('|').first.strip : stock.name }
 %>
 <div class="min-h-screen bg-bg-soft" data-controller="screener">
@@ -47,7 +49,7 @@
           <%= hidden_field_tag :screen, '1' %>
 
           <%# 第一行：市场 / 板块 / 年度区间 %>
-          <div class="grid grid-cols-1 lg:grid-cols-4 gap-3">
+          <div class="grid grid-cols-1 lg:grid-cols-5 gap-3">
             <div class="flex items-center gap-1.5">
               <label class="text-hl-13 font-medium text-muted-2 shrink-0">市场</label>
               <select name="market" class="px-3 py-2 text-hl-13 border border-line rounded-md focus:border-link flex-1 min-w-0 bg-white"
@@ -60,10 +62,20 @@
             <div class="flex items-center gap-1.5">
               <label class="text-hl-13 font-medium text-muted-2 shrink-0">板块</label>
               <select name="sector" class="px-3 py-2 text-hl-13 border border-line rounded-md focus:border-link flex-1 min-w-0 bg-white"
-                      data-screener-target="sector">
+                      data-screener-target="sector" data-action="change->screener#sectorChanged">
                 <option value="">全部</option>
                 <% @sectors.each do |sector| %>
                   <option value="<%= sector %>" <%= 'selected' if sel_sector == sector %>><%= sector %></option>
+                <% end %>
+              </select>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <label class="text-hl-13 font-medium text-muted-2 shrink-0">行业</label>
+              <select name="industry" class="px-3 py-2 text-hl-13 border border-line rounded-md focus:border-link flex-1 min-w-0 bg-white"
+                      data-screener-target="industry" <%= 'disabled' if @sector.blank? %>>
+                <option value="">全部</option>
+                <% @industries.each do |industry| %>
+                  <option value="<%= industry %>" <%= 'selected' if sel_industry == industry %>><%= industry %></option>
                 <% end %>
               </select>
             </div>
@@ -181,37 +193,70 @@
             <% if @result.stocks.empty? %>
               <div class="px-6 py-12 text-center text-hl-13 text-muted-3">没有符合条件的股票，试试放宽条件（如改为「至少一年满足」或缩小阈值）</div>
             <% else %>
+              <%
+                # 动态列：启用的盈利指标按年展开；净利润增长按模式展开
+                year_range = (c[:year_from]..c[:year_to]).to_a
+                col_groups = (c[:margin_conditions] || []).map do |cond|
+                  { label: StockScreenerService::LABELS[cond[:key].to_s], mkey: cond[:key].to_sym, per_year: true }
+                end
+                col_groups << { label: '净利润(亿)', mkey: :ni, per_year: true } if c[:growth_mode] == 'always_up'
+                col_groups << { label: '净利润同比', mkey: :ni_growth, per_year: false } if c[:growth_mode] == 'yoy'
+                has_year_cols = col_groups.any? { |g| g[:per_year] }
+              %>
               <div class="overflow-x-auto">
                 <table class="hl-table w-full">
                   <thead>
                     <tr>
-                      <th class="text-left">股票</th>
-                      <th class="text-left">板块</th>
-                      <th>金字塔分</th>
-                      <th>区间最低 ROE</th>
-                      <th>末年 ROE</th>
-                      <th>末年毛利率</th>
-                      <th>末年净利率</th>
-                      <th>净利润同比</th>
+                      <th class="text-left" <%= "rowspan=2" if has_year_cols %>>股票</th>
+                      <th class="text-left" <%= "rowspan=2" if has_year_cols %>>板块</th>
+                      <th class="text-left" <%= "rowspan=2" if has_year_cols %>>行业</th>
+                      <th <%= "rowspan=2" if has_year_cols %>>金字塔分</th>
+                      <% col_groups.each do |g| %>
+                        <% if g[:per_year] %>
+                          <th colspan="<%= year_range.size %>" class="border-l border-line-soft text-center"><%= g[:label] %></th>
+                        <% else %>
+                          <th <%= "rowspan=2" if has_year_cols %> class="border-l border-line-soft"><%= g[:label] %></th>
+                        <% end %>
+                      <% end %>
                     </tr>
+                    <% if has_year_cols %>
+                      <tr>
+                        <% col_groups.each do |g| %>
+                          <% next unless g[:per_year] %>
+                          <% year_range.each_with_index do |y, i| %>
+                            <th class="<%= 'border-l border-line-soft' if i.zero? %> text-hl-11 font-normal text-muted-2"><%= y %></th>
+                          <% end %>
+                        <% end %>
+                      </tr>
+                    <% end %>
                   </thead>
                   <tbody>
                     <% @result.stocks.each do |stock| %>
-                      <% m = @result.metrics[stock.id] || {} %>
-                      <tr class="hover:bg-bg-mute">
+                      <% m = @result.metrics[stock.id] || { years: {} } %>
+                      <% my = m[:years] || {} %>
+                      <tr class="hover:bg-bg-mute cursor-pointer"
+                          data-action="click->screener#openStock" data-screener-url-param="<%= stock_path(stock) %>">
                         <td class="text-left">
-                          <%= link_to stock_path(stock), class: 'text-ink font-medium hover:text-link', data: { turbo: false } do %>
+                          <%= link_to stock_path(stock), target: '_blank', rel: 'noopener', class: 'text-ink font-medium hover:text-link' do %>
                             <%= display_name.call(stock) %>
                           <% end %>
                           <span class="text-hl-11 text-muted-3 ml-1.5 font-mono"><%= stock.symbol %></span>
                         </td>
                         <td class="text-left text-muted"><%= stock.sector || '—' %></td>
+                        <td class="text-left text-muted"><%= stock.industry || '—' %></td>
                         <td class="text-center font-semibold text-link"><%= stock.pyramid_total_score %></td>
-                        <td class="text-center font-mono"><%= fmt.call(m[:roe_min]) %></td>
-                        <td class="text-center font-mono"><%= fmt.call(m[:roe_last]) %></td>
-                        <td class="text-center font-mono"><%= fmt.call(m[:gm_last]) %></td>
-                        <td class="text-center font-mono"><%= fmt.call(m[:npm_last]) %></td>
-                        <td class="text-center font-mono"><%= fmt.call(m[:ni_growth]) %></td>
+                        <% col_groups.each do |g| %>
+                          <% if g[:per_year] %>
+                            <% year_range.each_with_index do |y, i| %>
+                              <% val = (my[y] || {})[g[:mkey]] %>
+                              <td class="text-center font-mono <%= 'border-l border-line-soft' if i.zero? %>">
+                                <%= g[:mkey] == :ni ? fmt_yi.call(val) : fmt.call(val) %>
+                              </td>
+                            <% end %>
+                          <% else %>
+                            <td class="text-center font-mono border-l border-line-soft"><%= fmt.call(m[g[:mkey]]) %></td>
+                          <% end %>
+                        <% end %>
                       </tr>
                     <% end %>
                   </tbody>
@@ -248,6 +293,7 @@
                   <tr>
                     <th class="text-left">股票</th>
                     <th class="text-left">板块</th>
+                    <th class="text-left">行业</th>
                     <th>金字塔分</th>
                     <th>区间最低 ROE</th>
                     <th>末年 ROE</th>
@@ -262,6 +308,7 @@
                         <span class="text-hl-11 text-muted-3 ml-1.5 font-mono"><%= stock.symbol %></span>
                       </td>
                       <td class="text-left text-muted"><%= stock.sector || '—' %></td>
+                      <td class="text-left text-muted"><%= stock.industry || '—' %></td>
                       <td class="text-center font-semibold text-link"><%= stock.pyramid_total_score %></td>
                       <td class="text-center font-mono text-muted-3">**</td>
                       <td class="text-center font-mono text-muted-3">**</td>

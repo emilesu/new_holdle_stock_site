@@ -10,6 +10,11 @@ class ScreenersController < ApplicationController
     @market = 'CN' unless StockScreenerService::MARKETS.include?(@market)
 
     @sectors = cached_sectors(@market)
+    @sector = params[:sector].to_s.strip
+    @sector = nil if @sector.empty? || @sector == 'all'
+    @industry = params[:industry].to_s.strip
+    @industry = nil if @industry.empty? || @industry == 'all'
+    @industries = @sector ? industries_for(@market, @sector) : []
 
     @latest_year = Date.current.year - 1
     @default_year_from = @latest_year - 4
@@ -23,11 +28,13 @@ class ScreenersController < ApplicationController
     end
   end
 
-  # 板块列表 JSON：供前端切换市场时动态刷新板块下拉
-  def sectors
+  # 筛选项 JSON：按市场返回板块列表，按市场+板块返回行业列表（前端级联刷新用）
+  def filters
     market = params[:market].to_s
     market = 'CN' unless StockScreenerService::MARKETS.include?(market)
-    render json: cached_sectors(market)
+    sector = params[:sector].to_s.strip
+    sector = nil if sector.empty? || sector == 'all'
+    render json: { sectors: cached_sectors(market), industries: sector ? industries_for(market, sector) : [] }
   end
 
   private
@@ -36,6 +43,13 @@ class ScreenersController < ApplicationController
   def cached_sectors(market)
     Rails.cache.fetch("pyramid_sectors_#{market}_#{Date.current}", expires_in: 1.hour) do
       Stock.where(market: market).where.not(sector: nil).distinct.pluck(:sector).sort
+    end
+  end
+
+  # 行业列表与金字塔页共用同一缓存键
+  def industries_for(market, sector)
+    Rails.cache.fetch("pyramid_industries_#{market}_#{sector}_#{Date.current}", expires_in: 1.hour) do
+      Stock.where(market: market, sector: sector).where.not(industry: nil).distinct.pluck(:industry).sort
     end
   end
 

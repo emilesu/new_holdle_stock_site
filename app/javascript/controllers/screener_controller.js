@@ -1,41 +1,92 @@
 import { Controller } from "@hotwired/stimulus"
 
-// 股票筛选页交互：预设策略一键填充表单、盈利指标/净利润条件启用开关联动输入框禁用状态
-// 禁用的表单控件不会被 GET 提交，天然实现「留空即不启用」
+// 股票筛选页交互：
+// 1. 市场/板块级联：切换市场或板块时从 /screener/filters 动态重建板块、行业下拉
+// 2. 盈利指标/净利润条件启用开关联动输入框禁用状态（禁用的控件不会被 GET 提交，实现「留空即不启用」）
+// 3. 浏览器返回（bfcache / Turbo 缓存恢复）后重新同步勾选与禁用状态，避免 UI 与实际状态不一致
+// 4. 结果表整行点击新窗口打开股票详情
 export default class extends Controller {
-  static targets = ["form", "indicatorToggle", "indicatorInput", "growthToggle", "growthInput", "market", "sector"]
+  static targets = ["form", "indicatorToggle", "indicatorInput", "growthToggle", "growthInput", "market", "sector", "industry"]
 
   connect() {
-    this.sectorCache = {}
-    // Turbo 缓存恢复后重新同步一次禁用状态
+    this.filterCache = {}
+    this.syncAllState()
+    // 浏览器表单状态恢复发生在 JS 执行之后，需在 pageshow / turbo:load 后延迟重同步一次
+    this.restoreHandler = () => {
+      this.syncAllState()
+      requestAnimationFrame(() => this.syncAllState())
+    }
+    document.addEventListener("turbo:load", this.restoreHandler)
+    window.addEventListener("pageshow", this.restoreHandler)
+  }
+
+  disconnect() {
+    document.removeEventListener("turbo:load", this.restoreHandler)
+    window.removeEventListener("pageshow", this.restoreHandler)
+  }
+
+  syncAllState() {
     this.indicatorToggleTargets.forEach((el) => this.syncIndicator(el.dataset.key, el.checked))
     this.syncGrowth()
   }
 
-  // 切换市场时动态刷新板块下拉（板块列表按市场不同）
+  // ---------- 市场 / 板块 / 行业级联 ----------
+
   async marketChanged() {
     const market = this.marketTarget.value
-    const select = this.sectorTarget
-    if (this.sectorCache[market]) {
-      this.renderSectors(select, this.sectorCache[market])
+    const { sectors } = await this.fetchFilters(market, null)
+    // 响应乱序防护：市场已再次变化则丢弃过期响应
+    if (this.marketTarget.value !== market) return
+    this.renderOptions(this.sectorTarget, sectors, "")
+    this.resetIndustry()
+  }
+
+  async sectorChanged() {
+    const sector = this.sectorTarget.value
+    if (!sector) {
+      this.resetIndustry()
       return
     }
-    select.innerHTML = '<option value="">加载中...</option>'
+    const market = this.marketTarget.value
+    this.industryTarget.disabled = true
+    this.renderOptions(this.industryTarget, [], "", "加载中...")
+    const { industries } = await this.fetchFilters(market, sector)
+    // 响应乱序防护：板块/市场已再次变化则丢弃过期响应
+    if (this.sectorTarget.value !== sector || this.marketTarget.value !== market) return
+    this.renderOptions(this.industryTarget, industries, "")
+    this.industryTarget.disabled = false
+  }
+
+  resetIndustry() {
+    this.renderOptions(this.industryTarget, [], "")
+    this.industryTarget.disabled = true
+  }
+
+  async fetchFilters(market, sector) {
+    const key = `${market}|${sector || ""}`
+    if (this.filterCache[key]) return this.filterCache[key]
     try {
-      const res = await fetch(`/screener/sectors?market=${encodeURIComponent(market)}`)
-      const sectors = await res.json()
-      this.sectorCache[market] = sectors
-      this.renderSectors(select, sectors)
+      const res = await fetch(`/screener/filters?market=${encodeURIComponent(market)}&sector=${encodeURIComponent(sector || "")}`)
+      const data = await res.json()
+      this.filterCache[key] = data
+      return data
     } catch (error) {
-      console.error("加载板块列表失败:", error)
-      this.renderSectors(select, [])
+      console.error("加载筛选项失败:", error)
+      return { sectors: [], industries: [] }
     }
   }
 
-  renderSectors(select, sectors) {
-    select.innerHTML = '<option value="">全部</option>' +
-      sectors.map((s) => `<option value="${s}">${s}</option>`).join("")
+  renderOptions(select, items, selected, placeholder = null) {
+    let html = placeholder ? `<option value="">${this.escapeHtml(placeholder)}</option>` : '<option value="">全部</option>'
+    html += items.map((v) => `<option value="${this.escapeHtml(v)}" ${v === selected ? "selected" : ""}>${this.escapeHtml(v)}</option>`).join("")
+    select.innerHTML = html
   }
+
+  escapeHtml(str) {
+    return String(str).replace(/[&<>"']/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]))
+  }
+
+  // ---------- 勾选开关与输入框禁用联动 ----------
 
   toggleIndicator(event) {
     this.syncIndicator(event.target.dataset.key, event.target.checked)
@@ -68,7 +119,8 @@ export default class extends Controller {
     return this.growthInputTargets.find((el) => el.name === "growth_mode")
   }
 
-  // 预设策略：data-screener-preset-param 为 JSON，键为表单 name 或 xxx_enabled 开关
+  // ---------- 预设策略 ----------
+
   applyPreset(event) {
     const preset = JSON.parse(event.params.preset || "{}")
     Object.entries(preset).forEach(([key, value]) => {
@@ -84,7 +136,7 @@ export default class extends Controller {
       const el = this.element.querySelector(`[name="${key}"]`)
       if (el) {
         el.value = value
-        // 预设改变市场时派发 change，联动重置板块
+        // 预设改变市场时派发 change，联动刷新板块并重置行业
         if (key === "market") el.dispatchEvent(new Event("change"))
       }
     })
@@ -108,5 +160,15 @@ export default class extends Controller {
   findToggle(base) {
     if (base === "growth") return this.growthToggleTarget
     return this.indicatorToggleTargets.find((el) => el.dataset.key === base)
+  }
+
+  // ---------- 结果表整行点击 ----------
+
+  openStock(event) {
+    if (event.target.closest("a, button, select, input")) return
+    // 行内拖选文本后 mouseup 也会派发 click，避免误开新标签页
+    const selection = window.getSelection()
+    if (selection && !selection.isCollapsed) return
+    if (event.params.url) window.open(event.params.url, "_blank")
   }
 }

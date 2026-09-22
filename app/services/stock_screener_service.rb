@@ -93,6 +93,8 @@ class StockScreenerService
 
     @sector = @params['sector'].to_s.strip
     @sector = nil if @sector.empty? || @sector == 'all'
+    @industry = @params['industry'].to_s.strip
+    @industry = nil if @industry.empty? || @industry == 'all'
 
     latest_year = Date.current.year - 1 # 当年年报未披露完毕，默认区间截至上一完整财年
     @year_to = int_param(:year_to) || latest_year
@@ -151,7 +153,8 @@ class StockScreenerService
     @page = [[int_param(:page).to_i, 1].max, 1_000].min
 
     @result.conditions = {
-      market: @market, sector: @sector, year_from: @year_from, year_to: @year_to,
+      market: @market, sector: @sector, industry: @industry,
+      year_from: @year_from, year_to: @year_to,
       margin_mode: @margin_mode, margin_conditions: @margin_conditions,
       growth_mode: @growth_mode, growth_value: @growth_value, sort: @sort
     }
@@ -177,6 +180,7 @@ class StockScreenerService
     {
       market: @params['market'].to_s,
       sector: @params['sector'].to_s.strip.presence,
+      industry: @params['industry'].to_s.strip.presence,
       year_from: int_param(:year_from),
       year_to: int_param(:year_to),
       margin_mode: @params['margin_mode'].to_s.presence || 'all',
@@ -230,6 +234,7 @@ class StockScreenerService
   def base_scope
     scope = Stock.where(market: @market, status: 'listed')
     scope = scope.where(sector: @sector) if @sector
+    scope = scope.where(industry: @industry) if @industry
     scope
   end
 
@@ -335,33 +340,39 @@ class StockScreenerService
     "GROUP BY cur.stock_id"
   end
 
-  # ---------- 结果指标加载（展示用，单页各一次聚合查询，避免 N+1） ----------
+  # ---------- 结果指标加载（展示用，逐年明细，单页各一次查询，避免 N+1） ----------
+  # 返回结构：{ stock_id => { years: { 年份 => { roe:, gm:, npm:, ni: } }, ni_growth: 末年同比 } }
 
   def load_metrics(stocks)
     return {} if stocks.empty?
 
     ids = stocks.map(&:id)
     metrics = {}
-    year_to = @year_to.to_i
 
-    # 占位符顺序：SELECT 中三个 CASE 年份在前，WHERE 中 ids/market/日期在后
-    fi_sql = sanitize(<<~SQL, [year_to, year_to, year_to, ids, @market, date_from, date_to])
-      SELECT stock_id,
-             MIN(roe_avg) AS roe_min,
-             MAX(CASE WHEN EXTRACT(YEAR FROM report_date) = ? THEN roe_avg END) AS roe_last,
-             MAX(CASE WHEN EXTRACT(YEAR FROM report_date) = ? THEN gross_margin END) AS gm_last,
-             MAX(CASE WHEN EXTRACT(YEAR FROM report_date) = ? THEN net_sales_rate END) AS npm_last
+    fi_sql = sanitize(<<~SQL, [ids, @market, date_from, date_to])
+      SELECT stock_id, EXTRACT(YEAR FROM report_date) AS y,
+             roe_avg, gross_margin, net_sales_rate
       FROM financial_indicators
       WHERE stock_id IN (?) AND period_type = 'annual' AND market = ? AND report_date BETWEEN ? AND ?
-      GROUP BY stock_id
     SQL
     ActiveRecord::Base.connection.select_all(fi_sql).each do |row|
-      metrics[row['stock_id'].to_i] = {
-        roe_min: row['roe_min']&.to_f, roe_last: row['roe_last']&.to_f,
-        gm_last: row['gm_last']&.to_f, npm_last: row['npm_last']&.to_f
+      years = (metrics[row['stock_id'].to_i] ||= { years: {} })[:years]
+      years[row['y'].to_i] = {
+        roe: row['roe_avg']&.to_f, gm: row['gross_margin']&.to_f, npm: row['net_sales_rate']&.to_f
       }
     end
 
+    ni_sql = sanitize(<<~SQL, [ids, @market, date_from, date_to])
+      SELECT stock_id, EXTRACT(YEAR FROM report_date) AS y, net_income_to_shareholders
+      FROM income_statements
+      WHERE stock_id IN (?) AND period_type = 'annual' AND market = ? AND report_date BETWEEN ? AND ?
+    SQL
+    ActiveRecord::Base.connection.select_all(ni_sql).each do |row|
+      entry = (metrics[row['stock_id'].to_i] ||= { years: {} })
+      (entry[:years][row['y'].to_i] ||= {})[:ni] = row['net_income_to_shareholders']&.to_f
+    end
+
+    year_to = @year_to.to_i
     growth_sql = sanitize(<<~SQL, [ids, @market, year_to, year_to - 1])
       SELECT cur.stock_id,
              (cur.net_income_to_shareholders - prev.net_income_to_shareholders) / ABS(prev.net_income_to_shareholders) * 100 AS growth
@@ -372,8 +383,7 @@ class StockScreenerService
         AND prev.net_income_to_shareholders > 0 AND cur.net_income_to_shareholders IS NOT NULL
     SQL
     ActiveRecord::Base.connection.select_all(growth_sql).each do |row|
-      m = metrics[row['stock_id'].to_i] ||= {}
-      m[:ni_growth] = row['growth']&.to_f
+      (metrics[row['stock_id'].to_i] ||= { years: {} })[:ni_growth] = row['growth']&.to_f
     end
 
     metrics

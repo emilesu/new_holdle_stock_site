@@ -59,6 +59,15 @@ class StockScreenerServiceTest < ActiveSupport::TestCase
     assert_equal [@good.id], result.stocks.map(&:id)
   end
 
+  test "行业过滤：仅命中指定行业股票" do
+    @good.update!(industry: "白酒")
+    @mix.update!(industry: "啤酒")
+    result = screen(market: "CN", year_from: 2021, year_to: 2023, margin_mode: "any",
+                    roe_value: "20", industry: "白酒")
+    assert_equal [@good.id], result.stocks.map(&:id)
+    assert_equal "白酒", result.conditions[:industry]
+  end
+
   # ---------- 净利润增长 ----------
 
   test "yoy 模式：末年同比增长达阈值命中，回落不命中" do
@@ -88,14 +97,18 @@ class StockScreenerServiceTest < ActiveSupport::TestCase
     assert_equal [@good.id], result.stocks.map(&:id)
   end
 
-  test "metrics 带出区间最低/末年 ROE、末年毛利率净利率与净利润同比" do
-    result = screen(market: "CN", year_from: 2021, year_to: 2023, margin_mode: "all", roe_value: "20")
+  test "metrics 逐年明细：每年 ROE/毛利率/净利率/净利润与末年净利润同比" do
+    result = screen(market: "CN", year_from: 2021, year_to: 2023, margin_mode: "any", roe_value: "20")
     m = result.metrics[@good.id]
-    assert_in_delta 25, m[:roe_min], 0.01
-    assert_in_delta 30, m[:roe_last], 0.01
-    assert_in_delta 50, m[:gm_last], 0.01
-    assert_in_delta 15, m[:npm_last], 0.01
+    years = m[:years]
+    assert_in_delta 25, years[2021][:roe], 0.01
+    assert_in_delta 30, years[2023][:roe], 0.01
+    assert_in_delta 50, years[2023][:gm], 0.01
+    assert_in_delta 15, years[2023][:npm], 0.01
+    assert_in_delta 180, years[2023][:ni], 0.01
     assert_in_delta 38.46, m[:ni_growth], 0.1
+    # GAP 缺 2022 年报：years 中无该年键
+    refute result.metrics[@gap.id][:years].key?(2022)
   end
 
   # ---------- 排序与分页 ----------
