@@ -48,9 +48,9 @@
         <%= form_with url: screener_path, method: :get, data: { turbo_frame: 'screener_results', screener_target: 'form' }, class: 'space-y-5' do |f| %>
           <%= hidden_field_tag :screen, '1' %>
 
-          <%# 第一行：市场 / 板块 / 年度区间 %>
-          <div class="grid grid-cols-1 lg:grid-cols-5 gap-3">
-            <div class="flex items-center gap-1.5">
+          <%# 第一行：市场 / 板块 / 行业 / 年度区间 / 排序（手机端同一行横向滚动，桌面端五列网格） %>
+          <div class="flex gap-3 overflow-x-auto pb-1 lg:grid lg:grid-cols-5 lg:overflow-visible lg:pb-0">
+            <div class="flex items-center gap-1.5 shrink-0">
               <label class="text-hl-13 font-medium text-muted-2 shrink-0">市场</label>
               <select name="market" class="px-3 py-2 text-hl-13 border border-line rounded-md focus:border-link flex-1 min-w-0 bg-white"
                       data-screener-target="market" data-action="change->screener#marketChanged">
@@ -59,7 +59,7 @@
                 <% end %>
               </select>
             </div>
-            <div class="flex items-center gap-1.5">
+            <div class="flex items-center gap-1.5 shrink-0">
               <label class="text-hl-13 font-medium text-muted-2 shrink-0">板块</label>
               <select name="sector" class="px-3 py-2 text-hl-13 border border-line rounded-md focus:border-link flex-1 min-w-0 bg-white"
                       data-screener-target="sector" data-action="change->screener#sectorChanged">
@@ -69,7 +69,7 @@
                 <% end %>
               </select>
             </div>
-            <div class="flex items-center gap-1.5">
+            <div class="flex items-center gap-1.5 shrink-0">
               <label class="text-hl-13 font-medium text-muted-2 shrink-0">行业</label>
               <select name="industry" class="px-3 py-2 text-hl-13 border border-line rounded-md focus:border-link flex-1 min-w-0 bg-white"
                       data-screener-target="industry" <%= 'disabled' if @sector.blank? %>>
@@ -79,7 +79,7 @@
                 <% end %>
               </select>
             </div>
-            <div class="flex items-center gap-1.5">
+            <div class="flex items-center gap-1.5 shrink-0">
               <label class="text-hl-13 font-medium text-muted-2 shrink-0">年度</label>
               <select name="year_from" class="px-3 py-2 text-hl-13 border border-line rounded-md focus:border-link flex-1 min-w-0 bg-white">
                 <% years.each do |y| %>
@@ -93,7 +93,7 @@
                 <% end %>
               </select>
             </div>
-            <div class="flex items-center gap-1.5">
+            <div class="flex items-center gap-1.5 shrink-0">
               <label class="text-hl-13 font-medium text-muted-2 shrink-0">排序</label>
               <select name="sort" class="px-3 py-2 text-hl-13 border border-line rounded-md focus:border-link flex-1 min-w-0 bg-white">
                 <option value="pyramid" <%= 'selected' if sel_sort == 'pyramid' %>>金字塔分</option>
@@ -194,70 +194,60 @@
               <div class="px-6 py-12 text-center text-hl-13 text-muted-3">没有符合条件的股票，试试放宽条件（如改为「至少一年满足」或缩小阈值）</div>
             <% else %>
               <%
-                # 动态列：启用的盈利指标按年展开；净利润增长按模式展开
+                # 仿股票详情页财务表：年份为列、指标为行；每只股票按启用指标占多行，股票信息列跨行合并
                 year_range = (c[:year_from]..c[:year_to]).to_a
-                col_groups = (c[:margin_conditions] || []).map do |cond|
-                  { label: StockScreenerService::LABELS[cond[:key].to_s], mkey: cond[:key].to_sym, per_year: true }
+                indicator_rows = (c[:margin_conditions] || []).map do |cond|
+                  { label: StockScreenerService::LABELS[cond[:key].to_s], mkey: cond[:key].to_sym, kind: :year }
                 end
-                col_groups << { label: '净利润(亿)', mkey: :ni, per_year: true } if c[:growth_mode] == 'always_up'
-                col_groups << { label: '净利润同比', mkey: :ni_growth, per_year: false } if c[:growth_mode] == 'yoy'
-                has_year_cols = col_groups.any? { |g| g[:per_year] }
+                indicator_rows << { label: '净利润(亿)', mkey: :ni, kind: :year } if c[:growth_mode] == 'always_up'
+                indicator_rows << { label: '净利润同比', mkey: :ni_growth, kind: :growth } if c[:growth_mode] == 'yoy'
               %>
               <div class="overflow-x-auto">
                 <table class="hl-table w-full">
                   <thead>
                     <tr>
-                      <th class="text-left" <%= "rowspan=2" if has_year_cols %>>股票</th>
-                      <th class="text-left" <%= "rowspan=2" if has_year_cols %>>板块</th>
-                      <th class="text-left" <%= "rowspan=2" if has_year_cols %>>行业</th>
-                      <th <%= "rowspan=2" if has_year_cols %>>金字塔分</th>
-                      <% col_groups.each do |g| %>
-                        <% if g[:per_year] %>
-                          <th colspan="<%= year_range.size %>" class="border-l border-line-soft text-center"><%= g[:label] %></th>
-                        <% else %>
-                          <th <%= "rowspan=2" if has_year_cols %> class="border-l border-line-soft"><%= g[:label] %></th>
-                        <% end %>
+                      <th class="text-left">股票</th>
+                      <th class="text-left">板块</th>
+                      <th class="text-left">行业</th>
+                      <th>金字塔分</th>
+                      <th class="text-left">指标</th>
+                      <% year_range.each do |y| %>
+                        <th class="text-hl-12 font-semibold text-ink-soft whitespace-nowrap"><%= y %></th>
                       <% end %>
                     </tr>
-                    <% if has_year_cols %>
-                      <tr>
-                        <% col_groups.each do |g| %>
-                          <% next unless g[:per_year] %>
-                          <% year_range.each_with_index do |y, i| %>
-                            <th class="<%= 'border-l border-line-soft' if i.zero? %> text-hl-11 font-normal text-muted-2"><%= y %></th>
-                          <% end %>
-                        <% end %>
-                      </tr>
-                    <% end %>
                   </thead>
                   <tbody>
                     <% @result.stocks.each do |stock| %>
                       <% m = @result.metrics[stock.id] || { years: {} } %>
                       <% my = m[:years] || {} %>
-                      <tr class="hover:bg-bg-mute cursor-pointer"
-                          data-action="click->screener#openStock" data-screener-url-param="<%= stock_path(stock) %>">
-                        <td class="text-left">
-                          <%= link_to stock_path(stock), target: '_blank', rel: 'noopener', class: 'text-ink font-medium hover:text-link' do %>
-                            <%= display_name.call(stock) %>
+                      <% indicator_rows.each_with_index do |g, gi| %>
+                        <tr class="hover:bg-bg-mute cursor-pointer border-t border-line-soft"
+                            data-action="click->screener#openStock" data-screener-url-param="<%= stock_path(stock) %>">
+                          <% if gi.zero? %>
+                            <td class="text-left" rowspan="<%= indicator_rows.size %>">
+                              <%= link_to stock_path(stock), target: '_blank', rel: 'noopener', class: 'text-ink font-medium hover:text-link' do %>
+                                <%= display_name.call(stock) %>
+                              <% end %>
+                              <span class="text-hl-11 text-muted-3 ml-1.5 font-mono"><%= stock.symbol %></span>
+                            </td>
+                            <td class="text-left text-muted" rowspan="<%= indicator_rows.size %>"><%= stock.sector || '—' %></td>
+                            <td class="text-left text-muted" rowspan="<%= indicator_rows.size %>"><%= stock.industry || '—' %></td>
+                            <td class="text-center font-semibold text-link" rowspan="<%= indicator_rows.size %>"><%= stock.pyramid_total_score %></td>
                           <% end %>
-                          <span class="text-hl-11 text-muted-3 ml-1.5 font-mono"><%= stock.symbol %></span>
-                        </td>
-                        <td class="text-left text-muted"><%= stock.sector || '—' %></td>
-                        <td class="text-left text-muted"><%= stock.industry || '—' %></td>
-                        <td class="text-center font-semibold text-link"><%= stock.pyramid_total_score %></td>
-                        <% col_groups.each do |g| %>
-                          <% if g[:per_year] %>
-                            <% year_range.each_with_index do |y, i| %>
+                          <td class="text-left text-muted whitespace-nowrap"><%= g[:label] %></td>
+                          <% if g[:kind] == :year %>
+                            <% year_range.each do |y| %>
                               <% val = (my[y] || {})[g[:mkey]] %>
-                              <td class="text-center font-mono <%= 'border-l border-line-soft' if i.zero? %>">
-                                <%= g[:mkey] == :ni ? fmt_yi.call(val) : fmt.call(val) %>
-                              </td>
+                              <td class="text-center font-mono whitespace-nowrap"><%= g[:mkey] == :ni ? fmt_yi.call(val) : fmt.call(val) %></td>
                             <% end %>
                           <% else %>
-                            <td class="text-center font-mono border-l border-line-soft"><%= fmt.call(m[g[:mkey]]) %></td>
+                            <%# 净利润同比为末年单值，仅在末年列展示 %>
+                            <% year_range.each do |y| %>
+                              <td class="text-center font-mono"><%= y == c[:year_to] ? fmt.call(m[:ni_growth]) : '—' %></td>
+                            <% end %>
                           <% end %>
-                        <% end %>
-                      </tr>
+                        </tr>
+                      <% end %>
                     <% end %>
                   </tbody>
                 </table>
@@ -265,7 +255,7 @@
               <%# 分页 %>
               <div class="px-6 py-4 border-t border-line flex items-center justify-between">
                 <span class="text-hl-12 text-muted-3">第 <%= @result.page %> / <%= @result.total_pages %> 页</span>
-                <div class="flex items-center gap-1.5">
+                <div class="flex items-center gap-1.5 shrink-0">
                   <% if @result.page > 1 %>
                     <%= link_to '上一页', screener_path(request.query_parameters.merge(page: @result.page - 1)), class: 'hl-btn text-hl-12', data: { turbo_frame: 'screener_results' } %>
                   <% end %>
