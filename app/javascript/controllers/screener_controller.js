@@ -3,12 +3,17 @@ import { Controller } from "@hotwired/stimulus"
 // 股票筛选页交互：预设策略一键填充表单、盈利指标/净利润条件启用开关联动输入框禁用状态
 // 禁用的表单控件不会被 GET 提交，天然实现「留空即不启用」
 export default class extends Controller {
-  static targets = ["form", "indicatorToggle", "indicatorInput", "growthToggle", "growthInput"]
+  static targets = ["form", "indicatorToggle", "indicatorInput", "growthToggle", "growthInput", "market", "sector"]
 
   connect() {
     // Turbo 缓存恢复后重新同步一次禁用状态
     this.indicatorToggleTargets.forEach((el) => this.syncIndicator(el.dataset.key, el.checked))
     this.syncGrowth()
+  }
+
+  // 板块选项按服务端渲染的市场生成，切换市场后旧板块名对新市场无效，重置为「全部」避免提交出空结果
+  marketChanged() {
+    this.sectorTarget.value = ""
   }
 
   toggleIndicator(event) {
@@ -56,7 +61,11 @@ export default class extends Controller {
         return
       }
       const el = this.element.querySelector(`[name="${key}"]`)
-      if (el) el.value = value
+      if (el) {
+        el.value = value
+        // 预设改变市场时派发 change，联动重置板块
+        if (key === "market") el.dispatchEvent(new Event("change"))
+      }
     })
     // 预设未显式给出的指标行自动关闭，避免残留旧条件
     ;["roe", "gm", "npm"].forEach((base) => {

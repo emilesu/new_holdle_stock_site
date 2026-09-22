@@ -32,19 +32,12 @@ class ScreenersController < ApplicationController
     end
   end
 
-  # 非会员示例：缓存 stock_id 与指标，渲染时按 id 取最新名称/代码
+  # 非会员示例：仅缓存 stock_id 列表，渲染时按 id 取最新名称/代码（指标列展示为掩码，无需缓存指标）
   def cached_demo_result
-    Rails.cache.fetch("screener_demo_#{Date.current}", expires_in: 1.day) do
+    ids = Rails.cache.fetch("screener_demo_#{Date.current}", expires_in: 1.day) do
       result = StockScreenerService.call(DEMO_PARAMS)
-      next { ids: [], metrics: {} } unless result.ok?
-
-      {
-        ids: result.stocks.first(DEMO_LIMIT).map(&:id),
-        metrics: result.metrics.slice(*result.stocks.first(DEMO_LIMIT).map(&:id))
-      }
-    end.then do |cached|
-      stocks = Stock.where(id: cached[:ids]).in_order_of(:id, cached[:ids])
-      { stocks: stocks, metrics: cached[:metrics] }
+      result.ok? ? result.stocks.first(DEMO_LIMIT).map(&:id) : []
     end
+    Stock.where(id: ids).in_order_of(:id, ids)
   end
 end

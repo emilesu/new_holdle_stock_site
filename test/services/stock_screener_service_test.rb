@@ -111,7 +111,7 @@ class StockScreenerServiceTest < ActiveSupport::TestCase
     assert_equal [@gap, @good, @mix].map(&:id), result.stocks.map(&:id)
   end
 
-  test "分页：总数与页数正确，超界页返回空" do
+  test "分页：总数与页数正确，超界页码钳制到末页" do
     21.upto(28) do |i|
       s = create_stock("P#{i}", score: i)
       add_annual(s, 2023, roe: 40)
@@ -119,8 +119,8 @@ class StockScreenerServiceTest < ActiveSupport::TestCase
     result = screen(market: "CN", year_from: 2023, year_to: 2023, margin_mode: "last", roe_value: "20", page: 2)
     assert_equal 11, result.total_count # GOOD/MIX/GAP + 8 只新建
     assert_equal 1, result.total_pages   # 11 <= PER_PAGE(20)
-    assert_equal 2, result.page
-    assert_empty result.stocks
+    assert_equal 1, result.page          # 越界钳制到末页
+    assert_equal 11, result.stocks.size
   end
 
   # ---------- 参数校验与安全 ----------
@@ -143,6 +143,14 @@ class StockScreenerServiceTest < ActiveSupport::TestCase
   test "非枚举模式参数被拒绝" do
     result = screen(market: "CN", roe_value: "20", margin_mode: "drop_table")
     refute result.ok?
+  end
+
+  test "校验失败时 conditions 回显原始输入供表单保留" do
+    result = screen(market: "CN", year_from: 2023, year_to: 2021, roe_value: "20", gm_value: "45")
+    refute result.ok?
+    assert_equal 2023, result.conditions[:year_from]
+    assert_equal 2021, result.conditions[:year_to]
+    assert_equal %w[roe gm], result.conditions[:margin_conditions].map { |x| x[:key] }
   end
 
   test "SQL 注入字符串作为普通值处理，不破坏数据" do

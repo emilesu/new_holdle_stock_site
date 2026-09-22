@@ -50,7 +50,8 @@
           <div class="grid grid-cols-1 lg:grid-cols-4 gap-3">
             <div class="flex items-center gap-2">
               <label class="text-hl-13 font-medium text-muted-2 w-14 shrink-0">市场</label>
-              <select name="market" class="px-3 py-2 text-hl-13 border border-line rounded-md focus:border-link w-full bg-white">
+              <select name="market" class="px-3 py-2 text-hl-13 border border-line rounded-md focus:border-link w-full bg-white"
+                      data-screener-target="market" data-action="change->screener#marketChanged">
                 <% [%w[CN A股], %w[HK 港股], %w[US 美股]].each do |code, label| %>
                   <option value="<%= code %>" <%= 'selected' if @market == code %>><%= label %></option>
                 <% end %>
@@ -58,7 +59,8 @@
             </div>
             <div class="flex items-center gap-2">
               <label class="text-hl-13 font-medium text-muted-2 w-14 shrink-0">板块</label>
-              <select name="sector" class="px-3 py-2 text-hl-13 border border-line rounded-md focus:border-link w-full bg-white">
+              <select name="sector" class="px-3 py-2 text-hl-13 border border-line rounded-md focus:border-link w-full bg-white"
+                      data-screener-target="sector">
                 <option value="">全部</option>
                 <% @sectors.each do |sector| %>
                   <option value="<%= sector %>" <%= 'selected' if sel_sector == sector %>><%= sector %></option>
@@ -169,7 +171,7 @@
     <turbo-frame id="screener_results">
       <% if @screened %>
         <% if @result.errors.any? %>
-          <div class="hl-card p-4 text-hl-13 text-loss bg-bg-soft"><%= @result.errors.join('；') %></div>
+          <div class="hl-card p-4 text-hl-13 text-profit bg-bg-soft"><%= @result.errors.join('；') %></div>
         <% else %>
           <div class="hl-card">
             <div class="px-6 py-4 border-b border-line bg-bg-mute flex items-center justify-between">
@@ -235,9 +237,9 @@
         <div class="hl-card">
           <div class="px-6 py-4 border-b border-line bg-bg-mute flex items-center justify-between">
             <h2 class="text-hl-16 font-semibold text-ink-soft">示例：A股 近5年每年 ROE ≥ 20%</h2>
-            <span class="text-hl-12 text-muted-3">示例仅展示前 <%= @demo[:stocks].size %> 条</span>
+            <span class="text-hl-12 text-muted-3">示例仅展示前 <%= @demo.size %> 条</span>
           </div>
-          <% if @demo[:stocks].empty? %>
+          <% if @demo.empty? %>
             <div class="px-6 py-8 text-center text-hl-13 text-muted-3">暂无示例数据</div>
           <% else %>
             <div class="overflow-x-auto">
@@ -253,8 +255,7 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <% @demo[:stocks].each do |stock| %>
-                    <% m = @demo[:metrics][stock.id] || {} %>
+                  <% @demo.each do |stock| %>
                     <tr>
                       <td class="text-left">
                         <span class="text-ink font-medium"><%= display_name.call(stock) %></span>
