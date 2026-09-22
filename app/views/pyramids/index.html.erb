@@ -230,6 +230,7 @@
                  class="flex justify-center py-4 text-hl-13 text-muted-4 opacity-100 transition-opacity duration-300"
                  data-scroll-has-more="<%= @total_pages > 1 %>"
                  data-next-page="2"
+                 data-per-page="<%= PyramidsController::PER_PAGE %>"
                  data-total-pages="<%= @total_pages %>"
                  data-market="<%= @market %>"
                  data-sector="<%= @sector || '' %>"
@@ -728,14 +729,18 @@ document.addEventListener('turbo:load', function initPyramidPage() {
   console.log('[Scroll] 金字塔页面加载，使用 v3 滚动加载机制（JS 变量维护页码）');
   let scrollObserver = null;
   let scrollIsLoading = false;
-  // 每页条数需与 PyramidsController::PER_PAGE 一致（榜单排名也按它算）
-  const SCROLL_PER_PAGE = 20;
+  // 每页条数由服务端下发（哨兵 data-per-page），避免前端硬编码与 PyramidsController::PER_PAGE 漂移
+  const sentinelPerPage = () => {
+    const sentinel = document.getElementById('pyramid-scroll-sentinel');
+    const value = parseInt(sentinel && sentinel.dataset.perPage, 10);
+    return Number.isFinite(value) && value > 0 ? value : 20;
+  };
   // 当前页码以「列表里已渲染的股票条数」为准：页面被整页替换或列表被重建后，
   // 闭包内的游标可能落后于 DOM，按陈旧游标请求会把渲染过的分块再追加一遍
   const renderedPageCount = () => {
     const list = document.getElementById('pyramid-stock-list');
     if (!list) return 1;
-    return Math.max(1, Math.ceil(list.querySelectorAll('.stock-row').length / SCROLL_PER_PAGE));
+    return Math.max(1, Math.ceil(list.querySelectorAll('.stock-row').length / sentinelPerPage()));
   };
   let scrollCurrentPage = renderedPageCount();
   // 本闭包失效标记（页面被 Turbo 整页替换时置位）：
@@ -981,6 +986,11 @@ document.addEventListener('turbo:load', function initPyramidPage() {
   initRadarFixed();
 
   function cleanupBeforeCache() {
+    // 先注销自身的两个监听：initPyramidPage 每次整页渲染都会执行一次，
+    // 不注销会让监听器随访问次数累积，且回调闭包长期持有已分离的旧页面 DOM
+    //（与订单页「先移除旧监听再挂载」的处理方式一致）
+    document.removeEventListener('turbo:before-cache', cleanupBeforeCache);
+    document.removeEventListener('turbo:before-render', cleanupBeforeCache);
     // 移除初始化标记，确保 Turbo 恢复缓存页面时能重新初始化
     pyramidPage.removeAttribute('data-_initialized');
     // 失效本闭包：在途的 fetch 与已排队的定时器 / 观察器回调都不再允许写入 DOM，
