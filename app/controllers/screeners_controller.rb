@@ -19,10 +19,12 @@ class ScreenersController < ApplicationController
     @latest_year = Date.current.year - 1
     @default_year_from = @latest_year - 4
 
+    @favorite_stock_ids = []
     @screened = @is_member && params[:screen].present?
     if @screened
       @result = StockScreenerService.call(params)
       @conditions = @result.conditions
+      @favorite_stock_ids = favorite_stock_ids(@result.stocks)
     elsif !@is_member
       @demo = cached_demo_result
     end
@@ -51,6 +53,16 @@ class ScreenersController < ApplicationController
     Rails.cache.fetch("pyramid_industries_#{market}_#{sector}_#{Date.current}", expires_in: 1.hour) do
       Stock.where(market: market, sector: sector).where.not(industry: nil).distinct.pluck(:industry).sort
     end
+  end
+
+  # 当前用户在本页结果中的已收藏股票 id 集合（单次查询，供结果列表显示「已收藏」小图标）
+  def favorite_stock_ids(stocks)
+    return [] unless user_signed_in?
+
+    ids = stocks.map(&:id)
+    return [] if ids.empty?
+
+    current_user.user_favorites.where(stock_id: ids).pluck(:stock_id)
   end
 
   # 非会员示例：仅缓存 stock_id 列表，渲染时按 id 取最新名称/代码（指标列展示为掩码，无需缓存指标）

@@ -66,8 +66,13 @@ class Stock < ApplicationRecord
     tags = []
     tags << '数据<5年' if years.size < 5
     tags << '亏损年份' if years.any? { |y| pyramid_loss_year?(y) }
-    tags << '次新股' if listing_date.present? && listing_date <= Date.current && listing_date >= (Date.current - 3.years)
+    tags << '次新股' if new_listing?
     tags
+  end
+
+  # 次新股：上市日期距今不足 3 年（美股无上市日期数据，一律返回 false）
+  def new_listing?
+    listing_date.present? && listing_date <= Date.current && listing_date >= (Date.current - 3.years)
   end
 
   before_save :set_pinyin_initials

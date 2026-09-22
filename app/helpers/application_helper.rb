@@ -200,6 +200,29 @@ module ApplicationHelper
     end
   end
 
+  # ── 筛选结果页小图标 ─────────────────────────────
+  # 内联 SVG（Heroicons 24px 线条/实心路径），全站无图标字体依赖，颜色继承调用处的 text-* 类。
+  # 目前用于 /screener 结果表：次新股（钟表）与已收藏（星标），图标与表头图例共用同一份定义。
+  ICON_NEW_LISTING_PATH = "M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z".freeze
+  ICON_FAVORITE_PATH = "M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.006 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006Z".freeze
+
+  # 次新股图标：钟表，寓意上市时间短
+  def new_listing_icon_tag(class_name: "w-3 h-3")
+    tag.svg(
+      tag.path(nil, d: ICON_NEW_LISTING_PATH, "stroke-linecap": "round", "stroke-linejoin": "round"),
+      class: class_name, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor",
+      "stroke-width": 2, "aria-hidden": "true"
+    )
+  end
+
+  # 已收藏图标：实心星
+  def favorite_icon_tag(class_name: "w-3 h-3")
+    tag.svg(
+      tag.path(nil, d: ICON_FAVORITE_PATH, "fill-rule": "evenodd", "clip-rule": "evenodd", fill: "currentColor"),
+      class: class_name, viewBox: "0 0 24 24", fill: "currentColor", "aria-hidden": "true"
+    )
+  end
+
   # ── 设备检测 ─────────────────────────────────────
 
   def mobile_device?

@@ -255,7 +255,8 @@ export default class extends Controller {
   }
 
   openStock(event) {
-    if (event.target.closest("a, button, select, input")) return
+    // data-screener-no-open：仅作标记的图标（次新股/已收藏），点击不跳转，保证与「悬浮看提示」的预期一致
+    if (event.target.closest("a, button, select, input, [data-screener-no-open]")) return
     // 行内拖选文本后 mouseup 也会派发 click，避免误开新标签页
     const selection = window.getSelection()
     if (selection && !selection.isCollapsed) return

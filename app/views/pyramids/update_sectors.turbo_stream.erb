@@ -1,11 +1,10 @@
+<%# 本接口为会员专属（控制器 before_action 拦截），下拉恒为可交互状态 %>
 <%= turbo_stream.replace 'sector-container' do %>
 <div id="sector-container" class="flex-1 min-w-0">
-  <select name="sector" id="pyramid-sector" class="px-3 py-2 text-hl-13 border border-line rounded focus:border-link w-full min-w-28 bg-white" <%= 'disabled' unless @can_select_sector %>>
-    <% if @can_select_sector %>
-      <option value="">全部</option>
-    <% end %>
+  <select name="sector" id="pyramid-sector" class="px-3 py-2 text-hl-13 border border-line rounded focus:border-link w-full min-w-28 bg-white">
+    <option value="">全部</option>
     <% @sectors.each do |sector| %>
-      <option value="<%= sector %>" <%= 'selected' if !@can_select_sector && sector == '公用事业' %>><%= sector %></option>
+      <option value="<%= sector %>"><%= sector %></option>
     <% end %>
   </select>
 </div>
@@ -22,5 +21,5 @@
 
 <%# 会员提示单独维护，目标恒存在避免 Turbo replace 找不到元素 %>
 <%= turbo_stream.replace 'sector-hint' do %>
-  <p id="sector-hint" class="text-hl-11 text-muted-3 mt-2 <%= 'hidden' if @can_select_sector %>">会员可查看其他行业</p>
+  <p id="sector-hint" class="text-hl-11 text-muted-3 mt-2 hidden">会员可查看其他行业</p>
 <% end %>

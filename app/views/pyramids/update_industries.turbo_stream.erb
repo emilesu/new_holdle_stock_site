@@ -1,6 +1,7 @@
+<%# 本接口为会员专属（控制器 before_action 拦截），下拉恒为可交互状态 %>
 <%= turbo_stream.replace 'industry-container' do %>
   <div id="industry-container" class="flex-1 min-w-0">
-    <select name="industry" id="pyramid-industry" class="px-3 py-2 text-hl-13 border border-line rounded focus:border-link w-full min-w-28 bg-white" <%= 'disabled' unless @can_select_sector %>>
+    <select name="industry" id="pyramid-industry" class="px-3 py-2 text-hl-13 border border-line rounded focus:border-link w-full min-w-28 bg-white">
       <option value="" <%= 'selected' if @industry.blank? %>>全部</option>
       <% @industries.each do |industry| %>
         <option value="<%= industry %>" <%= 'selected' if @industry == industry %>><%= industry %></option>

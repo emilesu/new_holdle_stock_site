@@ -1,7 +1,7 @@
 <% favorite = current_user.user_favorites.find_by(stock_id: @stock.id) %>
 <%= turbo_stream.replace "follow_stock_#{@stock.id}" do %>
   <%= turbo_frame_tag "follow_stock_#{@stock.id}" do %>
-    <%= button_to "已关注", user_favorite_path(favorite, stock_id: @stock.id), method: :delete,
+    <%= button_to "已收藏", user_favorite_path(favorite, stock_id: @stock.id), method: :delete,
       class: "w-full hl-btn hl-btn-line mt-4" %>
   <% end %>
 <% end %>

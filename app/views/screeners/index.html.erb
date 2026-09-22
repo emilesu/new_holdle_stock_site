@@ -185,8 +185,17 @@
           <div class="hl-card p-4 text-hl-13 text-profit bg-bg-soft"><%= @result.errors.join('；') %></div>
         <% else %>
           <div class="hl-card">
-            <div class="px-6 py-4 border-b border-line bg-bg-mute flex items-center justify-between">
+            <div class="px-6 py-4 border-b border-line bg-bg-mute flex flex-wrap items-center justify-between gap-2">
               <h2 class="text-hl-16 font-semibold text-ink-soft">筛选结果</h2>
+              <%# 图例：图标无文字，移动端不显示 title 提示，故在此说明含义 %>
+              <div class="flex items-center gap-3 text-hl-11 text-muted-3">
+                <span class="inline-flex items-center gap-1">
+                  <%= new_listing_icon_tag %>次新股（上市不足 3 年）
+                </span>
+                <span class="inline-flex items-center gap-1">
+                  <%= favorite_icon_tag(class_name: "w-3 h-3 text-link") %>已收藏
+                </span>
+              </div>
               <span class="text-hl-13 text-muted">共找到 <span class="text-ink font-medium"><%= @result.total_count %></span> 只股票</span>
             </div>
             <% if @result.stocks.empty? %>
@@ -228,11 +237,26 @@
                             data-screener-group-param="<%= stock.id %>" data-screener-url-param="<%= stock_path(stock) %>">
                           <% if gi.zero? %>
                             <td class="text-left bg-white sticky left-0 z-20 lg:w-52 lg:max-w-52" rowspan="<%= indicator_rows.size %>">
-                              <div class="lg:truncate">
-                                <%= link_to stock_path(stock), target: '_blank', rel: 'noopener', class: 'text-ink font-medium hover:text-link' do %>
+                              <%# flex + 名称单独 truncate：列宽不足时只截断名称，代码与小图标始终可见 %>
+                              <div class="flex items-center min-w-0">
+                                <%= link_to stock_path(stock), target: '_blank', rel: 'noopener', class: 'text-ink font-medium hover:text-link lg:truncate' do %>
                                   <%= display_name.call(stock) %>
                                 <% end %>
-                                <span class="text-hl-11 text-muted-3 ml-1.5 font-mono"><%= stock.symbol %></span>
+                                <span class="text-hl-11 text-muted-3 ml-1.5 font-mono shrink-0"><%= stock.symbol %></span>
+                                <%# 次新股标记：无文字小图标，悬停/读屏显示注释；data-screener-no-open 阻止点击图标误触发整行跳转 %>
+                                <% if stock.new_listing? %>
+                                  <span class="ml-1.5 shrink-0 inline-flex text-muted-3 cursor-help" title="<%= Stock.pyramid_tag_hint('次新股') %>"
+                                        aria-label="次新股" role="img" data-screener-no-open>
+                                    <%= new_listing_icon_tag %>
+                                  </span>
+                                <% end %>
+                                <%# 已收藏标记：实心星，颜色跟随链接色 %>
+                                <% if @favorite_stock_ids.include?(stock.id) %>
+                                  <span class="ml-1.5 shrink-0 inline-flex text-link cursor-help" title="已收藏"
+                                        aria-label="已收藏" role="img" data-screener-no-open>
+                                    <%= favorite_icon_tag %>
+                                  </span>
+                                <% end %>
                               </div>
                             </td>
                             <td class="text-left text-muted lg:sticky lg:left-52 lg:z-20 lg:bg-white lg:w-32 lg:max-w-32 lg:truncate" rowspan="<%= indicator_rows.size %>"><%= stock.sector || '—' %></td>

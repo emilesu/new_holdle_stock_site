@@ -74,7 +74,7 @@
               </div>
               <%= turbo_frame_tag "follow_stock_#{@stock.id}" do %>
                 <% if user_signed_in? && @user_favorite.present? %>
-                  <%= button_to "已关注", user_favorite_path(@user_favorite, stock_id: @stock.id), method: :delete,
+                  <%= button_to "已收藏", user_favorite_path(@user_favorite, stock_id: @stock.id), method: :delete,
                     class: "w-full hl-btn hl-btn-line mt-4" %>
                 <% elsif user_signed_in? %>
                   <%= button_to "收藏股票", user_favorites_path(stock_id: @stock.id), method: :post,
