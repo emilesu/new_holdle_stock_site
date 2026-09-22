@@ -44,7 +44,7 @@
         <h2 class="text-hl-16 font-semibold text-ink-soft">筛选条件</h2>
       </div>
       <div class="p-6 space-y-5 <%= 'opacity-60 pointer-events-none select-none' unless @is_member %>">
-        <%= form_with url: screener_path, method: :get, data: { turbo_frame: 'screener_results', screener_target: 'form', action: 'submit->screener#persist' }, class: 'space-y-5' do |f| %>
+        <%= form_with url: screener_path, method: :get, data: { turbo_frame: 'screener_results', screener_target: 'form', action: 'submit->screener#persist input->screener#markTouched change->screener#markTouched' }, class: 'space-y-5' do |f| %>
           <%= hidden_field_tag :screen, '1' %>
 
           <%# 第一行：市场 / 板块 / 行业 / 年度区间 / 排序（手机端同一行横向滚动，桌面端五列网格） %>
@@ -223,7 +223,7 @@
                       <% my = m[:years] || {} %>
                       <% indicator_rows.each_with_index do |g, gi| %>
                         <tr class="cursor-pointer border-t border-line-soft"
-                            data-action="mouseenter->screener#rowEnter mouseleave->screener#rowLeave click->screener#openStock"
+                            data-action="mouseover->screener#rowEnter mouseout->screener#rowLeave click->screener#openStock"
                             data-screener-group-param="<%= stock.id %>" data-screener-url-param="<%= stock_path(stock) %>">
                           <% if gi.zero? %>
                             <td class="text-left bg-white sticky left-0 z-20 lg:w-52 lg:max-w-52" rowspan="<%= indicator_rows.size %>">

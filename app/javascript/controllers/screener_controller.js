@@ -10,6 +10,7 @@ export default class extends Controller {
 
   connect() {
     this.filterCache = {}
+    this.userTouched = false
     this.syncAllState()
     // 浏览器表单状态恢复发生在 JS 执行之后，需在 pageshow / turbo:load 后延迟重同步一次
     this.restoreHandler = () => {
@@ -40,6 +41,11 @@ export default class extends Controller {
     try { localStorage.removeItem(this.constructor.STORAGE_KEY) } catch (e) { /* 忽略 */ }
   }
 
+  // 用户在恢复完成前已手动编辑表单，则放弃自动恢复
+  markTouched() {
+    this.userTouched = true
+  }
+
   async restoreFromStorage() {
     // URL 已带筛选条件（服务端已回显）时不覆盖
     if (new URLSearchParams(window.location.search).has("screen")) return
@@ -53,12 +59,15 @@ export default class extends Controller {
     // 级联三件套：服务端渲染的板块/行业选项对应默认市场，需按记忆值重建
     if (sector) {
       const { sectors } = await this.fetchFilters(m, null)
+      if (this.userTouched) return
       this.renderOptions(this.sectorTarget, sectors, sector)
       const { industries } = await this.fetchFilters(m, sector)
+      if (this.userTouched) return
       this.renderOptions(this.industryTarget, industries, industry || "")
       this.industryTarget.disabled = false
     } else {
       const { sectors } = await this.fetchFilters(m, null)
+      if (this.userTouched) return
       this.renderOptions(this.sectorTarget, sectors, "")
       this.resetIndustry()
     }
@@ -234,6 +243,8 @@ export default class extends Controller {
   }
 
   rowLeave(event) {
+    // mouseout 在行间后代元素上也会触发，仍在同一行内则忽略
+    if (event.currentTarget.contains(event.relatedTarget)) return
     this.setGroupHover(event.params.group, false)
   }
 
