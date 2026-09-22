@@ -48,18 +48,18 @@
 
           <%# 第一行：市场 / 板块 / 年度区间 %>
           <div class="grid grid-cols-1 lg:grid-cols-4 gap-3">
-            <div class="flex items-center gap-2">
-              <label class="text-hl-13 font-medium text-muted-2 w-14 shrink-0">市场</label>
-              <select name="market" class="px-3 py-2 text-hl-13 border border-line rounded-md focus:border-link w-full bg-white"
+            <div class="flex items-center gap-1.5">
+              <label class="text-hl-13 font-medium text-muted-2 shrink-0">市场</label>
+              <select name="market" class="px-3 py-2 text-hl-13 border border-line rounded-md focus:border-link flex-1 min-w-0 bg-white"
                       data-screener-target="market" data-action="change->screener#marketChanged">
                 <% [%w[CN A股], %w[HK 港股], %w[US 美股]].each do |code, label| %>
                   <option value="<%= code %>" <%= 'selected' if @market == code %>><%= label %></option>
                 <% end %>
               </select>
             </div>
-            <div class="flex items-center gap-2">
-              <label class="text-hl-13 font-medium text-muted-2 w-14 shrink-0">板块</label>
-              <select name="sector" class="px-3 py-2 text-hl-13 border border-line rounded-md focus:border-link w-full bg-white"
+            <div class="flex items-center gap-1.5">
+              <label class="text-hl-13 font-medium text-muted-2 shrink-0">板块</label>
+              <select name="sector" class="px-3 py-2 text-hl-13 border border-line rounded-md focus:border-link flex-1 min-w-0 bg-white"
                       data-screener-target="sector">
                 <option value="">全部</option>
                 <% @sectors.each do |sector| %>
@@ -67,23 +67,23 @@
                 <% end %>
               </select>
             </div>
-            <div class="flex items-center gap-2">
-              <label class="text-hl-13 font-medium text-muted-2 w-14 shrink-0">年度</label>
-              <select name="year_from" class="px-3 py-2 text-hl-13 border border-line rounded-md focus:border-link w-full bg-white">
+            <div class="flex items-center gap-1.5">
+              <label class="text-hl-13 font-medium text-muted-2 shrink-0">年度</label>
+              <select name="year_from" class="px-3 py-2 text-hl-13 border border-line rounded-md focus:border-link flex-1 min-w-0 bg-white">
                 <% years.each do |y| %>
                   <option value="<%= y %>" <%= 'selected' if sel_from == y %>><%= y %> 年</option>
                 <% end %>
               </select>
               <span class="text-hl-13 text-muted-3 shrink-0">至</span>
-              <select name="year_to" class="px-3 py-2 text-hl-13 border border-line rounded-md focus:border-link w-full bg-white">
+              <select name="year_to" class="px-3 py-2 text-hl-13 border border-line rounded-md focus:border-link flex-1 min-w-0 bg-white">
                 <% years.each do |y| %>
                   <option value="<%= y %>" <%= 'selected' if sel_to == y %>><%= y %> 年</option>
                 <% end %>
               </select>
             </div>
-            <div class="flex items-center gap-2">
-              <label class="text-hl-13 font-medium text-muted-2 w-14 shrink-0">排序</label>
-              <select name="sort" class="px-3 py-2 text-hl-13 border border-line rounded-md focus:border-link w-full bg-white">
+            <div class="flex items-center gap-1.5">
+              <label class="text-hl-13 font-medium text-muted-2 shrink-0">排序</label>
+              <select name="sort" class="px-3 py-2 text-hl-13 border border-line rounded-md focus:border-link flex-1 min-w-0 bg-white">
                 <option value="pyramid" <%= 'selected' if sel_sort == 'pyramid' %>>金字塔分</option>
                 <option value="roe_min" <%= 'selected' if sel_sort == 'roe_min' %>>区间最低 ROE</option>
                 <option value="roe_last" <%= 'selected' if sel_sort == 'roe_last' %>>末年 ROE</option>
@@ -220,7 +220,7 @@
               <%# 分页 %>
               <div class="px-6 py-4 border-t border-line flex items-center justify-between">
                 <span class="text-hl-12 text-muted-3">第 <%= @result.page %> / <%= @result.total_pages %> 页</span>
-                <div class="flex items-center gap-2">
+                <div class="flex items-center gap-1.5">
                   <% if @result.page > 1 %>
                     <%= link_to '上一页', screener_path(request.query_parameters.merge(page: @result.page - 1)), class: 'hl-btn text-hl-12', data: { turbo_frame: 'screener_results' } %>
                   <% end %>

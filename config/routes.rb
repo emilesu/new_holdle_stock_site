@@ -41,6 +41,7 @@ Rails.application.routes.draw do
 
   # 股票筛选（会员专属）
   get "screener", to: "screeners#index", as: :screener
+  get "screener/sectors", to: "screeners#sectors", as: :screener_sectors
 
   resources :courses, only: [:index, :show]
   resources :lessons, only: [:show]

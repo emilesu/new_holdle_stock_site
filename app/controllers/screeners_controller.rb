@@ -23,6 +23,13 @@ class ScreenersController < ApplicationController
     end
   end
 
+  # 板块列表 JSON：供前端切换市场时动态刷新板块下拉
+  def sectors
+    market = params[:market].to_s
+    market = 'CN' unless StockScreenerService::MARKETS.include?(market)
+    render json: cached_sectors(market)
+  end
+
   private
 
   # 板块列表与金字塔页共用同一缓存键，避免重复计算

@@ -6,14 +6,35 @@ export default class extends Controller {
   static targets = ["form", "indicatorToggle", "indicatorInput", "growthToggle", "growthInput", "market", "sector"]
 
   connect() {
+    this.sectorCache = {}
     // Turbo 缓存恢复后重新同步一次禁用状态
     this.indicatorToggleTargets.forEach((el) => this.syncIndicator(el.dataset.key, el.checked))
     this.syncGrowth()
   }
 
-  // 板块选项按服务端渲染的市场生成，切换市场后旧板块名对新市场无效，重置为「全部」避免提交出空结果
-  marketChanged() {
-    this.sectorTarget.value = ""
+  // 切换市场时动态刷新板块下拉（板块列表按市场不同）
+  async marketChanged() {
+    const market = this.marketTarget.value
+    const select = this.sectorTarget
+    if (this.sectorCache[market]) {
+      this.renderSectors(select, this.sectorCache[market])
+      return
+    }
+    select.innerHTML = '<option value="">加载中...</option>'
+    try {
+      const res = await fetch(`/screener/sectors?market=${encodeURIComponent(market)}`)
+      const sectors = await res.json()
+      this.sectorCache[market] = sectors
+      this.renderSectors(select, sectors)
+    } catch (error) {
+      console.error("加载板块列表失败:", error)
+      this.renderSectors(select, [])
+    }
+  }
+
+  renderSectors(select, sectors) {
+    select.innerHTML = '<option value="">全部</option>' +
+      sectors.map((s) => `<option value="${s}">${s}</option>`).join("")
   }
 
   toggleIndicator(event) {
