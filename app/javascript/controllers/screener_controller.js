@@ -162,7 +162,22 @@ export default class extends Controller {
     return this.indicatorToggleTargets.find((el) => el.dataset.key === base)
   }
 
-  // ---------- 结果表整行点击 ----------
+  // ---------- 结果表行交互 ----------
+
+  // 同一只股票的多个指标行为一组，hover 时整组变色（rowspan 组无法用纯 CSS 实现）
+  rowEnter(event) {
+    this.setGroupHover(event.params.group, true)
+  }
+
+  rowLeave(event) {
+    this.setGroupHover(event.params.group, false)
+  }
+
+  setGroupHover(id, on) {
+    this.element.querySelectorAll(`tr[data-screener-group-param="${id}"] td`).forEach((cell) => {
+      cell.style.backgroundColor = on ? "var(--color-bg-soft)" : ""
+    })
+  }
 
   openStock(event) {
     if (event.target.closest("a, button, select, input")) return

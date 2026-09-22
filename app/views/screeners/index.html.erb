@@ -20,24 +20,23 @@
 %>
 <div class="min-h-screen bg-bg-soft" data-controller="screener">
   <main class="container-hl py-8">
+    <%# ----- 页面标题与快捷策略：功能未实现，暂时注释隐藏，恢复时删除注释标记即可 ----- %>
+    <!--
     <div class="mb-6">
       <h1 class="text-hl-20 font-semibold text-ink">股票筛选</h1>
       <p class="text-hl-13 text-muted mt-1">按年度区间与财务指标组合筛选股票，例如「2019–2023 每年 ROE≥20%」「净利润连续增长」。</p>
     </div>
 
-    <%# ----- 预设策略 ----- %>
     <div class="flex flex-wrap items-center gap-2 mb-6">
       <span class="text-hl-13 text-muted-2">快捷策略：</span>
-      <button type="button" class="hl-btn text-hl-12 <%= 'opacity-50 cursor-not-allowed' unless @is_member %>" <%= 'disabled' unless @is_member %>
-              data-action="screener#applyPreset"
+      <button type="button" class="hl-btn text-hl-12" data-action="screener#applyPreset"
               data-screener-preset-param='{"market":"CN","margin_mode":"all","roe_enabled":true,"roe_op":"gte","roe_value":"20","gm_enabled":true,"gm_op":"gte","gm_value":"40"}'>巴菲特风格</button>
-      <button type="button" class="hl-btn text-hl-12 <%= 'opacity-50 cursor-not-allowed' unless @is_member %>" <%= 'disabled' unless @is_member %>
-              data-action="screener#applyPreset"
+      <button type="button" class="hl-btn text-hl-12" data-action="screener#applyPreset"
               data-screener-preset-param='{"market":"CN","growth_enabled":true,"growth_mode":"always_up"}'>高成长</button>
-      <button type="button" class="hl-btn text-hl-12 <%= 'opacity-50 cursor-not-allowed' unless @is_member %>" <%= 'disabled' unless @is_member %>
-              data-action="screener#applyPreset"
+      <button type="button" class="hl-btn text-hl-12" data-action="screener#applyPreset"
               data-screener-preset-param='{"market":"CN","margin_mode":"all","npm_enabled":true,"npm_op":"gte","npm_value":"10"}'>稳健盈利</button>
     </div>
+    -->
 
     <%# ----- 筛选表单 ----- %>
     <div class="hl-card mb-6 relative">
@@ -202,11 +201,12 @@
                 indicator_rows << { label: '净利润(亿)', mkey: :ni, kind: :year } if c[:growth_mode] == 'always_up'
                 indicator_rows << { label: '净利润同比', mkey: :ni_growth, kind: :growth } if c[:growth_mode] == 'yoy'
               %>
+              <%# 仿股票详情页：列取自然宽度不被压缩，年份区在表内横向滑动，股票列吸附在左侧 %>
               <div class="overflow-x-auto">
-                <table class="hl-table w-full">
+                <table class="hl-table w-auto min-w-full">
                   <thead>
                     <tr>
-                      <th class="text-left">股票</th>
+                      <th class="text-left sticky left-0 z-20 bg-bg-soft shadow-[6px_0_6px_-6px_rgba(0,0,0,0.12)]">股票</th>
                       <th class="text-left">板块</th>
                       <th class="text-left">行业</th>
                       <th>金字塔分</th>
@@ -221,10 +221,11 @@
                       <% m = @result.metrics[stock.id] || { years: {} } %>
                       <% my = m[:years] || {} %>
                       <% indicator_rows.each_with_index do |g, gi| %>
-                        <tr class="hover:bg-bg-mute cursor-pointer border-t border-line-soft"
-                            data-action="click->screener#openStock" data-screener-url-param="<%= stock_path(stock) %>">
+                        <tr class="cursor-pointer border-t border-line-soft"
+                            data-action="mouseenter->screener#rowEnter mouseleave->screener#rowLeave click->screener#openStock"
+                            data-screener-group-param="<%= stock.id %>" data-screener-url-param="<%= stock_path(stock) %>">
                           <% if gi.zero? %>
-                            <td class="text-left" rowspan="<%= indicator_rows.size %>">
+                            <td class="text-left bg-white sticky left-0 z-20 shadow-[6px_0_6px_-6px_rgba(0,0,0,0.12)]" rowspan="<%= indicator_rows.size %>">
                               <%= link_to stock_path(stock), target: '_blank', rel: 'noopener', class: 'text-ink font-medium hover:text-link' do %>
                                 <%= display_name.call(stock) %>
                               <% end %>
