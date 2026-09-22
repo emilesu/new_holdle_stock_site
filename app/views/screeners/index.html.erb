@@ -179,7 +179,7 @@
     </div>
 
     <%# ----- 结果区（turbo-frame 局部刷新） ----- %>
-    <turbo-frame id="screener_results">
+    <turbo-frame id="screener_results" data-action="turbo:frame-load->screener#frameLoaded">
       <% if @screened %>
         <% if @result.errors.any? %>
           <div class="hl-card p-4 text-hl-13 text-profit bg-bg-soft"><%= @result.errors.join('；') %></div>
@@ -203,7 +203,7 @@
               %>
               <%# 仿股票详情页：前导五列定宽吸附左侧（lg 及以上），仅年份与数据区表内横滑；手机端只吸股票列避免小屏挤爆 %>
               <%# 吸附偏移 = 各列定宽累计：股票208 + 板块128 + 行业144 + 金字塔分96 + 指标112 %>
-              <div class="overflow-x-auto">
+              <div class="overflow-x-auto" data-screener-target="scroller">
                 <table class="hl-table w-auto min-w-full">
                   <thead>
                     <tr>

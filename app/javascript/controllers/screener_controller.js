@@ -6,7 +6,7 @@ import { Controller } from "@hotwired/stimulus"
 // 3. 浏览器返回（bfcache / Turbo 缓存恢复）后重新同步勾选与禁用状态，避免 UI 与实际状态不一致
 // 4. 结果表整行点击新窗口打开股票详情
 export default class extends Controller {
-  static targets = ["form", "indicatorToggle", "indicatorInput", "growthToggle", "growthInput", "market", "sector", "industry"]
+  static targets = ["form", "indicatorToggle", "indicatorInput", "growthToggle", "growthInput", "market", "sector", "industry", "scroller"]
 
   connect() {
     this.filterCache = {}
@@ -160,6 +160,15 @@ export default class extends Controller {
   findToggle(base) {
     if (base === "growth") return this.growthToggleTarget
     return this.indicatorToggleTargets.find((el) => el.dataset.key === base)
+  }
+
+  // ---------- 结果表渲染后默认展示最近年份 ----------
+
+  frameLoaded() {
+    // 等布局完成后把年份数据区滚到最右（末年）
+    requestAnimationFrame(() => {
+      this.scrollerTargets.forEach((el) => { el.scrollLeft = el.scrollWidth })
+    })
   }
 
   // ---------- 结果表行交互 ----------
