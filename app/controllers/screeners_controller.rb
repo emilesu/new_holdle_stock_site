@@ -20,6 +20,8 @@ class ScreenersController < ApplicationController
     @default_year_from = @latest_year - 4
 
     @favorite_stock_ids = []
+    # 非会员示例的服务端条件：用于让示例表与会员真实结果表结构一致（会员路径下为空）
+    @demo_conditions = {}
     @screened = @is_member && params[:screen].present?
     if @screened
       @result = StockScreenerService.call(params)
@@ -65,12 +67,19 @@ class ScreenersController < ApplicationController
     current_user.user_favorites.where(stock_id: ids).pluck(:stock_id)
   end
 
-  # 非会员示例：仅缓存 stock_id 列表，渲染时按 id 取最新名称/代码（指标列展示为掩码，无需缓存指标）
+  # 非会员示例：缓存 stock_id 列表与服务端解析后的示例条件
+  # 条件用于让示例表与会员真实结果表同构（同样的年份列与指标行），指标数值仍按 id 取最新数据但渲染为掩码，无需缓存
+  # 键名带 v2：旧版缓存值是纯数组，结构变更后换键避免类型冲突
   def cached_demo_result
-    ids = Rails.cache.fetch("screener_demo_#{Date.current}", expires_in: 1.day) do
+    cached = Rails.cache.fetch("screener_demo_v2_#{Date.current}", expires_in: 1.day) do
       result = StockScreenerService.call(DEMO_PARAMS)
-      result.ok? ? result.stocks.first(DEMO_LIMIT).map(&:id) : []
+      if result.ok?
+        { ids: result.stocks.first(DEMO_LIMIT).map(&:id), conditions: result.conditions }
+      else
+        { ids: [], conditions: {} }
+      end
     end
-    Stock.where(id: ids).in_order_of(:id, ids)
+    @demo_conditions = cached[:conditions] || {}
+    Stock.where(id: cached[:ids]).in_order_of(:id, cached[:ids])
   end
 end

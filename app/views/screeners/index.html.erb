@@ -17,6 +17,18 @@
   fmt = ->(val) { val.nil? ? '—' : "#{number_with_precision(val, precision: 2)}%" }
   fmt_yi = ->(val) { val.nil? ? '—' : number_with_precision(val / 1e8, precision: 2) }
   display_name = ->(stock) { stock.market == 'US' && stock.name&.include?('|') ? stock.name.split('|').first.strip : stock.name }
+  # 非会员示例条件：让示例表与会员真实结果表同构（同样的年份列与指标行）
+  demo_c = @demo_conditions || {}
+  # 结果表结构（会员表与示例表共用）：年份列 = 区间年度，指标行 = 启用的盈利指标 + 净利润增长
+  year_range_of = ->(conds) { ((conds[:year_from] || sel_from)..(conds[:year_to] || sel_to)).to_a }
+  indicator_rows_of = ->(conds) {
+    rows = (conds[:margin_conditions] || []).map do |cond|
+      { label: StockScreenerService::LABELS[cond[:key].to_s], mkey: cond[:key].to_sym, kind: :year }
+    end
+    rows << { label: '净利润(亿)', mkey: :ni, kind: :year } if conds[:growth_mode] == 'always_up'
+    rows << { label: '净利润同比', mkey: :ni_growth, kind: :growth } if conds[:growth_mode] == 'yoy'
+    rows
+  }
 %>
 <div class="min-h-screen bg-bg-soft" data-controller="screener">
   <main class="container-hl py-8">
@@ -201,86 +213,13 @@
             <% if @result.stocks.empty? %>
               <div class="px-6 py-12 text-center text-hl-13 text-muted-3">没有符合条件的股票，试试放宽条件（如改为「至少一年满足」或缩小阈值）</div>
             <% else %>
-              <%
-                # 仿股票详情页财务表：年份为列、指标为行；每只股票按启用指标占多行，股票信息列跨行合并
-                year_range = (c[:year_from]..c[:year_to]).to_a
-                indicator_rows = (c[:margin_conditions] || []).map do |cond|
-                  { label: StockScreenerService::LABELS[cond[:key].to_s], mkey: cond[:key].to_sym, kind: :year }
-                end
-                indicator_rows << { label: '净利润(亿)', mkey: :ni, kind: :year } if c[:growth_mode] == 'always_up'
-                indicator_rows << { label: '净利润同比', mkey: :ni_growth, kind: :growth } if c[:growth_mode] == 'yoy'
-              %>
-              <%# 仿股票详情页：前导五列定宽吸附左侧（lg 及以上），仅年份与数据区表内横滑；手机端只吸股票列避免小屏挤爆 %>
-              <%# 吸附偏移 = 各列定宽累计：股票208 + 板块128 + 行业144 + 金字塔分96 + 指标112 %>
-              <div class="overflow-x-auto" data-screener-target="scroller">
-                <%# table-fixed 使 lg 定宽列逐像素精确，吸附偏移不漂移（修复列间缝隙漏内容）；年份列不设宽度均分余量，min-width 保证每列至少 96px %>
-                <table class="hl-table w-full lg:table-fixed" style="min-width: <%= 688 + 96 * year_range.size %>px">
-                  <thead>
-                    <tr>
-                      <th class="text-left sticky left-0 z-20 bg-bg-soft whitespace-nowrap lg:w-52 lg:max-w-52 lg:truncate">股票</th>
-                      <th class="text-left whitespace-nowrap lg:sticky lg:left-52 lg:z-20 lg:bg-bg-soft lg:w-32 lg:max-w-32 lg:truncate">板块</th>
-                      <th class="text-left whitespace-nowrap lg:sticky lg:left-84 lg:z-20 lg:bg-bg-soft lg:w-36 lg:max-w-36 lg:truncate">行业</th>
-                      <th class="whitespace-nowrap lg:sticky lg:left-120 lg:z-20 lg:bg-bg-soft lg:w-24">金字塔分</th>
-                      <th class="text-left whitespace-nowrap lg:sticky lg:left-144 lg:z-20 lg:bg-bg-soft lg:w-28 lg:shadow-[6px_0_6px_-6px_rgba(0,0,0,0.12)]">指标</th>
-                      <% year_range.each do |y| %>
-                        <th class="text-hl-12 font-semibold text-ink-soft whitespace-nowrap"><%= y %></th>
-                      <% end %>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <% @result.stocks.each do |stock| %>
-                      <% m = @result.metrics[stock.id] || { years: {} } %>
-                      <% my = m[:years] || {} %>
-                      <% indicator_rows.each_with_index do |g, gi| %>
-                        <tr class="cursor-pointer border-t border-line-soft"
-                            data-action="mouseover->screener#rowEnter mouseout->screener#rowLeave click->screener#openStock"
-                            data-screener-group-param="<%= stock.id %>" data-screener-url-param="<%= stock_path(stock) %>">
-                          <% if gi.zero? %>
-                            <td class="text-left bg-white sticky left-0 z-20 lg:w-52 lg:max-w-52" rowspan="<%= indicator_rows.size %>">
-                              <%# flex + 名称单独 truncate：列宽不足时只截断名称，代码与小图标始终可见 %>
-                              <div class="flex items-center min-w-0">
-                                <%= link_to stock_path(stock), target: '_blank', rel: 'noopener', class: 'text-ink font-medium hover:text-link lg:truncate' do %>
-                                  <%= display_name.call(stock) %>
-                                <% end %>
-                                <span class="text-hl-11 text-muted-3 ml-1.5 font-mono shrink-0"><%= stock.symbol %></span>
-                                <%# 次新股标记：无文字小图标，悬停/读屏显示注释；data-screener-no-open 阻止点击图标误触发整行跳转 %>
-                                <% if stock.new_listing? %>
-                                  <span class="ml-1.5 shrink-0 inline-flex text-muted-3 cursor-help" title="<%= Stock.pyramid_tag_hint('次新股') %>"
-                                        aria-label="次新股" role="img" data-screener-no-open>
-                                    <%= new_listing_icon_tag %>
-                                  </span>
-                                <% end %>
-                                <%# 已收藏标记：实心星，颜色跟随链接色 %>
-                                <% if @favorite_stock_ids.include?(stock.id) %>
-                                  <span class="ml-1.5 shrink-0 inline-flex text-link cursor-help" title="已收藏"
-                                        aria-label="已收藏" role="img" data-screener-no-open>
-                                    <%= favorite_icon_tag %>
-                                  </span>
-                                <% end %>
-                              </div>
-                            </td>
-                            <td class="text-left text-muted lg:sticky lg:left-52 lg:z-20 lg:bg-white lg:w-32 lg:max-w-32 lg:truncate" rowspan="<%= indicator_rows.size %>"><%= stock.sector || '—' %></td>
-                            <td class="text-left text-muted lg:sticky lg:left-84 lg:z-20 lg:bg-white lg:w-36 lg:max-w-36 lg:truncate" rowspan="<%= indicator_rows.size %>"><%= stock.industry || '—' %></td>
-                            <td class="text-center font-semibold text-link lg:sticky lg:left-120 lg:z-20 lg:bg-white lg:w-24" rowspan="<%= indicator_rows.size %>"><%= stock.pyramid_total_score %></td>
-                          <% end %>
-                          <td class="text-left text-muted whitespace-nowrap lg:sticky lg:left-144 lg:z-20 lg:bg-white lg:w-28 lg:shadow-[6px_0_6px_-6px_rgba(0,0,0,0.12)]"><%= g[:label] %></td>
-                          <% if g[:kind] == :year %>
-                            <% year_range.each do |y| %>
-                              <% val = (my[y] || {})[g[:mkey]] %>
-                              <td class="text-center font-mono whitespace-nowrap"><%= g[:mkey] == :ni ? fmt_yi.call(val) : fmt.call(val) %></td>
-                            <% end %>
-                          <% else %>
-                            <%# 净利润同比为末年单值，仅在末年列展示 %>
-                            <% year_range.each do |y| %>
-                              <td class="text-center font-mono"><%= y == c[:year_to] ? fmt.call(m[:ni_growth]) : '—' %></td>
-                            <% end %>
-                          <% end %>
-                        </tr>
-                      <% end %>
-                    <% end %>
-                  </tbody>
-                </table>
-              </div>
+              <%= render 'results_table',
+                         stocks: @result.stocks,
+                         conditions: c,
+                         metrics: @result.metrics,
+                         indicator_rows: indicator_rows_of.call(c),
+                         year_range: year_range_of.call(c),
+                         fmt: fmt, fmt_yi: fmt_yi, display_name: display_name %>
               <%# 分页 %>
               <div class="px-6 py-4 border-t border-line flex items-center justify-between">
                 <span class="text-hl-12 text-muted-3">第 <%= @result.page %> / <%= @result.total_pages %> 页</span>
@@ -297,46 +236,29 @@
           </div>
         <% end %>
       <% elsif !@is_member %>
-        <%# 非会员示例预览 %>
+        <%# 非会员示例预览：表头与列结构与会员真实结果表完全一致，仅指标数值打码 %>
         <div class="hl-card">
-          <div class="px-6 py-4 border-b border-line bg-bg-mute flex items-center justify-between">
+          <div class="px-6 py-4 border-b border-line bg-bg-mute flex flex-wrap items-center justify-between gap-2">
             <h2 class="text-hl-16 font-semibold text-ink-soft">示例：A股 近5年每年 ROE ≥ 20%</h2>
+            <%# 图例：示例表同样会显示次新股图标，非会员需有说明 %>
+            <div class="flex items-center gap-3 text-hl-11 text-muted-3">
+              <span class="inline-flex items-center gap-1">
+                <%= new_listing_icon_tag %>次新股（上市不足 3 年）
+              </span>
+            </div>
             <span class="text-hl-12 text-muted-3">示例仅展示前 <%= @demo.size %> 条</span>
           </div>
           <% if @demo.empty? %>
             <div class="px-6 py-8 text-center text-hl-13 text-muted-3">暂无示例数据</div>
           <% else %>
-            <div class="overflow-x-auto">
-              <table class="hl-table w-full">
-                <thead>
-                  <tr>
-                    <th class="text-left">股票</th>
-                    <th class="text-left">板块</th>
-                    <th class="text-left">行业</th>
-                    <th>金字塔分</th>
-                    <th>区间最低 ROE</th>
-                    <th>末年 ROE</th>
-                    <th>净利润同比</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <% @demo.each do |stock| %>
-                    <tr>
-                      <td class="text-left">
-                        <span class="text-ink font-medium"><%= display_name.call(stock) %></span>
-                        <span class="text-hl-11 text-muted-3 ml-1.5 font-mono"><%= stock.symbol %></span>
-                      </td>
-                      <td class="text-left text-muted"><%= stock.sector || '—' %></td>
-                      <td class="text-left text-muted"><%= stock.industry || '—' %></td>
-                      <td class="text-center font-semibold text-link"><%= stock.pyramid_total_score %></td>
-                      <td class="text-center font-mono text-muted-3">**</td>
-                      <td class="text-center font-mono text-muted-3">**</td>
-                      <td class="text-center font-mono text-muted-3">**</td>
-                    </tr>
-                  <% end %>
-                </tbody>
-              </table>
-            </div>
+            <%= render 'results_table',
+                       stocks: @demo,
+                       conditions: demo_c,
+                       metrics: {},
+                       indicator_rows: indicator_rows_of.call(demo_c),
+                       year_range: year_range_of.call(demo_c),
+                       masked: true,
+                       fmt: fmt, fmt_yi: fmt_yi, display_name: display_name %>
           <% end %>
           <div class="px-6 py-4 border-t border-line bg-bg-mute flex items-center justify-between gap-4">
             <p class="text-hl-13 text-muted">完整筛选结果与全部指标列为会员专属</p>

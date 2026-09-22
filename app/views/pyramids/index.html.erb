@@ -687,7 +687,11 @@ document.addEventListener('turbo:load', function initPyramidPage() {
   };
 
   // 无参数进入时套用缓存；URL 已带条件时以 URL 为准（不写缓存）
-  const restoreSelection = async () => {
+  // 仅会员调用（调用处已用 canSelectSector 门控）
+  // 三级下拉的选项必须由服务端按「市场 → 板块 → 行业」重建（板块列表随市场变、行业列表随板块变），
+  // 而前端异步级联的赋值会被 Turbo 流异步替换 DOM 冲掉（下拉看着恢复了、实际没选中），
+  // 故不再前端拼装选项，改为带参数访问同一页面，由服务端一次性渲染出正确的三级下拉与榜单
+  const restoreSelection = () => {
     if (!marketSelectEl()) return;
 
     const urlParams = new URLSearchParams(location.search);
@@ -704,37 +708,20 @@ document.addEventListener('turbo:load', function initPyramidPage() {
 
     const target = {
       market: SELECTION_MARKETS.includes(saved.market) ? saved.market : 'CN',
-      sector: canSelectSector ? (saved.sector || '') : '公用事业',
-      industry: canSelectSector && saved.sector ? (saved.industry || '') : ''
+      sector: saved.sector || '',
+      // 板块为「全部」时行业必然为空，避免残留上次的行业条件
+      industry: saved.sector ? (saved.industry || '') : ''
     };
     const initial = currentSelection();
     // 与当前页面一致时无需重新加载，避免多余请求
     if (target.market === initial.market && target.sector === initial.sector && target.industry === initial.industry) return;
 
-    marketSelectEl().value = target.market;
-
-    // 非会员的板块固定为「公用事业」，与切换市场的处理保持一致
-    if (!canSelectSector) {
-      updateSectors(target.market);
-      updateList(target.market, '公用事业', '');
-      rememberSelection({ market: target.market, sector: '公用事业', industry: '' });
-      return;
-    }
-
-    await updateSectors(target.market);
-    const sectorEl = sectorSelectEl();
-    if (sectorEl) sectorEl.value = target.sector;
-    // 板块数据已下线时浏览器会回退为「全部」，以实际生效值为准
-    const sector = sectorEl ? sectorEl.value : '';
-    let industry = '';
-    if (sector) {
-      await loadIndustries(target.market, sector);
-      const industryEl = industrySelectEl();
-      if (industryEl) industryEl.value = target.industry;
-      industry = industryEl ? industryEl.value : '';
-    }
-    updateList(target.market, sector, industry);
-    rememberSelection({ market: target.market, sector: sector, industry: industry });
+    const params = new URLSearchParams();
+    params.set('market', target.market);
+    if (target.sector) params.set('sector', target.sector);
+    if (target.industry) params.set('industry', target.industry);
+    // 目标板块 / 行业已下线时服务端渲染的选项里不会有它，浏览器自然回退为「全部」
+    window.Turbo.visit(`${location.pathname}?${params.toString()}`, { action: 'replace' });
   };
 
   // 无限滚动加载（v3 - 使用 JS 变量维护页码，避开 Turbo replace 不生效的 Bug）
