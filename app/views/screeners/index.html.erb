@@ -204,7 +204,8 @@
               <%# 仿股票详情页：前导五列定宽吸附左侧（lg 及以上），仅年份与数据区表内横滑；手机端只吸股票列避免小屏挤爆 %>
               <%# 吸附偏移 = 各列定宽累计：股票208 + 板块128 + 行业144 + 金字塔分96 + 指标112 %>
               <div class="overflow-x-auto" data-screener-target="scroller">
-                <table class="hl-table w-auto min-w-full">
+                <%# table-fixed 使 lg 定宽列逐像素精确，吸附偏移不漂移（修复列间缝隙漏内容）；年份列不设宽度均分余量，min-width 保证每列至少 96px %>
+                <table class="hl-table w-full lg:table-fixed" style="min-width: <%= 688 + 96 * year_range.size %>px">
                   <thead>
                     <tr>
                       <th class="text-left sticky left-0 z-20 bg-bg-soft whitespace-nowrap lg:w-52 lg:max-w-52 lg:truncate">股票</th>
