@@ -201,16 +201,17 @@
                 indicator_rows << { label: '净利润(亿)', mkey: :ni, kind: :year } if c[:growth_mode] == 'always_up'
                 indicator_rows << { label: '净利润同比', mkey: :ni_growth, kind: :growth } if c[:growth_mode] == 'yoy'
               %>
-              <%# 仿股票详情页：列取自然宽度不被压缩，年份区在表内横向滑动，股票列吸附在左侧 %>
+              <%# 仿股票详情页：前导五列定宽吸附左侧（lg 及以上），仅年份与数据区表内横滑；手机端只吸股票列避免小屏挤爆 %>
+              <%# 吸附偏移 = 各列定宽累计：股票208 + 板块128 + 行业144 + 金字塔分96 + 指标112 %>
               <div class="overflow-x-auto">
                 <table class="hl-table w-auto min-w-full">
                   <thead>
                     <tr>
-                      <th class="text-left sticky left-0 z-20 bg-bg-soft shadow-[6px_0_6px_-6px_rgba(0,0,0,0.12)]">股票</th>
-                      <th class="text-left">板块</th>
-                      <th class="text-left">行业</th>
-                      <th>金字塔分</th>
-                      <th class="text-left">指标</th>
+                      <th class="text-left sticky left-0 z-20 bg-bg-soft lg:w-52 lg:max-w-52 lg:truncate">股票</th>
+                      <th class="text-left lg:sticky lg:left-52 lg:z-20 lg:bg-bg-soft lg:w-32 lg:max-w-32 lg:truncate">板块</th>
+                      <th class="text-left lg:sticky lg:left-84 lg:z-20 lg:bg-bg-soft lg:w-36 lg:max-w-36 lg:truncate">行业</th>
+                      <th class="lg:sticky lg:left-120 lg:z-20 lg:bg-bg-soft lg:w-24">金字塔分</th>
+                      <th class="text-left lg:sticky lg:left-144 lg:z-20 lg:bg-bg-soft lg:w-28 lg:shadow-[6px_0_6px_-6px_rgba(0,0,0,0.12)]">指标</th>
                       <% year_range.each do |y| %>
                         <th class="text-hl-12 font-semibold text-ink-soft whitespace-nowrap"><%= y %></th>
                       <% end %>
@@ -225,17 +226,19 @@
                             data-action="mouseenter->screener#rowEnter mouseleave->screener#rowLeave click->screener#openStock"
                             data-screener-group-param="<%= stock.id %>" data-screener-url-param="<%= stock_path(stock) %>">
                           <% if gi.zero? %>
-                            <td class="text-left bg-white sticky left-0 z-20 shadow-[6px_0_6px_-6px_rgba(0,0,0,0.12)]" rowspan="<%= indicator_rows.size %>">
-                              <%= link_to stock_path(stock), target: '_blank', rel: 'noopener', class: 'text-ink font-medium hover:text-link' do %>
-                                <%= display_name.call(stock) %>
-                              <% end %>
-                              <span class="text-hl-11 text-muted-3 ml-1.5 font-mono"><%= stock.symbol %></span>
+                            <td class="text-left bg-white sticky left-0 z-20 lg:w-52 lg:max-w-52" rowspan="<%= indicator_rows.size %>">
+                              <div class="lg:truncate">
+                                <%= link_to stock_path(stock), target: '_blank', rel: 'noopener', class: 'text-ink font-medium hover:text-link' do %>
+                                  <%= display_name.call(stock) %>
+                                <% end %>
+                                <span class="text-hl-11 text-muted-3 ml-1.5 font-mono"><%= stock.symbol %></span>
+                              </div>
                             </td>
-                            <td class="text-left text-muted" rowspan="<%= indicator_rows.size %>"><%= stock.sector || '—' %></td>
-                            <td class="text-left text-muted" rowspan="<%= indicator_rows.size %>"><%= stock.industry || '—' %></td>
-                            <td class="text-center font-semibold text-link" rowspan="<%= indicator_rows.size %>"><%= stock.pyramid_total_score %></td>
+                            <td class="text-left text-muted lg:sticky lg:left-52 lg:z-20 lg:bg-white lg:w-32 lg:max-w-32 lg:truncate" rowspan="<%= indicator_rows.size %>"><%= stock.sector || '—' %></td>
+                            <td class="text-left text-muted lg:sticky lg:left-84 lg:z-20 lg:bg-white lg:w-36 lg:max-w-36 lg:truncate" rowspan="<%= indicator_rows.size %>"><%= stock.industry || '—' %></td>
+                            <td class="text-center font-semibold text-link lg:sticky lg:left-120 lg:z-20 lg:bg-white lg:w-24" rowspan="<%= indicator_rows.size %>"><%= stock.pyramid_total_score %></td>
                           <% end %>
-                          <td class="text-left text-muted whitespace-nowrap"><%= g[:label] %></td>
+                          <td class="text-left text-muted whitespace-nowrap lg:sticky lg:left-144 lg:z-20 lg:bg-white lg:w-28 lg:shadow-[6px_0_6px_-6px_rgba(0,0,0,0.12)]"><%= g[:label] %></td>
                           <% if g[:kind] == :year %>
                             <% year_range.each do |y| %>
                               <% val = (my[y] || {})[g[:mkey]] %>
