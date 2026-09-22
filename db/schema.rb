@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_09_19_120000) do
+ActiveRecord::Schema[7.1].define(version: 2026_09_22_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -201,6 +201,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_09_19_120000) do
     t.string "period_type", default: "annual", null: false, comment: "期次类型（annual/q1/h1/q3，累计口径）"
     t.index ["financial_report_id", "report_date"], name: "idx_fin_indicators_report_date"
     t.index ["financial_report_id"], name: "index_financial_indicators_on_financial_report_id"
+    t.index ["report_date"], name: "idx_fi_annual_report_date", where: "((period_type)::text = 'annual'::text)"
     t.index ["stock_id", "period_type", "report_date"], name: "idx_financial_indicators_stock_period_date"
     t.index ["stock_id", "report_date", "market"], name: "idx_on_stock_id_report_date_market_cbb7ad04c1", unique: true
     t.index ["stock_id"], name: "index_financial_indicators_on_stock_id"
@@ -260,6 +261,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_09_19_120000) do
     t.string "period_type", default: "annual", null: false, comment: "期次类型（annual/q1/h1/q3，累计口径）"
     t.index ["financial_report_id", "report_date"], name: "idx_income_stmts_report_date"
     t.index ["financial_report_id"], name: "index_income_statements_on_financial_report_id"
+    t.index ["report_date"], name: "idx_is_annual_report_date", where: "((period_type)::text = 'annual'::text)"
     t.index ["stock_id", "period_type", "report_date"], name: "idx_income_statements_stock_period_date"
     t.index ["stock_id", "report_date", "market"], name: "index_income_statements_on_stock_id_and_report_date_and_market", unique: true
     t.index ["stock_id"], name: "index_income_statements_on_stock_id"

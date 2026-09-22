@@ -42,3 +42,6 @@ application.register("flash", FlashController)
 
 import FinancialTableController from "./financial_table_controller"
 application.register("financial-table", FinancialTableController)
+
+import ScreenerController from "./screener_controller"
+application.register("screener", ScreenerController)

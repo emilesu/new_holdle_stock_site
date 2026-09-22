@@ -1,0 +1,282 @@
+<% set_page_title "股票筛选 - 财务条件选股" %>
+<% set_page_description "按 ROE、毛利率、净利率、净利润增长等财务指标与年度区间组合筛选股票，快速找到符合条件的优质公司。" %>
+<% set_page_keywords "股票筛选,选股器,ROE筛选,净利润增长,财务指标选股" %>
+<%
+  # 表单回填值：已筛选时用服务端解析后的条件，否则用默认值
+  c = (@result&.conditions if @screened) || {}
+  sel_sector = c[:sector].to_s
+  sel_from = (c[:year_from] || @default_year_from).to_i
+  sel_to = (c[:year_to] || @latest_year).to_i
+  sel_mode = c[:margin_mode] || 'all'
+  conds_by = (c[:margin_conditions] || []).index_by { |x| x[:key] }
+  growth_mode = c[:growth_mode]
+  growth_value = c[:growth_value]
+  sel_sort = c[:sort] || 'pyramid'
+  years = (StockScreenerService::MIN_YEAR..@latest_year).to_a.reverse
+  fmt = ->(val) { val.nil? ? '—' : "#{number_with_precision(val, precision: 2)}%" }
+  display_name = ->(stock) { stock.market == 'US' && stock.name&.include?('|') ? stock.name.split('|').first.strip : stock.name }
+%>
+<div class="min-h-screen bg-bg-soft" data-controller="screener">
+  <main class="container-hl py-8">
+    <div class="mb-6">
+      <h1 class="text-hl-20 font-semibold text-ink">股票筛选</h1>
+      <p class="text-hl-13 text-muted mt-1">按年度区间与财务指标组合筛选股票，例如「2019–2023 每年 ROE≥20%」「净利润连续增长」。</p>
+    </div>
+
+    <%# ----- 预设策略 ----- %>
+    <div class="flex flex-wrap items-center gap-2 mb-6">
+      <span class="text-hl-13 text-muted-2">快捷策略：</span>
+      <button type="button" class="hl-btn text-hl-12 <%= 'opacity-50 cursor-not-allowed' unless @is_member %>" <%= 'disabled' unless @is_member %>
+              data-action="screener#applyPreset"
+              data-screener-preset-param='{"market":"CN","margin_mode":"all","roe_enabled":true,"roe_op":"gte","roe_value":"20","gm_enabled":true,"gm_op":"gte","gm_value":"40"}'>巴菲特风格</button>
+      <button type="button" class="hl-btn text-hl-12 <%= 'opacity-50 cursor-not-allowed' unless @is_member %>" <%= 'disabled' unless @is_member %>
+              data-action="screener#applyPreset"
+              data-screener-preset-param='{"market":"CN","growth_enabled":true,"growth_mode":"always_up"}'>高成长</button>
+      <button type="button" class="hl-btn text-hl-12 <%= 'opacity-50 cursor-not-allowed' unless @is_member %>" <%= 'disabled' unless @is_member %>
+              data-action="screener#applyPreset"
+              data-screener-preset-param='{"market":"CN","margin_mode":"all","npm_enabled":true,"npm_op":"gte","npm_value":"10"}'>稳健盈利</button>
+    </div>
+
+    <%# ----- 筛选表单 ----- %>
+    <div class="hl-card mb-6 relative">
+      <div class="px-6 py-4 border-b border-line bg-bg-mute">
+        <h2 class="text-hl-16 font-semibold text-ink-soft">筛选条件</h2>
+      </div>
+      <div class="p-6 space-y-5 <%= 'opacity-60 pointer-events-none select-none' unless @is_member %>">
+        <%= form_with url: screener_path, method: :get, data: { turbo_frame: 'screener_results', screener_target: 'form' }, class: 'space-y-5' do |f| %>
+          <%= hidden_field_tag :screen, '1' %>
+
+          <%# 第一行：市场 / 板块 / 年度区间 %>
+          <div class="grid grid-cols-1 lg:grid-cols-4 gap-3">
+            <div class="flex items-center gap-2">
+              <label class="text-hl-13 font-medium text-muted-2 w-14 shrink-0">市场</label>
+              <select name="market" class="px-3 py-2 text-hl-13 border border-line rounded-md focus:border-link w-full bg-white">
+                <% [%w[CN A股], %w[HK 港股], %w[US 美股]].each do |code, label| %>
+                  <option value="<%= code %>" <%= 'selected' if @market == code %>><%= label %></option>
+                <% end %>
+              </select>
+            </div>
+            <div class="flex items-center gap-2">
+              <label class="text-hl-13 font-medium text-muted-2 w-14 shrink-0">板块</label>
+              <select name="sector" class="px-3 py-2 text-hl-13 border border-line rounded-md focus:border-link w-full bg-white">
+                <option value="">全部</option>
+                <% @sectors.each do |sector| %>
+                  <option value="<%= sector %>" <%= 'selected' if sel_sector == sector %>><%= sector %></option>
+                <% end %>
+              </select>
+            </div>
+            <div class="flex items-center gap-2">
+              <label class="text-hl-13 font-medium text-muted-2 w-14 shrink-0">年度</label>
+              <select name="year_from" class="px-3 py-2 text-hl-13 border border-line rounded-md focus:border-link w-full bg-white">
+                <% years.each do |y| %>
+                  <option value="<%= y %>" <%= 'selected' if sel_from == y %>><%= y %> 年</option>
+                <% end %>
+              </select>
+              <span class="text-hl-13 text-muted-3 shrink-0">至</span>
+              <select name="year_to" class="px-3 py-2 text-hl-13 border border-line rounded-md focus:border-link w-full bg-white">
+                <% years.each do |y| %>
+                  <option value="<%= y %>" <%= 'selected' if sel_to == y %>><%= y %> 年</option>
+                <% end %>
+              </select>
+            </div>
+            <div class="flex items-center gap-2">
+              <label class="text-hl-13 font-medium text-muted-2 w-14 shrink-0">排序</label>
+              <select name="sort" class="px-3 py-2 text-hl-13 border border-line rounded-md focus:border-link w-full bg-white">
+                <option value="pyramid" <%= 'selected' if sel_sort == 'pyramid' %>>金字塔分</option>
+                <option value="roe_min" <%= 'selected' if sel_sort == 'roe_min' %>>区间最低 ROE</option>
+                <option value="roe_last" <%= 'selected' if sel_sort == 'roe_last' %>>末年 ROE</option>
+                <option value="ni_growth" <%= 'selected' if sel_sort == 'ni_growth' %>>净利润同比</option>
+              </select>
+            </div>
+          </div>
+
+          <%# 第二行：盈利指标条件 %>
+          <div class="border-t border-line-soft pt-4">
+            <div class="flex flex-col sm:flex-row sm:items-center gap-2 mb-3">
+              <span class="text-hl-13 font-medium text-ink-soft">盈利指标</span>
+              <select name="margin_mode" class="px-3 py-1.5 text-hl-12 border border-line rounded-md focus:border-link bg-white">
+                <option value="all" <%= 'selected' if sel_mode == 'all' %>>区间内每年均满足</option>
+                <option value="any" <%= 'selected' if sel_mode == 'any' %>>区间内至少一年满足</option>
+                <option value="last" <%= 'selected' if sel_mode == 'last' %>>仅看末年</option>
+              </select>
+              <span class="text-hl-11 text-muted-3">勾选启用并填写阈值，留空即不启用</span>
+            </div>
+            <% [['roe', 'ROE 净资产收益率'], ['gm', '毛利率'], ['npm', '净利率']].each do |key, label| %>
+              <% cond = conds_by[key] %>
+              <div class="flex items-center gap-3 py-1.5" data-screener-indicator-row="<%= key %>">
+                <label class="flex items-center gap-1.5 w-44 shrink-0 cursor-pointer">
+                  <input type="checkbox" class="rounded border-line text-link focus:ring-link"
+                         data-screener-target="indicatorToggle" data-key="<%= key %>"
+                         data-action="change->screener#toggleIndicator"
+                         <%= 'checked' if cond %>>
+                  <span class="text-hl-13 text-muted"><%= label %></span>
+                </label>
+                <select name="<%= key %>_op" class="px-2 py-1.5 text-hl-12 border border-line rounded-md bg-white w-16"
+                        data-screener-target="indicatorInput" <%= 'disabled' unless cond %>>
+                  <option value="gte" <%= 'selected' if cond&.dig(:op) == 'gte' %>>≥</option>
+                  <option value="lte" <%= 'selected' if cond&.dig(:op) == 'lte' %>>≤</option>
+                </select>
+                <input type="number" step="0.1" name="<%= key %>_value" value="<%= cond&.dig(:value) %>"
+                       placeholder="如 20" class="px-3 py-1.5 text-hl-13 border border-line rounded-md focus:border-link w-28 bg-white"
+                       data-screener-target="indicatorInput" <%= 'disabled' unless cond %>>
+                <span class="text-hl-12 text-muted-3">%</span>
+              </div>
+            <% end %>
+          </div>
+
+          <%# 第三行：净利润增长条件 %>
+          <div class="border-t border-line-soft pt-4">
+            <div class="flex flex-wrap items-center gap-3">
+              <label class="flex items-center gap-1.5 shrink-0 cursor-pointer">
+                <input type="checkbox" class="rounded border-line text-link focus:ring-link"
+                       data-screener-target="growthToggle" data-action="change->screener#toggleGrowth"
+                       <%= 'checked' if growth_mode.present? %>>
+                <span class="text-hl-13 font-medium text-ink-soft">净利润增长</span>
+              </label>
+              <select name="growth_mode" class="px-3 py-1.5 text-hl-12 border border-line rounded-md bg-white"
+                      data-screener-target="growthInput" data-action="change->screener#toggleGrowth" <%= 'disabled' if growth_mode.blank? %>>
+                <option value="yoy" <%= 'selected' if growth_mode == 'yoy' %>>末年同比增长 ≥</option>
+                <option value="always_up" <%= 'selected' if growth_mode == 'always_up' %>>区间内逐年上升</option>
+              </select>
+              <input type="number" step="0.1" name="growth_value" value="<%= growth_value %>"
+                     placeholder="如 15" class="px-3 py-1.5 text-hl-13 border border-line rounded-md focus:border-link w-28 bg-white"
+                     data-screener-target="growthInput" <%= 'disabled' if growth_mode.blank? || growth_mode == 'always_up' %>>
+              <span class="text-hl-12 text-muted-3">%（同比模式）</span>
+            </div>
+            <p class="text-hl-11 text-muted-3 mt-2">口径：净利润取归母净利润；同比增长要求上一年净利润为正；数据缺失（缺年报）的股票在「每年均满足 / 逐年上升」模式下自动排除。</p>
+          </div>
+
+          <div class="flex items-center gap-3 pt-1">
+            <button type="submit" class="hl-btn hl-btn-primary">开始筛选</button>
+            <%= link_to '重置', screener_path, class: 'hl-btn text-hl-13' %>
+          </div>
+        <% end %>
+      </div>
+
+      <% unless @is_member %>
+        <%# 非会员遮罩：功能介绍 + 引导加入 %>
+        <div class="absolute inset-0 flex items-center justify-center bg-white/70">
+          <div class="text-center px-6">
+            <p class="text-hl-16 font-semibold text-ink mb-1">股票筛选为会员专属功能</p>
+            <p class="text-hl-13 text-muted mb-4">加入会员即可按财务指标自由组合筛选全市场股票</p>
+            <%= link_to '了解会员权益', join_path, class: 'hl-btn hl-btn-primary' %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+    <%# ----- 结果区（turbo-frame 局部刷新） ----- %>
+    <turbo-frame id="screener_results">
+      <% if @screened %>
+        <% if @result.errors.any? %>
+          <div class="hl-card p-4 text-hl-13 text-loss bg-bg-soft"><%= @result.errors.join('；') %></div>
+        <% else %>
+          <div class="hl-card">
+            <div class="px-6 py-4 border-b border-line bg-bg-mute flex items-center justify-between">
+              <h2 class="text-hl-16 font-semibold text-ink-soft">筛选结果</h2>
+              <span class="text-hl-13 text-muted">共找到 <span class="text-ink font-medium"><%= @result.total_count %></span> 只股票</span>
+            </div>
+            <% if @result.stocks.empty? %>
+              <div class="px-6 py-12 text-center text-hl-13 text-muted-3">没有符合条件的股票，试试放宽条件（如改为「至少一年满足」或缩小阈值）</div>
+            <% else %>
+              <div class="overflow-x-auto">
+                <table class="hl-table w-full">
+                  <thead>
+                    <tr>
+                      <th class="text-left">股票</th>
+                      <th class="text-left">板块</th>
+                      <th>金字塔分</th>
+                      <th>区间最低 ROE</th>
+                      <th>末年 ROE</th>
+                      <th>末年毛利率</th>
+                      <th>末年净利率</th>
+                      <th>净利润同比</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <% @result.stocks.each do |stock| %>
+                      <% m = @result.metrics[stock.id] || {} %>
+                      <tr class="hover:bg-bg-mute">
+                        <td class="text-left">
+                          <%= link_to stock_path(stock), class: 'text-ink font-medium hover:text-link', data: { turbo: false } do %>
+                            <%= display_name.call(stock) %>
+                          <% end %>
+                          <span class="text-hl-11 text-muted-3 ml-1.5 font-mono"><%= stock.symbol %></span>
+                        </td>
+                        <td class="text-left text-muted"><%= stock.sector || '—' %></td>
+                        <td class="text-center font-semibold text-link"><%= stock.pyramid_total_score %></td>
+                        <td class="text-center font-mono"><%= fmt.call(m[:roe_min]) %></td>
+                        <td class="text-center font-mono"><%= fmt.call(m[:roe_last]) %></td>
+                        <td class="text-center font-mono"><%= fmt.call(m[:gm_last]) %></td>
+                        <td class="text-center font-mono"><%= fmt.call(m[:npm_last]) %></td>
+                        <td class="text-center font-mono"><%= fmt.call(m[:ni_growth]) %></td>
+                      </tr>
+                    <% end %>
+                  </tbody>
+                </table>
+              </div>
+              <%# 分页 %>
+              <div class="px-6 py-4 border-t border-line flex items-center justify-between">
+                <span class="text-hl-12 text-muted-3">第 <%= @result.page %> / <%= @result.total_pages %> 页</span>
+                <div class="flex items-center gap-2">
+                  <% if @result.page > 1 %>
+                    <%= link_to '上一页', screener_path(request.query_parameters.merge(page: @result.page - 1)), class: 'hl-btn text-hl-12', data: { turbo_frame: 'screener_results' } %>
+                  <% end %>
+                  <% if @result.has_more? %>
+                    <%= link_to '下一页', screener_path(request.query_parameters.merge(page: @result.page + 1)), class: 'hl-btn text-hl-12', data: { turbo_frame: 'screener_results' } %>
+                  <% end %>
+                </div>
+              </div>
+            <% end %>
+          </div>
+        <% end %>
+      <% elsif !@is_member %>
+        <%# 非会员示例预览 %>
+        <div class="hl-card">
+          <div class="px-6 py-4 border-b border-line bg-bg-mute flex items-center justify-between">
+            <h2 class="text-hl-16 font-semibold text-ink-soft">示例：A股 近5年每年 ROE ≥ 20%</h2>
+            <span class="text-hl-12 text-muted-3">示例仅展示前 <%= @demo[:stocks].size %> 条</span>
+          </div>
+          <% if @demo[:stocks].empty? %>
+            <div class="px-6 py-8 text-center text-hl-13 text-muted-3">暂无示例数据</div>
+          <% else %>
+            <div class="overflow-x-auto">
+              <table class="hl-table w-full">
+                <thead>
+                  <tr>
+                    <th class="text-left">股票</th>
+                    <th class="text-left">板块</th>
+                    <th>金字塔分</th>
+                    <th>区间最低 ROE</th>
+                    <th>末年 ROE</th>
+                    <th>净利润同比</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% @demo[:stocks].each do |stock| %>
+                    <% m = @demo[:metrics][stock.id] || {} %>
+                    <tr>
+                      <td class="text-left">
+                        <span class="text-ink font-medium"><%= display_name.call(stock) %></span>
+                        <span class="text-hl-11 text-muted-3 ml-1.5 font-mono"><%= stock.symbol %></span>
+                      </td>
+                      <td class="text-left text-muted"><%= stock.sector || '—' %></td>
+                      <td class="text-center font-semibold text-link"><%= stock.pyramid_total_score %></td>
+                      <td class="text-center font-mono text-muted-3">**</td>
+                      <td class="text-center font-mono text-muted-3">**</td>
+                      <td class="text-center font-mono text-muted-3">**</td>
+                    </tr>
+                  <% end %>
+                </tbody>
+              </table>
+            </div>
+          <% end %>
+          <div class="px-6 py-4 border-t border-line bg-bg-mute flex items-center justify-between gap-4">
+            <p class="text-hl-13 text-muted">完整筛选结果与全部指标列为会员专属</p>
+            <%= link_to '加入会员', join_path, class: 'hl-btn hl-btn-primary shrink-0' %>
+          </div>
+        </div>
+      <% end %>
+    </turbo-frame>
+  </main>
+</div>

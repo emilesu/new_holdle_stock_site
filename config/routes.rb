@@ -39,6 +39,9 @@ Rails.application.routes.draw do
   get "pyramid/load_more", to: "pyramids#load_more"
   get "pyramid/permission", to: "pyramids#permission"
 
+  # 股票筛选（会员专属）
+  get "screener", to: "screeners#index", as: :screener
+
   resources :courses, only: [:index, :show]
   resources :lessons, only: [:show]
   resources :articles, only: [:index, :show]

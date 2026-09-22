@@ -9,7 +9,7 @@ class ApplicationController < ActionController::Base
     # 鉴权/个性化页面：禁止 CDN 公共缓存（2026-09-05 事故根因：Nginx 强制 public max-age=600
     # 导致会员小节 URL 的 302 重定向响应被 CDN 缓存，会员点击被弹走；反向也会泄露会员内容）。
     # 需与 Nginx 对这些路径透传源站 Cache-Control 配合，否则该头会被 proxy_hide_header 剥除。
-    PRIVATE_CACHE_CONTROLLERS = %w[lessons courses orders pyramids stocks message_boards onboardings profiles].freeze
+    PRIVATE_CACHE_CONTROLLERS = %w[lessons courses orders pyramids stocks message_boards onboardings profiles screeners].freeze
     PRIVATE_CACHE_ACTIONS = { "pages" => %w[join plans] }.freeze
 
     # 生产环境 Nginx 处理 SSL 终结，内部 Puma 始终使用 HTTP
