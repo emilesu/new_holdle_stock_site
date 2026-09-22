@@ -44,7 +44,7 @@
         <h2 class="text-hl-16 font-semibold text-ink-soft">筛选条件</h2>
       </div>
       <div class="p-6 space-y-5 <%= 'opacity-60 pointer-events-none select-none' unless @is_member %>">
-        <%= form_with url: screener_path, method: :get, data: { turbo_frame: 'screener_results', screener_target: 'form' }, class: 'space-y-5' do |f| %>
+        <%= form_with url: screener_path, method: :get, data: { turbo_frame: 'screener_results', screener_target: 'form', action: 'submit->screener#persist' }, class: 'space-y-5' do |f| %>
           <%= hidden_field_tag :screen, '1' %>
 
           <%# 第一行：市场 / 板块 / 行业 / 年度区间 / 排序（手机端同一行横向滚动，桌面端五列网格） %>
@@ -161,7 +161,7 @@
 
           <div class="flex items-center gap-3 pt-1">
             <button type="submit" class="hl-btn hl-btn-primary">开始筛选</button>
-            <%= link_to '重置', screener_path, class: 'hl-btn text-hl-13' %>
+            <%= link_to '重置', screener_path, class: 'hl-btn text-hl-13', data: { action: 'click->screener#clearStored' } %>
           </div>
         <% end %>
       </div>

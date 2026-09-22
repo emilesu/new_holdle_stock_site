@@ -18,6 +18,61 @@ export default class extends Controller {
     }
     document.addEventListener("turbo:load", this.restoreHandler)
     window.addEventListener("pageshow", this.restoreHandler)
+    this.restoreFromStorage()
+  }
+
+  // ---------- 记住上次筛选条件（localStorage，7 天有效） ----------
+
+  static STORAGE_KEY = "screener_last_v1"
+  static STORAGE_TTL = 7 * 24 * 60 * 60 * 1000
+
+  persist() {
+    const fields = {}
+    new FormData(this.formTarget).forEach((v, k) => { fields[k] = String(v) })
+    const toggles = { growth: this.growthToggleTarget.checked }
+    this.indicatorToggleTargets.forEach((el) => { toggles[el.dataset.key] = el.checked })
+    try {
+      localStorage.setItem(this.constructor.STORAGE_KEY, JSON.stringify({ fields, toggles, ts: Date.now() }))
+    } catch (e) { /* 无痕模式等存储不可用时静默忽略 */ }
+  }
+
+  clearStored() {
+    try { localStorage.removeItem(this.constructor.STORAGE_KEY) } catch (e) { /* 忽略 */ }
+  }
+
+  async restoreFromStorage() {
+    // URL 已带筛选条件（服务端已回显）时不覆盖
+    if (new URLSearchParams(window.location.search).has("screen")) return
+    let saved = null
+    try { saved = JSON.parse(localStorage.getItem(this.constructor.STORAGE_KEY)) } catch (e) { return }
+    if (!saved || !saved.fields || Date.now() - (saved.ts || 0) > this.constructor.STORAGE_TTL) return
+
+    const { market, sector, industry, ...rest } = saved.fields
+    const m = market || this.marketTarget.value
+    this.marketTarget.value = m
+    // 级联三件套：服务端渲染的板块/行业选项对应默认市场，需按记忆值重建
+    if (sector) {
+      const { sectors } = await this.fetchFilters(m, null)
+      this.renderOptions(this.sectorTarget, sectors, sector)
+      const { industries } = await this.fetchFilters(m, sector)
+      this.renderOptions(this.industryTarget, industries, industry || "")
+      this.industryTarget.disabled = false
+    } else {
+      const { sectors } = await this.fetchFilters(m, null)
+      this.renderOptions(this.sectorTarget, sectors, "")
+      this.resetIndustry()
+    }
+
+    const form = this.formTarget
+    Object.entries(rest).forEach(([k, v]) => {
+      const el = form.elements[k]
+      if (el) el.value = v
+    })
+    const toggles = saved.toggles || {}
+    this.growthToggleTarget.checked = !!toggles.growth
+    this.indicatorToggleTargets.forEach((el) => { el.checked = !!toggles[el.dataset.key] })
+    this.syncAllState()
+    form.requestSubmit()
   }
 
   disconnect() {
