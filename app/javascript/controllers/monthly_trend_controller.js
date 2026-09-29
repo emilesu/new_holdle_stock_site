@@ -9,13 +9,13 @@ import { Controller } from "@hotwired/stimulus"
 const ECHARTS_VERSION = "6.1.0"
 const ECHARTS_URL = `https://registry.npmmirror.com/echarts/${ECHARTS_VERSION}/files/dist/echarts.min.js`
 
-// 右侧留白：ECharts 6 默认开启轴标签防溢出，会按 grid 收缩 rect，故从 Chart.js 时代的 64 放宽到 72
+// 右侧留白：容纳 y 轴刻度标签（如 "2,500"、"12.34%"）。ECharts 的轴标签防溢出钳制已在 gridsFromLayout
+// 显式关闭（outerBoundsMode: 'none'），故此值必须自己够宽，不能再指望框架帮忙兜底
 const RIGHT_GUTTER = 72
 
-// 左侧留白：category 轴的首个月份标签以「半字宽」为居中半径（实测约 23px），grid.left = 0 时它会越过画布左边缘。
-// ECharts 6 的防溢出机制（grid.outerBoundsMode 默认 'auto'，按采样标签估算，且只在首次完整布局时生效）
-// 会为了不裁切它而把**这一个** grid 单独向右收缩、另外两个不动 —— 表现为三图十字准星只在右端对齐，
-// 越往左错位越大。预留 28px 让该标签天然落在画布内，机制便永无触发理由，三个 grid 的 rect 恒等。
+// 左侧留白：category 轴的首个月份标签以「半字宽」为居中半径（实测约 23px），grid.left 小于该值时标签会
+// 越出画布左边缘被裁切。28px 使首月标签天然落在画布内 —— 这里只是单纯给标签留位置，
+// 不再承担「规避 ECharts 防溢出收缩」的职责（那件事已由外层的 outerBoundsMode: 'none' 根治）
 const LEFT_GUTTER = 28
 
 // 站内 A股配色：红涨绿跌
@@ -143,6 +143,22 @@ export default class extends Controller {
   async renderChart(labels) {
     const generation = this.requestId
 
+    // 几何测量与 overlay 内边距回写都放在 await 之前：render() 已 setStatus("") 使容器可见，此刻即可测量；
+    // 不必等 1.1MB 的 ECharts 脚本下完，caption 行在等待期间就已完成对齐，
+    // 且后续 ensureECharts 加载失败的降级态也同样带着正确的内边距
+    const grids = this.gridsFromLayout()
+    if (!grids) {
+      // 此时 render() 已 setStatus("") 把容器显示出来了，必须补一句提示，否则用户只看到空白卡片
+      this.setStatus("图表布局异常，请刷新重试")
+      return
+    }
+
+    // caption 行（MACD 标题行等）随 overlay 左右内边距一起内缩，使其左右端点正好落在绘图区左右边界上，
+    // 而不是顶到卡片边缘（右侧 72px 是 y 轴标签的位置，caption 顶到那里会横跨整张卡片）；
+    // 内缩值直接取自上面算出的 grid 边界，常量只在 JS 侧维护一份，避免 ERB 再写一套导致漂移
+    this.overlayTarget.style.paddingLeft = `${grids[0].left}px`
+    this.overlayTarget.style.paddingRight = `${grids[0].right}px`
+
     let echarts
     try {
       echarts = await this.ensureECharts()
@@ -159,19 +175,6 @@ export default class extends Controller {
     // 等待脚本期间若已发起新请求或页面已被替换，丢弃本次渲染
     if (this.disposed || generation !== this.requestId) return
 
-    const grids = this.gridsFromLayout()
-    if (!grids) {
-      // 此时 render() 已 setStatus("") 把容器显示出来了，必须补一句提示，否则用户只看到空白卡片
-      this.setStatus("图表布局异常，请刷新重试")
-      return
-    }
-
-    // caption 行（MACD 标题行等）随 overlay 左右内边距一起内缩，使其左右端点正好落在绘图区左右边界上，
-    // 而不是顶到卡片边缘（右侧 72px 是 y 轴标签的位置，caption 顶到那里会横跨整张卡片）；
-    // 内缩值直接取自上面算出的 grid 边界，常量只在 JS 侧维护一份，避免 ERB 再写一套导致漂移
-    this.overlayTarget.style.paddingLeft = `${grids[0].left}px`
-    this.overlayTarget.style.paddingRight = `${grids[0].right}px`
-
     if (!this.chart) {
       this.chartTarget.innerHTML = ""
       this.chart = echarts.init(this.chartTarget)
@@ -182,7 +185,9 @@ export default class extends Controller {
     this.chart.setOption(this.buildOption(labels, grids), { notMerge: true })
   }
 
-  // 读 ERB 占位元素的实际几何作为 grid 矩形：唯一真源，避免 JS 常量与模板漂移
+  // grid 矩形：top/height 的唯一真源是 ERB 占位元素（改模板高度类图表自动跟随，避免 JS 常量漂移）；
+  // left/right 只能来自 JS 常量 —— 它取决于 y 轴刻度标签宽度，ERB 里无法表达，
+  // 故改用「把同一组常量回写成 overlay 内边距」的方式让 caption 行与绘图区对齐（见 renderChart）
   gridsFromLayout() {
     const bands = {}
     this.overlayTarget.querySelectorAll("[data-band]").forEach((el) => {
@@ -195,6 +200,10 @@ export default class extends Controller {
     }
 
     return ["kline", "macd", "roe"].map((name) => ({
+      // 关闭 ECharts 6 的轴标签防溢出钳制（默认 'auto'）：它按采样标签估算，会单独收缩某一个 grid，
+      // 使三个 grid 的矩形不等、十字准星越往左错位越大。设为 'none' 后 rect 完全由下面的常量与模板高度决定，
+      // 三个 grid 恒等 —— 这是比「靠留白让机制不触发」更稳的根治手段
+      outerBoundsMode: "none",
       left: LEFT_GUTTER,
       right: RIGHT_GUTTER,
       top: bands[name].top,
