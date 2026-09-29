@@ -172,9 +172,9 @@
           <div class="px-6 py-4">
             <div class="hidden" data-monthly-trend-target="charts">
               <%# 单容器：三 grid 共用一个 ECharts 实例。canvas 绝对定位铺满，HTML caption 覆盖其上但不吃事件 %>
-              <div class="relative" data-monthly-trend-target="chartWrap">
+              <div class="relative">
                 <div class="absolute inset-0" data-monthly-trend-target="chart"></div>
-                <%# overlay 的占位高度即三 grid 的几何真源（JS 读 offsetTop/offsetHeight），改高度类图表自动跟随 %>
+                <%# overlay 的占位高度即三 grid 的几何真源（JS 读 offsetTop/offsetHeight），改高度类图表自动跟随；左右内边距由 JS 按 grid 边界回写，使 caption 行与绘图区左右边界对齐（勿在模板里另写一套数值） %>
                 <div class="relative pointer-events-none" data-monthly-trend-target="overlay">
                   <div class="h-56" data-band="kline"></div>
                   <div class="flex h-5 items-center justify-between text-hl-11 text-muted-4">
@@ -184,7 +184,7 @@
                   <div class="h-40" data-band="macd"></div>
                   <div class="flex h-5 items-center text-hl-11 text-muted-4">月ROE（年报按报告期 +4 个月生效）</div>
                   <div class="h-40" data-band="roe"></div>
-                  <%# 底部 56px：最下一格的月份标签（约 22px）+ dataZoom slider（20px）+ 留白 %>
+                  <%# 底部 49px（h-14 = 3.5rem，站点根字号 14px）：最下一格的月份标签 + dataZoom slider %>
                   <div class="h-14"></div>
                 </div>
               </div>

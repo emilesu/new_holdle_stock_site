@@ -12,6 +12,12 @@ const ECHARTS_URL = `https://registry.npmmirror.com/echarts/${ECHARTS_VERSION}/f
 // 右侧留白：ECharts 6 默认开启轴标签防溢出，会按 grid 收缩 rect，故从 Chart.js 时代的 64 放宽到 72
 const RIGHT_GUTTER = 72
 
+// 左侧留白：category 轴的首个月份标签以「半字宽」为居中半径（实测约 23px），grid.left = 0 时它会越过画布左边缘。
+// ECharts 6 的防溢出机制（grid.outerBoundsMode 默认 'auto'，按采样标签估算，且只在首次完整布局时生效）
+// 会为了不裁切它而把**这一个** grid 单独向右收缩、另外两个不动 —— 表现为三图十字准星只在右端对齐，
+// 越往左错位越大。预留 28px 让该标签天然落在画布内，机制便永无触发理由，三个 grid 的 rect 恒等。
+const LEFT_GUTTER = 28
+
 // 站内 A股配色：红涨绿跌
 const UP_COLOR = "#ef4444"
 const DOWN_COLOR = "#10b981"
@@ -25,7 +31,7 @@ const SPLIT_LINE_COLOR = "rgba(0, 0, 0, 0.06)"
 const AXIS_LINE_COLOR = "rgba(0, 0, 0, 0.1)"
 
 export default class extends Controller {
-  static targets = ["rangeBtn", "adjBtn", "chart", "chartWrap", "overlay", "macdNote", "status", "charts"]
+  static targets = ["rangeBtn", "adjBtn", "chart", "overlay", "macdNote", "status", "charts"]
   static values = { url: String }
 
   connect() {
@@ -99,7 +105,8 @@ export default class extends Controller {
       // 旧请求返回时页面可能已被替换，丢弃过期响应
       if (this.disposed || requestId !== this.requestId) return
 
-      this.render(payload)
+      // 必须 await：renderChart 是异步的，浮空调用会让它的异常逃出本方法的 try/catch
+      await this.render(payload)
     } catch (error) {
       if (this.disposed || requestId !== this.requestId) return
 
@@ -124,11 +131,12 @@ export default class extends Controller {
     // 顺序不可颠倒：charts 容器此前是 hidden（尺寸 0），必须先取消隐藏再 init，否则得到 0×0 空白图
     this.setStatus("")
 
-    this.renderChart(bars.map((bar) => String(bar.t || "").slice(0, 7)))
-
     if (this.hasMacdNoteTarget) {
       this.macdNoteTarget.textContent = `MACD · ${payload.adj === "hfq" ? "后复权" : "前复权"}口径`
     }
+
+    // 返回 promise：由 load() await，异常才能被它的 try/catch 兜住
+    return this.renderChart(bars.map((bar) => String(bar.t || "").slice(0, 7)))
   }
 
   // 单实例渲染：三 grid + 5 个 series 一次 setOption
@@ -152,12 +160,21 @@ export default class extends Controller {
     if (this.disposed || generation !== this.requestId) return
 
     const grids = this.gridsFromLayout()
-    if (!grids) return
+    if (!grids) {
+      // 此时 render() 已 setStatus("") 把容器显示出来了，必须补一句提示，否则用户只看到空白卡片
+      this.setStatus("图表布局异常，请刷新重试")
+      return
+    }
+
+    // caption 行（MACD 标题行等）随 overlay 左右内边距一起内缩，使其左右端点正好落在绘图区左右边界上，
+    // 而不是顶到卡片边缘（右侧 72px 是 y 轴标签的位置，caption 顶到那里会横跨整张卡片）；
+    // 内缩值直接取自上面算出的 grid 边界，常量只在 JS 侧维护一份，避免 ERB 再写一套导致漂移
+    this.overlayTarget.style.paddingLeft = `${grids[0].left}px`
+    this.overlayTarget.style.paddingRight = `${grids[0].right}px`
 
     if (!this.chart) {
       this.chartTarget.innerHTML = ""
       this.chart = echarts.init(this.chartTarget)
-      this.chart.setOption({ textStyle: { fontFamily: this.chartFontFamily() } })
       this.bindResize()
     }
 
@@ -178,7 +195,7 @@ export default class extends Controller {
     }
 
     return ["kline", "macd", "roe"].map((name) => ({
-      left: 0,
+      left: LEFT_GUTTER,
       right: RIGHT_GUTTER,
       top: bands[name].top,
       height: bands[name].height
@@ -192,6 +209,8 @@ export default class extends Controller {
 
     return {
       animation: false,
+      // 全局字体必须放在这一份 option 里：另起一次 setOption 设 textStyle 会被下面 notMerge 的整体替换冲掉
+      textStyle: { fontFamily: this.chartFontFamily() },
 
       // 三个 grid 共用同一组 left/right → 像素级对齐；不使用 containLabel（v6 已 deprecated 且会破坏对齐）
       grid: grids,
