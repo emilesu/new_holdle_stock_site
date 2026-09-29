@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_09_22_120000) do
+ActiveRecord::Schema[7.1].define(version: 2026_09_29_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -453,6 +453,31 @@ ActiveRecord::Schema[7.1].define(version: 2026_09_22_120000) do
     t.index ["key"], name: "index_solid_queue_semaphores_on_key", unique: true
   end
 
+  create_table "stock_monthly_bars", comment: "股票月K线数据表（含前复权/后复权两套价格）", force: :cascade do |t|
+    t.bigint "stock_id", null: false, comment: "股票ID，关联stocks表"
+    t.string "market", default: "CN", null: false, comment: "市场类型"
+    t.date "trade_date", null: false, comment: "月末交易日"
+    t.decimal "open", precision: 12, scale: 4, comment: "不复权开盘价（溯源用，不直接展示）"
+    t.decimal "close", precision: 12, scale: 4, comment: "不复权收盘价（溯源用，不直接展示）"
+    t.decimal "high", precision: 12, scale: 4, comment: "不复权最高价（溯源用，不直接展示）"
+    t.decimal "low", precision: 12, scale: 4, comment: "不复权最低价（溯源用，不直接展示）"
+    t.bigint "volume", comment: "成交量"
+    t.decimal "qfq_open", precision: 12, scale: 4, comment: "前复权开盘价（默认展示口径）"
+    t.decimal "qfq_close", precision: 12, scale: 4, comment: "前复权收盘价（默认展示口径）"
+    t.decimal "qfq_high", precision: 12, scale: 4, comment: "前复权最高价（默认展示口径）"
+    t.decimal "qfq_low", precision: 12, scale: 4, comment: "前复权最低价（默认展示口径）"
+    t.decimal "hfq_open", precision: 12, scale: 4, comment: "后复权开盘价（可切换展示，亦为MACD递推基准）"
+    t.decimal "hfq_close", precision: 12, scale: 4, comment: "后复权收盘价（可切换展示，亦为MACD递推基准）"
+    t.decimal "hfq_high", precision: 12, scale: 4, comment: "后复权最高价（可切换展示，亦为MACD递推基准）"
+    t.decimal "hfq_low", precision: 12, scale: 4, comment: "后复权最低价（可切换展示，亦为MACD递推基准）"
+    t.decimal "qfq_factor", precision: 20, scale: 10, comment: "该月适用的前复权因子"
+    t.decimal "hfq_factor", precision: 20, scale: 10, comment: "该月适用的后复权因子"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["market", "trade_date"], name: "index_stock_monthly_bars_on_market_and_trade_date"
+    t.index ["stock_id", "trade_date"], name: "index_stock_monthly_bars_on_stock_id_and_trade_date", unique: true
+  end
+
   create_table "stocks", force: :cascade do |t|
     t.string "symbol"
     t.string "name"
@@ -572,6 +597,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_09_22_120000) do
   add_foreign_key "solid_queue_ready_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_recurring_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_scheduled_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
+  add_foreign_key "stock_monthly_bars", "stocks"
   add_foreign_key "usage_logs", "api_keys"
   add_foreign_key "usage_logs", "users"
   add_foreign_key "user_favorites", "stocks"

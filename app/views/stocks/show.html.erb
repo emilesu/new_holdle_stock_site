@@ -145,6 +145,48 @@
           market_col = market_financial_column_classes(@stock.market)
         %>
 
+        <%# 月K · MACD · 月ROE 三联图（免费开放）；数据由 Stimulus 懒加载，进入视口才请求 %>
+        <div class="bg-white hl-card overflow-hidden"
+             data-controller="monthly-trend"
+             data-monthly-trend-url-value="<%= monthly_trend_stock_path(@stock, format: :json) %>">
+          <div class="px-6 py-4 border-b border-line flex items-center justify-between flex-wrap gap-2">
+            <h2 class="text-hl-16 font-semibold text-ink">月K · MACD · 月ROE <span class="text-hl-12 text-muted-4 ml-2">Monthly Trend</span></h2>
+            <div class="flex items-center gap-2">
+              <%# 区间：近 10 年（默认）/ 全部历史 %>
+              <div class="flex rounded border border-line overflow-hidden">
+                <button type="button" data-monthly-trend-target="rangeBtn" data-range="10y" aria-pressed="true"
+                        data-action="monthly-trend#switchRange" class="px-3 py-1 text-hl-12 text-ink">近10年</button>
+                <button type="button" data-monthly-trend-target="rangeBtn" data-range="all" aria-pressed="false"
+                        data-action="monthly-trend#switchRange" class="px-3 py-1 text-hl-12 text-muted-4 border-l border-line">全部</button>
+              </div>
+              <%# 复权：前复权（默认）/ 后复权 %>
+              <div class="flex rounded border border-line overflow-hidden">
+                <button type="button" data-monthly-trend-target="adjBtn" data-adj="qfq" aria-pressed="true"
+                        data-action="monthly-trend#switchAdj" class="px-3 py-1 text-hl-12 text-ink">前复权</button>
+                <button type="button" data-monthly-trend-target="adjBtn" data-adj="hfq" aria-pressed="false"
+                        data-action="monthly-trend#switchAdj" class="px-3 py-1 text-hl-12 text-muted-4 border-l border-line">后复权</button>
+              </div>
+            </div>
+          </div>
+          <div class="px-6 py-4">
+            <div class="hidden space-y-3" data-monthly-trend-target="charts">
+              <div class="relative h-56"><canvas data-monthly-trend-target="kline"></canvas></div>
+              <div>
+                <div class="flex items-center justify-between text-hl-11 text-muted-4">
+                  <span>MACD(12,26,9)</span>
+                  <span data-monthly-trend-target="macdNote">MACD · 前复权口径</span>
+                </div>
+                <div class="relative h-40"><canvas data-monthly-trend-target="macd"></canvas></div>
+              </div>
+              <div>
+                <div class="text-hl-11 text-muted-4">月ROE（年报按报告期 +4 个月生效）</div>
+                <div class="relative h-40"><canvas data-monthly-trend-target="roe"></canvas></div>
+              </div>
+            </div>
+            <div class="py-10 text-center text-hl-12 text-muted-4" data-monthly-trend-target="status">加载中…</div>
+          </div>
+        </div>
+
         <% financial_tables.each do |table| %>
         <div class="bg-white hl-card overflow-hidden <%= market_col[:hover] %>" data-controller="financial-table">
           <div class="px-6 py-4 border-b border-line">

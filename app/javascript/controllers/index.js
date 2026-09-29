@@ -45,3 +45,6 @@ application.register("financial-table", FinancialTableController)
 
 import ScreenerController from "./screener_controller"
 application.register("screener", ScreenerController)
+
+import MonthlyTrendController from "./monthly_trend_controller"
+application.register("monthly-trend", MonthlyTrendController)

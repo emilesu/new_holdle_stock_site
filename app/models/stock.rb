@@ -13,6 +13,7 @@ class Stock < ApplicationRecord
   has_many :balance_sheets, through: :financial_reports
   has_many :cash_flows, through: :financial_reports
   has_many :financial_indicators, through: :financial_reports
+  has_many :stock_monthly_bars, dependent: :destroy
 
   # 新收录股票 → 异步推送给百度（新 URL 对 SEO 价值最高；失败不影响入库）
   after_commit :push_to_baidu_on_create, on: :create, if: -> { ENV["BAIDU_PUSH_TOKEN"].to_s.present? }
