@@ -1,31 +1,44 @@
 import { Controller } from "@hotwired/stimulus"
 
 // 月K · MACD · 月ROE 三联图
-// 三图共用同一份月份数组（category 轴），上两图隐藏 x 轴刻度，由最下方 ROE 图给出月份标签
-const Y_AXIS_WIDTH = 64
-
-// 最小验证：K 线改用 ECharts 蜡烛图，MACD / ROE 仍是 Chart.js
+// 三图共用一个 ECharts 实例、三个 grid，共用同一份月份数组（category 轴）；
+// 上两图隐藏 x 轴刻度，由最下方 ROE 图给出月份标签。grid 几何由 ERB 占位元素实测得出（见 gridsFromLayout），
+// 避免 JS 常量与模板高度漂移 —— 这是从「Chart.js + ECharts 混合渲染 + 人工约定轴宽」迁移过来的核心目的。
+//
 // ECharts 走 npmmirror CDN 懒加载（仅当三联图进入视口才注入脚本），不进入 esbuild 产物
 const ECHARTS_VERSION = "6.1.0"
 const ECHARTS_URL = `https://registry.npmmirror.com/echarts/${ECHARTS_VERSION}/files/dist/echarts.min.js`
-// 站内 A股配色：红涨绿跌（与 MACD 柱一致）
-const CANDLE_UP_COLOR = "#ef4444"
-const CANDLE_DOWN_COLOR = "#10b981"
+
+// 右侧留白：ECharts 6 默认开启轴标签防溢出，会按 grid 收缩 rect，故从 Chart.js 时代的 64 放宽到 72
+const RIGHT_GUTTER = 72
+
+// 站内 A股配色：红涨绿跌
+const UP_COLOR = "#ef4444"
+const DOWN_COLOR = "#10b981"
+const HIST_UP_COLOR = "rgba(239, 68, 68, 0.55)"
+const HIST_DOWN_COLOR = "rgba(16, 185, 129, 0.55)"
+const DIF_COLOR = "#ef4444"
+const DEA_COLOR = "#3b82f6"
+const ROE_COLOR = "#f59e0b"
+const TICK_COLOR = "#9ca3af"
+const SPLIT_LINE_COLOR = "rgba(0, 0, 0, 0.06)"
+const AXIS_LINE_COLOR = "rgba(0, 0, 0, 0.1)"
 
 export default class extends Controller {
-  static targets = ["rangeBtn", "adjBtn", "kline", "macd", "roe", "macdNote", "status", "charts"]
+  static targets = ["rangeBtn", "adjBtn", "chart", "chartWrap", "overlay", "macdNote", "status", "charts"]
   static values = { url: String }
 
   connect() {
     this.range = "10y"
     this.adj = "qfq"
-    this.charts = {}
     this.requestId = 0
-    this.skipRoe = false
     this.disposed = false
-    this.klineChart = null
+    this.chart = null
     this.echartsPromise = null
     this.resizeHandler = null
+    this.barData = []
+    this.macdData = []
+    this.roeData = []
 
     this.syncButtons()
     this.setStatus("加载中…")
@@ -52,7 +65,7 @@ export default class extends Controller {
       window.removeEventListener("resize", this.resizeHandler)
       this.resizeHandler = null
     }
-    this.destroyCharts()
+    this.disposeChart()
   }
 
   switchRange(event) {
@@ -69,8 +82,6 @@ export default class extends Controller {
     if (value === this.adj) return
 
     this.adj = value
-    // ROE 是比率，与复权口径无关：仅切复权时不重绘 ROE 图
-    this.skipRoe = true
     this.syncButtons()
     this.load()
   }
@@ -78,7 +89,7 @@ export default class extends Controller {
   async load() {
     const requestId = ++this.requestId
     // 已有图表时保留旧图，避免切换区间/复权时卡片闪现空白
-    if (!this.klineChart) this.setStatus("加载中…")
+    if (!this.chart) this.setStatus("加载中…")
 
     try {
       const response = await fetch(this.buildUrl(), { headers: { Accept: "application/json" } })
@@ -93,7 +104,7 @@ export default class extends Controller {
       if (this.disposed || requestId !== this.requestId) return
 
       console.error("monthly trend load error:", error)
-      this.destroyCharts()
+      this.disposeChart()
       this.setStatus("数据加载失败，请稍后重试")
     }
   }
@@ -101,24 +112,27 @@ export default class extends Controller {
   render(payload) {
     const bars = payload.bars || []
     if (!bars.length) {
-      this.destroyCharts()
+      this.disposeChart()
       this.setStatus("暂无数据")
       return
     }
 
     this.barData = bars
-    const labels = bars.map((bar) => String(bar.t || "").slice(0, 7))
+    this.macdData = payload.macd || []
+    this.roeData = payload.roe || []
 
+    // 顺序不可颠倒：charts 容器此前是 hidden（尺寸 0），必须先取消隐藏再 init，否则得到 0×0 空白图
     this.setStatus("")
-    this.renderKline(labels, bars)
-    this.renderMacd(labels, payload.macd || [], payload.adj)
-    if (!(this.skipRoe && this.charts.roe)) this.renderRoe(labels, payload.roe || [])
-    this.skipRoe = false
+
+    this.renderChart(bars.map((bar) => String(bar.t || "").slice(0, 7)))
+
+    if (this.hasMacdNoteTarget) {
+      this.macdNoteTarget.textContent = `MACD · ${payload.adj === "hfq" ? "后复权" : "前复权"}口径`
+    }
   }
 
-  // K 线：ECharts 蜡烛图
-  // grid.right 必须与 Chart.js 的 Y_AXIS_WIDTH 一致，否则与下方 MACD / ROE 图的月份刻度错位
-  async renderKline(labels, bars) {
+  // 单实例渲染：三 grid + 5 个 series 一次 setOption
+  async renderChart(labels) {
     const generation = this.requestId
 
     let echarts
@@ -128,74 +142,237 @@ export default class extends Controller {
       console.error("echarts load error:", error)
       if (this.disposed || generation !== this.requestId) return
 
-      this.disposeKline()
-      this.klineTarget.innerHTML =
-        '<div class="h-full flex items-center justify-center text-hl-12 text-muted-4">K线图库加载失败</div>'
+      this.disposeChart()
+      this.chartTarget.innerHTML =
+        '<div class="h-full flex items-center justify-center text-hl-12 text-muted-4">图表库加载失败</div>'
       return
     }
 
     // 等待脚本期间若已发起新请求或页面已被替换，丢弃本次渲染
     if (this.disposed || generation !== this.requestId) return
 
-    this.disposeKline()
-    this.klineTarget.innerHTML = ""
+    const grids = this.gridsFromLayout()
+    if (!grids) return
 
-    const chart = echarts.init(this.klineTarget)
-    this.klineChart = chart
+    if (!this.chart) {
+      this.chartTarget.innerHTML = ""
+      this.chart = echarts.init(this.chartTarget)
+      this.chart.setOption({ textStyle: { fontFamily: this.chartFontFamily() } })
+      this.bindResize()
+    }
 
-    chart.setOption({
+    // notMerge：切换区间/复权时整体替换，避免旧 series 残留
+    this.chart.setOption(this.buildOption(labels, grids), { notMerge: true })
+  }
+
+  // 读 ERB 占位元素的实际几何作为 grid 矩形：唯一真源，避免 JS 常量与模板漂移
+  gridsFromLayout() {
+    const bands = {}
+    this.overlayTarget.querySelectorAll("[data-band]").forEach((el) => {
+      bands[el.dataset.band] = { top: el.offsetTop, height: el.offsetHeight }
+    })
+
+    if (!bands.kline || !bands.macd || !bands.roe) {
+      console.error("monthly trend: grid 占位元素缺失", bands)
+      return null
+    }
+
+    return ["kline", "macd", "roe"].map((name) => ({
+      left: 0,
+      right: RIGHT_GUTTER,
+      top: bands[name].top,
+      height: bands[name].height
+    }))
+  }
+
+  buildOption(labels, grids) {
+    const bars = this.barData
+    const macd = this.macdData
+    const roe = this.roeData
+
+    return {
       animation: false,
-      grid: { left: 0, right: Y_AXIS_WIDTH, top: 6, bottom: 0 },
-      xAxis: {
-        type: "category",
-        data: labels,
-        axisTick: { show: false },
-        axisLine: { lineStyle: { color: "rgba(0, 0, 0, 0.1)" } },
-        axisLabel: { show: false }
+
+      // 三个 grid 共用同一组 left/right → 像素级对齐；不使用 containLabel（v6 已 deprecated 且会破坏对齐）
+      grid: grids,
+
+      xAxis: [
+        this.buildXAxis(0, labels, false),
+        this.buildXAxis(1, labels, false),
+        this.buildXAxis(2, labels, true)
+      ],
+
+      // scale 口径对齐原 Chart.js：K/ROE 贴合数据区间；MACD 强制含 0（柱状图基线）
+      yAxis: [
+        this.buildYAxis(0, true),
+        this.buildYAxis(1, false),
+        this.buildYAxis(2, true, "%")
+      ],
+
+      // 跨三图联动十字准星（官方只承诺指示线同步；tooltip 内容由 buildTooltip 自拼）
+      axisPointer: {
+        link: [{ xAxisIndex: "all" }],
+        label: { show: false }
       },
-      yAxis: {
-        // scale: true —— 贴合数据区间取值，与原先 Chart.js 折线的口径一致（不从 0 起）
-        scale: true,
-        position: "right",
-        axisLabel: { fontSize: 10, color: "#9ca3af" },
-        splitLine: { lineStyle: { color: "rgba(0, 0, 0, 0.06)" } }
-      },
+
+      dataZoom: [
+        // 触屏：单指不拦截页面滚动，双指缩放；PC：Shift+滚轮缩放（普通滚轮仍滚动页面），按住拖动平移
+        {
+          type: "inside",
+          xAxisIndex: [0, 1, 2],
+          zoomOnMouseWheel: "shift",
+          moveOnMouseMove: true,
+          moveOnMouseWheel: false,
+          minValueSpan: 6
+        },
+        // 拖拽条：所有设备可用的兜底缩放方式；占用底部 20px
+        {
+          type: "slider",
+          xAxisIndex: [0, 1, 2],
+          bottom: 6,
+          height: 20,
+          brushSelect: false,
+          showDetail: false,
+          borderColor: AXIS_LINE_COLOR,
+          fillerColor: "rgba(0, 0, 0, 0.04)",
+          handleStyle: { color: "#d1d5db", borderColor: "#d1d5db" },
+          moveHandleStyle: { color: "#d1d5db" },
+          textStyle: { color: TICK_COLOR, fontSize: 10 },
+          minValueSpan: 6
+        }
+      ],
+
       tooltip: {
         trigger: "axis",
-        axisPointer: { type: "cross", label: { show: false } },
+        axisPointer: { type: "cross", snap: true, label: { show: false } },
+        // 卡片是 overflow-hidden，不挂 body 会被裁切
+        appendToBody: true,
         backgroundColor: "rgba(17, 24, 39, 0.92)",
         borderWidth: 0,
         padding: [6, 8],
         textStyle: { color: "#f9fafb", fontSize: 11 },
         formatter: (params) => {
           const item = Array.isArray(params) ? params[0] : params
-          const bar = item && this.barData && this.barData[item.dataIndex]
-          if (!bar) return ""
-
-          return [
-            String(bar.t || "").slice(0, 7),
-            `开 ${this.fmt(bar.o)}`,
-            `高 ${this.fmt(bar.h)}`,
-            `低 ${this.fmt(bar.l)}`,
-            `收 ${this.fmt(bar.c)}`
-          ].join("<br/>")
+          return this.buildTooltip(item && item.dataIndex)
         }
       },
-      series: [{
-        type: "candlestick",
-        // ECharts candlestick 数据顺序固定为 [开, 收, 低, 高]，此处由后端下发的 o/h/l/c 重排
-        data: bars.map((bar) => [bar.o, bar.c, bar.l, bar.h]),
-        barMaxWidth: 10,
-        itemStyle: {
-          color: CANDLE_UP_COLOR,
-          color0: CANDLE_DOWN_COLOR,
-          borderColor: CANDLE_UP_COLOR,
-          borderColor0: CANDLE_DOWN_COLOR
-        }
-      }]
-    })
 
-    this.bindKlineResize()
+      series: [
+        {
+          name: "月K",
+          type: "candlestick",
+          xAxisIndex: 0,
+          yAxisIndex: 0,
+          // ECharts candlestick 数据顺序固定为 [开, 收, 低, 高]，由后端下发的 o/h/l/c 重排
+          data: bars.map((bar) => [bar.o, bar.c, bar.l, bar.h]),
+          barMaxWidth: 10,
+          itemStyle: {
+            color: UP_COLOR,
+            color0: DOWN_COLOR,
+            borderColor: UP_COLOR,
+            borderColor0: DOWN_COLOR
+          }
+        },
+        {
+          name: "HIST",
+          type: "bar",
+          xAxisIndex: 1,
+          yAxisIndex: 1,
+          data: macd.map((item) => item.hist),
+          itemStyle: {
+            color: (params) => (params.value >= 0 ? HIST_UP_COLOR : HIST_DOWN_COLOR)
+          }
+        },
+        {
+          name: "DIF",
+          type: "line",
+          xAxisIndex: 1,
+          yAxisIndex: 1,
+          data: macd.map((item) => item.dif),
+          showSymbol: false,
+          lineStyle: { width: 1.2, color: DIF_COLOR },
+          itemStyle: { color: DIF_COLOR }
+        },
+        {
+          name: "DEA",
+          type: "line",
+          xAxisIndex: 1,
+          yAxisIndex: 1,
+          data: macd.map((item) => item.dea),
+          showSymbol: false,
+          lineStyle: { width: 1.2, color: DEA_COLOR },
+          itemStyle: { color: DEA_COLOR }
+        },
+        {
+          name: "ROE",
+          type: "line",
+          xAxisIndex: 2,
+          yAxisIndex: 2,
+          data: roe.map((item) => item.value),
+          showSymbol: false,
+          // 阶梯方向与后端「生效月」语义一致：当月起向后延伸
+          step: "end",
+          // 无年报覆盖的月份是 null，默认不连接 → 自动断线，不画 0
+          connectNulls: false,
+          lineStyle: { width: 1.5, color: ROE_COLOR },
+          itemStyle: { color: ROE_COLOR }
+        }
+      ]
+    }
+  }
+
+  buildXAxis(gridIndex, labels, showLabel) {
+    return {
+      gridIndex,
+      type: "category",
+      data: labels,
+      boundaryGap: true,
+      axisTick: { show: false },
+      axisLine: { lineStyle: { color: AXIS_LINE_COLOR } },
+      splitLine: { show: false },
+      axisLabel: showLabel
+        ? { fontSize: 10, color: TICK_COLOR, maxRotation: 0, hideOverlap: true }
+        : { show: false }
+    }
+  }
+
+  buildYAxis(gridIndex, scale, unit = "") {
+    return {
+      gridIndex,
+      scale,
+      position: "right",
+      splitNumber: 4, // 约 5 条刻度，对齐原 maxTicksLimit: 5
+      axisLine: { show: false },
+      axisTick: { show: false },
+      axisLabel: { fontSize: 10, color: TICK_COLOR, formatter: `{value}${unit}` },
+      splitLine: { lineStyle: { color: SPLIT_LINE_COLOR } }
+    }
+  }
+
+  // 三段自拼（价 / 量指标 / 基本面）：ECharts 只保证指示线跨 grid 联动，不合并 tooltip 内容，
+  // 因此统一按同一个 dataIndex 从三份本地数据取值（后端三数组等长对齐）
+  buildTooltip(index) {
+    const bar = this.barData[index]
+    if (!bar) return ""
+
+    const lines = [
+      String(bar.t || "").slice(0, 7),
+      `开 ${this.fmt(bar.o)}　高 ${this.fmt(bar.h)}　低 ${this.fmt(bar.l)}　收 ${this.fmt(bar.c)}`
+    ]
+
+    const macd = this.macdData[index]
+    if (macd) {
+      lines.push(`MACD　HIST ${this.fmt(macd.hist)}　DIF ${this.fmt(macd.dif)}　DEA ${this.fmt(macd.dea)}`)
+    }
+
+    const roe = this.roeData[index]
+    if (roe) {
+      const value = roe.value === null || roe.value === undefined ? "-" : `${this.fmt(roe.value)}%`
+      const report = roe.report_date ? `（年报 ${roe.report_date}）` : ""
+      lines.push(`ROE ${value}${report}`)
+    }
+
+    return lines.join("<br/>")
   }
 
   // ECharts 脚本懒加载：三联图进入视口后才注入，其他页面零成本
@@ -222,186 +399,28 @@ export default class extends Controller {
     return this.echartsPromise
   }
 
-  // ECharts 不随容器自动缩放，需手动 resize（Chart.js 的 responsive 已自动处理）
-  bindKlineResize() {
+  // 让 canvas 文字与 Tailwind caption 同字体（--font-sans）
+  chartFontFamily() {
+    return window.getComputedStyle(this.chartTarget).fontFamily || "sans-serif"
+  }
+
+  // ECharts 不随容器自动缩放，需手动 resize
+  bindResize() {
     if (this.resizeHandler) return
 
     this.resizeHandler = () => {
-      if (this.klineChart) this.klineChart.resize()
+      if (this.chart) this.chart.resize()
     }
     window.addEventListener("resize", this.resizeHandler)
   }
 
-  disposeKline() {
+  disposeChart() {
     // ECharts 实例只有 dispose()，没有 Chart.js 的 destroy()
-    if (this.klineChart) {
-      this.klineChart.dispose()
-      this.klineChart = null
+    if (this.chart) {
+      this.chart.dispose()
+      this.chart = null
     }
-  }
-
-  // 回退实现（保留备用）：K 线用 Chart.js 画收盘折线
-  // 若 ECharts 蜡烛图最终不采用，把 renderKline 改回调用本方法，
-  // 并把 show.html.erb 的 K 线容器从 <div data-monthly-trend-target="kline"> 换回 <canvas …>
-  renderKlineWithChartJs(labels, bars) {
-    if (this.charts.kline) this.charts.kline.destroy()
-
-    this.charts.kline = new Chart(this.klineTarget, {
-      type: "line",
-      data: {
-        labels,
-        datasets: [{
-          label: "收盘",
-          data: bars.map((bar) => bar.c),
-          borderColor: "rgb(239, 68, 68)",
-          backgroundColor: "rgba(239, 68, 68, 0.08)",
-          borderWidth: 1.5,
-          pointRadius: 0,
-          pointHoverRadius: 3,
-          fill: false,
-          tension: 0
-        }]
-      },
-      options: this.baseOptions({ tooltipLabel: (context) => this.ohlcLines(context.dataIndex) })
-    })
-  }
-
-  renderMacd(labels, macd, adj) {
-    if (this.charts.macd) this.charts.macd.destroy()
-
-    const hist = macd.map((item) => item.hist)
-
-    this.charts.macd = new Chart(this.macdTarget, {
-      type: "bar",
-      data: {
-        labels,
-        datasets: [
-          {
-            type: "bar",
-            label: "HIST",
-            data: hist,
-            backgroundColor: hist.map((value) => (value >= 0 ? "rgba(239, 68, 68, 0.55)" : "rgba(16, 185, 129, 0.55)")),
-            borderWidth: 0,
-            barPercentage: 0.9,
-            order: 1
-          },
-          {
-            type: "line",
-            label: "DIF",
-            data: macd.map((item) => item.dif),
-            borderColor: "rgb(239, 68, 68)",
-            borderWidth: 1.2,
-            pointRadius: 0,
-            tension: 0,
-            order: 2
-          },
-          {
-            type: "line",
-            label: "DEA",
-            data: macd.map((item) => item.dea),
-            borderColor: "rgb(59, 130, 246)",
-            borderWidth: 1.2,
-            pointRadius: 0,
-            tension: 0,
-            order: 2
-          }
-        ]
-      },
-      options: this.baseOptions({
-        tooltipLabel: (context) => `${context.dataset.label} ${this.fmt(context.parsed.y)}`
-      })
-    })
-
-    if (this.hasMacdNoteTarget) {
-      this.macdNoteTarget.textContent = `MACD · ${adj === "hfq" ? "后复权" : "前复权"}口径`
-    }
-  }
-
-  renderRoe(labels, roe) {
-    if (this.charts.roe) this.charts.roe.destroy()
-
-    this.charts.roe = new Chart(this.roeTarget, {
-      type: "line",
-      data: {
-        labels,
-        datasets: [{
-          label: "ROE",
-          data: roe.map((item) => item.value),
-          borderColor: "rgb(245, 158, 11)",
-          backgroundColor: "rgba(245, 158, 11, 0.08)",
-          borderWidth: 1.5,
-          pointRadius: 0,
-          fill: false,
-          stepped: true,
-          // 无年报覆盖的月份留空断线，不画 0
-          spanGaps: false
-        }]
-      },
-      options: this.baseOptions({
-        showXTicks: true,
-        yUnit: "%",
-        tooltipLabel: (context) => {
-          const item = roe[context.dataIndex]
-          const report = item && item.report_date ? `（年报 ${item.report_date}）` : ""
-          return `ROE ${this.fmt(context.parsed.y)}%${report}`
-        }
-      })
-    })
-  }
-
-  // 三图共用配置：固定 y 轴宽度，保证上下三图的月份严格对齐
-  baseOptions({ showXTicks = false, yUnit = "", tooltipLabel = null } = {}) {
-    const callbacks = tooltipLabel ? { label: tooltipLabel } : {}
-
-    return {
-      responsive: true,
-      maintainAspectRatio: false,
-      animation: false,
-      interaction: { mode: "index", intersect: false },
-      plugins: {
-        legend: { display: false },
-        tooltip: { displayColors: false, callbacks }
-      },
-      scales: {
-        x: {
-          type: "category",
-          ticks: {
-            display: showXTicks,
-            maxRotation: 0,
-            autoSkip: true,
-            maxTicksLimit: 12,
-            font: { size: 10 },
-            color: "#9ca3af"
-          },
-          grid: { display: false },
-          border: { color: "rgba(0, 0, 0, 0.1)" }
-        },
-        y: {
-          position: "right",
-          afterFit: (scale) => { scale.width = Y_AXIS_WIDTH },
-          ticks: {
-            maxTicksLimit: 5,
-            font: { size: 10 },
-            color: "#9ca3af",
-            callback: (value) => `${value}${yUnit}`
-          },
-          grid: { color: "rgba(0, 0, 0, 0.06)" },
-          border: { display: false }
-        }
-      }
-    }
-  }
-
-  ohlcLines(index) {
-    const bar = this.barData && this.barData[index]
-    if (!bar) return ""
-
-    return [
-      `开 ${this.fmt(bar.o)}`,
-      `高 ${this.fmt(bar.h)}`,
-      `低 ${this.fmt(bar.l)}`,
-      `收 ${this.fmt(bar.c)}`
-    ]
+    this.chartTarget.innerHTML = ""
   }
 
   fmt(value) {
@@ -433,11 +452,5 @@ export default class extends Controller {
       this.statusTarget.classList.toggle("hidden", !message)
     }
     if (this.hasChartsTarget) this.chartsTarget.classList.toggle("hidden", Boolean(message))
-  }
-
-  destroyCharts() {
-    this.disposeKline()
-    Object.values(this.charts).forEach((chart) => chart && chart.destroy())
-    this.charts = {}
   }
 }
