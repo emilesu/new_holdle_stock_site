@@ -171,7 +171,8 @@
           </div>
           <div class="px-6 py-4">
             <div class="hidden space-y-3" data-monthly-trend-target="charts">
-              <div class="relative h-56"><canvas data-monthly-trend-target="kline"></canvas></div>
+              <%# K 线为 ECharts 蜡烛图（最小验证）：ECharts 需要 div 容器承载 canvas，不能直接用 canvas %>
+              <div class="relative h-56"><div class="absolute inset-0" data-monthly-trend-target="kline"></div></div>
               <div>
                 <div class="flex items-center justify-between text-hl-11 text-muted-4">
                   <span>MACD(12,26,9)</span>

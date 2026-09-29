@@ -4,6 +4,14 @@ import { Controller } from "@hotwired/stimulus"
 // 三图共用同一份月份数组（category 轴），上两图隐藏 x 轴刻度，由最下方 ROE 图给出月份标签
 const Y_AXIS_WIDTH = 64
 
+// 最小验证：K 线改用 ECharts 蜡烛图，MACD / ROE 仍是 Chart.js
+// ECharts 走 npmmirror CDN 懒加载（仅当三联图进入视口才注入脚本），不进入 esbuild 产物
+const ECHARTS_VERSION = "6.1.0"
+const ECHARTS_URL = `https://registry.npmmirror.com/echarts/${ECHARTS_VERSION}/files/dist/echarts.min.js`
+// 站内 A股配色：红涨绿跌（与 MACD 柱一致）
+const CANDLE_UP_COLOR = "#ef4444"
+const CANDLE_DOWN_COLOR = "#10b981"
+
 export default class extends Controller {
   static targets = ["rangeBtn", "adjBtn", "kline", "macd", "roe", "macdNote", "status", "charts"]
   static values = { url: String }
@@ -15,6 +23,9 @@ export default class extends Controller {
     this.requestId = 0
     this.skipRoe = false
     this.disposed = false
+    this.klineChart = null
+    this.echartsPromise = null
+    this.resizeHandler = null
 
     this.syncButtons()
     this.setStatus("加载中…")
@@ -35,6 +46,11 @@ export default class extends Controller {
     if (this.observer) {
       this.observer.disconnect()
       this.observer = null
+    }
+    // 页面被整页替换时必须摘掉 window 监听，否则会随访问次数累积
+    if (this.resizeHandler) {
+      window.removeEventListener("resize", this.resizeHandler)
+      this.resizeHandler = null
     }
     this.destroyCharts()
   }
@@ -62,7 +78,7 @@ export default class extends Controller {
   async load() {
     const requestId = ++this.requestId
     // 已有图表时保留旧图，避免切换区间/复权时卡片闪现空白
-    if (!this.charts.kline) this.setStatus("加载中…")
+    if (!this.klineChart) this.setStatus("加载中…")
 
     try {
       const response = await fetch(this.buildUrl(), { headers: { Accept: "application/json" } })
@@ -100,7 +116,134 @@ export default class extends Controller {
     this.skipRoe = false
   }
 
-  renderKline(labels, bars) {
+  // K 线：ECharts 蜡烛图
+  // grid.right 必须与 Chart.js 的 Y_AXIS_WIDTH 一致，否则与下方 MACD / ROE 图的月份刻度错位
+  async renderKline(labels, bars) {
+    const generation = this.requestId
+
+    let echarts
+    try {
+      echarts = await this.ensureECharts()
+    } catch (error) {
+      console.error("echarts load error:", error)
+      if (this.disposed || generation !== this.requestId) return
+
+      this.disposeKline()
+      this.klineTarget.innerHTML =
+        '<div class="h-full flex items-center justify-center text-hl-12 text-muted-4">K线图库加载失败</div>'
+      return
+    }
+
+    // 等待脚本期间若已发起新请求或页面已被替换，丢弃本次渲染
+    if (this.disposed || generation !== this.requestId) return
+
+    this.disposeKline()
+    this.klineTarget.innerHTML = ""
+
+    const chart = echarts.init(this.klineTarget)
+    this.klineChart = chart
+
+    chart.setOption({
+      animation: false,
+      grid: { left: 0, right: Y_AXIS_WIDTH, top: 6, bottom: 0 },
+      xAxis: {
+        type: "category",
+        data: labels,
+        axisTick: { show: false },
+        axisLine: { lineStyle: { color: "rgba(0, 0, 0, 0.1)" } },
+        axisLabel: { show: false }
+      },
+      yAxis: {
+        // scale: true —— 贴合数据区间取值，与原先 Chart.js 折线的口径一致（不从 0 起）
+        scale: true,
+        position: "right",
+        axisLabel: { fontSize: 10, color: "#9ca3af" },
+        splitLine: { lineStyle: { color: "rgba(0, 0, 0, 0.06)" } }
+      },
+      tooltip: {
+        trigger: "axis",
+        axisPointer: { type: "cross", label: { show: false } },
+        backgroundColor: "rgba(17, 24, 39, 0.92)",
+        borderWidth: 0,
+        padding: [6, 8],
+        textStyle: { color: "#f9fafb", fontSize: 11 },
+        formatter: (params) => {
+          const item = Array.isArray(params) ? params[0] : params
+          const bar = item && this.barData && this.barData[item.dataIndex]
+          if (!bar) return ""
+
+          return [
+            String(bar.t || "").slice(0, 7),
+            `开 ${this.fmt(bar.o)}`,
+            `高 ${this.fmt(bar.h)}`,
+            `低 ${this.fmt(bar.l)}`,
+            `收 ${this.fmt(bar.c)}`
+          ].join("<br/>")
+        }
+      },
+      series: [{
+        type: "candlestick",
+        // ECharts candlestick 数据顺序固定为 [开, 收, 低, 高]，此处由后端下发的 o/h/l/c 重排
+        data: bars.map((bar) => [bar.o, bar.c, bar.l, bar.h]),
+        barMaxWidth: 10,
+        itemStyle: {
+          color: CANDLE_UP_COLOR,
+          color0: CANDLE_DOWN_COLOR,
+          borderColor: CANDLE_UP_COLOR,
+          borderColor0: CANDLE_DOWN_COLOR
+        }
+      }]
+    })
+
+    this.bindKlineResize()
+  }
+
+  // ECharts 脚本懒加载：三联图进入视口后才注入，其他页面零成本
+  ensureECharts() {
+    if (window.echarts) return Promise.resolve(window.echarts)
+    if (this.echartsPromise) return this.echartsPromise
+
+    this.echartsPromise = new Promise((resolve, reject) => {
+      const script = document.createElement("script")
+      script.src = ECHARTS_URL
+      script.async = true
+      script.onload = () => {
+        if (window.echarts) resolve(window.echarts)
+        else reject(new Error("echarts 加载完成但未挂到 window"))
+      }
+      script.onerror = () => reject(new Error(`echarts 脚本加载失败：${ECHARTS_URL}`))
+      document.head.appendChild(script)
+    }).catch((error) => {
+      // 不缓存失败的 promise，后续切换区间时仍可重试
+      this.echartsPromise = null
+      throw error
+    })
+
+    return this.echartsPromise
+  }
+
+  // ECharts 不随容器自动缩放，需手动 resize（Chart.js 的 responsive 已自动处理）
+  bindKlineResize() {
+    if (this.resizeHandler) return
+
+    this.resizeHandler = () => {
+      if (this.klineChart) this.klineChart.resize()
+    }
+    window.addEventListener("resize", this.resizeHandler)
+  }
+
+  disposeKline() {
+    // ECharts 实例只有 dispose()，没有 Chart.js 的 destroy()
+    if (this.klineChart) {
+      this.klineChart.dispose()
+      this.klineChart = null
+    }
+  }
+
+  // 回退实现（保留备用）：K 线用 Chart.js 画收盘折线
+  // 若 ECharts 蜡烛图最终不采用，把 renderKline 改回调用本方法，
+  // 并把 show.html.erb 的 K 线容器从 <div data-monthly-trend-target="kline"> 换回 <canvas …>
+  renderKlineWithChartJs(labels, bars) {
     if (this.charts.kline) this.charts.kline.destroy()
 
     this.charts.kline = new Chart(this.klineTarget, {
@@ -293,6 +436,7 @@ export default class extends Controller {
   }
 
   destroyCharts() {
+    this.disposeKline()
     Object.values(this.charts).forEach((chart) => chart && chart.destroy())
     this.charts = {}
   }
