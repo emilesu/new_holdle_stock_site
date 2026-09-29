@@ -20,6 +20,9 @@ module DataSources
     RETRY_TIMES = 2
     RETRY_INTERVAL = 1
 
+    # HTTP 非 2xx 响应（纳入重试范围）
+    class RequestError < StandardError; end
+
     class << self
       # HTTP客户端，默认为Faraday，测试时可替换
       attr_writer :http_client
@@ -66,17 +69,17 @@ module DataSources
             req.options.open_timeout = TIMEOUT
           end
 
-          raise "HTTP #{response.status}" unless response.success?
+          raise RequestError, "HTTP #{response.status}" unless response.success?
 
           response.body
-        rescue Faraday::TimeoutError, Faraday::ConnectionFailed => e
+        rescue Faraday::TimeoutError, Faraday::ConnectionFailed, RequestError => e
+          # 首次请求 + RETRY_TIMES 次重试
+          raise if retries.zero?
+
           retries -= 1
-          if retries > 0
-            Rails.logger.warn "[SinaAdjFactor] 请求异常，重试中（剩余 #{retries} 次）：#{e.message}"
-            sleep RETRY_INTERVAL
-            retry
-          end
-          raise
+          Rails.logger.warn "[SinaAdjFactor] 请求异常，重试中（剩余 #{retries} 次）：#{e.message}"
+          sleep RETRY_INTERVAL
+          retry
         end
       end
 

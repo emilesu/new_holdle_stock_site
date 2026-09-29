@@ -31,6 +31,9 @@ module DataSources
     # 常数比值自检的相对误差容差
     RATIO_TOLERANCE = 1e-4
 
+    # HTTP 非 2xx 响应（纳入重试范围）
+    class RequestError < StandardError; end
+
     # 冲突时需要更新的列（created_at 不参与覆盖）
     FULL_UPDATE_COLUMNS = %i[
       market open close high low volume
@@ -59,16 +62,21 @@ module DataSources
           return empty_result
         end
 
-        bars = build_bars(
-          stock,
-          raw_bars,
-          SinaAdjFactorService.fetch_qfq(stock.symbol),
-          SinaAdjFactorService.fetch_hfq(stock.symbol)
-        )
+        # 因子抓取失败时返回空数组；此时若继续换算，前/后复权价会双双退化为不复权价，
+        # 且「后复权 ÷ 前复权」恒为 1 恰好通过 verify_constant_ratio 自检，属静默写错数据 ——
+        # 故因子缺失直接跳过本只，不落库
+        qfq_factors = SinaAdjFactorService.fetch_qfq(stock.symbol)
+        hfq_factors = SinaAdjFactorService.fetch_hfq(stock.symbol)
+        if qfq_factors.empty? || hfq_factors.empty?
+          Rails.logger.error "[SinaMonthlyBar] #{stock.symbol} 复权因子缺失，跳过本只以避免写入未复权口径"
+          return empty_result
+        end
+
+        bars = build_bars(stock, raw_bars, qfq_factors, hfq_factors)
         return empty_result if bars.empty?
 
         verify_constant_ratio(stock, bars)
-        cleanup_stale_partial_month(stock, bars)
+        cleanup_stale_dates(stock, bars)
 
         before = stock.stock_monthly_bars.count
         update_columns = mode == :incremental ? INCREMENTAL_UPDATE_COLUMNS : FULL_UPDATE_COLUMNS
@@ -155,17 +163,17 @@ module DataSources
             req.options.open_timeout = TIMEOUT
           end
 
-          raise "HTTP #{response.status}" unless response.success?
+          raise RequestError, "HTTP #{response.status}" unless response.success?
 
           response.body
-        rescue Faraday::TimeoutError, Faraday::ConnectionFailed => e
+        rescue Faraday::TimeoutError, Faraday::ConnectionFailed, RequestError => e
+          # 首次请求 + RETRY_TIMES 次重试
+          raise if retries.zero?
+
           retries -= 1
-          if retries > 0
-            Rails.logger.warn "[SinaMonthlyBar] 请求异常，重试中（剩余 #{retries} 次）：#{e.message}"
-            sleep RETRY_INTERVAL
-            retry
-          end
-          raise
+          Rails.logger.warn "[SinaMonthlyBar] 请求异常，重试中（剩余 #{retries} 次）：#{e.message}"
+          sleep RETRY_INTERVAL
+          retry
         end
       end
 
@@ -178,16 +186,19 @@ module DataSources
         factors[cursor[0]][:factor]
       end
 
-      # 同年月内日期不同的旧行先清理：
-      # 尚未走完的当月，新浪月K以「当前最新交易日」为日期，月内会逐日推进（如 09-29 → 09-30），
-      # 若只 upsert 会在同一个月份留下多行，故按 (stock_id, 当月) 收敛为唯一一行
-      def cleanup_stale_partial_month(stock, bars)
-        last_date = bars.last[:trade_date]
+      # 清理与本次抓取结果「同月但日期不同」的旧行：
+      # 尚未走完的当月，新浪以「当前最新交易日」为日期且月内逐日推进（09-29 → 09-30），
+      # 若只 upsert 会在同一月份留下多行；跨月时上月残留的部分月行（如 08-30）
+      # 与本月才拿到的真实月末行（08-31）也会并存，故按「本次覆盖到的月份」整体收敛
+      def cleanup_stale_dates(stock, bars)
+        new_dates = bars.map { |bar| bar[:trade_date] }
+        months = new_dates.map(&:beginning_of_month).uniq.sort
+
         deleted = stock.stock_monthly_bars
-          .where(trade_date: last_date.beginning_of_month..last_date.end_of_month)
-          .where.not(trade_date: last_date)
+          .where(trade_date: months.first..months.last.end_of_month)
+          .where.not(trade_date: new_dates)
           .delete_all
-        Rails.logger.info "[SinaMonthlyBar] #{stock.symbol} 清理当月旧行 #{deleted} 条" if deleted.positive?
+        Rails.logger.info "[SinaMonthlyBar] #{stock.symbol} 清理同月旧行 #{deleted} 条" if deleted.positive?
       end
 
       # 自检：同一行必须满足 后复权收盘价 ÷ 前复权收盘价 ≡ 常数（= hfq_last）

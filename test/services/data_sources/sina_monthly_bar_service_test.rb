@@ -136,6 +136,36 @@ class SinaMonthlyBarServiceTest < ActiveSupport::TestCase
     assert_equal 3, @stock.stock_monthly_bars.count
   end
 
+  test "跨月时清理上月残留的部分月行，不留下同月重复" do
+    # 3 月未走完时抓一次：新浪以「当前最新交易日」03-15 为日期
+    stub_http(raw_body: raw_bars_body_for(%w[2024-01-31 2024-02-29 2024-03-15]))
+    Service.refresh(@stock, mode: :full)
+    assert_equal Date.new(2024, 3, 15), @stock.stock_monthly_bars.maximum(:trade_date)
+
+    # 次月再抓：这次才拿到 3 月真实的月末行 03-29，02-15 那类残留行必须被清掉
+    stub_http(raw_body: raw_bars_body_for(%w[2024-01-31 2024-02-29 2024-03-29 2024-04-01]))
+    Service.refresh(@stock, mode: :full)
+
+    march_dates = @stock.stock_monthly_bars
+      .where(trade_date: Date.new(2024, 3, 1)..Date.new(2024, 3, 31))
+      .pluck(:trade_date)
+    assert_equal [Date.new(2024, 3, 29)], march_dates, "3 月应只剩真实月末行，不得残留 03-15"
+    assert_equal 4, @stock.stock_monthly_bars.count
+  end
+
+  test "因子抓取失败时不落库，且 HTTP 非 2xx 会重试 RETRY_TIMES 次" do
+    Service.http_client = build_client("getKLineData" => raw_bars_body)
+    factor_client = build_client("/qfq.js" => nil, "/hfq.js" => factor_body("hfq", default_hfq_events))
+    FactorService.http_client = factor_client
+
+    result = Service.refresh(@stock, mode: :full)
+
+    assert_equal 3, factor_client.calls.count { |url| url.include?("/qfq.js") },
+                 "首次请求 + RETRY_TIMES(2) 次重试 = 3 次"
+    assert_equal 0, result[:total], "因子缺失应跳过本只"
+    assert_equal 0, @stock.stock_monthly_bars.count, "不得以不复权口径写入错误数据"
+  end
+
   test "无月K数据时返回空结果且不写入" do
     Service.http_client = build_client("getKLineData" => "[]")
 
@@ -168,11 +198,14 @@ class SinaMonthlyBarServiceTest < ActiveSupport::TestCase
   end
 
   def raw_bars_body(march_day = "2024-03-29")
-    [
-      { "day" => "2024-01-31", "open" => "10.000", "high" => "12.000", "low" => "9.000", "close" => "10.000", "volume" => "1000" },
-      { "day" => "2024-02-29", "open" => "10.000", "high" => "11.000", "low" => "9.000", "close" => "10.000", "volume" => "2000" },
-      { "day" => march_day, "open" => "10.000", "high" => "11.000", "low" => "9.000", "close" => "10.000", "volume" => "3000" }
-    ].to_json
+    raw_bars_body_for(["2024-01-31", "2024-02-29", march_day])
+  end
+
+  def raw_bars_body_for(days)
+    days.each_with_index.map do |day, index|
+      { "day" => day, "open" => "10.000", "high" => "11.000", "low" => "9.000",
+        "close" => "10.000", "volume" => ((index + 1) * 1000).to_s }
+    end.to_json
   end
 
   # 3 月除权一次：后复权因子 1 → 2，前复权因子 2 → 1
@@ -212,7 +245,9 @@ class SinaMonthlyBarServiceTest < ActiveSupport::TestCase
 
   def build_client(routes)
     client = Object.new
+    client.define_singleton_method(:calls) { @calls ||= [] }
     client.define_singleton_method(:get) do |url, *_args|
+      calls << url
       body = routes.find { |pattern, _| url.include?(pattern) }&.last
       response = Object.new
       response.define_singleton_method(:success?) { !body.nil? }

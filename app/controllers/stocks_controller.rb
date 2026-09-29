@@ -172,8 +172,10 @@ class StocksController < ApplicationController
     adj = params[:adj].presence_in(MONTHLY_ADJS) || "qfq"
 
     data = Rails.cache.fetch(
-      # 缓存键必须带 range 与 adj，否则切换区间/复权会命中另一口径的缓存
-      [@stock, :monthly_trend, :v1, range, adj, @stock.updated_at.to_i],
+      # 缓存键必须带 range 与 adj，否则切换区间/复权会命中另一口径的缓存；
+      # 数据版本必须取月K自身 —— 月K写入不 touch stocks，若用 stocks.updated_at 会导致
+      # 「先访问页面缓存了空结果 → 之后抓取入库 → 最长 12 小时仍返回空」
+      [@stock, :monthly_trend, :v2, range, adj, monthly_bars_version(@stock)],
       expires_in: MONTHLY_TREND_CACHE_EXPIRES_IN
     ) do
       fetch_monthly_trend(@stock, range, adj)
@@ -494,6 +496,12 @@ class StocksController < ApplicationController
         display_name: stock.display_name_for_comparison
       }
     end
+  end
+
+  # 月K数据版本：用该股月K的最新写入时间作缓存版本
+  # （月K写入不 touch stocks，不能复用 stocks.updated_at，否则数据变了缓存不变）
+  def monthly_bars_version(stock)
+    stock.stock_monthly_bars.maximum(:updated_at)&.to_i || 0
   end
 
   # 月K三联图数据
