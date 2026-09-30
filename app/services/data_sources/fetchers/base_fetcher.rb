@@ -9,7 +9,10 @@ module DataSources
       TIMEOUT = 15
       RETRY_MAX = 3
       RETRY_DELAY = 2
-      MAX_YEARS_BACK = 20
+      # 年报保留年限：nil = 不限（全量入库）；填数字则只保留最近 N 年年报
+      # 曾设为 20：导致股票详情页三联图的「月ROE」阶梯起点晚于月K 起点（月K 为全历史，年报被截断）
+      # 现放开为全量；详情页年报列的展示上限仍由 Stock::MAX_ANNUAL_YEARS 控制，不受此影响
+      MAX_YEARS_BACK = nil
       # 季报只保留近 16 期（约 4 年），满足「最近一期 + 去年同期 + 近 16 期趋势图」
       MAX_QUARTERS_BACK = 16
 
@@ -139,12 +142,12 @@ module DataSources
         data.is_a?(Array) ? data : []
       end
 
-      # 保留策略：年报近 MAX_YEARS_BACK 年 + 季报近 MAX_QUARTERS_BACK 期
+      # 保留策略：年报不限年限（MAX_YEARS_BACK 为 nil 时全量）+ 季报近 MAX_QUARTERS_BACK 期
       # entries: [{ report_date: Date, period_type: String }, ...]
       # 返回允许入库的期次集合，元素为 [period_type, report_date]
       def retention_period_set(entries)
-        annual_cutoff = MAX_YEARS_BACK.years.ago.to_date
-        annual = entries.select { |e| e[:period_type] == "annual" && e[:report_date] >= annual_cutoff }
+        annual = entries.select { |e| e[:period_type] == "annual" }
+        annual = annual.select { |e| within_years?(e[:report_date], MAX_YEARS_BACK) } if MAX_YEARS_BACK
         quarters = entries.reject { |e| e[:period_type] == "annual" }
                           .uniq { |e| e[:report_date] }
                           .sort_by { |e| e[:report_date] }

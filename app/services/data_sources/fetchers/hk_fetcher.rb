@@ -94,7 +94,7 @@ module DataSources
         puts "📊 港股财务数据: #{stock.symbol} | #{stock.name}"
         puts "#{'=' * 60}"
 
-        # Step 1: 获取全部报告期次（年报近 20 年 + 季报近 16 期）
+        # Step 1: 获取全部报告期次（年报全量 + 季报近 16 期）
         periods = fetch_report_periods(symbol)
         unless periods.any?
           log_progress(stock, "报告期次", :failed, "未获取到报告期次")

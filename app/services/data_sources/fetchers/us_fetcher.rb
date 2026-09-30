@@ -104,7 +104,7 @@ module DataSources
         end
         puts "  SECUCODE: #{secucode}"
 
-        # Step 2: 获取全部报告期次（年报近 20 年 + 季报近 16 期）
+        # Step 2: 获取全部报告期次（年报全量 + 季报近 16 期）
         periods = fetch_report_periods(secucode)
         unless periods.any?
           log_progress(stock, "报告期次", :failed, "未获取到报告期次")
@@ -162,7 +162,7 @@ module DataSources
         data.first&.dig("SECUCODE")
       end
 
-      # 获取美股全部报告期次（年报近 20 年 + 季报近 16 期）
+      # 获取美股全部报告期次（年报全量 + 季报近 16 期）
       # 东财美股数据特点：
       #   - REPORT_TYPE = 年报 / 累计季报 / 单季报
       #   - REPORT = 期次标签（如 2025/FY、2026/Q9、2026/Q3）
@@ -179,9 +179,22 @@ module DataSources
           source: "SECURITIES", client: "PC"
         }
 
-        response = http_get(BASE_URL, params: params)
-        data = extract_data_list(response)
-        return [] if data.empty?
+        # 分页拉取：单只期次列表可达 7000+ 行（同一报告日有单季报/累计季报等多个变体），单页上限兜不住。
+        # 截断或任一分页失败都会让期次白名单缺掉最早的年报，而 cleanup_stale_records 的完整性防护
+        # 只比最新期次（最新期次始终落在第 1 页），照样会按残缺白名单删掉历史 —— 故拿不到任何一页
+        # 就整体作废、返回空，宁可这次不抓，也不让残缺列表进入清理
+        data = []
+        page = 1
+        loop do
+          params[:pageNumber] = page
+          response = http_get(BASE_URL, params: params)
+          batch = extract_data_list(response)
+          return [] if batch.empty?
+
+          data.concat(batch)
+          break if response.dig("result", "pages").to_i <= page
+          page += 1
+        end
 
         entries = data.filter_map do |item|
           date_str = item["REPORT_DATE"].to_s.split(" ").first

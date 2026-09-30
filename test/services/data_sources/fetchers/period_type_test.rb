@@ -45,7 +45,7 @@ module DataSources
         assert_equal "q3", fetcher.send(:period_type_for_date, Date.new(2025, 9, 30))
       end
 
-      test "retention_period_set: 年报保留近 20 年，季报保留近 16 期" do
+      test "retention_period_set: 年报全量保留，季报保留近 16 期" do
         fetcher = CnFetcher.new
         entries = []
         (2000..2025).each { |y| entries << { report_date: Date.new(y, 12, 31), period_type: "annual" } }
@@ -59,15 +59,17 @@ module DataSources
         annual_dates = allowed.select { |pt, _d| pt == "annual" }.map(&:last)
         quarter_dates = allowed.reject { |pt, _d| pt == "annual" }.map(&:last)
 
-        assert_equal 20, annual_dates.size
-        assert_equal Date.new(2006, 12, 31), annual_dates.min
+        # 年报不再按年限截断（MAX_YEARS_BACK = nil），2000~2025 全量保留
+        assert_nil BaseFetcher::MAX_YEARS_BACK
+        assert_equal 26, annual_dates.size
+        assert_equal Date.new(2000, 12, 31), annual_dates.min
         assert_equal 16, quarter_dates.size
         # 保留最近 16 期季报：2020~2025 共 18 期，最早两期被剔除
         assert_equal Date.new(2020, 9, 30), quarter_dates.min
         assert_equal Date.new(2025, 9, 30), quarter_dates.max
       end
 
-      test "cleanup_stale_records: 剔除误标为年报的季报残留与超期记录" do
+      test "cleanup_stale_records: 剔除不在本次期次白名单内的残留记录（含误标年报）" do
         stock = Stock.create!(
           symbol: "PERIOD_CLEAN", name: "Period Clean Stock", market: "CN",
           exchange: "SH", sector: "消费", status: "active"
@@ -81,7 +83,7 @@ module DataSources
           financial_report: stale_report, stock: stock, report_date: Date.new(2025, 6, 30),
           market: "CN", period_type: "annual", net_income: 100
         )
-        # 超期：2010 年报不在近 20 年内
+        # 不在本次期次白名单内（年报已不限年限，此处仅模拟接口本次未返回 2010 年报）
         old_report = FinancialReport.create!(
           stock: stock, report_date: Date.new(2010, 12, 31), market: "CN",
           report_type: "CN_ANNUAL", currency: "CNY", period_type: "annual"
