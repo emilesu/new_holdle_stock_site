@@ -1,8 +1,10 @@
 module DataSources
-  # A股月K批量抓取编排器
+  # 月K批量抓取编排器（A股/港股/美股共用）
   #
   # 原逻辑内联在 lib/tasks/monthly_bars.rake 中，只有 rake 入口、后台无法触发；
   # 抽成服务后可由后台按钮 / 定时任务 / rake 三处共用，并接入统一进度上报与同步状态记录。
+  #
+  # 数据源按市场分发：CN → 新浪（SinaMonthlyBarService），HK/US → Yahoo（YahooMonthlyBarService）
   #
   # mode:
   #   :full        —— 全量重算并覆盖所有列（首次建库；前复权基准变更时使用）
@@ -10,6 +12,9 @@ module DataSources
   class MonthlyBarBatchService
     # 请求间隔（秒），与 SinaMonthlyBarService::REQUEST_INTERVAL 保持一致
     REQUEST_INTERVAL = SinaMonthlyBarService::REQUEST_INTERVAL
+
+    # 市场 → 抓取服务（Yahoo 版 refresh 签名与 Sina 版一致：(stock, mode:)）
+    SERVICES = { "CN" => SinaMonthlyBarService, "HK" => YahooMonthlyBarService, "US" => YahooMonthlyBarService }.freeze
 
     class << self
       # 返回 { total:, success:, failed:, bars:, inserted: }
@@ -24,12 +29,12 @@ module DataSources
         CrawlContext.current&.start!(total_count: stats[:total])
 
         Rails.logger.info "[MonthlyBarBatch] 月K任务开始：mode=#{mode} market=#{market} 待处理 #{stats[:total]} 只"
-        puts "月K任务开始：mode=#{mode}，待处理 #{stats[:total]} 只"
+        puts "月K任务开始：mode=#{mode} market=#{market}，待处理 #{stats[:total]} 只"
 
         stocks.each_with_index do |stock, index|
           ok = false
           begin
-            result = SinaMonthlyBarService.refresh(stock, mode: mode)
+            result = service_for(market).refresh(stock, mode: mode)
             if result[:total].zero?
               stats[:failed] += 1
             else
@@ -65,6 +70,10 @@ module DataSources
       end
 
       private
+
+      def service_for(market)
+        SERVICES.fetch(market.to_s, SinaMonthlyBarService)
+      end
 
       def target_stocks(mode, market, stock_ids, after_stock_id, limit)
         stocks = Stock.where(market: market)

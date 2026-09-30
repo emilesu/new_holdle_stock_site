@@ -145,13 +145,14 @@
           market_col = market_financial_column_classes(@stock.market)
         %>
 
-        <%# 月K · MACD · 月ROE 三联图（免费开放；首期仅 A 股有月K数据，非 A 股不渲染）；数据由 Stimulus 懒加载，进入视口才请求 %>
-        <% if @stock.market == "CN" %>
+        <%# 月K · MACD · 月ROE 三联图（免费开放；A股数据源新浪、港股/美股数据源 Yahoo）；数据由 Stimulus 懒加载，进入视口才请求 %>
+        <% if %w[CN HK US].include?(@stock.market) %>
         <div class="bg-white hl-card overflow-hidden"
              data-controller="monthly-trend"
-             data-monthly-trend-url-value="<%= monthly_trend_stock_path(@stock, format: :json) %>">
+             data-monthly-trend-url-value="<%= monthly_trend_stock_path(@stock, format: :json) %>"
+             data-monthly-trend-currency-value="<%= @stock.market == 'CN' ? nil : financial_unit %>">
           <div class="px-6 py-4 border-b border-line flex items-center justify-between flex-wrap gap-2">
-            <h2 class="text-hl-16 font-semibold text-ink">月K · MACD · 月ROE <span class="text-hl-12 text-muted-4 ml-2">Monthly Trend</span></h2>
+            <h2 class="text-hl-16 font-semibold text-ink">月K · MACD · 月ROE <span class="text-hl-12 text-muted-4 ml-2">Monthly Trend<%= " · #{financial_unit}" unless @stock.market == 'CN' %></span></h2>
             <div class="flex items-center gap-2">
               <%# 区间：近 10 年（默认）/ 全部历史 %>
               <div class="flex rounded border border-line overflow-hidden">

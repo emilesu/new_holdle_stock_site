@@ -44,7 +44,8 @@ function clamp(value, min, max) {
 
 export default class extends Controller {
   static targets = ["rangeBtn", "adjBtn", "chart", "overlay", "macdNote", "status", "charts"]
-  static values = { url: String }
+  // currency：价格数值单位后缀（港币/美元）。A股不下发该值（默认空串），tooltip 保持原样
+  static values = { url: String, currency: String }
 
   connect() {
     // 交互模型：一次性取「全部历史」（buildUrl 里 range 恒为 all），之后在本地窗口里左右滑动回看。
@@ -591,9 +592,10 @@ export default class extends Controller {
     const bar = this.barData[index]
     if (!bar) return ""
 
+    const unit = this.currencyValue ? `（${this.currencyValue}）` : ""
     const lines = [
       String(bar.t || "").slice(0, 7),
-      `开 ${this.fmt(bar.o)}　高 ${this.fmt(bar.h)}　低 ${this.fmt(bar.l)}　收 ${this.fmt(bar.c)}`
+      `开 ${this.fmt(bar.o)}　高 ${this.fmt(bar.h)}　低 ${this.fmt(bar.l)}　收 ${this.fmt(bar.c)}${unit}`
     ]
 
     const macd = this.macdData[index]

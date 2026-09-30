@@ -117,6 +117,24 @@ class StocksMonthlyTrendTest < ActionDispatch::IntegrationTest
     assert_equal "2023-12-31", roe["2024-04-30"]["report_date"]
   end
 
+  # 港股样本：接口层市场无关（Yahoo 口径入库后与 A 股共用同一链路），ROE 缺失照常留空
+  test "港股股票返回三联图数据，无财务指标时 roe 全部留空" do
+    hk = Stock.create!(symbol: "00700.HK", name: "腾讯控股", market: "HK")
+    rows = [Date.new(2024, 1, 31), Date.new(2024, 2, 29)].each_with_index.map do |date, index|
+      price_row(date, 300.0 + index).merge(stock_id: hk.id, market: "HK")
+    end
+    StockMonthlyBar.insert_all(rows)
+
+    get monthly_trend_stock_path(hk, format: :json), params: { range: "all" }
+
+    body = response.parsed_body
+    assert_response :success
+    assert_equal 2, body["bars"].size
+    assert_equal 2, body["roe"].size
+    assert body["roe"].all? { |item| item["value"].nil? }, "无年报时 ROE 应全部留空"
+    assert_equal 300.0, body["bars"].first["c"] # 默认 qfq 口径（price_row 约定 qfq = 不复权价）
+  end
+
   private
 
   def create_bars(count, start_date: Date.new(2012, 1, 31))

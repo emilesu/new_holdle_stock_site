@@ -57,6 +57,18 @@ module DataSources
         kwargs: { market: "US" }, sync_data_type: "financial", accepts_stock_scope: true, heavy: true,
         description: "东方财富数据源，抓取利润表/资产负债表/现金流量表/财务指标四张报表"
       ),
+      Task.new(
+        key: "monthly_bars_fetch_us", name: "美股月K全量重建", group: "US", market: "US",
+        service: "DataSources::MonthlyBarBatchService", method_name: "call",
+        kwargs: { mode: :full, market: "US" }, sync_data_type: "monthly_bar", accepts_stock_scope: true, heavy: true,
+        description: "Yahoo 月K + adjclose 因子全量重算并覆盖所有列，事件月取日线聚合修正"
+      ),
+      Task.new(
+        key: "monthly_bars_refresh_us", name: "美股月K增量", group: "US", market: "US",
+        service: "DataSources::MonthlyBarBatchService", method_name: "call",
+        kwargs: { mode: :incremental, market: "US" }, sync_data_type: "monthly_bar", accepts_stock_scope: true, heavy: false,
+        description: "已有历史行只重写前复权列，后复权列只增不改"
+      ),
 
       # ── 港股 ──
       Task.new(
@@ -70,6 +82,18 @@ module DataSources
         service: "DataSources::EastMoneyFinanceService", method_name: "call",
         kwargs: { market: "HK" }, sync_data_type: "financial", accepts_stock_scope: true, heavy: true,
         description: "东方财富数据源，抓取四张财务报表"
+      ),
+      Task.new(
+        key: "monthly_bars_fetch_hk", name: "港股月K全量重建", group: "HK", market: "HK",
+        service: "DataSources::MonthlyBarBatchService", method_name: "call",
+        kwargs: { mode: :full, market: "HK" }, sync_data_type: "monthly_bar", accepts_stock_scope: true, heavy: true,
+        description: "Yahoo 月K + adjclose 因子全量重算并覆盖所有列，事件月取日线聚合修正"
+      ),
+      Task.new(
+        key: "monthly_bars_refresh_hk", name: "港股月K增量", group: "HK", market: "HK",
+        service: "DataSources::MonthlyBarBatchService", method_name: "call",
+        kwargs: { mode: :incremental, market: "HK" }, sync_data_type: "monthly_bar", accepts_stock_scope: true, heavy: false,
+        description: "已有历史行只重写前复权列，后复权列只增不改"
       ),
 
       # ── A股 ──
