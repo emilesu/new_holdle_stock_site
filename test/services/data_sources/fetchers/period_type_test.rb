@@ -1,4 +1,5 @@
 require "test_helper"
+require "minitest/mock"
 
 module DataSources
   module Fetchers
@@ -146,6 +147,20 @@ module DataSources
         FinancialIndicator.where(stock_id: stock&.id).delete_all
         FinancialReport.where(stock_id: stock&.id).delete_all
         stock&.destroy!
+      end
+
+      test "UsFetcher: 期次分页超过上限时整体作废，不无限翻页" do
+        fetcher = UsFetcher.new
+        # 接口谎报页数（pages 极大）：应被上限截断，并按「拿不到完整列表」返回空
+        row = { "REPORT_DATE" => "2025-12-31 00:00:00", "REPORT" => "2025/FY", "REPORT_TYPE" => "年报" }
+        response = { "result" => { "data" => [ row ], "pages" => 9999 } }
+        calls = 0
+
+        fetcher.stub(:http_get, ->(*_args, **_kwargs) { calls += 1; response }) do
+          assert_equal [], fetcher.send(:fetch_report_periods, "AAPL.O")
+        end
+
+        assert_equal BaseFetcher::MAX_PERIOD_PAGES, calls, "翻页次数应被上限截断"
       end
     end
   end

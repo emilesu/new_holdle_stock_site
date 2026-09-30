@@ -193,6 +193,13 @@ module DataSources
 
           data.concat(batch)
           break if response.dig("result", "pages").to_i <= page
+
+          # 超过上限仍说还有下一页 → 页数不可信，按「拿不到完整列表」处理（理由同上）
+          if page >= MAX_PERIOD_PAGES
+            Rails.logger.error "[#{self.class}] #{secucode} 期次分页超过上限 #{MAX_PERIOD_PAGES} 页（已取 #{data.size} 行），本次期次解析作废"
+            return []
+          end
+
           page += 1
         end
 
@@ -263,6 +270,14 @@ module DataSources
           items.concat(batch)
           total_pages = response.dig("result", "pages").to_i
           break if total_pages <= page
+
+          # 超过上限仍说还有下一页 → 页数不可信，作废本次拉取，避免把残缺数据当完整数据写入
+          if page >= MAX_PERIOD_PAGES
+            Rails.logger.error "[#{self.class}] #{secucode} 报表分页超过上限 #{MAX_PERIOD_PAGES} 页，本次拉取作废"
+            log_progress(stock, statement_name, :failed, "分页超过上限 #{MAX_PERIOD_PAGES} 页")
+            return { status: :failed }
+          end
+
           page += 1
         end
 

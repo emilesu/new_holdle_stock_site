@@ -196,6 +196,13 @@ module DataSources
 
           total_pages = response.dig("result", "pages").to_i
           break if total_pages <= page
+
+          # 超过上限仍说还有下一页 → 页数不可信，按「拿不到完整列表」返回空
+          if page >= MAX_PERIOD_PAGES
+            Rails.logger.error "[#{self.class}] #{symbol} 期次分页超过上限 #{MAX_PERIOD_PAGES} 页，本次期次解析作废"
+            return []
+          end
+
           page += 1
         end
         entries
@@ -515,6 +522,14 @@ module DataSources
           items.concat(batch)
           total_pages = response.dig("result", "pages").to_i
           break if total_pages <= page
+
+          # 超过上限仍说还有下一页 → 页数不可信，返回空让调用方按「API 无返回数据」记为失败，
+          # 不把残缺科目数据当完整数据写入
+          if page >= MAX_PERIOD_PAGES
+            Rails.logger.error "[#{self.class}] #{symbol} 报表分页超过上限 #{MAX_PERIOD_PAGES} 页，本次拉取作废"
+            return []
+          end
+
           page += 1
         end
         items

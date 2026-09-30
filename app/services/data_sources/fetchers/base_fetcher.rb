@@ -15,6 +15,9 @@ module DataSources
       MAX_YEARS_BACK = nil
       # 季报只保留近 16 期（约 4 年），满足「最近一期 + 去年同期 + 近 16 期趋势图」
       MAX_QUARTERS_BACK = 16
+      # 报表接口分页硬上限。正常数据远小于此（美股单只期次最多 7000+ 行，pageSize=5000 只需 2 页）；
+      # 接口谎报 pages（如返回极大值）时，靠它兜住无限翻页空转，各抓取器分页循环统一引用此常量
+      MAX_PERIOD_PAGES = 20
 
       EASTMONEY_HEADERS = {
         "User-Agent" => "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
