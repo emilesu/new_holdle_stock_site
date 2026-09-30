@@ -38,5 +38,18 @@ module DataSources
       assert CrawlerRegistry.find("a_finance").heavy?
       refute CrawlerRegistry.find("a_stock_list").heavy?
     end
+
+    # 后台「测试 5 只」按钮的显示条件是 accepts_stock_scope?，触发时固定传 limit=5。
+    # CrawlerJob 只透传服务签名里声明过的关键字参数，若服务没声明 limit:，
+    # 参数会被静默丢弃 → 点「测试 5 只」实际跑全量（曾有 listing_date 踩坑）
+    test "支持股票子集的任务必须声明 limit 关键字参数" do
+      CrawlerRegistry.all.select(&:accepts_stock_scope?).each do |task|
+        accepted = task.service_class.method(task.method_name)
+          .parameters.select { |type, _name| %i[key keyreq].include?(type) }
+          .map(&:last)
+
+        assert_includes accepted, :limit, "#{task.key} 未声明 limit:，后台「测试 5 只」会退化成全量"
+      end
+    end
   end
 end

@@ -13,7 +13,7 @@ module DataSources
     REQUEST_INTERVAL = 0.3
 
     class << self
-      def call(market: nil, stock_ids: nil, after_stock_id: nil)
+      def call(market: nil, stock_ids: nil, after_stock_id: nil, limit: nil)
         Rails.logger.info "=" * 70
         Rails.logger.info "开始同步上市日期（东方财富 F10）"
         Rails.logger.info "=" * 70
@@ -21,9 +21,15 @@ module DataSources
         stats = { total: 0, updated: 0, skipped: 0, failed: 0 }
         markets = market.present? ? [market] : REPORTS.keys
 
+        # 本任务 market 为 nil（横跨 CN/HK 两个市场），后台「测试 5 只」传进来的 limit 是
+        # 整体额度而非单市场额度，故用 remaining 跨市场共享，否则会变成每个市场各跑 5 只
+        remaining = limit.present? ? limit.to_i : nil
+
         # 先解析出各市场的目标股票集再处理：本任务 market 为 nil，CrawlerScope 会用全库股票数
         # 当进度分母，而本服务只处理「listing_date 为空」的股票，不先纠正分母进度永远到不了 100%
         targets = markets.filter_map do |m|
+          next if remaining && remaining <= 0
+
           unless REPORTS.key?(m)
             Rails.logger.warn "市场 #{m} 暂不支持上市日期同步，跳过"
             next
@@ -32,16 +38,24 @@ module DataSources
           stocks = Stock.where(market: m).where(listing_date: nil)
           stocks = stocks.where(id: stock_ids) if stock_ids.present?
           stocks = stocks.where("stocks.id > ?", after_stock_id.to_i) if after_stock_id.present?
-          [ m, stocks.order(:id) ]
+          stocks = stocks.limit(remaining) if remaining
+          remaining -= stocks.size if remaining
+          [ m, stocks ]
         end
 
         stats[:total] = targets.sum { |_m, stocks| stocks.size }
         CrawlContext.current&.start!(total_count: stats[:total])
 
         targets.each do |m, stocks|
-          Rails.logger.info "[#{m}] 待同步 #{stocks.size} 只"
+          # find_each 内部会用 batch_size 覆盖 relation 上的 limit（activerecord/relation/batches.rb
+          # 的 batch_on_unloaded_relation），所以限量额度不能只挂在 relation 上，循环内再兜一道
+          target_count = stocks.size
+          Rails.logger.info "[#{m}] 待同步 #{target_count} 只"
 
+          processed = 0
           stocks.find_each do |stock|
+            break if processed >= target_count
+
             ok = false
             begin
               date = fetch_listing_date(REPORTS[m], secucode(stock))
@@ -61,6 +75,7 @@ module DataSources
             ensure
               SyncStateRecorder.record(stock, :listing_date, ok: ok)
               CrawlContext.current&.tick(unit_id: stock.id, ok: ok)
+              processed += 1
               sleep REQUEST_INTERVAL
             end
           end
