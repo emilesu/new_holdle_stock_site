@@ -7,6 +7,12 @@ module DataSources
   #   后复权价 = 不复权价 × hfq_factor      （以上市首日归一，只增不改）
   #   前复权价 = 不复权价 ÷ qfq_factor      （以最新日归一，除权后整段重写）
   #
+  # 除权事件月修正（2026-09-30，修复「月中除权」失真，见 correct_event_months）：
+  #   单一因子换算只对「整月因子不变」的月份成立；除权日落在月中时，
+  #   open/high/low 若发生在除权日之前，整月套除权后因子会虚高一个事件比率。
+  #   修正方式与雪球/同花顺一致：取该月不复权日线（同源新浪，scale=240 一次取满全历史），
+  #   逐日按当日因子复权后再聚合成月K。
+  #
   # 重算策略（D9/D14）：
   #   :full        —— 全量重算并覆盖所有列（首次建库；前复权基准变更时使用）
   #   :incremental —— 已有历史行只更新前复权列，后复权列保持不动（后复权只增不改）
@@ -26,6 +32,11 @@ module DataSources
     # 实测单次可返回全历史（A股最长约 400 根月K）
     MAX_BARS = 1000
 
+    # 240 分钟 = 日线周期 → 新浪不复权日线（事件月修正用）
+    DAILY_SCALE = 240
+    # 实测单次可返回全历史（A股最长约 8600 根日线，1990 年上市的老股）
+    DAILY_MAX_BARS = 10000
+
     PRICE_SCALE = 4
     FACTOR_SCALE = 10
     # 常数比值自检的相对误差容差
@@ -44,6 +55,13 @@ module DataSources
 
     # 增量模式：已有历史行只重写前复权列（前复权随时间整段变化），后复权列「只增不改」
     INCREMENTAL_UPDATE_COLUMNS = %i[qfq_open qfq_close qfq_high qfq_low qfq_factor updated_at].freeze
+
+    # 增量模式下「本轮新修正的事件月」行需要额外落库后复权价列
+    # （事件月的 hfq 同样是旧单因子算法写错的，属于修 bug，不违反「只增不改」）
+    EVENT_MONTH_UPDATE_COLUMNS = %i[
+      qfq_open qfq_close qfq_high qfq_low
+      hfq_open hfq_close hfq_high hfq_low updated_at
+    ].freeze
 
     class << self
       # HTTP客户端，默认为Faraday，测试时可替换
@@ -75,17 +93,37 @@ module DataSources
         bars = build_bars(stock, raw_bars, qfq_factors, hfq_factors)
         return empty_result if bars.empty?
 
+        corrected_dates = correct_event_months(stock, bars, qfq_factors, hfq_factors, mode: mode)
+
         verify_constant_ratio(stock, bars)
         cleanup_stale_dates(stock, bars)
 
         before = stock.stock_monthly_bars.count
-        update_columns = mode == :incremental ? INCREMENTAL_UPDATE_COLUMNS : FULL_UPDATE_COLUMNS
-        stock.stock_monthly_bars.upsert_all(
-          bars,
-          unique_by: %i[stock_id trade_date],
-          update_only: update_columns,
-          record_timestamps: false
-        )
+        if mode == :incremental
+          stock.stock_monthly_bars.upsert_all(
+            bars,
+            unique_by: %i[stock_id trade_date],
+            update_only: INCREMENTAL_UPDATE_COLUMNS,
+            record_timestamps: false
+          )
+          # 本轮修正过的事件月行：后复权价列也要覆盖（其余行后复权保持「只增不改」）
+          if corrected_dates.any?
+            corrected_bars = bars.select { |bar| corrected_dates.include?(bar[:trade_date]) }
+            stock.stock_monthly_bars.upsert_all(
+              corrected_bars,
+              unique_by: %i[stock_id trade_date],
+              update_only: EVENT_MONTH_UPDATE_COLUMNS,
+              record_timestamps: false
+            )
+          end
+        else
+          stock.stock_monthly_bars.upsert_all(
+            bars,
+            unique_by: %i[stock_id trade_date],
+            update_only: FULL_UPDATE_COLUMNS,
+            record_timestamps: false
+          )
+        end
         after = stock.stock_monthly_bars.count
         inserted = after - before
 
@@ -103,6 +141,30 @@ module DataSources
         data.sort_by { |item| item["day"].to_s }
       rescue JSON::ParserError => e
         Rails.logger.error "[SinaMonthlyBar] #{code} 月K解析失败：#{e.message}"
+        []
+      end
+
+      # 不复权日线全历史（同源新浪，scale=240），按交易日升序
+      # 返回 [{date:, open:, high:, low:, close:}]，供事件月逐日复权聚合使用
+      def fetch_daily_bars(symbol)
+        code = SinaAdjFactorService.sina_code(symbol)
+        url = "#{KLINE_URL}?symbol=#{code}&scale=#{DAILY_SCALE}&ma=no&datalen=#{DAILY_MAX_BARS}"
+        body = request(url)
+        data = JSON.parse(body)
+        return [] unless data.is_a?(Array)
+
+        data.filter_map do |item|
+          date = parse_trade_date(item["day"])
+          open = to_decimal(item["open"])
+          close = to_decimal(item["close"])
+          high = to_decimal(item["high"])
+          low = to_decimal(item["low"])
+          next if date.nil? || open.nil? || close.nil? || high.nil? || low.nil?
+
+          { date: date, open: open, high: high, low: low, close: close }
+        end.sort_by { |d| d[:date] }
+      rescue JSON::ParserError => e
+        Rails.logger.error "[SinaMonthlyBar] #{code} 日线解析失败：#{e.message}"
         []
       end
 
@@ -184,6 +246,127 @@ module DataSources
 
         cursor[0] += 1 while cursor[0] + 1 < factors.size && factors[cursor[0] + 1][:date] <= trade_date
         factors[cursor[0]][:factor]
+      end
+
+      # 除权事件月修正：把「除权日落在月中」的月份改为按日复权聚合
+      #
+      #   单一因子换算（build_bars 的产物）只对整月因子不变的月份成立。事件月内
+      #   open/high/low 可能发生在除权日之前，须用除权前的旧因子换算，否则虚高。
+      #   聚合规则与雪球/同花顺一致：open=首日、high=逐日复权高的最大值、
+      #   low=逐日复权低的最小值、close=末日（末日必在除权日后，与单因子结果一致）。
+      #
+      #   full 模式修正全部事件月；incremental 模式只修正「库里仍是旧算法值」
+      #   或「未落库 / 当月进行中」的行，已修正过的历史事件月不再请求日线
+      #   （其前复权列按恒等式 前复权 = 后复权 ÷ hfq_last 逐字段成立，直接推导）。
+      #
+      #   日线与月K同源（新浪 scale=240），每股一次取满全历史后本地按月筛选聚合；
+      #   请求失败时保持单因子值降级落库，下一轮增量会因「仍是旧算法值」被重新识别修正，
+      #   具备自愈能力。
+      #
+      # 返回本轮实际修正过的 trade_date 数组。
+      def correct_event_months(stock, bars, qfq_factors, hfq_factors, mode:)
+        event_dates = qfq_factors.map { |f| f[:date] }.reject { |d| d.year < 1970 } # 剔除 1900 哨兵
+        affected = bars.select do |bar|
+          month_begin = bar[:trade_date].beginning_of_month
+          event_dates.any? { |d| d >= month_begin && d <= bar[:trade_date] }
+        end
+        return [] if affected.empty?
+
+        pending =
+          if mode == :incremental
+            pick_uncorrected_bars(stock, affected, bars, hfq_factors)
+          else
+            affected
+          end
+        return [] if pending.empty?
+
+        daily =
+          begin
+            fetch_daily_bars(stock.symbol)
+          rescue StandardError => e
+            Rails.logger.error "[SinaMonthlyBar] #{stock.symbol} 日线抓取失败：#{e.message}"
+            []
+          end
+        if daily.empty?
+          Rails.logger.warn "[SinaMonthlyBar] #{stock.symbol} 日线缺失，事件月暂按单因子落库，下次增量自动重试"
+          return []
+        end
+
+        # 覆盖断言：日线起点晚于最早待修正事件月月初、且该月并非该股最早月份时，
+        # 说明日线历史被截断（datalen 不够），聚合出的 open 会缺首日，本轮整体放弃修正。
+        # 待修正事件月恰为上市首月时，日线从上市日起即是完整的，晚于月初属正常。
+        earliest_begin = pending.map { |bar| bar[:trade_date].beginning_of_month }.min
+        first_month_begin = bars.first[:trade_date].beginning_of_month
+        if daily.first[:date] > earliest_begin && earliest_begin > first_month_begin
+          Rails.logger.error "[SinaMonthlyBar] #{stock.symbol} 日线起于 #{daily.first[:date]}，" \
+                             "覆盖不住最早事件月 #{earliest_begin}，本轮跳过修正"
+          return []
+        end
+
+        corrected_dates = []
+        pending.each do |bar|
+          month_begin = bar[:trade_date].beginning_of_month
+          month_days = daily.select { |d| d[:date] >= month_begin && d[:date] <= bar[:trade_date] }
+          next if month_days.empty?
+
+          apply_event_month_correction(bar, month_days, qfq_factors, hfq_factors)
+          corrected_dates << bar[:trade_date]
+        end
+        corrected_dates
+      end
+
+      # 增量模式的事件月分流：
+      #   需要重新修正：未落库的新行 / 当月进行中的行（每日推进，无法靠数值判断）/
+      #                 库里 hfq_open 仍是「不复权open × 月末因子」旧算法值的行
+      #   已修正过：用库里 hfq 列按恒等式推导出本轮要重写的前复权列，返回 false 不再请求日线
+      #
+      #   注：除权日恰为当月首个交易日时，修正本就是恒等操作，旧算法值 == 修正值，
+      #   会被反复识别为「待修正」而多一次日线请求，结果仍正确，可接受。
+      def pick_uncorrected_bars(stock, affected, bars, hfq_factors)
+        stored_rows = stock.stock_monthly_bars
+          .where(trade_date: affected.map { |bar| bar[:trade_date] })
+          .index_by(&:trade_date)
+        latest_date = bars.last[:trade_date]
+        hfq_last = hfq_factors.last[:factor]
+
+        affected.select do |bar|
+          row = stored_rows[bar[:trade_date]]
+          if row.nil? || row.hfq_open.nil? || bar[:trade_date] == latest_date || row.hfq_open == bar[:hfq_open]
+            true
+          else
+            # 已修正过：前复权 = 后复权 ÷ hfq_last（§2.4.1 常数关系，逐字段成立）
+            bar[:qfq_open] = (row.hfq_open / hfq_last).round(PRICE_SCALE)
+            bar[:qfq_close] = (row.hfq_close / hfq_last).round(PRICE_SCALE)
+            bar[:qfq_high] = row.hfq_high && (row.hfq_high / hfq_last).round(PRICE_SCALE)
+            bar[:qfq_low] = row.hfq_low && (row.hfq_low / hfq_last).round(PRICE_SCALE)
+            false
+          end
+        end
+      end
+
+      # 用「该月逐日不复权价 × 当日因子」聚合结果覆盖事件月的两套复权价
+      def apply_event_month_correction(bar, month_days, qfq_factors, hfq_factors)
+        first = month_days.first
+        last = month_days.last
+
+        qfq_high = month_days.map { |d| d[:high] / factor_on(qfq_factors, d[:date]) }.max
+        qfq_low = month_days.map { |d| d[:low] / factor_on(qfq_factors, d[:date]) }.min
+        hfq_high = month_days.map { |d| d[:high] * factor_on(hfq_factors, d[:date]) }.max
+        hfq_low = month_days.map { |d| d[:low] * factor_on(hfq_factors, d[:date]) }.min
+
+        bar[:qfq_open] = (first[:open] / factor_on(qfq_factors, first[:date])).round(PRICE_SCALE)
+        bar[:qfq_close] = (last[:close] / factor_on(qfq_factors, last[:date])).round(PRICE_SCALE)
+        bar[:qfq_high] = qfq_high && qfq_high.round(PRICE_SCALE)
+        bar[:qfq_low] = qfq_low && qfq_low.round(PRICE_SCALE)
+        bar[:hfq_open] = (first[:open] * factor_on(hfq_factors, first[:date])).round(PRICE_SCALE)
+        bar[:hfq_close] = (last[:close] * factor_on(hfq_factors, last[:date])).round(PRICE_SCALE)
+        bar[:hfq_high] = hfq_high && hfq_high.round(PRICE_SCALE)
+        bar[:hfq_low] = hfq_low && hfq_low.round(PRICE_SCALE)
+      end
+
+      # 取「因子事件日 <= 指定日期」中最新的一条（日线逐日取因子；事件条数很小，反向线性查找即可）
+      def factor_on(factors, date)
+        factors.reverse_each.find { |f| f[:date] <= date }&.fetch(:factor) || BigDecimal(1)
       end
 
       # 清理与本次抓取结果「同月但日期不同」的旧行：

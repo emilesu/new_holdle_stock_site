@@ -7,6 +7,7 @@ class SinaMonthlyBarServiceTest < ActiveSupport::TestCase
 
   JAN = Date.new(2024, 1, 31)
   FEB = Date.new(2024, 2, 29)
+  MAR = Date.new(2024, 3, 29)
 
   setup do
     @stock = Stock.create!(symbol: "SH999999", name: "月K测试", market: "CN")
@@ -121,6 +122,111 @@ class SinaMonthlyBarServiceTest < ActiveSupport::TestCase
     assert_equal BigDecimal("2.5"), jan.qfq_close, "增量模式下前复权列应整段重写"
   end
 
+  # ====================================================
+  # 除权事件月修正（2026-09-30 修复「月中除权」失真）
+  # ====================================================
+  test "全量模式：除权日落在月中时，事件月按逐日因子聚合而非月末单一因子" do
+    stub_http
+    Service.refresh(@stock, mode: :full)
+
+    march = @stock.stock_monthly_bars.find_by(trade_date: MAR)
+    # 03-01 开盘在除权日 03-15 之前：前复权 = 10 ÷ 2（旧因子），月末单一因子会错算成 10 ÷ 1
+    assert_equal BigDecimal("5.0"), march.qfq_open
+    # 复权后 high = max(11÷2, 11÷1) = 11；low = min(9÷2, 9÷1) = 4.5
+    assert_equal BigDecimal("11.0"), march.qfq_high
+    assert_equal BigDecimal("4.5"), march.qfq_low
+    # 收盘在除权之后：与单因子结果一致
+    assert_equal BigDecimal("10.0"), march.qfq_close
+    # 后复权同样失真同样修：open = 10 × 1（旧因子），而非 10 × 2
+    assert_equal BigDecimal("10.0"), march.hfq_open
+    assert_equal BigDecimal("22.0"), march.hfq_high
+    assert_equal BigDecimal("9.0"), march.hfq_low
+    assert_equal BigDecimal("20.0"), march.hfq_close
+    # 常数不变量仍成立：hfq_close ÷ qfq_close == hfq_last(2)
+    assert_equal BigDecimal("2.0"), march.hfq_close / march.qfq_close
+  end
+
+  test "全量模式：非事件月不受影响，仍按单一因子换算" do
+    stub_http
+    Service.refresh(@stock, mode: :full)
+
+    jan = @stock.stock_monthly_bars.find_by(trade_date: JAN)
+    assert_equal BigDecimal("5.0"), jan.qfq_open   # 10 ÷ 2
+    assert_equal BigDecimal("10.0"), jan.hfq_open  # 10 × 1
+  end
+
+  test "增量模式：已修正的历史事件月按 前复权=后复权÷hfq_last 推导，不再请求该月日线" do
+    four = %w[2024-01-31 2024-02-29 2024-03-29 2024-04-30]
+    stub_http(raw_body: raw_bars_body_for(four))
+    Service.refresh(@stock, mode: :full)
+    march = @stock.stock_monthly_bars.find_by(trade_date: MAR)
+    assert_equal BigDecimal("10.0"), march.hfq_open, "全量修正后 hfq_open = 10 × 旧因子1"
+
+    # 4 月新发生除权（04-20）：hfq_last 2 → 4；3 月是「已修正的历史事件月」且非当月进行中
+    stub_http(
+      raw_body: raw_bars_body_for(four),
+      hfq_events: [{ "d" => "1900-01-01", "f" => "1.0" }, { "d" => "2024-03-15", "f" => "2.0" }, { "d" => "2024-04-20", "f" => "4.0" }],
+      qfq_events: [{ "d" => "1900-01-01", "f" => "4.0" }, { "d" => "2024-03-15", "f" => "2.0" }, { "d" => "2024-04-20", "f" => "1.0" }]
+    )
+    Service.refresh(@stock, mode: :incremental)
+
+    march.reload
+    assert_equal BigDecimal("10.0"), march.hfq_open, "已修正的历史后复权列保持只增不改"
+    # 前复权 = 后复权 ÷ 新 hfq_last：10 ÷ 4 = 2.5；单因子旧算法会错算成 10 ÷ 2 = 5
+    assert_equal BigDecimal("2.5"), march.qfq_open
+    assert_equal BigDecimal("5.0"), march.qfq_close
+  end
+
+  test "增量模式：存量旧算法（单因子）事件月行被识别并重新修正" do
+    four = %w[2024-01-31 2024-02-29 2024-03-29 2024-04-30]
+    stub_http(raw_body: raw_bars_body_for(four))
+    Service.refresh(@stock, mode: :full)
+
+    # 人为把 3 月行改回旧单因子算法值（hfq_open = 10 × 月末因子2 = 20），模拟修复前入库的存量数据
+    march = @stock.stock_monthly_bars.find_by(trade_date: MAR)
+    march.update!(hfq_open: BigDecimal("20.0"), qfq_open: BigDecimal("10.0"))
+
+    Service.refresh(@stock, mode: :incremental)
+
+    march.reload
+    assert_equal BigDecimal("10.0"), march.hfq_open, "旧算法行应被识别并修正回 10 × 旧因子1"
+    assert_equal BigDecimal("5.0"), march.qfq_open, "前复权应修正回 10 ÷ 旧因子2"
+  end
+
+  test "日线抓取失败时事件月降级为单因子落库，不中断本只股票" do
+    stub_http(daily_body: nil)
+
+    result = Service.refresh(@stock, mode: :full)
+
+    assert_equal 3, result[:total]
+    march = @stock.stock_monthly_bars.find_by(trade_date: MAR)
+    assert_equal BigDecimal("10.0"), march.qfq_open, "降级时保持单因子换算值"
+    assert_equal BigDecimal("20.0"), march.hfq_open
+  end
+
+  test "日线历史截断覆盖不住事件月时，本轮跳过修正、按单因子落库" do
+    # 日线起点 03-05 晚于事件月月初 03-01，且 3 月并非该股最早月份（1 月起有月K）→ 判定截断
+    stub_http(daily_body: sina_daily_body("2024-03-05"))
+
+    result = Service.refresh(@stock, mode: :full)
+
+    assert_equal 3, result[:total]
+    march = @stock.stock_monthly_bars.find_by(trade_date: MAR)
+    assert_equal BigDecimal("10.0"), march.qfq_open, "跳过修正时保持单因子换算值"
+    assert_equal BigDecimal("20.0"), march.hfq_open
+  end
+
+  test "事件月为上市首月时，日线自月半起属正常，不误判为截断" do
+    # 只有 3 月一根月K（上市首月即事件月），日线从 03-05 起 = 上市日晚于月初，属正常
+    stub_http(raw_body: raw_bars_body_for(["2024-03-29"]), daily_body: sina_daily_body("2024-03-05"))
+
+    Service.refresh(@stock, mode: :full)
+
+    march = @stock.stock_monthly_bars.find_by(trade_date: MAR)
+    assert_equal BigDecimal("5.0"), march.qfq_open, "首月事件月应正常修正：10 ÷ 除权前因子2"
+    assert_equal BigDecimal("10.0"), march.hfq_open
+  end
+
   test "当月交易日推进时清理同月旧行，不留下重复月份" do
     stub_http(raw_body: raw_bars_body("2024-03-15"))
     Service.refresh(@stock, mode: :full)
@@ -223,12 +329,28 @@ class SinaMonthlyBarServiceTest < ActiveSupport::TestCase
     ]
   end
 
-  def stub_http(raw_body: nil, hfq_events: nil, qfq_events: nil)
-    Service.http_client = build_client("getKLineData" => raw_body || raw_bars_body)
+  # 月K（scale=7200）与日线（scale=240）同源同域，按 scale 参数路由；
+  # daily_body 传 nil 可模拟「日线抓取失败」
+  def stub_http(raw_body: nil, hfq_events: nil, qfq_events: nil, daily_body: :default)
+    Service.http_client = build_client(
+      "scale=7200" => raw_body || raw_bars_body,
+      "scale=240" => daily_body == :default ? sina_daily_body : daily_body
+    )
     FactorService.http_client = build_client(
       "/qfq.js" => factor_body("qfq", qfq_events || default_qfq_events),
       "/hfq.js" => factor_body("hfq", hfq_events || default_hfq_events)
     )
+  end
+
+  # 2024-03 事件月日线：03-15 除权（hfq 1→2，qfq 2→1）
+  #   两日 OHLC 与月K fixture（开10 高11 低9 收10）保持一致
+  #   first_day 可后移以模拟「日线历史被截断」
+  def sina_daily_body(first_day = "2024-03-01")
+    rows = [
+      { "day" => first_day, "open" => "10.000", "high" => "11.000", "low" => "9.000", "close" => "10.000", "volume" => "100" },
+      { "day" => "2024-03-29", "open" => "10.000", "high" => "11.000", "low" => "9.000", "close" => "10.000", "volume" => "100" }
+    ]
+    JSON.generate(rows)
   end
 
   def default_hfq_events
