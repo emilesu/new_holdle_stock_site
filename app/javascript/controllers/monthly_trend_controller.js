@@ -9,14 +9,22 @@ import { Controller } from "@hotwired/stimulus"
 const ECHARTS_VERSION = "6.1.0"
 const ECHARTS_URL = `https://registry.npmmirror.com/echarts/${ECHARTS_VERSION}/files/dist/echarts.min.js`
 
-// 右侧留白：容纳 y 轴刻度标签（如 "2,500"、"12.34%"）。ECharts 的轴标签防溢出钳制已在 gridsFromLayout
+// 右侧留白：仅需容纳 y 轴刻度标签（如 "2,000"、"39%"）。刻度文字实测约 30px，加 ECharts 默认 8px 轴间距
+// 共约 38px，取 44px 已无多余空白。ECharts 的轴标签防溢出钳制已在 gridsFromLayout
 // 显式关闭（outerBoundsMode: 'none'），故此值必须自己够宽，不能再指望框架帮忙兜底
-const RIGHT_GUTTER = 72
+const RIGHT_GUTTER = 44
 
-// 左侧留白：category 轴的首个月份标签以「半字宽」为居中半径（实测约 23px），grid.left 小于该值时标签会
-// 越出画布左边缘被裁切。28px 使首月标签天然落在画布内 —— 这里只是单纯给标签留位置，
-// 不再承担「规避 ECharts 防溢出收缩」的职责（那件事已由外层的 outerBoundsMode: 'none' 根治）
-const LEFT_GUTTER = 28
+// 左侧留白：0 —— 首月标签改用 axisLabel.alignMinLabel: 'left'（见 buildXAxis）贴住轴起点左对齐，
+// 不再需要为「居中标签向左溢出半字宽」预留空间。绘图区左边界因此与卡片内容区左边界重合，
+// 与卡片标题、caption 行落在同一条竖线上，消除「卡片内边距 + 轴留白」的双层内缩
+const LEFT_GUTTER = 0
+
+// 默认可视窗口：近 10 年（120 个月）。数据一次性取「全部历史」，本常量只决定初次渲染的窗口宽度
+// 与「近10年」按钮的定位目标 —— 之后左右拖动都只是在本窗口里滑动回看，不再重复请求接口
+const DEFAULT_WINDOW_MONTHS = 120
+
+// 最小可视窗口（月）：与 dataZoom 的 minValueSpan 同一口径，避免自定义滚轮缩放越过内置下限后打架
+const MIN_WINDOW_MONTHS = 6
 
 // 站内 A股配色：红涨绿跌
 const UP_COLOR = "#ef4444"
@@ -30,18 +38,30 @@ const TICK_COLOR = "#9ca3af"
 const SPLIT_LINE_COLOR = "rgba(0, 0, 0, 0.06)"
 const AXIS_LINE_COLOR = "rgba(0, 0, 0, 0.1)"
 
+function clamp(value, min, max) {
+  return Math.min(Math.max(value, min), max)
+}
+
 export default class extends Controller {
   static targets = ["rangeBtn", "adjBtn", "chart", "overlay", "macdNote", "status", "charts"]
   static values = { url: String }
 
   connect() {
-    this.range = "10y"
+    // 交互模型：一次性取「全部历史」（buildUrl 里 range 恒为 all），之后在本地窗口里左右滑动回看。
+    // activeRange 只表示「当前窗口落在哪个预设档位」，用于按钮高亮，不再参与请求参数
+    this.activeRange = "10y"
     this.adj = "qfq"
     this.requestId = 0
     this.disposed = false
     this.chart = null
     this.echartsPromise = null
     this.resizeHandler = null
+    this.zoomHandler = null
+    // 滚轮/触控板手势监听（捕获阶段挂在画布容器上）与横向平移的亚像素余量
+    this.wheelHandler = null
+    this.panRemainder = 0
+    // 重渲染（切换复权）后要恢复的窗口；null 表示回到默认「近10年」
+    this.pendingWindow = null
     this.barData = []
     this.macdData = []
     this.roeData = []
@@ -74,19 +94,27 @@ export default class extends Controller {
     this.disposeChart()
   }
 
+  // 「近10年 / 全部」= 瞬时定位：数据早已全量在手，只把 dataZoom 窗口挪到位，不再发请求
   switchRange(event) {
     const value = event.currentTarget.dataset.range
-    if (value === this.range) return
 
-    this.range = value
-    this.syncButtons()
-    this.load()
+    if (!this.chart) {
+      // 数据或图库还没就绪：先记下目标，渲染完成后按它定位，避免这次点击石沉大海
+      this.pendingWindow = value
+      this.setActiveRange(value)
+      return
+    }
+
+    this.applyWindow(value)
   }
 
   switchAdj(event) {
     const value = event.currentTarget.dataset.adj
     if (value === this.adj) return
 
+    // 复权只改数值口径、不该改时间窗口：先记下当前位置，重画后原地恢复，
+    // 否则用户刚拖到 2008 年、一切复权就被弹回默认窗口
+    this.pendingWindow = this.currentWindow()
     this.adj = value
     this.syncButtons()
     this.load()
@@ -179,10 +207,146 @@ export default class extends Controller {
       this.chartTarget.innerHTML = ""
       this.chart = echarts.init(this.chartTarget)
       this.bindResize()
+      this.bindZoom()
+      this.bindWheel()
     }
 
     // notMerge：切换区间/复权时整体替换，避免旧 series 残留
     this.chart.setOption(this.buildOption(labels, grids), { notMerge: true })
+
+    // 整体替换会把 dataZoom 窗口重置为「全部」，故此处必须重新定位：
+    // 切换复权时回到用户原位置，其余情况回到默认「近10年」
+    this.applyWindow(this.pendingWindow || "10y")
+    this.pendingWindow = null
+  }
+
+  // 窗口定位：target 为预设档位名（"10y" / "all"），或 { startValue, endValue }（复权重画后原地恢复）
+  applyWindow(target) {
+    const last = this.barData.length - 1
+    if (!this.chart || last < 0) return
+
+    const window =
+      typeof target === "string"
+        ? {
+            startValue: target === "all" ? 0 : Math.max(0, last - (DEFAULT_WINDOW_MONTHS - 1)),
+            endValue: last
+          }
+        : target
+
+    // 不传 dataZoomIndex：实测 ECharts 会对所有 dataZoom 组件（inside + slider）同时生效
+    this.chart.dispatchAction({ type: "dataZoom", ...window })
+    this.setActiveRange(window.startValue <= 0 ? "all" : "10y")
+  }
+
+  // 读回当前窗口（复权切换前先存下来）。ECharts 会把 start/end（百分比）与 startValue/endValue（下标）
+  // 两种口径同时写回 option，任取其一即可；这里优先用下标，缺失时再由百分比换算
+  currentWindow() {
+    const zoom = this.chart && (this.chart.getOption().dataZoom || [])[0]
+    if (!zoom) return null
+
+    const last = this.barData.length - 1
+    const index = (value, percent, fallback) => {
+      if (typeof value === "number") return value
+      if (typeof percent === "number") return Math.round((percent / 100) * last)
+      return fallback
+    }
+
+    return {
+      startValue: index(zoom.startValue, zoom.start, 0),
+      endValue: index(zoom.endValue, zoom.end, last)
+    }
+  }
+
+  // 用户拖动/滚轮缩放后，让「近10年 / 全部」高亮跟随窗口实际范围：
+  // 窗口盖住全部历史才算「全部」，其余（含滚轮缩放出的任意区间）都归到「近10年」
+  bindZoom() {
+    if (!this.chart || this.zoomHandler) return
+
+    this.zoomHandler = () => {
+      const window = this.currentWindow()
+      if (!window) return
+
+      this.setActiveRange(window.startValue <= 0 ? "all" : "10y")
+    }
+    this.chart.on("datazoom", this.zoomHandler)
+  }
+
+  // 滚轮 / 触控板双指手势。ECharts 的 inside dataZoom 会无条件吃掉画布上的滚轮事件：
+  // v6.1.0 的 _mousewheelHandler 先经 _checkTriggerMoveZoom 调 preventDefault（只要指针落在
+  // 组件矩形内就调，且 _opt 里的 zoomOnMouseWheel 被写成常量 true），之后才用 isAvailableBehavior
+  // 判断 zoomOnMouseWheel / moveOnMouseWheel 是否允许触发 —— 也就是说把配置改成 false 也拦不住它
+  // preventDefault，「鼠标停在图上时整页无法上下滚动」正是这么来的。
+  // 故改为在捕获阶段接管：一律 stopPropagation 让 zrender 根本收不到滚轮，
+  // 再按手势决定是否 preventDefault —— 纵向滚轮不调，浏览器照常滚动整页；
+  // 只有横向手势（触控板双指平移）与 Shift+滚轮由图表消费。
+  bindWheel() {
+    if (this.wheelHandler) return
+
+    this.wheelHandler = (event) => {
+      if (!this.chart) return
+
+      event.stopPropagation()
+
+      // Firefox 的滚轮以「行」为单位（deltaMode=1），换算成像素再参与计算，否则一次滚动挪不足 1 个月
+      const unit = event.deltaMode === 1 ? 16 : 1
+      const deltaX = event.deltaX * unit
+      const deltaY = event.deltaY * unit
+
+      if (event.shiftKey) {
+        event.preventDefault()
+        this.zoomByWheel(event, deltaY || deltaX)
+      } else if (Math.abs(deltaX) > Math.abs(deltaY)) {
+        event.preventDefault()
+        this.panByWheel(deltaX)
+      }
+    }
+    this.chartTarget.addEventListener("wheel", this.wheelHandler, { passive: false, capture: true })
+  }
+
+  // Shift+滚轮缩放：以指针所在月份为锚点（该月份在屏幕上原地不动），窗口宽度按滚轮方向收放
+  zoomByWheel(event, delta) {
+    const current = this.currentWindow()
+    const last = this.barData.length - 1
+    if (!current || last < 0 || !delta) return
+
+    const span = current.endValue - current.startValue + 1
+    const nextSpan = clamp(Math.round(span * (delta < 0 ? 0.8 : 1.25)), MIN_WINDOW_MONTHS, last + 1)
+    if (nextSpan === span) return
+
+    const rect = this.chartTarget.getBoundingClientRect()
+    const raw = this.chart.convertFromPixel({ xAxisIndex: 0 }, [event.clientX - rect.left, 0])
+    const value = Array.isArray(raw) ? raw[0] : raw
+    const anchor = Number.isFinite(value)
+      ? clamp(value, current.startValue, current.endValue)
+      : (current.startValue + current.endValue) / 2
+
+    const ratio = span > 1 ? (anchor - current.startValue) / (span - 1) : 0
+    const start = clamp(Math.round(anchor - ratio * (nextSpan - 1)), 0, last + 1 - nextSpan)
+
+    this.applyWindow({ startValue: start, endValue: start + nextSpan - 1 })
+  }
+
+  // 触控板双指横向平移：像素 → 月份用当前窗口宽度换算，方向与 ECharts 按住拖动一致
+  //（内容跟着手指走：双指右滑 = 内容右移 = 看到更早的月份）。
+  // 亚像素余量累计后再取整：触控板慢速滑动单次位移常常不足 1 个月，直接取整会被整段吃掉
+  panByWheel(deltaX) {
+    const current = this.currentWindow()
+    const last = this.barData.length - 1
+    const width = this.chart.getWidth() - LEFT_GUTTER - RIGHT_GUTTER
+    if (!current || last < 0 || width <= 0) return
+
+    const span = current.endValue - current.startValue + 1
+    this.panRemainder += deltaX * (span / width)
+
+    const shift = Math.trunc(this.panRemainder)
+    if (!shift) return
+
+    this.panRemainder -= shift
+    // 顶到两端时保持窗口宽度不变，只把窗口贴在边界上（clamp 后与原位置相同则不再派发）
+    const start = clamp(current.startValue + shift, 0, Math.max(0, last + 1 - span))
+    if (start === current.startValue) return
+
+    this.applyWindow({ startValue: start, endValue: start + span - 1 })
   }
 
   // grid 矩形：top/height 的唯一真源是 ERB 占位元素（改模板高度类图表自动跟随，避免 JS 常量漂移）；
@@ -199,6 +363,13 @@ export default class extends Controller {
       return null
     }
 
+    // 容器为给 K 线顶部刻度留出可绘制空间而设了 padding-top，而画布是 absolute inset-0 ——
+    // 它铺满容器的 padding box（这段内边距也包括在内），overlay 却被这段内边距在文档流里整体下推。
+    // grid 的坐标原点在画布左上角，故三个 grid 的 top 都要补上这段差值，否则三格会整体高出 caption 行
+    const topInset = Math.round(
+      this.overlayTarget.getBoundingClientRect().top - this.chartTarget.getBoundingClientRect().top
+    )
+
     return ["kline", "macd", "roe"].map((name) => ({
       // 关闭 ECharts 6 的轴标签防溢出钳制（默认 'auto'）：它按采样标签估算，会单独收缩某一个 grid，
       // 使三个 grid 的矩形不等、十字准星越往左错位越大。设为 'none' 后 rect 完全由下面的常量与模板高度决定，
@@ -206,7 +377,7 @@ export default class extends Controller {
       outerBoundsMode: "none",
       left: LEFT_GUTTER,
       right: RIGHT_GUTTER,
-      top: bands[name].top,
+      top: topInset + bands[name].top,
       height: bands[name].height
     }))
   }
@@ -230,11 +401,12 @@ export default class extends Controller {
         this.buildXAxis(2, labels, true)
       ],
 
-      // scale 口径对齐原 Chart.js：K/ROE 贴合数据区间；MACD 强制含 0（柱状图基线）
+      // scale 口径对齐原 Chart.js：K/MACD 贴合数据区间（MACD 由 scale:false 强制含 0，柱状图基线）；
+      // ROE 显式指定轴底（见 roeFloor）：正常以 0% 为底，收益率高度才能跨区间横向比较，不受当期最低点抬升
       yAxis: [
         this.buildYAxis(0, true),
         this.buildYAxis(1, false),
-        this.buildYAxis(2, true, "%")
+        this.buildYAxis(2, false, "%", this.roeFloor())
       ],
 
       // 跨三图联动十字准星（官方只承诺指示线同步；tooltip 内容由 buildTooltip 自拼）
@@ -244,14 +416,16 @@ export default class extends Controller {
       },
 
       dataZoom: [
-        // 触屏：单指不拦截页面滚动，双指缩放；PC：Shift+滚轮缩放（普通滚轮仍滚动页面），按住拖动平移
+        // 滚轮与触控板手势由 bindWheel 在 DOM 捕获阶段接管（原因见该方法注释：ECharts 6.1.0 的
+        // inside 无论如何都会 preventDefault 掉滚轮，配置成 false 也拦不住），
+        // 这里显式关掉两个滚轮开关，只保留按住拖动平移与触屏双指捏合缩放
         {
           type: "inside",
           xAxisIndex: [0, 1, 2],
-          zoomOnMouseWheel: "shift",
+          zoomOnMouseWheel: false,
           moveOnMouseMove: true,
           moveOnMouseWheel: false,
-          minValueSpan: 6
+          minValueSpan: MIN_WINDOW_MONTHS
         },
         // 拖拽条：所有设备可用的兜底缩放方式；占用底部 20px
         {
@@ -266,7 +440,7 @@ export default class extends Controller {
           handleStyle: { color: "#d1d5db", borderColor: "#d1d5db" },
           moveHandleStyle: { color: "#d1d5db" },
           textStyle: { color: TICK_COLOR, fontSize: 10 },
-          minValueSpan: 6
+          minValueSpan: MIN_WINDOW_MONTHS
         }
       ],
 
@@ -359,13 +533,21 @@ export default class extends Controller {
       axisLine: { lineStyle: { color: AXIS_LINE_COLOR } },
       splitLine: { show: false },
       axisLabel: showLabel
-        ? { fontSize: 10, color: TICK_COLOR, maxRotation: 0, hideOverlap: true }
+        ? {
+            fontSize: 10,
+            color: TICK_COLOR,
+            maxRotation: 0,
+            hideOverlap: true,
+            // 首月标签默认以刻度为居中，会向左溢出约半字宽（"2016-10" 约 19px）；
+            // grid.left 已压到 0，故把最左侧标签改为左对齐贴住轴起点，避免被画布裁切
+            alignMinLabel: "left"
+          }
         : { show: false }
     }
   }
 
-  buildYAxis(gridIndex, scale, unit = "") {
-    return {
+  buildYAxis(gridIndex, scale, unit = "", min = null) {
+    const axis = {
       gridIndex,
       scale,
       position: "right",
@@ -375,6 +557,20 @@ export default class extends Controller {
       axisLabel: { fontSize: 10, color: TICK_COLOR, formatter: `{value}${unit}` },
       splitLine: { lineStyle: { color: SPLIT_LINE_COLOR } }
     }
+
+    // 显式给定轴底就用它（ROE 的 0% 基准）；否则交由 ECharts 自动取整
+    if (min !== null) axis.min = min
+
+    return axis
+  }
+
+  // ROE 轴底：正常为 0%；历史出现过亏损（ROE < 0）时下探到最低值，避免曲线被轴底截断；无数据则退化为 0
+  roeFloor() {
+    const values = this.roeData
+      .map((item) => (item && item.value !== null && item.value !== undefined ? Number(item.value) : NaN))
+      .filter((value) => Number.isFinite(value))
+
+    return values.length ? Math.min(0, ...values) : 0
   }
 
   // 三段自拼（价 / 量指标 / 基本面）：ECharts 只保证指示线跨 grid 联动，不合并 tooltip 内容，
@@ -443,11 +639,17 @@ export default class extends Controller {
   }
 
   disposeChart() {
-    // ECharts 实例只有 dispose()，没有 Chart.js 的 destroy()
+    // 滚轮监听挂在画布容器上（非 window），但容器会被 Turbo 整页替换，同样要显式摘下
+    if (this.wheelHandler) {
+      this.chartTarget.removeEventListener("wheel", this.wheelHandler, { capture: true })
+      this.wheelHandler = null
+    }
+    // ECharts 实例只有 dispose()，没有 Chart.js 的 destroy()；dispose 会一并摘掉 datazoom 监听
     if (this.chart) {
       this.chart.dispose()
       this.chart = null
     }
+    this.zoomHandler = null
     this.chartTarget.innerHTML = ""
   }
 
@@ -458,13 +660,22 @@ export default class extends Controller {
 
   buildUrl() {
     const url = new URL(this.urlValue, window.location.origin)
-    url.searchParams.set("range", this.range)
+    // 区间恒为 all：一次把全部历史取回本地，之后左右拖动即在本窗口内滑动回看更早的月K，
+    // 拖到最左即可一路退到上市初期（与财务表格「初始停在最新、向左滑看历史」同一套心智）
+    url.searchParams.set("range", "all")
     url.searchParams.set("adj", this.adj)
     return url.toString()
   }
 
+  setActiveRange(value) {
+    if (value === this.activeRange) return
+
+    this.activeRange = value
+    this.syncButtons()
+  }
+
   syncButtons() {
-    this.rangeBtnTargets.forEach((btn) => this.applyActive(btn, btn.dataset.range === this.range))
+    this.rangeBtnTargets.forEach((btn) => this.applyActive(btn, btn.dataset.range === this.activeRange))
     this.adjBtnTargets.forEach((btn) => this.applyActive(btn, btn.dataset.adj === this.adj))
   }
 

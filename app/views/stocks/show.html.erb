@@ -172,7 +172,12 @@
           <div class="px-6 py-4">
             <div class="hidden" data-monthly-trend-target="charts">
               <%# 单容器：三 grid 共用一个 ECharts 实例。canvas 绝对定位铺满，HTML caption 覆盖其上但不吃事件 %>
-              <div class="relative">
+              <%# pt-2 = 0.5rem = 7px（站点根字号 14px）：K 线首个 y 轴刻度标签以刻度线为垂直居中，
+                  字号 10px 需其上方留出约 5px，grid 顶边若贴住画布上边缘该标签上半就会被裁掉。
+                  画布是 absolute inset-0，铺满容器的 padding box（连这段内边距一起覆盖），
+                  于是刻度线上方多出 7px 可绘制区域；而 overlay 在文档流里被这段内边距整体下推，
+                  故 grid.top 必须由 JS 补上这段差值（见 gridsFromLayout 的 topInset），三格与 caption 行才不错位 %>
+              <div class="relative pt-2">
                 <div class="absolute inset-0" data-monthly-trend-target="chart"></div>
                 <%# overlay 的占位高度即三 grid 的几何真源（JS 读 offsetTop/offsetHeight），改高度类图表自动跟随；左右内边距由 JS 按 grid 边界回写，使 caption 行与绘图区左右边界对齐（勿在模板里另写一套数值） %>
                 <div class="relative pointer-events-none" data-monthly-trend-target="overlay">
