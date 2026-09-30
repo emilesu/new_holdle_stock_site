@@ -145,6 +145,60 @@
           market_col = market_financial_column_classes(@stock.market)
         %>
 
+        <%# 月K · MACD · 月ROE 三联图（免费开放；首期仅 A 股有月K数据，非 A 股不渲染）；数据由 Stimulus 懒加载，进入视口才请求 %>
+        <% if @stock.market == "CN" %>
+        <div class="bg-white hl-card overflow-hidden"
+             data-controller="monthly-trend"
+             data-monthly-trend-url-value="<%= monthly_trend_stock_path(@stock, format: :json) %>">
+          <div class="px-6 py-4 border-b border-line flex items-center justify-between flex-wrap gap-2">
+            <h2 class="text-hl-16 font-semibold text-ink">月K · MACD · 月ROE <span class="text-hl-12 text-muted-4 ml-2">Monthly Trend</span></h2>
+            <div class="flex items-center gap-2">
+              <%# 区间：近 10 年（默认）/ 全部历史 %>
+              <div class="flex rounded border border-line overflow-hidden">
+                <button type="button" data-monthly-trend-target="rangeBtn" data-range="10y" aria-pressed="true"
+                        data-action="monthly-trend#switchRange" class="px-3 py-1 text-hl-12 text-ink">近10年</button>
+                <button type="button" data-monthly-trend-target="rangeBtn" data-range="all" aria-pressed="false"
+                        data-action="monthly-trend#switchRange" class="px-3 py-1 text-hl-12 text-muted-4 border-l border-line">全部</button>
+              </div>
+              <%# 复权：前复权（默认）/ 后复权 %>
+              <div class="flex rounded border border-line overflow-hidden">
+                <button type="button" data-monthly-trend-target="adjBtn" data-adj="qfq" aria-pressed="true"
+                        data-action="monthly-trend#switchAdj" class="px-3 py-1 text-hl-12 text-ink">前复权</button>
+                <button type="button" data-monthly-trend-target="adjBtn" data-adj="hfq" aria-pressed="false"
+                        data-action="monthly-trend#switchAdj" class="px-3 py-1 text-hl-12 text-muted-4 border-l border-line">后复权</button>
+              </div>
+            </div>
+          </div>
+          <div class="px-6 py-4">
+            <div class="hidden" data-monthly-trend-target="charts">
+              <%# 单容器：三 grid 共用一个 ECharts 实例。canvas 绝对定位铺满，HTML caption 覆盖其上但不吃事件 %>
+              <%# pt-2 = 0.5rem = 7px（站点根字号 14px）：K 线首个 y 轴刻度标签以刻度线为垂直居中，
+                  字号 10px 需其上方留出约 5px，grid 顶边若贴住画布上边缘该标签上半就会被裁掉。
+                  画布是 absolute inset-0，铺满容器的 padding box（连这段内边距一起覆盖），
+                  于是刻度线上方多出 7px 可绘制区域；而 overlay 在文档流里被这段内边距整体下推，
+                  故 grid.top 必须由 JS 补上这段差值（见 gridsFromLayout 的 topInset），三格与 caption 行才不错位 %>
+              <div class="relative pt-2">
+                <div class="absolute inset-0" data-monthly-trend-target="chart"></div>
+                <%# overlay 的占位高度即三 grid 的几何真源（JS 读 offsetTop/offsetHeight），改高度类图表自动跟随；左右内边距由 JS 按 grid 边界回写，使 caption 行与绘图区左右边界对齐（勿在模板里另写一套数值） %>
+                <div class="relative pointer-events-none" data-monthly-trend-target="overlay">
+                  <div class="h-56" data-band="kline"></div>
+                  <div class="flex h-5 items-center justify-between text-hl-11 text-muted-4">
+                    <span>MACD(12,26,9)</span>
+                    <span data-monthly-trend-target="macdNote">MACD · 前复权口径</span>
+                  </div>
+                  <div class="h-40" data-band="macd"></div>
+                  <div class="flex h-5 items-center text-hl-11 text-muted-4">月ROE（年报按报告期 +4 个月生效）</div>
+                  <div class="h-40" data-band="roe"></div>
+                  <%# 底部 49px（h-14 = 3.5rem，站点根字号 14px）：最下一格的月份标签 + dataZoom slider %>
+                  <div class="h-14"></div>
+                </div>
+              </div>
+            </div>
+            <div class="py-10 text-center text-hl-12 text-muted-4" data-monthly-trend-target="status">加载中…</div>
+          </div>
+        </div>
+        <% end %>
+
         <% financial_tables.each do |table| %>
         <div class="bg-white hl-card overflow-hidden <%= market_col[:hover] %>" data-controller="financial-table">
           <div class="px-6 py-4 border-b border-line">

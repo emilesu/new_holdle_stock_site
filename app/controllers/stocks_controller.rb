@@ -5,8 +5,18 @@ class StocksController < ApplicationController
   INDUSTRY_COMPARISON_LIMIT = 30
   CACHE_EXPIRES_IN = 6.hours
   INDUSTRY_CACHE_EXPIRES_IN = 12.hours
-  
-  before_action :set_stock, only: [:show, :indicator_detail]
+
+  MONTHLY_TREND_CACHE_EXPIRES_IN = 12.hours
+  MONTHLY_RANGES = %w[10y all].freeze
+  MONTHLY_ADJS = %w[qfq hfq].freeze
+  # 近 10 年 ≈ 120 根月K（实测 MACD 预热误差 0.05%）
+  MONTHLY_RANGE_LIMIT = 120
+  MACD_FAST = 12
+  MACD_SLOW = 26
+  MACD_SIGNAL = 9
+  MACD_ROUND = 6
+
+  before_action :set_stock, only: [:show, :indicator_detail, :monthly_trend]
 
   # 财务指标格式化统一走 format_value，视图单元格与弹窗接口口径一致
   helper_method :format_value
@@ -153,6 +163,25 @@ class StocksController < ApplicationController
     end
     
     render json: { success: true, data: data }
+  end
+
+  # 月K + MACD + 月ROE 三联图数据（免费开放，无会员门槛）
+  def monthly_trend
+    range = params[:range].presence_in(MONTHLY_RANGES) || "10y"
+    # 默认前复权（与同花顺/东财一致），可切后复权
+    adj = params[:adj].presence_in(MONTHLY_ADJS) || "qfq"
+
+    data = Rails.cache.fetch(
+      # 缓存键必须带 range 与 adj，否则切换区间/复权会命中另一口径的缓存；
+      # 数据版本必须取月K自身 —— 月K写入不 touch stocks，若用 stocks.updated_at 会导致
+      # 「先访问页面缓存了空结果 → 之后抓取入库 → 最长 12 小时仍返回空」
+      [@stock, :monthly_trend, :v2, range, adj, monthly_bars_version(@stock)],
+      expires_in: MONTHLY_TREND_CACHE_EXPIRES_IN
+    ) do
+      fetch_monthly_trend(@stock, range, adj)
+    end
+
+    render json: { success: true }.merge(data)
   end
 
   private
@@ -467,6 +496,130 @@ class StocksController < ApplicationController
         display_name: stock.display_name_for_comparison
       }
     end
+  end
+
+  # 月K数据版本：用该股月K的最新写入时间作缓存版本
+  # （月K写入不 touch stocks，不能复用 stocks.updated_at，否则数据变了缓存不变）
+  def monthly_bars_version(stock)
+    stock.stock_monthly_bars.maximum(:updated_at)&.to_i || 0
+  end
+
+  # 月K三联图数据
+  # 关键点：MACD 以后复权为递推基准，且必须用「库内全部历史」算完再按区间切片（预热不足会失真）
+  def fetch_monthly_trend(stock, range, adj)
+    all_bars = stock.stock_monthly_bars.chronological.to_a
+    if all_bars.empty?
+      return {
+        symbol: stock.symbol,
+        range: range,
+        adj: adj,
+        bars: [],
+        macd: [],
+        roe: [],
+        meta: { adj: adj, total_bars: 0, returned_bars: 0, warmup_bars: 0 }
+      }
+    end
+
+    macd = compute_macd(all_bars.map { |bar| bar.hfq_close.to_f })
+    # 后复权序列 ÷ 最后一期后复权因子 = 前复权序列（EMA 为线性算子 ⇒ MACD 同为常数倍，只跑一次递推）
+    hfq_last = all_bars.map(&:hfq_factor).compact.max || BigDecimal(1)
+    scale = adj == "hfq" ? 1.0 : 1.0 / hfq_last.to_f
+
+    start_index = range == "all" ? 0 : [all_bars.size - MONTHLY_RANGE_LIMIT, 0].max
+    sliced_bars = all_bars[start_index..] || []
+    sliced_roe = build_monthly_roe(stock, all_bars)[start_index..] || []
+
+    {
+      symbol: stock.symbol,
+      range: range,
+      adj: adj,
+      bars: sliced_bars.map { |bar| monthly_bar_payload(bar, adj) },
+      macd: sliced_bars.each_with_index.map do |bar, offset|
+        index = start_index + offset
+        {
+          t: bar.trade_date.iso8601,
+          dif: (macd[:dif][index] * scale).round(MACD_ROUND),
+          dea: (macd[:dea][index] * scale).round(MACD_ROUND),
+          hist: (macd[:hist][index] * scale).round(MACD_ROUND)
+        }
+      end,
+      roe: sliced_roe,
+      meta: {
+        adj: adj,
+        total_bars: all_bars.size,
+        returned_bars: sliced_bars.size,
+        warmup_bars: start_index
+      }
+    }
+  end
+
+  # MACD(12/26/9)：DIF = EMA12 − EMA26，DEA = EMA9(DIF)，hist = 2 × (DIF − DEA)
+  def compute_macd(closes)
+    fast = ema(closes, MACD_FAST)
+    slow = ema(closes, MACD_SLOW)
+    dif = fast.each_with_index.map { |value, index| value - slow[index] }
+    dea = ema(dif, MACD_SIGNAL)
+
+    {
+      dif: dif,
+      dea: dea,
+      hist: dif.each_with_index.map { |value, index| 2 * (value - dea[index]) }
+    }
+  end
+
+  # 指数移动平均：α = 2/(n+1)，以首值为种子递推（与东财/同花顺口径一致）
+  def ema(values, period)
+    alpha = 2.0 / (period + 1)
+    previous = nil
+    values.map do |value|
+      previous = previous.nil? ? value.to_f : alpha * value.to_f + (1 - alpha) * previous
+    end
+  end
+
+  # 月ROE阶梯：每根月K取「已生效的最新一期年报」，生效月 = report_date + 4.months
+  # （A股年报法定披露截止为次年 4/30，+4 个月可避免前视偏差；最早一期生效前留空由前端断线）
+  def build_monthly_roe(stock, bars)
+    annual = FinancialIndicator
+      .where(stock_id: stock.id, period_type: "annual")
+      .where.not(roe_avg: nil)
+      .order(:report_date)
+      .pluck(:report_date, :roe_avg)
+
+    effective = annual.map do |report_date, roe_avg|
+      { month_seq: month_seq(report_date + 4.months), value: roe_avg.to_f, report_date: report_date }
+    end
+
+    pointer = -1
+    bars.map do |bar|
+      current = month_seq(bar.trade_date)
+      pointer += 1 while pointer + 1 < effective.size && effective[pointer + 1][:month_seq] <= current
+      item = pointer >= 0 ? effective[pointer] : nil
+
+      {
+        t: bar.trade_date.iso8601,
+        value: item && item[:value].round(2),
+        report_date: item && item[:report_date].iso8601
+      }
+    end
+  end
+
+  # 月份序列号（年 × 12 + 月），用于「生效月」比较
+  def month_seq(date)
+    date.year * 12 + date.month
+  end
+
+  # bars 只返回当前复权口径那一套价（两套塞进同一响应会让 payload 翻倍）
+  def monthly_bar_payload(bar, adj)
+    prefix = adj == "hfq" ? "hfq" : "qfq"
+
+    {
+      t: bar.trade_date.iso8601,
+      o: bar.public_send("#{prefix}_open")&.to_f,
+      h: bar.public_send("#{prefix}_high")&.to_f,
+      l: bar.public_send("#{prefix}_low")&.to_f,
+      c: bar.public_send("#{prefix}_close")&.to_f,
+      v: bar.volume
+    }
   end
 
   def set_stock
