@@ -125,6 +125,8 @@ module DataSources
 
           stats[:total] = hk_list.size
           Rails.logger.info "共获取到 #{stats[:total]} 只港股基础信息"
+          # 进度分母改为实际取回的条数（列表任务不支持按股票续跑，故不写断点）
+          CrawlContext.current&.start!(total_count: stats[:total])
 
           Rails.logger.info "开始补充行业分类信息..."
           puts "┌─────────────┬─────────────┬─────────────┬─────────────┬─────────────┐"
@@ -141,6 +143,7 @@ module DataSources
 
               result = process_stock(item)
               stats[result] += 1
+              CrawlContext.current&.tick(ok: result != :failed)
 
               status = case result
                        when :created then "新增"
@@ -154,6 +157,7 @@ module DataSources
               sleep REQUEST_INTERVAL
             rescue => e
               stats[:failed] += 1
+              CrawlContext.current&.tick(ok: false)
               Rails.logger.error "处理港股 #{item[:symbol]} 失败: #{e.message}"
             end
           end
@@ -295,7 +299,10 @@ module DataSources
                        item[:industry] == stock.industry &&
                        # 接口未返回上市日期（nil）时不参与比较，避免存量已有日期时误判为有变更导致 updated 统计虚增
                        (item[:listing_date].blank? || item[:listing_date] == stock.listing_date)
-          return :skipped if no_changes
+          if no_changes
+            SyncStateRecorder.record(stock, :profile, ok: true)
+            return :skipped
+          end
         end
 
         stock.name = item[:name]
@@ -307,10 +314,12 @@ module DataSources
         stock.status = "active" if stock.status.blank?
         # pinyin_initials 由 Stock 模型 before_save 回调自动生成（中文名拼音首字母），此处无需显式赋值
         stock.save!
+        SyncStateRecorder.record(stock, :profile, ok: true)
 
         is_new ? :created : :updated
       rescue => e
         Rails.logger.error "处理港股 #{item[:symbol]} 失败: #{e.message}"
+        SyncStateRecorder.record(stock, :profile, ok: false, error: e) if stock.present?
         :failed
       end
 

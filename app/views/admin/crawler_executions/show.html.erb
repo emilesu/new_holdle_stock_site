@@ -1,0 +1,116 @@
+<div class="mb-6 flex flex-wrap items-start justify-between gap-3">
+  <div>
+    <h1 class="text-hl-22 font-bold text-ink"><%= @execution.task_name %></h1>
+    <p class="mt-1 text-hl-13 text-muted">
+      执行记录 #<%= @execution.id %>
+      · <%= @execution.task_key.presence || "（未登记任务）" %>
+      <% if @task.nil? && @execution.task_key.present? %>
+        <span class="text-red-600">（该任务已从注册表下线）</span>
+      <% end %>
+    </p>
+  </div>
+  <div class="flex items-center gap-2">
+    <a href="<%= admin_crawler_execution_path(@execution) %>" class="hl-btn hl-btn-line whitespace-nowrap">刷新</a>
+    <a href="<%= admin_crawler_executions_path %>" class="hl-btn hl-btn-line whitespace-nowrap">返回列表</a>
+  </div>
+</div>
+
+<div class="hl-card p-5 mb-6">
+  <div class="flex items-center gap-3 mb-4">
+    <span class="w-3 h-3 rounded-full <%= @execution.status == 'success' ? 'bg-green-500' : @execution.status == 'running' ? 'bg-yellow-500' : 'bg-red-500' %>"></span>
+    <span class="text-hl-16 font-semibold text-ink">
+      <%= { "running" => "执行中", "success" => "成功", "failed" => "失败" }.fetch(@execution.status, @execution.status) %>
+    </span>
+    <% if @execution.stale? %>
+      <span class="text-hl-11 text-muted-4 border border-line px-1.5 py-0.5 rounded">心跳停滞，等待看门狗标记失败</span>
+    <% end %>
+  </div>
+
+  <div class="text-hl-13 text-muted mb-4"><%= @execution.progress_message.presence || @execution.message %></div>
+
+  <% percent = @execution.progress_percent %>
+  <div class="flex items-center gap-3 mb-4">
+    <div class="flex-1 h-1.5 bg-line rounded overflow-hidden">
+      <div class="h-full bg-ink" style="width: <%= percent || 0 %>%"></div>
+    </div>
+    <span class="text-hl-12 text-muted-4 flex-shrink-0">
+      <%= percent ? "#{percent}%" : "准备中" %>
+      <% if @execution.total_count.to_i.positive? %>
+        （<%= @execution.processed_count %>/<%= @execution.total_count %>）
+      <% end %>
+    </span>
+  </div>
+
+  <dl class="grid grid-cols-2 md:grid-cols-4 gap-4 text-hl-12">
+    <div>
+      <dt class="text-muted-5">成功 / 失败</dt>
+      <dd class="mt-1 text-ink font-medium"><%= @execution.success_count %> / <%= @execution.failed_count %></dd>
+    </div>
+    <div>
+      <dt class="text-muted-5">开始时间</dt>
+      <dd class="mt-1 text-ink"><%= @execution.executed_at&.strftime('%Y-%m-%d %H:%M:%S') %></dd>
+    </div>
+    <div>
+      <dt class="text-muted-5">结束时间</dt>
+      <dd class="mt-1 text-ink"><%= @execution.finished_at&.strftime('%Y-%m-%d %H:%M:%S') || "—" %></dd>
+    </div>
+    <div>
+      <dt class="text-muted-5">耗时</dt>
+      <dd class="mt-1 text-ink"><%= @execution.finished_at.present? ? "#{@execution.duration.to_f.round(1)} 秒" : "—" %></dd>
+    </div>
+    <div>
+      <dt class="text-muted-5">触发方式</dt>
+      <dd class="mt-1 text-ink"><%= { "manual" => "手动", "schedule" => "定时", "retry" => "重试" }.fetch(@execution.trigger_source.to_s, "未知") %></dd>
+    </div>
+    <div>
+      <dt class="text-muted-5">市场</dt>
+      <dd class="mt-1 text-ink"><%= @execution.market.presence || "—" %></dd>
+    </div>
+    <div>
+      <dt class="text-muted-5">最后心跳</dt>
+      <dd class="mt-1 text-ink"><%= @execution.heartbeat_at.present? ? relative_time(@execution.heartbeat_at) : "—" %></dd>
+    </div>
+    <div>
+      <dt class="text-muted-5">执行参数</dt>
+      <dd class="mt-1 text-ink break-all"><%= @execution.params.present? ? @execution.params.to_json : "—" %></dd>
+    </div>
+  </dl>
+</div>
+
+<% if @execution.checkpoint.present? %>
+  <div class="hl-card p-5 mb-6">
+    <h2 class="text-hl-16 font-semibold text-ink mb-2">断点</h2>
+    <p class="text-hl-12 text-muted-4 mb-2">
+      <% if @task&.accepts_stock_scope? %>
+        上次处理到的最后一个股票 ID —— 可从此处继续，跳过上次已处理到的股票（含当次抓取失败的股票）。
+      <% else %>
+        上次处理到的最后一个股票 ID（该任务不支持按股票范围续跑，此项仅供排查参考）。
+      <% end %>
+    </p>
+    <pre class="text-hl-12 text-ink bg-bg-soft border border-line rounded p-3 overflow-x-auto"><%= JSON.pretty_generate(@execution.checkpoint) %></pre>
+  </div>
+<% end %>
+
+<% if @execution.error_detail.present? %>
+  <div class="hl-card p-5 mb-6">
+    <h2 class="text-hl-16 font-semibold text-red-600 mb-2">错误详情</h2>
+    <pre class="text-hl-12 text-red-700 bg-bg-soft border border-line rounded p-3 overflow-x-auto whitespace-pre-wrap"><%= @execution.error_detail %></pre>
+  </div>
+<% end %>
+
+<% if @task %>
+  <div class="flex flex-wrap items-center gap-2">
+    <%= link_to "重新执行",
+          retry_admin_crawler_execution_path(@execution),
+          data: { turbo_method: :post, turbo_confirm: "确认重新执行「#{@task.name}」？" },
+          rel: "nofollow", class: "hl-btn hl-btn-primary" %>
+    <%# 仅对支持按股票子集执行的任务提供续跑：不支持的任务会丢弃 after_stock_id，
+        点下去实际是全量重跑，给出「已续跑」的承诺会误导 %>
+    <% if @execution.resumable? && @task.accepts_stock_scope? %>
+      <%= link_to "从断点继续（跳过上次已处理到的股票）",
+            retry_admin_crawler_execution_path(@execution, from_checkpoint: 1),
+            data: { turbo_method: :post, turbo_confirm: "确认从断点续跑？" },
+            rel: "nofollow", class: "hl-btn hl-btn-line" %>
+    <% end %>
+  </div>
+<% end %>

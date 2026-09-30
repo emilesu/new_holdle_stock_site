@@ -13,7 +13,7 @@ module DataSources
     REQUEST_INTERVAL = 0.3
 
     class << self
-      def call(market: nil)
+      def call(market: nil, stock_ids: nil, after_stock_id: nil)
         Rails.logger.info "=" * 70
         Rails.logger.info "开始同步上市日期（东方财富 F10）"
         Rails.logger.info "=" * 70
@@ -21,30 +21,46 @@ module DataSources
         stats = { total: 0, updated: 0, skipped: 0, failed: 0 }
         markets = market.present? ? [market] : REPORTS.keys
 
-        markets.each do |m|
+        # 先解析出各市场的目标股票集再处理：本任务 market 为 nil，CrawlerScope 会用全库股票数
+        # 当进度分母，而本服务只处理「listing_date 为空」的股票，不先纠正分母进度永远到不了 100%
+        targets = markets.filter_map do |m|
           unless REPORTS.key?(m)
             Rails.logger.warn "市场 #{m} 暂不支持上市日期同步，跳过"
             next
           end
 
           stocks = Stock.where(market: m).where(listing_date: nil)
-          stats[:total] += stocks.size
+          stocks = stocks.where(id: stock_ids) if stock_ids.present?
+          stocks = stocks.where("stocks.id > ?", after_stock_id.to_i) if after_stock_id.present?
+          [ m, stocks.order(:id) ]
+        end
+
+        stats[:total] = targets.sum { |_m, stocks| stocks.size }
+        CrawlContext.current&.start!(total_count: stats[:total])
+
+        targets.each do |m, stocks|
           Rails.logger.info "[#{m}] 待同步 #{stocks.size} 只"
 
           stocks.find_each do |stock|
+            ok = false
             begin
               date = fetch_listing_date(REPORTS[m], secucode(stock))
               if date && date <= Date.current
                 stock.update_column(:listing_date, date)
                 stats[:updated] += 1
+                ok = true
               else
                 stats[:skipped] += 1
+                # 接口正常返回但无上市日期：视为该股票此字段无可同步数据，不计为失败
+                ok = true
                 Rails.logger.warn "上市日期缺失或异常（未来日期）跳过 #{stock.symbol}: #{date}" if date
               end
             rescue => e
               stats[:failed] += 1
               Rails.logger.error "同步上市日期失败 #{stock.symbol}: #{e.message}"
             ensure
+              SyncStateRecorder.record(stock, :listing_date, ok: ok)
+              CrawlContext.current&.tick(unit_id: stock.id, ok: ok)
               sleep REQUEST_INTERVAL
             end
           end

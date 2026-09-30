@@ -13,10 +13,30 @@ production:
   clear_solid_queue_finished_jobs:
     command: "SolidQueue::Job.clear_finished_in_batches(sleep_between_batches: 0.3)"
     schedule: every hour at minute 12
-  # 上市日期同步进度监控：每5分钟检查一次，同步完成时在管理后台补全 CrawlerExecution 记录
-  listing_date_sync_monitor:
-    class: ListingDateSyncMonitorJob
+  # 爬虫僵尸任务看门狗：把心跳停滞的 running 记录标记为失败（部署重启/OOM 兜底）
+  crawler_watchdog:
+    class: CrawlerWatchdogJob
     schedule: every 5 minutes
+  # A股月K增量：工作日 22:00 收盘后执行（有手动任务在跑时自动跳过）
+  crawler_monthly_bars_cn:
+    class: CrawlerScheduleJob
+    args: [ { task_key: "monthly_bars_refresh_cn" } ]
+    schedule: "0 22 * * 1-5"
+  # A股财务增量：工作日 23:00，只跑「超过 7 天未成功同步」的股票（天然限量）
+  crawler_finance_stale:
+    class: CrawlerScheduleJob
+    args: [ { task_key: "a_finance", params: { stale_after: 7 } } ]
+    schedule: "0 23 * * 1-5"
+  # A股列表刷新：每周日 21:00（港股/美股列表未纳入定时，需要时到爬虫管理页手动执行）
+  crawler_stock_lists_weekly:
+    class: CrawlerScheduleJob
+    args: [ { task_key: "a_stock_list" } ]
+    schedule: "0 21 * * 0"
+  # 数据质量扫描：每周日 20:00
+  crawler_quality_scan_weekly:
+    class: CrawlerScheduleJob
+    args: [ { task_key: "data_quality_scan" } ]
+    schedule: "0 20 * * 0"
   # T7 计费后台：预占超时释放（60 秒未 confirm/release 的 precheck 自动释放）
   release_stale_prechecks:
     class: ReleaseStalePrechecksJob

@@ -6,7 +6,12 @@ module DataSources
   #   DataSources::EastMoneyFinanceService.call(limit: 30, market: "HK")
   #   DataSources::EastMoneyFinanceService.call(limit: 10, market: "CN")
   #   DataSources::EastMoneyFinanceService.call(market: "US")
+  #   DataSources::EastMoneyFinanceService.call(market: "CN", stock_ids: [1, 2, 3])   # 定点重抓
+  #   DataSources::EastMoneyFinanceService.call(market: "CN", after_stock_id: 500)    # 断点续跑
   class EastMoneyFinanceService
+    # 请求间隔（秒），避免触发数据源限流；可用环境变量调整
+    REQUEST_INTERVAL = ENV.fetch("CRAWLER_REQUEST_INTERVAL", "0.3").to_f
+
     FETCHER_MAP = {
       "CN" => DataSources::Fetchers::CnFetcher,
       "HK" => DataSources::Fetchers::HkFetcher,
@@ -22,7 +27,7 @@ module DataSources
     LISTED_STATUS = "listed".freeze
 
     class << self
-      def call(limit: nil, market: "CN")
+      def call(limit: nil, market: "CN", stock_ids: nil, after_stock_id: nil)
         market_name = MARKET_NAMES[market] || market
         puts "\n#{'=' * 70}"
         puts "🚀 开始执行#{market_name}财务数据爬取任务 (东方财富数据源)"
@@ -36,6 +41,9 @@ module DataSources
 
         fetcher = fetcher_class.new
         stocks = Stock.where(market: market)
+        stocks = stocks.where(id: stock_ids) if stock_ids.present?
+        stocks = stocks.where("stocks.id > ?", after_stock_id.to_i) if after_stock_id.present?
+        stocks = stocks.order(:id)
         total_count = stocks.count
         stocks = stocks.limit(limit) if limit
         batch_size = stocks.count
@@ -64,11 +72,18 @@ module DataSources
             end
             # 财务数据真实变更 → touch 股票，使详情页缓存（cached_financial_data / cached_detail_financials）立即失效
             touch_if_changed(stock, result)
+            SyncStateRecorder.record(stock, :financial, ok: all_success)
           rescue => e
             fail_count += 1
             puts "  ❌ [#{stock.symbol}] 处理异常: #{e.message}"
             Rails.logger.error "[EastMoneyFinanceService] #{stock.symbol} 处理异常: #{e.message}"
+            all_success = false
+            SyncStateRecorder.record(stock, :financial, ok: false, error: e)
           end
+
+          CrawlContext.current&.tick(unit_id: stock.id, ok: all_success)
+          # 请求间隔：避免触发数据源限流
+          sleep REQUEST_INTERVAL if REQUEST_INTERVAL.positive?
         end
 
         # 财务数据真实变更的股票 → 异步推送百度（附加动作，失败不影响主流程）
@@ -106,6 +121,7 @@ module DataSources
         all_success = fetch_result.is_a?(Hash) ? fetch_result[:success] : fetch_result
         update_stock_status(stock) if all_success
         touch_if_changed(stock, fetch_result)
+        SyncStateRecorder.record(stock, :financial, ok: all_success)
 
         # 单只财务数据真实变更 → 推送百度（附加动作，失败不影响主流程）
         if fetch_result.is_a?(Hash) && fetch_result[:changed]

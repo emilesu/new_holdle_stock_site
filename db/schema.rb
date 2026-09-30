@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_09_29_120000) do
+ActiveRecord::Schema[7.1].define(version: 2026_09_30_120200) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -167,7 +167,39 @@ ActiveRecord::Schema[7.1].define(version: 2026_09_29_120000) do
     t.datetime "executed_at", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "task_key", comment: "注册表任务 key（DataSources::CrawlerRegistry），历史记录为 NULL"
+    t.string "trigger_source", default: "manual", null: false, comment: "触发来源（manual/schedule/retry）"
+    t.string "market", comment: "涉及市场（US/HK/CN），便于筛选"
+    t.jsonb "params", default: {}, null: false, comment: "本次执行参数（stock_ids/after_stock_id/mode/stale_after）"
+    t.integer "total_count", default: 0, null: false, comment: "目标股票总数"
+    t.integer "processed_count", default: 0, null: false, comment: "已处理数量"
+    t.integer "success_count", default: 0, null: false, comment: "成功数量"
+    t.integer "failed_count", default: 0, null: false, comment: "失败数量"
+    t.string "progress_message", comment: "高频刷新的进度文案"
+    t.jsonb "checkpoint", default: {}, null: false, comment: "断点（如 {\"last_unit_id\": 12345}），供中断后续跑"
+    t.text "error_detail", comment: "异常类/消息/堆栈前 20 行"
+    t.datetime "heartbeat_at", comment: "心跳时间，看门狗据此判定执行进程是否已死"
+    t.datetime "finished_at", comment: "结束时间"
     t.index ["executed_at"], name: "index_crawler_executions_on_executed_at"
+    t.index ["status", "heartbeat_at"], name: "idx_crawler_executions_status_heartbeat_at"
+    t.index ["task_key", "executed_at"], name: "idx_crawler_executions_task_key_executed_at"
+  end
+
+  create_table "data_quality_issues", comment: "数据质量问题台账", force: :cascade do |t|
+    t.bigint "stock_id", null: false, comment: "股票ID，关联stocks表"
+    t.string "market", null: false, comment: "市场类型（US/HK/CN）"
+    t.string "data_type", null: false, comment: "数据类型（financial/monthly_bar）"
+    t.string "issue_type", null: false, comment: "问题类型（month_gap/hfq_factor_decrease/ratio_deviation/partial_period/empty_financials/future_report_date/value_overflow）"
+    t.string "severity", default: "warning", null: false, comment: "严重级别（info/warning/error）"
+    t.jsonb "detail", default: {}, null: false, comment: "问题细节（区间、字段名、数值等）"
+    t.datetime "detected_at", null: false, comment: "最近一次检出时间"
+    t.datetime "resolved_at", comment: "处理时间（NULL=未处理）"
+    t.string "resolution", comment: "处理说明（manual/ignored 等）"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["data_type", "severity"], name: "idx_dq_issues_type_severity"
+    t.index ["market", "resolved_at"], name: "idx_dq_issues_market_resolved"
+    t.index ["stock_id", "data_type", "issue_type"], name: "idx_dq_issues_open_unique", unique: true, where: "(resolved_at IS NULL)"
   end
 
   create_table "financial_indicators", force: :cascade do |t|
@@ -453,6 +485,22 @@ ActiveRecord::Schema[7.1].define(version: 2026_09_29_120000) do
     t.index ["key"], name: "index_solid_queue_semaphores_on_key", unique: true
   end
 
+  create_table "stock_data_sync_states", comment: "股票数据同步状态表（新鲜度看板 / 失败重试基础）", force: :cascade do |t|
+    t.bigint "stock_id", null: false, comment: "股票ID，关联stocks表"
+    t.string "market", null: false, comment: "市场类型（US/HK/CN），冗余字段便于按市场聚合"
+    t.string "data_type", null: false, comment: "数据类型（profile/financial/monthly_bar/listing_date）"
+    t.string "status", default: "pending", null: false, comment: "同步状态（pending/success/failed）"
+    t.datetime "last_success_at", comment: "最近一次成功时间"
+    t.datetime "last_attempt_at", comment: "最近一次尝试时间（含失败）"
+    t.integer "retry_count", default: 0, null: false, comment: "连续失败次数，成功后归零"
+    t.string "error_message", comment: "最近一次失败原因"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["data_type", "status"], name: "idx_stock_data_sync_states_type_status"
+    t.index ["market", "data_type", "last_success_at"], name: "idx_stock_data_sync_states_market_type_time"
+    t.index ["stock_id", "data_type"], name: "idx_stock_data_sync_states_stock_type", unique: true
+  end
+
   create_table "stock_monthly_bars", comment: "股票月K线数据表（含前复权/后复权两套价格）", force: :cascade do |t|
     t.bigint "stock_id", null: false, comment: "股票ID，关联stocks表"
     t.string "market", default: "CN", null: false, comment: "市场类型"
@@ -583,6 +631,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_09_29_120000) do
   add_foreign_key "cash_flows", "financial_reports"
   add_foreign_key "cash_flows", "stocks"
   add_foreign_key "chapters", "courses"
+  add_foreign_key "data_quality_issues", "stocks"
   add_foreign_key "financial_indicators", "financial_reports"
   add_foreign_key "financial_indicators", "stocks"
   add_foreign_key "financial_reports", "stocks"
@@ -597,6 +646,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_09_29_120000) do
   add_foreign_key "solid_queue_ready_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_recurring_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_scheduled_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
+  add_foreign_key "stock_data_sync_states", "stocks"
   add_foreign_key "stock_monthly_bars", "stocks"
   add_foreign_key "usage_logs", "api_keys"
   add_foreign_key "usage_logs", "users"

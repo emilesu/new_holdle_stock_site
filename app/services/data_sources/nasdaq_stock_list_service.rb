@@ -66,6 +66,8 @@ module DataSources
             stocks.each do |item|
               result = save_stock(market, item, existing_stocks)
               stats[result] += 1
+              # 列表任务不支持按股票续跑，只上报进度、不写断点
+              CrawlContext.current&.tick(ok: result != :failed)
             end
 
             Rails.logger.info "✅ #{market} 处理完成: 新增 #{stats[:created]}, 更新 #{stats[:updated]}, 跳过 #{stats[:skipped]}, 失败 #{stats[:failed]}"
@@ -101,21 +103,24 @@ module DataSources
           # 不覆盖 name 字段，保留已有的中文名/组合名
           # 仅更新 exchange 和 status
           if existing.exchange == market
+            SyncStateRecorder.record(existing, :profile, ok: true)
             return :skipped
           end
           existing.exchange = market
           existing.status = "listed"
           existing.save!
+          SyncStateRecorder.record(existing, :profile, ok: true)
           return :updated
         end
 
-        Stock.create!(
+        stock = Stock.create!(
           symbol: symbol,
           name: name,
           market: "US",
           exchange: market,
           status: "listed"
         )
+        SyncStateRecorder.record(stock, :profile, ok: true)
 
         :created
       rescue ActiveRecord::RecordInvalid => e

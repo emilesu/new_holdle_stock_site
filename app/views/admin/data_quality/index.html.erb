@@ -1,0 +1,112 @@
+<div class="mb-6">
+  <h1 class="text-hl-22 font-bold text-ink">数据质量</h1>
+  <p class="mt-1 text-hl-13 text-muted">
+    待处理 <%= @open_total %> 条
+    <span class="text-muted-5">
+      （严重 <%= @open_counts["error"].to_i %> · 警告 <%= @open_counts["warning"].to_i %> · 提示 <%= @open_counts["info"].to_i %>）
+    </span>
+  </p>
+</div>
+
+<form method="get" action="<%= admin_data_quality_path %>" class="hl-card p-4 mb-6">
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+    <label class="block">
+      <span class="text-hl-12 text-muted-4">数据类型</span>
+      <select name="data_type" class="mt-1 w-full border border-line rounded px-3 py-2 text-hl-13 text-ink bg-white">
+        <option value="">全部类型</option>
+        <% StockDataSyncState::DATA_TYPES.each do |data_type| %>
+          <option value="<%= data_type %>" <%= "selected" if @data_type == data_type %>>
+            <%= StockDataSyncState.data_type_name(data_type) %>
+          </option>
+        <% end %>
+      </select>
+    </label>
+    <label class="block">
+      <span class="text-hl-12 text-muted-4">严重级别</span>
+      <select name="severity" class="mt-1 w-full border border-line rounded px-3 py-2 text-hl-13 text-ink bg-white">
+        <option value="">全部级别</option>
+        <% DataQualityIssue::SEVERITIES.each do |severity| %>
+          <option value="<%= severity %>" <%= "selected" if @severity == severity %>>
+            <%= DataQualityIssue::SEVERITY_NAMES[severity] %>
+          </option>
+        <% end %>
+      </select>
+    </label>
+    <label class="flex items-end gap-2 pb-2">
+      <%= check_box_tag :resolved, "1", @show_resolved, class: "rounded border-line" %>
+      <span class="text-hl-13 text-muted">显示已处理</span>
+    </label>
+    <div class="flex items-end gap-2">
+      <button type="submit" class="hl-btn hl-btn-primary">筛选</button>
+      <a href="<%= admin_data_quality_path %>" class="hl-btn hl-btn-line">重置</a>
+    </div>
+  </div>
+</form>
+
+<div class="hl-card divide-y divide-line">
+  <% if @issues.present? %>
+    <% @issues.each do |issue| %>
+      <div class="px-5 py-4 flex items-start gap-4">
+        <span class="text-hl-11 flex-shrink-0 mt-0.5 px-1.5 py-0.5 rounded border
+          <%= issue.severity == 'error' ? 'border-red-300 text-red-600' : issue.severity == 'warning' ? 'border-yellow-300 text-yellow-700' : 'border-line text-muted-4' %>">
+          <%= DataQualityIssue::SEVERITY_NAMES.fetch(issue.severity, issue.severity) %>
+        </span>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-2 flex-wrap">
+            <% if issue.stock %>
+              <a href="<%= admin_stock_path(issue.stock) %>" class="text-hl-13 font-medium text-ink hover:underline">
+                <%= issue.stock.symbol %>
+              </a>
+              <span class="text-hl-12 text-muted-4"><%= issue.stock.name %></span>
+            <% else %>
+              <span class="text-hl-13 text-muted-4">股票已删除</span>
+            <% end %>
+            <span class="text-hl-11 text-muted-5 border border-line px-1.5 py-0.5 rounded">
+              <%= StockDataSyncState.data_type_name(issue.data_type) %>
+            </span>
+            <span class="text-hl-12 text-ink"><%= DataQualityIssue.issue_type_name(issue.issue_type) %></span>
+          </div>
+          <% if issue.detail.present? %>
+            <div class="text-hl-12 text-muted-4 mt-1 break-all"><%= issue.detail.to_json %></div>
+          <% end %>
+          <div class="text-hl-11 text-muted-5 mt-1">
+            检出 <%= relative_time(issue.detected_at) %>
+            <% if issue.resolved_at.present? %>
+              · 已处理 <%= relative_time(issue.resolved_at) %>（<%= issue.resolution %>）
+            <% end %>
+          </div>
+        </div>
+        <% unless issue.resolved_at.present? %>
+          <%= link_to "标记已处理",
+                admin_resolve_data_quality_path(issue, data_type: @data_type, severity: @severity),
+                data: { turbo_method: :post, turbo_confirm: "确认标记该问题为已处理？" },
+                rel: "nofollow", class: "hl-btn hl-btn-line flex-shrink-0" %>
+        <% end %>
+      </div>
+    <% end %>
+  <% else %>
+    <div class="px-5 py-12 text-center">
+      <p class="text-hl-13 text-muted-4">没有符合条件的数据质量问题</p>
+      <p class="text-hl-12 text-muted-5 mt-1">可到爬虫管理页执行「数据质量扫描」重新体检</p>
+    </div>
+  <% end %>
+</div>
+
+<% if @total_pages > 1 %>
+  <div class="mt-4 flex items-center justify-between text-hl-13 text-muted">
+    <div>
+      显示
+      <span class="font-semibold text-ink"><%= [(@page - 1) * Admin::DataQualityController::PER_PAGE + 1, @total_count].min %></span>
+      -
+      <span class="font-semibold text-ink"><%= [@page * Admin::DataQualityController::PER_PAGE, @total_count].min %></span>
+      条
+    </div>
+    <div class="flex items-center gap-1">
+      <a href="<%= admin_data_quality_path(data_type: @data_type, severity: @severity, resolved: @show_resolved ? "1" : nil, page: [@page - 1, 1].max) %>"
+         class="px-3 py-2 border border-line rounded <%= 'pointer-events-none opacity-40' if @page <= 1 %>">上一页</a>
+      <span class="px-3 py-2"><%= @page %> / <%= @total_pages %></span>
+      <a href="<%= admin_data_quality_path(data_type: @data_type, severity: @severity, resolved: @show_resolved ? "1" : nil, page: [@page + 1, @total_pages].min) %>"
+         class="px-3 py-2 border border-line rounded <%= 'pointer-events-none opacity-40' if @page >= @total_pages %>">下一页</a>
+    </div>
+  </div>
+<% end %>

@@ -278,22 +278,27 @@ module DataSources
         stocks.each_with_index do |stock, index|
           # 每处理一只股票后等待一段时间，避免被限流
           sleep REQUEST_INTERVAL if index > 0
-          
+
+          ok = false
           begin
             result = process_single_stock(stock.symbol)
             stats[result] += 1
-            
+            ok = result != :failed
+
             status = case result
                      when :success then "成功"
                      when :skipped then "跳过"
                      else "失败"
                      end
-            
+
             puts "│ #{stock.symbol&.rjust(9)} │ #{stock.name.to_s[0..8]&.rjust(9)} │ #{stock.sector.to_s[0..8]&.rjust(9)} │ #{status&.rjust(9)} │"
           rescue => e
             stats[:failed] += 1
             puts "❌ 处理股票 #{stock.symbol} 失败: #{e.message}"
           end
+
+          SyncStateRecorder.record(stock, :profile, ok: ok)
+          CrawlContext.current&.tick(unit_id: stock.id, ok: ok)
         end
 
         puts "└─────────────┴─────────────┴─────────────┴─────────────┘"

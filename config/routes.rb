@@ -112,23 +112,22 @@ Rails.application.routes.draw do
   namespace :admin do
     root to: "dashboard#index"
     
-    get "stock_crawlers", to: "stock_crawlers#index"
-    post "stock_crawlers/us_stock_list", to: "stock_crawlers#us_stock_list"
-    post "stock_crawlers/us_stock_basic", to: "stock_crawlers#us_stock_basic"
-    post "stock_crawlers/us_finance", to: "stock_crawlers#us_finance"
-    post "stock_crawlers/us_finance_em", to: "stock_crawlers#us_finance_em"
-    post "stock_crawlers/us_finance_em_single", to: "stock_crawlers#us_finance_em_single"
-    post "stock_crawlers/a_stock_list", to: "stock_crawlers#a_stock_list"
-    post "stock_crawlers/a_finance", to: "stock_crawlers#a_finance"
-    post "stock_crawlers/a_finance_em", to: "stock_crawlers#a_finance_em"
-    post "stock_crawlers/a_finance_em_single", to: "stock_crawlers#a_finance_em_single"
-    post "stock_crawlers/update_all_pyramid", to: "stock_crawlers#update_all_pyramid"
-    post "stock_crawlers/refresh_all_radar", to: "stock_crawlers#refresh_all_radar"
-    post "stock_crawlers/refresh_all_radar_full", to: "stock_crawlers#refresh_all_radar_full"
-    post "stock_crawlers/hk_stock_list", to: "stock_crawlers#hk_stock_list"
-    post "stock_crawlers/hk_finance", to: "stock_crawlers#hk_finance"
-    post "stock_crawlers/hk_finance_em", to: "stock_crawlers#hk_finance_em"
-    post "stock_crawlers/hk_finance_em_single", to: "stock_crawlers#hk_finance_em_single"
+    # 爬虫管理：任务定义来自 DataSources::CrawlerRegistry，后台只传 task_key
+    get  "stock_crawlers",           to: "stock_crawlers#index"
+    post "stock_crawlers/:task_key", to: "stock_crawlers#create", as: :run_stock_crawler
+
+    # 爬虫执行历史与重试
+    resources :crawler_executions, only: [:index, :show] do
+      member { post :retry }
+    end
+
+    # 数据看板：覆盖率与新鲜度、批量补抓
+    get  "stock_data",         to: "stock_data#index"
+    post "stock_data/recrawl", to: "stock_data#recrawl", as: :recrawl_stock_data
+
+    # 数据质量问题台账
+    get  "data_quality",             to: "data_quality#index"
+    post "data_quality/:id/resolve", to: "data_quality#resolve", as: :resolve_data_quality
 
     # 管理员后台留言管理
     resources :message_boards, only: [:index, :update, :destroy] do

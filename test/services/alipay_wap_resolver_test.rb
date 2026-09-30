@@ -1,4 +1,5 @@
 require "test_helper"
+require "minitest/mock"
 
 class AlipayWapResolverTest < ActiveSupport::TestCase
   test "跟随 302 重定向返回 mclient 收银台地址" do

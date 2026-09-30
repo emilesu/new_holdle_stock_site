@@ -1,120 +1,48 @@
 module Admin
+  # 爬虫管理首页：任务卡片（由注册表驱动）+ 最近执行记录
   class StockCrawlersController < BaseController
+    # 首页只展示最近若干条，完整历史走「执行历史」页
+    RECENT_LIMIT = 10
+
     def index
-      @results = CrawlerExecution.recent.to_a
+      @tasks_by_group = DataSources::CrawlerRegistry.by_group
+      @last_executions = last_executions_by_task
+      @crawler_active = CrawlerExecution.running.exists?
+      @executions = CrawlerExecution.order(executed_at: :desc).limit(RECENT_LIMIT)
+      @recent_total = CrawlerExecution.count
     end
 
-    # ──────────────────────────────────────────────
-    # 美股爬虫
-    # ──────────────────────────────────────────────
+    # 只接受注册表 key，不再接受任意类名/方法名，收窄后台可执行面
+    def create
+      task = DataSources::CrawlerRegistry.find(params[:task_key])
+      unless task
+        redirect_to admin_stock_crawlers_path, alert: "未知任务：#{params[:task_key]}"
+        return
+      end
 
-    def us_stock_list
-      enqueue_crawler("爬取美股列表", "DataSources::NasdaqStockListService")
-    end
-
-    def us_stock_basic
-      enqueue_crawler("爬取美股名称&行业", "DataSources::UsStockBasicInfoService")
-    end
-
-    def us_finance
-      enqueue_crawler("爬取美股全套财务", "DataSources::EastMoneyFinanceService", kwargs: { market: "US" })
-    end
-
-    def us_finance_em
-      enqueue_crawler("爬取美股全套财务(东方财富)", "DataSources::EastMoneyFinanceService", kwargs: { market: "US" })
-    end
-
-    def us_finance_em_single
-      limit = (params[:limit] || 5).to_i
-      enqueue_crawler("爬取美股财务(东方财富) #{limit}只", "DataSources::EastMoneyFinanceService",
-                      single_mode: true, single_limit: limit, single_market: "US")
-    end
-
-    # ──────────────────────────────────────────────
-    # A股爬虫
-    # ──────────────────────────────────────────────
-
-    def a_stock_list
-      enqueue_crawler("爬取A股列表、名称&行业", "DataSources::AStockListService")
-    end
-
-    def a_finance
-      enqueue_crawler("爬取A股全套财务", "DataSources::EastMoneyFinanceService", kwargs: { market: "CN" })
-    end
-
-    def a_finance_em
-      enqueue_crawler("爬取A股全套财务(东方财富)", "DataSources::EastMoneyFinanceService", kwargs: { market: "CN" })
-    end
-
-    def a_finance_em_single
-      limit = (params[:limit] || 5).to_i
-      enqueue_crawler("爬取A股财务(东方财富) #{limit}只", "DataSources::EastMoneyFinanceService",
-                      single_mode: true, single_limit: limit, single_market: "CN")
-    end
-
-    # ──────────────────────────────────────────────
-    # 港股爬虫
-    # ──────────────────────────────────────────────
-
-    def hk_stock_list
-      enqueue_crawler("爬取港股列表、名称&行业", "DataSources::HkStockListService")
-    end
-
-    def hk_finance
-      enqueue_crawler("爬取港股全套财务", "DataSources::EastMoneyFinanceService", kwargs: { market: "HK" })
-    end
-
-    def hk_finance_em
-      enqueue_crawler("爬取港股全套财务(东方财富)", "DataSources::EastMoneyFinanceService", kwargs: { market: "HK" })
-    end
-
-    def hk_finance_em_single
-      limit = (params[:limit] || 5).to_i
-      enqueue_crawler("爬取港股财务(东方财富) #{limit}只", "DataSources::EastMoneyFinanceService",
-                      single_mode: true, single_limit: limit, single_market: "HK")
-    end
-
-    # ──────────────────────────────────────────────
-    # 数据计算
-    # ──────────────────────────────────────────────
-
-    def update_all_pyramid
-      enqueue_crawler("全局更新金字塔分数", "DataSources::StockPyramidBatchService", kwargs: { full_recalc: true })
-    end
-
-    def refresh_all_radar
-      enqueue_crawler("全局刷新雷达维度缓存(增量)", "DataSources::StockRadarBatchService", kwargs: { full_recalc: false })
-    end
-
-    def refresh_all_radar_full
-      enqueue_crawler("全局刷新雷达维度缓存(全量)", "DataSources::StockRadarBatchService", kwargs: { full_recalc: true })
+      execution = DataSources::CrawlerExecutionStarter.call(
+        task: task,
+        trigger_source: "manual",
+        params: crawl_params
+      )
+      redirect_to admin_stock_crawlers_path,
+                  notice: "「#{task.name}」已提交后台执行（记录 ##{execution.id}），可在下方查看进度"
     end
 
     private
 
-    def enqueue_crawler(task_name, service_name, method_name: "call", args: [],
-                        kwargs: {}, single_mode: false, single_limit: nil, single_market: nil)
-      execution = CrawlerExecution.create!(
-        task_name: task_name,
-        status: "running",
-        message: "任务已提交，正在后台异步执行中...",
-        duration: 0,
-        executed_at: Time.current
-      )
+    # 手动触发时可携带的范围参数（测试用 limit、指定股票 stock_ids 等）
+    def crawl_params
+      params.permit(:limit, :stale_after, :only_failed, :after_stock_id, stock_ids: []).to_h
+    end
 
-      CrawlerJob.perform_later(
-        task_name: task_name,
-        service_name: service_name,
-        method_name: method_name,
-        args: args,
-        kwargs: kwargs,
-        single_mode: single_mode,
-        single_limit: single_limit,
-        single_market: single_market,
-        execution_id: execution.id
-      )
-
-      redirect_to admin_stock_crawlers_path, notice: "爬取任务已提交后台异步执行，请稍后在执行结果中查看状态"
+    # 每个任务最近一次执行记录（PostgreSQL DISTINCT ON，避免把全部历史加载进内存）
+    def last_executions_by_task
+      CrawlerExecution
+        .select("DISTINCT ON (task_key) *")
+        .where(task_key: DataSources::CrawlerRegistry.keys)
+        .order("task_key, executed_at DESC")
+        .index_by(&:task_key)
     end
   end
 end

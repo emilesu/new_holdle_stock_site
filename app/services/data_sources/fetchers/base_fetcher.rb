@@ -226,7 +226,7 @@ module DataSources
             period_type: period_type
           )
           financial_data.each { |k, v| record.send("#{k}=", v) }
-          save_with_overflow_protection(record, financial_data)
+          save_with_overflow_protection(record, financial_data, stock)
           mark_crawled(financial_report)
           Rails.logger.info "[#{self.class}] #{model_class} 新建记录: stock=#{stock.symbol}, date=#{report_date}, period=#{period_type}, market=#{market}"
           :success
@@ -240,7 +240,7 @@ module DataSources
             # 否则历史误标期次（如把中报当年报入库）永远无法被修正
             record.report_type = report_type
             record.period_type = period_type
-            save_with_overflow_protection(record, financial_data)
+            save_with_overflow_protection(record, financial_data, stock)
             mark_crawled(financial_report)
             Rails.logger.info "[#{self.class}] #{model_class} 更新记录: stock=#{stock.symbol}, date=#{report_date}, period=#{period_type}, market=#{market}"
             :success
@@ -256,7 +256,7 @@ module DataSources
 
       # 保存记录，捕获数值溢出时逐个排除超限字段
       # 可靠做法：先全置 nil，再逐个赋值并保存，精确定位溢出字段
-      def save_with_overflow_protection(record, financial_data)
+      def save_with_overflow_protection(record, financial_data, stock = nil)
         record.save!
       rescue ActiveRecord::StatementInvalid => e
         raise e unless e.message.include?("NumericValueOutOfRange")
@@ -280,8 +280,27 @@ module DataSources
 
         overflow_fields.each do |key|
           Rails.logger.warn "[#{self.class}] #{record.class}.#{key} 数值溢出(#{financial_data[key]}), 已置 nil"
+          report_overflow(stock, record, key, financial_data[key])
         end
         record.save!
+      end
+
+      # 溢出字段落一条数据质量台账，避免「静默置 nil」无据可查
+      def report_overflow(stock, record, key, value)
+        return if stock.blank?
+
+        DataQualityIssue.record!(
+          stock, "financial", "value_overflow",
+          severity: "error",
+          detail: {
+            table: record.class.name,
+            field: key.to_s,
+            value: value.to_s,
+            report_date: record.report_date.to_s
+          }
+        )
+      rescue => e
+        Rails.logger.error "[#{self.class}] 溢出问题上报失败: #{e.message}"
       end
     end
   end

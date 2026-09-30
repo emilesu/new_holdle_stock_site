@@ -328,10 +328,15 @@ module DataSources
           puts "│    代码     │    名称     │  行业板块   │  主营业务   │  处理状态   │"
           puts "├─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤"
 
+          # 进度分母改为实际抓到的列表条数：CrawlerScope 按市场股票数估算，与本服务
+          # 从接口取回的真实条数会有偏差（列表任务不支持按股票续跑，故不写断点）
+          CrawlContext.current&.start!(total_count: stats[:total])
+
           data.each do |item|
             begin
               result = process_stock(item)
               stats[result] += 1
+              CrawlContext.current&.tick(ok: result != :failed)
 
               status = case result
                        when :created then "新增"
@@ -343,6 +348,7 @@ module DataSources
               puts "│ #{item['symbol']&.rjust(9)} │ #{item['name']&.rjust(9)} │ #{item['sector']&.rjust(9)} │ #{item['main_business']&.rjust(9)} │ #{status&.rjust(9)} │"
             rescue => e
               stats[:failed] += 1
+              CrawlContext.current&.tick(ok: false)
               Rails.logger.error "处理股票 #{item['symbol']} 失败: #{e.message}"
             end
           end
@@ -594,7 +600,10 @@ module DataSources
                        item["exchange"] == stock.exchange &&
                        item["sector"] == stock.sector &&
                        item["main_business"] == stock.industry
-          return :skipped if no_changes
+          if no_changes
+            SyncStateRecorder.record(stock, :profile, ok: true)
+            return :skipped
+          end
         end
 
         stock.name = item["name"]
@@ -603,10 +612,12 @@ module DataSources
         stock.industry = item["main_business"]
         # pinyin_initials 由 Stock 模型 before_save 回调自动生成（中文名拼音首字母），此处无需显式赋值
         stock.save!
+        SyncStateRecorder.record(stock, :profile, ok: true)
 
         is_new ? :created : :updated
       rescue => e
         Rails.logger.error "处理股票 #{item['symbol']} 失败: #{e.message}"
+        SyncStateRecorder.record(stock, :profile, ok: false, error: e) if stock.present?
         :failed
       end
 

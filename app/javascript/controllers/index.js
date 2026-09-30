@@ -48,3 +48,6 @@ application.register("screener", ScreenerController)
 
 import MonthlyTrendController from "./monthly_trend_controller"
 application.register("monthly-trend", MonthlyTrendController)
+
+import CrawlerProgressController from "./crawler_progress_controller"
+application.register("crawler-progress", CrawlerProgressController)

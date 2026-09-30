@@ -1,0 +1,165 @@
+<%
+  market_names = { "CN" => "A股", "HK" => "港股", "US" => "美股" }
+  data_type_names = StockDataSyncState::DATA_TYPE_NAMES
+  scope_names = Admin::StockDataController::SCOPE_NAMES
+  stale_cutoff = Time.current - StockDataSyncState.stale_after_for(@data_type)
+%>
+
+<div class="mb-6">
+  <h1 class="text-hl-22 font-bold text-ink">数据看板</h1>
+  <p class="mt-1 text-hl-13 text-muted">各市场数据的覆盖率与新鲜度；按条件勾选后可一键补抓</p>
+</div>
+
+<div class="flex items-center gap-1 mb-6 border-b border-line">
+  <% Admin::StockDataController::MARKETS.each do |market| %>
+    <a href="<%= admin_stock_data_path(market: market, data_type: @data_type) %>"
+       class="px-4 py-2 text-hl-13 border-b-2 -mb-px transition-colors
+         <%= @market == market ? 'border-ink text-ink font-medium' : 'border-transparent text-muted-4 hover:text-ink' %>">
+      <%= market_names[market] %>
+    </a>
+  <% end %>
+</div>
+
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+  <% StockDataSyncState::DATA_TYPES.each do |data_type| %>
+    <% coverage = @coverages[data_type] %>
+    <% ok_rate = coverage[:total].positive? ? (coverage[:ok] * 100.0 / coverage[:total]).round : 0 %>
+    <a href="<%= admin_stock_data_path(market: @market, data_type: data_type) %>"
+       class="hl-card hl-card-hover p-4 block <%= @data_type == data_type ? 'border-ink' : '' %>">
+      <div class="flex items-center justify-between">
+        <span class="text-hl-13 font-medium text-ink"><%= data_type_names[data_type] %></span>
+        <span class="text-hl-12 <%= ok_rate >= 90 ? 'text-green-600' : ok_rate >= 60 ? 'text-yellow-600' : 'text-red-600' %>">
+          <%= ok_rate %>%
+        </span>
+      </div>
+      <div class="mt-2 h-1 bg-line rounded overflow-hidden">
+        <div class="h-full bg-ink" style="width: <%= ok_rate %>%"></div>
+      </div>
+      <div class="mt-2 text-hl-11 text-muted-5">
+        共 <%= coverage[:total] %> 只 · 过期 <%= coverage[:stale] %> · 从未 <%= coverage[:never] %> · 失败 <%= coverage[:failed] %>
+      </div>
+    </a>
+  <% end %>
+</div>
+
+<div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+  <div class="flex items-center gap-1">
+    <% Admin::StockDataController::SCOPES.each do |scope| %>
+      <a href="<%= admin_stock_data_path(market: @market, data_type: @data_type, scope: scope) %>"
+         class="px-3 py-1.5 text-hl-12 rounded border transition-colors
+           <%= @scope == scope ? 'border-ink bg-ink text-white' : 'border-line text-muted-4 hover:text-ink' %>">
+        <%= scope_names[scope] %>
+      </a>
+    <% end %>
+  </div>
+  <span class="text-hl-12 text-muted-4">
+    <%= data_type_names[@data_type] %> · <%= scope_names[@scope] %> · 共 <%= @total_count %> 只
+  </span>
+</div>
+
+<%= form_with url: admin_recrawl_stock_data_path, method: :post, class: "hl-card" do %>
+  <%= hidden_field_tag :market, @market %>
+  <%= hidden_field_tag :data_type, @data_type %>
+
+  <div class="px-5 py-4 border-b border-line flex flex-wrap items-center justify-between gap-3">
+    <div class="text-hl-12 text-muted-4">
+      <% if @task %>
+        补抓任务：<span class="text-ink font-medium"><%= @task.name %></span>
+        <% if @task.heavy? %><span class="text-muted-5">（重任务 · 建议低峰执行）</span><% end %>
+      <% else %>
+        <span class="text-muted-5">当前市场暂无支持按股票子集补抓的任务，请到爬虫管理页执行全量任务</span>
+      <% end %>
+    </div>
+    <% if @task %>
+      <div class="flex items-center gap-2">
+        <% if @scope == "all" %>
+          <button type="submit" name="scope" value="all" class="hl-btn hl-btn-line"
+                  data-turbo-confirm="确认对<%= market_names[@market] %>全部 <%= @total_count %> 只股票执行补抓？全量任务耗时较长，建议低峰执行。">
+            补抓当前筛选（<%= @total_count %> 只）
+          </button>
+        <% else %>
+          <button type="submit" name="scope" value="<%= @scope %>" class="hl-btn hl-btn-primary">
+            补抓当前筛选（<%= @total_count %> 只）
+          </button>
+        <% end %>
+        <button type="submit" name="scope" value="selected" class="hl-btn hl-btn-line"
+                data-turbo-confirm="确认补抓勾选的股票？">
+          补抓勾选
+        </button>
+      </div>
+    <% end %>
+  </div>
+
+  <div class="overflow-x-auto md-table-wrap">
+    <table class="w-full text-hl-13">
+      <thead>
+        <tr class="border-b border-line text-left text-hl-12 text-muted-4">
+          <th class="px-4 py-3 w-10"></th>
+          <th class="px-4 py-3">代码</th>
+          <th class="px-4 py-3">名称</th>
+          <th class="px-4 py-3">同步状态</th>
+          <th class="px-4 py-3">最近成功</th>
+          <th class="px-4 py-3">重试</th>
+          <th class="px-4 py-3">错误信息</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-line">
+        <% if @stocks.present? %>
+          <% @stocks.each do |stock| %>
+            <% state = @sync_states[stock.id] %>
+            <tr class="hover:bg-bg-mute transition-colors">
+              <td class="px-4 py-3">
+                <%= check_box_tag "stock_ids[]", stock.id, false, class: "rounded border-line" %>
+              </td>
+              <td class="px-4 py-3">
+                <a href="<%= admin_stock_path(stock) %>" class="text-ink hover:underline"><%= stock.symbol %></a>
+              </td>
+              <td class="px-4 py-3 text-muted"><%= stock.name %></td>
+              <td class="px-4 py-3">
+                <% if state.nil? || state.last_success_at.nil? %>
+                  <span class="text-red-600">从未同步</span>
+                <% elsif state.last_success_at < stale_cutoff %>
+                  <span class="text-yellow-600">已过期</span>
+                <% elsif state.status == "failed" %>
+                  <span class="text-red-600">最近失败</span>
+                <% else %>
+                  <span class="text-green-600">正常</span>
+                <% end %>
+              </td>
+              <td class="px-4 py-3 text-muted-4">
+                <%= state&.last_success_at ? state.last_success_at.strftime('%Y-%m-%d %H:%M') : "—" %>
+              </td>
+              <td class="px-4 py-3 text-muted-4"><%= state&.retry_count.to_i %></td>
+              <td class="px-4 py-3 text-muted-5 max-w-[280px] truncate" title="<%= state&.error_message %>">
+                <%= state&.error_message.presence || "—" %>
+              </td>
+            </tr>
+          <% end %>
+        <% else %>
+          <tr>
+            <td colspan="7" class="px-4 py-12 text-center text-hl-13 text-muted-4">没有符合条件的股票</td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% end %>
+
+<% if @total_pages > 1 %>
+  <div class="mt-4 flex items-center justify-between text-hl-13 text-muted">
+    <div>
+      显示
+      <span class="font-semibold text-ink"><%= [(@page - 1) * Admin::StockDataController::PER_PAGE + 1, @total_count].min %></span>
+      -
+      <span class="font-semibold text-ink"><%= [@page * Admin::StockDataController::PER_PAGE, @total_count].min %></span>
+      条
+    </div>
+    <div class="flex items-center gap-1">
+      <a href="<%= admin_stock_data_path(market: @market, data_type: @data_type, scope: @scope, page: [@page - 1, 1].max) %>"
+         class="px-3 py-2 border border-line rounded <%= 'pointer-events-none opacity-40' if @page <= 1 %>">上一页</a>
+      <span class="px-3 py-2"><%= @page %> / <%= @total_pages %></span>
+      <a href="<%= admin_stock_data_path(market: @market, data_type: @data_type, scope: @scope, page: [@page + 1, @total_pages].min) %>"
+         class="px-3 py-2 border border-line rounded <%= 'pointer-events-none opacity-40' if @page >= @total_pages %>">下一页</a>
+    </div>
+  </div>
+<% end %>
