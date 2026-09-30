@@ -113,8 +113,10 @@ export default class extends Controller {
     if (value === this.adj) return
 
     // 复权只改数值口径、不该改时间窗口：先记下当前位置，重画后原地恢复，
-    // 否则用户刚拖到 2008 年、一切复权就被弹回默认窗口
-    this.pendingWindow = this.currentWindow()
+    // 否则用户刚拖到 2008 年、一切复权就被弹回默认窗口。
+    // 图表尚未创建时 currentWindow() 返回 null（图库还在加载），此时不能拿 null 覆盖掉
+    // switchRange 刚记下的档位，否则那次「全部」点击会被静默丢弃
+    this.pendingWindow = this.currentWindow() || this.pendingWindow
     this.adj = value
     this.syncButtons()
     this.load()
@@ -225,7 +227,8 @@ export default class extends Controller {
     const last = this.barData.length - 1
     if (!this.chart || last < 0) return
 
-    const window =
+    // 变量名刻意避开 window：这里装的是 dataZoom 窗口，不是全局对象
+    const zoomWindow =
       typeof target === "string"
         ? {
             startValue: target === "all" ? 0 : Math.max(0, last - (DEFAULT_WINDOW_MONTHS - 1)),
@@ -234,8 +237,15 @@ export default class extends Controller {
         : target
 
     // 不传 dataZoomIndex：实测 ECharts 会对所有 dataZoom 组件（inside + slider）同时生效
-    this.chart.dispatchAction({ type: "dataZoom", ...window })
-    this.setActiveRange(window.startValue <= 0 ? "all" : "10y")
+    this.chart.dispatchAction({ type: "dataZoom", ...zoomWindow })
+    this.setActiveRange(this.windowRange(zoomWindow))
+  }
+
+  // 窗口落在哪个预设档位：**盖住全部历史**才算「全部」，否则一律归「近10年」。
+  // 不能只看 startValue —— 上市不足 120 个月的新股点「近10年」时 startValue 本来就是 0，
+  // 在最左端放大到只看早期若干年时 startValue 也是 0，两种都会误亮「全部」
+  windowRange(zoomWindow) {
+    return zoomWindow.startValue <= 0 && zoomWindow.endValue >= this.barData.length - 1 ? "all" : "10y"
   }
 
   // 读回当前窗口（复权切换前先存下来）。ECharts 会把 start/end（百分比）与 startValue/endValue（下标）
@@ -263,10 +273,10 @@ export default class extends Controller {
     if (!this.chart || this.zoomHandler) return
 
     this.zoomHandler = () => {
-      const window = this.currentWindow()
-      if (!window) return
+      const zoomWindow = this.currentWindow()
+      if (!zoomWindow) return
 
-      this.setActiveRange(window.startValue <= 0 ? "all" : "10y")
+      this.setActiveRange(this.windowRange(zoomWindow))
     }
     this.chart.on("datazoom", this.zoomHandler)
   }
@@ -278,7 +288,7 @@ export default class extends Controller {
   // preventDefault，「鼠标停在图上时整页无法上下滚动」正是这么来的。
   // 故改为在捕获阶段接管：一律 stopPropagation 让 zrender 根本收不到滚轮，
   // 再按手势决定是否 preventDefault —— 纵向滚轮不调，浏览器照常滚动整页；
-  // 只有横向手势（触控板双指平移）与 Shift+滚轮由图表消费。
+  // 只有横向手势（触控板双指平移）与 Shift+滚轮 / 触控板捏合由图表消费。
   bindWheel() {
     if (this.wheelHandler) return
 
@@ -292,7 +302,9 @@ export default class extends Controller {
       const deltaX = event.deltaX * unit
       const deltaY = event.deltaY * unit
 
-      if (event.shiftKey) {
+      // Shift+滚轮与触控板捏合都按缩放处理。捏合在 Chrome 里就是 wheel + ctrlKey，
+      // 不接管的话会触发浏览器整页缩放（页面元素忽大忽小），这里 preventDefault 后交给图表
+      if (event.shiftKey || event.ctrlKey) {
         event.preventDefault()
         this.zoomByWheel(event, deltaY || deltaX)
       } else if (Math.abs(deltaX) > Math.abs(deltaY)) {
