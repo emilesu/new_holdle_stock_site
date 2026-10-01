@@ -43,5 +43,39 @@ module DataSources
         assert_nil @stock.reload.listing_date, "未来日期不应写入数据库"
       end
     end
+
+    # ── 美股 Yahoo firstTradeDate ──
+
+    test "美股通过 Yahoo firstTradeDate 成功写入上市日期" do
+      us_stock = Stock.create!(
+        symbol: "LDT_US", name: "US Listing Date Test", market: "US", exchange: "NASDAQ", status: "active"
+      )
+      # AAPL 真实 firstTradeDate=345479400 → 1980-12-12（美东时间）
+      yahoo_body = '{"chart":{"result":[{"meta":{"firstTradeDate":345479400}}],"error":null}}'
+      Faraday.stub(:get, ->(_url) { fake_response(yahoo_body) }) do
+        result = DataSources::StockListingDateService.call(market: "US", stock_ids: [ us_stock.id ])
+        assert_equal 1, result[:updated]
+        assert_equal Date.new(1980, 12, 12), us_stock.reload.listing_date
+      end
+    ensure
+      us_stock&.destroy!
+    end
+
+    test "美股 Yahoo 404（退市标的）计入 skipped 不报错" do
+      us_stock = Stock.create!(
+        symbol: "LDT_DEL", name: "Delisted Test", market: "US", exchange: "NYSE", status: "delisted"
+      )
+      not_found = Struct.new(:body, :status) do
+        def success? = false
+      end.new(nil, 404)
+      Faraday.stub(:get, ->(_url) { not_found }) do
+        result = DataSources::StockListingDateService.call(market: "US", stock_ids: [ us_stock.id ])
+        assert_equal 1, result[:skipped]
+        assert_equal 0, result[:failed]
+        assert_nil us_stock.reload.listing_date
+      end
+    ensure
+      us_stock&.destroy!
+    end
   end
 end

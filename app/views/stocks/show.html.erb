@@ -46,8 +46,8 @@
                     <%= @stock.industry.presence || '-' %>
                   </span>
                 </div>
-                <%# 上市日期仅 A股/港股支持（东方财富 F10 同步，美股无该字段） %>
-                <% if @stock.market.in?(%w[CN HK]) %>
+                <%# 上市日期：A股/港股来自东方财富 F10，美股来自 Yahoo chart firstTradeDate %>
+                <% if @stock.market.in?(%w[CN HK US]) %>
                   <div class="flex justify-between py-2">
                     <span class="text-muted-3 text-hl-11">上市日期</span>
                     <span class="text-ink font-medium">

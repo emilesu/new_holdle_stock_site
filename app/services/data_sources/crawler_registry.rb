@@ -127,7 +127,7 @@ module DataSources
         key: "listing_date", name: "同步上市日期", group: "BASE", market: nil,
         service: "DataSources::StockListingDateService", method_name: "call",
         sync_data_type: "listing_date", accepts_stock_scope: true, heavy: false,
-        description: "东方财富 F10 组织资料，补齐 listing_date 为空的股票（美股无此字段）"
+        description: "CN/HK 东方财富 F10 + US Yahoo chart firstTradeDate，补齐 listing_date 为空的股票"
       ),
 
       # ── 数据计算 ──

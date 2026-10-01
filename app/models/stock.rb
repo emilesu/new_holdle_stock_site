@@ -63,7 +63,7 @@ class Stock < ApplicationRecord
   # 单只股票的金字塔警示标签（纯展示，不参与评分）
   # - "数据<5年": 财务指标不足5年，评分基于5年均值，可靠性较低
   # - "亏损年份": 近5年存在 ROE<=0 或净利润<0 的年份，增长/现金分经特殊规则处理
-  # - "次新股": 上市日期距今不足3年（需 listing_date 已同步，美股暂不支持）
+  # - "次新股": 上市日期距今不足3年（需 listing_date 已同步）
   def pyramid_tags
     years = financial_years.last(5)
     tags = []
@@ -73,7 +73,7 @@ class Stock < ApplicationRecord
     tags
   end
 
-  # 次新股：上市日期距今不足 3 年（美股无上市日期数据，一律返回 false）
+  # 次新股：上市日期距今不足 3 年
   def new_listing?
     listing_date.present? && listing_date <= Date.current && listing_date >= (Date.current - 3.years)
   end

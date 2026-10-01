@@ -1,13 +1,27 @@
 module DataSources
-  # 同步 A股/港股上市日期（东方财富 F10 组织资料报表）
+  # 同步 A股/港股/美股上市日期
+  #   CN/HK：东方财富 F10 组织资料报表
+  #   US：Yahoo v8 chart API 的 meta.firstTradeDate（首个交易日时间戳）
   # 增量策略：仅处理 listing_date 为空的股票，避免重复请求
-  # 美股暂不支持（东方财富美股 F10 报表无上市日期字段），美股次新标签由"数据<5年"兜底
   class StockListingDateService
-    # 市场 => 东方财富 F10 组织资料报表名
+    # 东方财富 F10 组织资料报表（CN/HK）
     REPORTS = {
       "CN" => "RPT_F10_ORG_BASICINFO",
       "HK" => "RPT_HKF10_INFO_ORGPROFILE"
     }.freeze
+
+    # Yahoo chart API（美股）
+    YAHOO_CHART_URL = "https://query1.finance.yahoo.com/v8/finance/chart".freeze
+    YAHOO_USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36".freeze
+    YAHOO_TIMEOUT = 20
+    YAHOO_RETRY_TIMES = 2
+    YAHOO_RETRY_INTERVAL = 1
+
+    # 支持的全部市场
+    SUPPORTED_MARKETS = (REPORTS.keys + [ "US" ]).freeze
+
+    # HTTP 非 2xx 响应（纳入重试范围）
+    class RequestError < StandardError; end
 
     # 请求间隔（秒），避免触发数据源限流
     REQUEST_INTERVAL = 0.3
@@ -15,22 +29,18 @@ module DataSources
     class << self
       def call(market: nil, stock_ids: nil, after_stock_id: nil, limit: nil)
         Rails.logger.info "=" * 70
-        Rails.logger.info "开始同步上市日期（东方财富 F10）"
+        Rails.logger.info "开始同步上市日期（CN/HK 东方财富 F10 + US Yahoo chart）"
         Rails.logger.info "=" * 70
 
         stats = { total: 0, updated: 0, skipped: 0, failed: 0 }
-        markets = market.present? ? [market] : REPORTS.keys
+        markets = market.present? ? [ market ] : SUPPORTED_MARKETS
 
-        # 本任务 market 为 nil（横跨 CN/HK 两个市场），后台「测试 5 只」传进来的 limit 是
-        # 整体额度而非单市场额度，故用 remaining 跨市场共享，否则会变成每个市场各跑 5 只
         remaining = limit.present? ? limit.to_i : nil
 
-        # 先解析出各市场的目标股票集再处理：本任务 market 为 nil，CrawlerScope 会用全库股票数
-        # 当进度分母，而本服务只处理「listing_date 为空」的股票，不先纠正分母进度永远到不了 100%
         targets = markets.filter_map do |m|
           next if remaining && remaining <= 0
 
-          unless REPORTS.key?(m)
+          unless SUPPORTED_MARKETS.include?(m)
             Rails.logger.warn "市场 #{m} 暂不支持上市日期同步，跳过"
             next
           end
@@ -47,8 +57,6 @@ module DataSources
         CrawlContext.current&.start!(total_count: stats[:total])
 
         targets.each do |m, stocks|
-          # find_each 内部会用 batch_size 覆盖 relation 上的 limit（activerecord/relation/batches.rb
-          # 的 batch_on_unloaded_relation），所以限量额度不能只挂在 relation 上，循环内再兜一道
           target_count = stocks.size
           Rails.logger.info "[#{m}] 待同步 #{target_count} 只"
 
@@ -58,14 +66,18 @@ module DataSources
 
             ok = false
             begin
-              date = fetch_listing_date(REPORTS[m], secucode(stock))
+              date = if m == "US"
+                fetch_us_listing_date(stock)
+              else
+                fetch_listing_date(REPORTS[m], secucode(stock))
+              end
+
               if date && date <= Date.current
                 stock.update_column(:listing_date, date)
                 stats[:updated] += 1
                 ok = true
               else
                 stats[:skipped] += 1
-                # 接口正常返回但无上市日期：视为该股票此字段无可同步数据，不计为失败
                 ok = true
                 Rails.logger.warn "上市日期缺失或异常（未来日期）跳过 #{stock.symbol}: #{date}" if date
               end
@@ -88,6 +100,59 @@ module DataSources
 
       private
 
+      # 美股：通过 Yahoo chart API 的 meta.firstTradeDate 获取上市日期
+      # firstTradeDate 是 Unix 时间戳（UTC），需按美东时区转换为当地日期
+      def fetch_us_listing_date(stock)
+        yahoo_sym = DataSources::YahooMonthlyBarService.yahoo_symbol(stock)
+        return nil if yahoo_sym.nil?
+
+        url = "#{YAHOO_CHART_URL}/#{yahoo_sym}?range=1d&interval=1d"
+        body = yahoo_request(url)
+        return nil if body.nil?
+
+        data = JSON.parse(body)
+        ts = data.dig("chart", "result", 0, "meta", "firstTradeDate")
+        return nil if ts.nil?
+
+        # 时间戳按美东时区转换为日期（交易所当地时间的首个交易日）
+        ActiveSupport::TimeZone["America/New_York"].at(ts.to_i).to_date
+      rescue JSON::ParserError => e
+        Rails.logger.error "[ListingDate-US] #{stock.symbol} 响应解析失败：#{e.message}"
+        nil
+      end
+
+      # Yahoo 请求（带重试），404 视为标的无数据返回 nil
+      def yahoo_request(url)
+        retries = YAHOO_RETRY_TIMES
+        begin
+          response = Faraday.get(url) do |req|
+            req.headers["User-Agent"] = YAHOO_USER_AGENT
+            req.options.timeout = YAHOO_TIMEOUT
+            req.options.open_timeout = YAHOO_TIMEOUT
+          end
+
+          return nil if response.status == 404
+          raise RequestError, "HTTP #{response.status}" unless response.success?
+
+          body = response.body
+          # HTTP 200 但 body 携带 chart.error（Yahoo 的 Not Found 也可能走这里）
+          error = JSON.parse(body).dig("chart", "error") rescue nil
+          if error.present?
+            Rails.logger.warn "[ListingDate-US] Yahoo 返回业务错误：#{error["code"]} #{error["description"]}"
+            return nil
+          end
+
+          body
+        rescue Faraday::TimeoutError, Faraday::ConnectionFailed, RequestError => e
+          raise if retries.zero?
+
+          retries -= 1
+          Rails.logger.warn "[ListingDate-US] 请求异常，重试中（剩余 #{retries} 次）：#{e.message}"
+          sleep YAHOO_RETRY_INTERVAL
+          retry
+        end
+      end
+
       # 库内 symbol → 东方财富 SECUCODE 格式（如 SH600519 → 600519.SH，00700.HK → 00700.HK）
       def secucode(stock)
         if stock.market == "CN"
@@ -99,8 +164,7 @@ module DataSources
         end
       end
 
-      # 查询成功但接口无上市日期数据时返回 nil（计入 skipped）
-      # 请求失败（超时/断连重试耗尽、非 2xx、解析失败等）抛异常，由 call 层计入 failed，避免统计失真
+      # 东方财富 F10 查询上市日期（CN/HK）
       def fetch_listing_date(report_name, secucode)
         data = EastmoneyDatacenter.fetch_data(
           report_name: report_name,
