@@ -17,34 +17,56 @@
     <nav class="bg-ink text-white" data-controller="mobile-menu">
       <div class="container-hl">
         <div class="flex justify-between items-center h-14">
-          <div class="flex items-center space-x-6">
-            <a href="<%= admin_root_path %>" class="text-hl-16 font-bold">管理后台</a>
-            <div class="hidden md:flex space-x-1">
-              <a href="<%= admin_root_path %>" class="text-muted-4 hover:text-white px-3 py-1.5 text-hl-13 transition-colors rounded">仪表盘</a>
-              <a href="<%= admin_message_boards_path %>" class="text-muted-4 hover:text-white px-3 py-1.5 text-hl-13 transition-colors rounded">留言管理</a>
-              <a href="<%= admin_users_path %>" class="text-muted-4 hover:text-white px-3 py-1.5 text-hl-13 transition-colors rounded">用户管理</a>
-              <a href="<%= admin_orders_path %>" class="text-muted-4 hover:text-white px-3 py-1.5 text-hl-13 transition-colors rounded">订单管理</a>
-              <a href="<%= admin_usage_analytics_path %>" class="text-muted-4 hover:text-white px-3 py-1.5 text-hl-13 transition-colors rounded">AI 提问分析</a>
-              <a href="<%= admin_stocks_path %>" class="text-muted-4 hover:text-white px-3 py-1.5 text-hl-13 transition-colors rounded">股票管理</a>
-              <a href="<%= admin_courses_path %>" class="text-muted-4 hover:text-white px-3 py-1.5 text-hl-13 transition-colors rounded">课程管理</a>
-              <a href="<%= admin_articles_path %>" class="text-muted-4 hover:text-white px-3 py-1.5 text-hl-13 transition-colors rounded">文章管理</a>
-              <a href="<%= admin_videos_path %>" class="text-muted-4 hover:text-white px-3 py-1.5 text-hl-13 transition-colors rounded">视频管理</a>
-              <a href="<%= admin_stock_crawlers_path %>" class="text-muted-4 hover:text-white px-3 py-1.5 text-hl-13 transition-colors rounded">爬虫管理</a>
-              <a href="<%= admin_stock_data_path %>" class="text-muted-4 hover:text-white px-3 py-1.5 text-hl-13 transition-colors rounded">数据看板</a>
-              <a href="<%= admin_data_quality_path %>" class="text-muted-4 hover:text-white px-3 py-1.5 text-hl-13 transition-colors rounded">数据质量</a>
+          <div class="flex items-center space-x-4 min-w-0">
+            <a href="<%= admin_root_path %>" class="text-hl-15 font-bold whitespace-nowrap shrink-0">管理后台</a>
+            <%# 桌面端：按业务域分组的下拉导航（数据源与移动端菜单共用 admin_nav_groups） %>
+            <div class="hidden md:flex items-center space-x-1" data-controller="admin-nav">
+              <a href="<%= admin_root_path %>" class="<%= admin_nav_link_class(request.path == admin_root_path) %>">仪表盘</a>
+              <% admin_nav_groups.each do |group| %>
+                <% if group[:items].size == 1 %>
+                  <%# 仅含一个页面的分组（如 AI）直接渲染为顶级链接，减少一次点击 %>
+                  <% item = group[:items].first %>
+                  <a href="<%= item[:url] %>" class="<%= admin_nav_link_class(admin_nav_active?(item[:url])) %>"><%= item[:label] %></a>
+                <% else %>
+                  <% group_active = group[:items].any? { |item| admin_nav_active?(item[:url]) } %>
+                  <div class="relative">
+                    <button type="button"
+                            data-action="click->admin-nav#toggle"
+                            aria-haspopup="true" aria-expanded="false"
+                            class="<%= admin_nav_link_class(group_active) %> flex items-center gap-1 cursor-pointer select-none">
+                      <%= group[:label] %>
+                      <svg data-role="arrow" class="w-3 h-3 transition-transform duration-150" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                      </svg>
+                    </button>
+                    <div data-role="menu"
+                         class="hidden absolute left-0 top-full mt-2 min-w-40 py-1 bg-white border border-line rounded z-50
+                                opacity-0 -translate-y-1 transition-all duration-150 ease-out
+                                hl-dropdown-open:opacity-100 hl-dropdown-open:translate-y-0
+                                hl-dropdown-closing:opacity-0 hl-dropdown-closing:-translate-y-1">
+                      <% group[:items].each do |item| %>
+                        <a href="<%= item[:url] %>"
+                           class="block px-4 py-2 text-hl-13 <%= admin_nav_active?(item[:url]) ? 'text-ink bg-bg-mute font-medium' : 'text-muted hover:bg-bg-mute hover:text-ink' %>">
+                          <%= item[:label] %>
+                        </a>
+                      <% end %>
+                    </div>
+                  </div>
+                <% end %>
+              <% end %>
             </div>
           </div>
-          
-          <div class="flex items-center space-x-4">
+
+          <div class="flex items-center space-x-4 shrink-0">
             <div class="flex items-center space-x-3">
               <%= user_avatar_tag(current_user, size: "w-8 h-8") %>
               <div class="text-right hidden sm:block">
-                <p class="text-hl-13 font-medium"><%= current_user.nickname %></p>
-                <p class="text-hl-12 text-muted-5"><%= human_role(current_user.role) %></p>
+                <p class="text-hl-13 font-medium whitespace-nowrap"><%= current_user.nickname %></p>
+                <p class="text-hl-12 text-muted-5 whitespace-nowrap"><%= human_role(current_user.role) %></p>
               </div>
             </div>
             <div class="hidden md:block">
-              <%= link_to "退出", destroy_user_session_path, method: :delete, class: "text-muted-4 hover:text-white px-3 py-1.5 text-hl-13 transition-colors rounded" %>
+              <%= link_to "退出", destroy_user_session_path, method: :delete, class: "text-muted-4 hover:text-white px-3 py-1.5 text-hl-13 transition-colors rounded whitespace-nowrap" %>
             </div>
             <button data-action="click->mobile-menu#toggle"
                     class="md:hidden p-2 hover:bg-white/10 rounded" aria-label="切换菜单">
@@ -61,17 +83,15 @@
            class="hidden md:hidden bg-ink border-t border-white/10 overflow-hidden transition-[max-height] duration-200 ease-out">
         <div class="px-4 py-4 space-y-2">
           <a href="<%= admin_root_path %>" class="block px-3 py-2 text-hl-13 text-muted-4 hover:text-white hover:bg-white/10 rounded transition-colors">仪表盘</a>
-          <a href="<%= admin_message_boards_path %>" class="block px-3 py-2 text-hl-13 text-muted-4 hover:text-white hover:bg-white/10 rounded transition-colors">留言管理</a>
-          <a href="<%= admin_users_path %>" class="block px-3 py-2 text-hl-13 text-muted-4 hover:text-white hover:bg-white/10 rounded transition-colors">用户管理</a>
-          <a href="<%= admin_orders_path %>" class="block px-3 py-2 text-hl-13 text-muted-4 hover:text-white hover:bg-white/10 rounded transition-colors">订单管理</a>
-          <a href="<%= admin_usage_analytics_path %>" class="block px-3 py-2 text-hl-13 text-muted-4 hover:text-white hover:bg-white/10 rounded transition-colors">AI 提问分析</a>
-          <a href="<%= admin_stocks_path %>" class="block px-3 py-2 text-hl-13 text-muted-4 hover:text-white hover:bg-white/10 rounded transition-colors">股票管理</a>
-          <a href="<%= admin_courses_path %>" class="block px-3 py-2 text-hl-13 text-muted-4 hover:text-white hover:bg-white/10 rounded transition-colors">课程管理</a>
-          <a href="<%= admin_articles_path %>" class="block px-3 py-2 text-hl-13 text-muted-4 hover:text-white hover:bg-white/10 rounded transition-colors">文章管理</a>
-          <a href="<%= admin_videos_path %>" class="block px-3 py-2 text-hl-13 text-muted-4 hover:text-white hover:bg-white/10 rounded transition-colors">视频管理</a>
-          <a href="<%= admin_stock_crawlers_path %>" class="block px-3 py-2 text-hl-13 text-muted-4 hover:text-white hover:bg-white/10 rounded transition-colors">爬虫管理</a>
-          <a href="<%= admin_stock_data_path %>" class="block px-3 py-2 text-hl-13 text-muted-4 hover:text-white hover:bg-white/10 rounded transition-colors">数据看板</a>
-          <a href="<%= admin_data_quality_path %>" class="block px-3 py-2 text-hl-13 text-muted-4 hover:text-white hover:bg-white/10 rounded transition-colors">数据质量</a>
+          <% admin_nav_groups.each do |group| %>
+            <%# 单元素分组（如 AI）不渲染标题，避免与子项重复 %>
+            <% if group[:items].size > 1 %>
+              <p class="px-3 pt-2 pb-1 text-hl-11 text-muted-5 tracking-wide-2"><%= group[:label] %></p>
+            <% end %>
+            <% group[:items].each do |item| %>
+              <a href="<%= item[:url] %>" class="block px-3 py-2 text-hl-13 text-muted-4 hover:text-white hover:bg-white/10 rounded transition-colors"><%= item[:label] %></a>
+            <% end %>
+          <% end %>
           <div class="pt-3 mt-3 border-t border-white/10">
             <div class="flex items-center gap-3 px-3 py-2">
               <%= user_avatar_tag(current_user, size: "w-9 h-9") %>

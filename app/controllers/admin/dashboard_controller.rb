@@ -22,6 +22,9 @@ module Admin
       
       # 最近股票
       @recent_stocks = Stock.order(created_at: :desc).limit(5)
+
+      # 最近爬虫执行
+      @recent_executions = CrawlerExecution.order(executed_at: :desc).limit(5)
     end
   end
 end

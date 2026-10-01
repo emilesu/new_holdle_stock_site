@@ -51,3 +51,6 @@ application.register("monthly-trend", MonthlyTrendController)
 
 import CrawlerProgressController from "./crawler_progress_controller"
 application.register("crawler-progress", CrawlerProgressController)
+
+import AdminNavController from "./admin_nav_controller"
+application.register("admin-nav", AdminNavController)
