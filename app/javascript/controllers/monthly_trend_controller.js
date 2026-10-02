@@ -1,6 +1,6 @@
 import { Controller } from "@hotwired/stimulus"
 
-// 月K · MACD · 月ROE 三联图
+// 月K · MACD · 年ROE 三联图
 // 三图共用一个 ECharts 实例、三个 grid，共用同一份月份数组（category 轴）；
 // 上两图隐藏 x 轴刻度，由最下方 ROE 图给出月份标签。grid 几何由 ERB 占位元素实测得出（见 gridsFromLayout），
 // 避免 JS 常量与模板高度漂移 —— 这是从「Chart.js + ECharts 混合渲染 + 人工约定轴宽」迁移过来的核心目的。
@@ -36,7 +36,7 @@ const HIST_DOWN_COLOR = "rgba(16, 185, 129, 0.55)"
 const DIF_COLOR = "#ef4444"
 const DEA_COLOR = "#3b82f6"
 const ROE_COLOR = "#f59e0b"
-// ROE 亏损月柱：灰色向下延伸。不用站内红绿，避免与价格「红涨绿跌」语义混淆
+// ROE 亏损年柱：灰色向下延伸。不用站内红绿，避免与价格「红涨绿跌」语义混淆
 const ROE_NEGATIVE_COLOR = "#9ca3af"
 const TICK_COLOR = "#9ca3af"
 const SPLIT_LINE_COLOR = "rgba(0, 0, 0, 0.06)"
@@ -407,7 +407,6 @@ export default class extends Controller {
   buildOption(labels, grids) {
     const bars = this.barData
     const macd = this.macdData
-    const roe = this.roeData
 
     return {
       animation: false,
@@ -424,11 +423,18 @@ export default class extends Controller {
       ],
 
       // scale 口径对齐原 Chart.js：K/MACD 贴合数据区间（MACD 由 scale:false 强制含 0，柱状图基线）；
-      // ROE 显式指定轴底（见 roeFloor）：正常以 0% 为底，收益率高度才能跨区间横向比较，不受当期最低点抬升
+      // ROE 轴默认 0–100%，仅当可见窗口内出现 >100 或 <0 的值时按窗口动态外扩（回调收到的是过滤后的可见区间）；
+      // 外扩值取整到 10 的倍数，避免轴顶出现「175.46%」这类非整数边界标签（代码审查 v1.61 工作区发现）
       yAxis: [
         this.buildYAxis(0, true),
         this.buildYAxis(1, false),
-        this.buildYAxis(2, false, "%", this.roeFloor())
+        this.buildYAxis(
+          2,
+          false,
+          "%",
+          (value) => (value.min >= 0 ? 0 : Math.floor(value.min / 10) * 10),
+          (value) => (value.max <= 100 ? 100 : Math.ceil(value.max / 10) * 10)
+        )
       ],
 
       // 跨三图联动十字准星（官方只承诺指示线同步；tooltip 内容由 buildTooltip 自拼）。
@@ -445,6 +451,9 @@ export default class extends Controller {
         {
           type: "inside",
           xAxisIndex: [0, 1, 2],
+          // weakFilter：跨出窗口边界的年报周期柱（任一端在窗口内）保留、由 series.clip 在格边裁切，
+          // 修复「左缘不满整期缺柱」；K线/MACD 每条目只有一个 x 值，weakFilter 与默认 filter 等价，无副作用
+          filterMode: "weakFilter",
           zoomOnMouseWheel: false,
           moveOnMouseMove: true,
           moveOnMouseWheel: false,
@@ -454,6 +463,7 @@ export default class extends Controller {
         {
           type: "slider",
           xAxisIndex: [0, 1, 2],
+          filterMode: "weakFilter",
           bottom: 6,
           height: 20,
           brushSelect: false,
@@ -533,15 +543,38 @@ export default class extends Controller {
         },
         {
           name: "ROE",
-          type: "bar",
+          type: "custom",
           xAxisIndex: 2,
           yAxisIndex: 2,
-          data: roe.map((item) => item.value),
-          barMaxWidth: 10,
-          // 正值琥珀、负值灰色（亏损月自 0 基线向下延伸）；
-          // 无年报覆盖的月份是 null → 不画柱（不画 0），与「年报按报告期 +4 个月生效」语义一致
-          itemStyle: {
-            color: (params) => (params.value >= 0 ? ROE_COLOR : ROE_NEGATIVE_COLOR)
+          // 每年一根大柱：同一份年报的整个「生效期」（生效月起、下一份年报生效月前，通常 12 个月）
+          // 合并为一个矩形，相邻年报之间留 1px 白色缝隙以示贴合区分；悬停信息框仍按月显示当月生效的年 ROE
+          data: this.roePeriods(),
+          // 维度映射：dim0/dim1（起止月下标）→ x，dim2（ROE 值）→ y。
+          // 缺省 encode 时 ECharts 把 dim1 当 y 维度，「结束月下标」会污染 y 轴量程（刻度虚高到几百 %）
+          encode: { x: [0, 1], y: 2 },
+          // 跨窗口的周期柱由 dataZoom 的 filterMode:"weakFilter" 保留，这里负责在网格边界裁切
+          clip: true,
+          renderItem: (_params, api) => {
+            const start = api.value(0)
+            const end = api.value(1)
+            const value = api.value(2)
+            const zeroY = api.coord([start, 0])[1]
+            const valY = api.coord([start, value])[1]
+            const cell = api.size([1, 0])[0]
+            // 矩形左右边界取起止月的整格（category 中心 ± 半格宽），周期内月份完全覆盖
+            const left = api.coord([start, 0])[0] - cell / 2
+            const right = api.coord([end, 0])[0] + cell / 2
+            return {
+              type: "rect",
+              shape: {
+                x: left,
+                y: Math.min(zeroY, valY),
+                width: right - left,
+                height: Math.abs(zeroY - valY)
+              },
+              // 正值琥珀、负值灰色（亏损年自 0 基线向下延伸）；白色描边形成年报间缝隙
+              style: { fill: value >= 0 ? ROE_COLOR : ROE_NEGATIVE_COLOR, stroke: "#ffffff", lineWidth: 1 }
+            }
           }
         }
       ]
@@ -581,7 +614,7 @@ export default class extends Controller {
     }
   }
 
-  buildYAxis(gridIndex, scale, unit = "", min = null) {
+  buildYAxis(gridIndex, scale, unit = "", min = null, max = null) {
     const axis = {
       gridIndex,
       scale,
@@ -605,19 +638,29 @@ export default class extends Controller {
       }
     }
 
-    // 显式给定轴底就用它（ROE 的 0% 基准）；否则交由 ECharts 自动取整
+    // 显式给定轴底/轴顶就用它（ROE 的 0% 基准与 100% 默认顶，回调形式随可见窗口动态外扩）；
+    // 否则交由 ECharts 自动取整
     if (min !== null) axis.min = min
+    if (max !== null) axis.max = max
 
     return axis
   }
 
-  // ROE 轴底：正常为 0%；历史出现过亏损（ROE < 0）时下探到最低值，避免负柱被轴底截断；无数据则退化为 0
-  roeFloor() {
-    const values = this.roeData
-      .map((item) => (item && item.value !== null && item.value !== undefined ? Number(item.value) : NaN))
-      .filter((value) => Number.isFinite(value))
-
-    return values.length ? Math.min(0, ...values) : 0
+  // 把按月 roeData 归并成「年报周期」：[[起始月下标, 结束月下标, ROE值], ...]
+  // 同一 report_date 连续出现 = 同一份年报持续生效，结束月下标顺延到该段最后一月；
+  // report_date 一变（或从无数据首次出现）即开启新周期。周期天然约 12 个月，缺年报时会拉长为覆盖多年
+  roePeriods() {
+    const periods = []
+    this.roeData.forEach((item, i) => {
+      if (!item || item.value === null || item.value === undefined) return
+      const last = periods[periods.length - 1]
+      if (last && last.report_date === item.report_date) {
+        last.end = i
+      } else {
+        periods.push({ start: i, end: i, value: item.value, report_date: item.report_date })
+      }
+    })
+    return periods.map((p) => [p.start, p.end, p.value])
   }
 
   // 三段自拼（价 / 量指标 / 基本面）：ECharts 只保证指示线跨 grid 联动，不合并 tooltip 内容，

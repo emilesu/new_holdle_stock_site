@@ -152,7 +152,7 @@
              data-monthly-trend-url-value="<%= monthly_trend_stock_path(@stock, format: :json) %>"
              data-monthly-trend-currency-value="<%= @stock.market == 'CN' ? nil : financial_unit %>">
           <div class="px-6 py-4 border-b border-line flex items-center justify-between flex-wrap gap-2">
-            <h2 class="text-hl-16 font-semibold text-ink">月K · MACD · 月ROE <span class="text-hl-12 text-muted-4 ml-2">Monthly Trend<%= " · #{financial_unit}" unless @stock.market == 'CN' %></span></h2>
+            <h2 class="text-hl-16 font-semibold text-ink">月K · MACD · 年ROE <span class="text-hl-12 text-muted-4 ml-2">Monthly Trend<%= " · #{financial_unit}" unless @stock.market == 'CN' %></span></h2>
             <div class="flex items-center gap-2">
               <%# 区间：近 8 年（默认）/ 全部历史 %>
               <div class="flex rounded border border-line overflow-hidden">
@@ -190,7 +190,7 @@
                     <span data-monthly-trend-target="macdNote">MACD · 前复权口径</span>
                   </div>
                   <div class="h-40" data-band="macd"></div>
-                  <div class="flex h-5 items-center text-hl-11 text-muted-4">月ROE（年报按报告期 +4 个月生效）</div>
+                  <div class="flex h-5 items-center text-hl-11 text-muted-4">年ROE（每份年报一根整柱，柱宽 = 生效期：报告期 + 4 个月起）</div>
                   <div class="h-40" data-band="roe"></div>
                   <%# 底部 49px（h-14 = 3.5rem，站点根字号 14px）：最下一格的月份标签 + dataZoom slider %>
                   <div class="h-14"></div>
