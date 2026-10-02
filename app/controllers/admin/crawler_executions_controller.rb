@@ -37,8 +37,10 @@ module Admin
                         execution.resumable? &&
                         task.accepts_stock_scope?
       if from_checkpoint
+        # 支持子集的服务均按 stock_ids ∩ after_stock_id 交集过滤，
+        # 保留 stock_ids 让续跑仍限定在原股票子集内；
+        # 删除它会把子集执行的续跑扩大为全市场重算
         retry_params[:after_stock_id] = execution.checkpoint["last_unit_id"]
-        retry_params.delete(:stock_ids)
       end
 
       new_execution = DataSources::CrawlerExecutionStarter.call(
