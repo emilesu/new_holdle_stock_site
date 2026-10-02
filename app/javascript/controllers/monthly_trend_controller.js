@@ -9,19 +9,21 @@ import { Controller } from "@hotwired/stimulus"
 const ECHARTS_VERSION = "6.1.0"
 const ECHARTS_URL = `https://registry.npmmirror.com/echarts/${ECHARTS_VERSION}/files/dist/echarts.min.js`
 
-// 右侧留白：仅需容纳 y 轴刻度标签（如 "2,000"、"39%"）。刻度文字实测约 30px，加 ECharts 默认 8px 轴间距
-// 共约 38px，取 44px 已无多余空白。ECharts 的轴标签防溢出钳制已在 gridsFromLayout
-// 显式关闭（outerBoundsMode: 'none'），故此值必须自己够宽，不能再指望框架帮忙兜底
-const RIGHT_GUTTER = 44
+// 右侧留白：需同时容纳 y 轴刻度标签（如 "2,000"、"39%"）与十字星横线在轴上的数值标签框
+// （如 "1738.56" 约 38px 文字 + 8px 内边距 ≈ 46px），取 52px。
+// 刻度标签必须完全落进这段留白——轴标签防溢出钳制已在 gridsFromLayout 显式关闭
+//（outerBoundsMode: 'none'），不能再指望框架收缩 grid 兜底；十字星标签框另有 confineInContainer
+// 兜底（超宽时整体左移压到绘图区边缘、不会被画布裁切），不受上述关闭影响
+const RIGHT_GUTTER = 52
 
 // 左侧留白：0 —— 首月标签改用 axisLabel.alignMinLabel: 'left'（见 buildXAxis）贴住轴起点左对齐，
 // 不再需要为「居中标签向左溢出半字宽」预留空间。绘图区左边界因此与卡片内容区左边界重合，
 // 与卡片标题、caption 行落在同一条竖线上，消除「卡片内边距 + 轴留白」的双层内缩
 const LEFT_GUTTER = 0
 
-// 默认可视窗口：近 10 年（120 个月）。数据一次性取「全部历史」，本常量只决定初次渲染的窗口宽度
-// 与「近10年」按钮的定位目标 —— 之后左右拖动都只是在本窗口里滑动回看，不再重复请求接口
-const DEFAULT_WINDOW_MONTHS = 120
+// 默认可视窗口：近 8 年（96 个月）。数据一次性取「全部历史」，本常量只决定初次渲染的窗口宽度
+// 与「近8年」按钮的定位目标 —— 之后左右拖动都只是在本窗口里滑动回看，不再重复请求接口
+const DEFAULT_WINDOW_MONTHS = 96
 
 // 最小可视窗口（月）：与 dataZoom 的 minValueSpan 同一口径，避免自定义滚轮缩放越过内置下限后打架
 const MIN_WINDOW_MONTHS = 6
@@ -34,6 +36,8 @@ const HIST_DOWN_COLOR = "rgba(16, 185, 129, 0.55)"
 const DIF_COLOR = "#ef4444"
 const DEA_COLOR = "#3b82f6"
 const ROE_COLOR = "#f59e0b"
+// ROE 亏损月柱：灰色向下延伸。不用站内红绿，避免与价格「红涨绿跌」语义混淆
+const ROE_NEGATIVE_COLOR = "#9ca3af"
 const TICK_COLOR = "#9ca3af"
 const SPLIT_LINE_COLOR = "rgba(0, 0, 0, 0.06)"
 const AXIS_LINE_COLOR = "rgba(0, 0, 0, 0.1)"
@@ -50,18 +54,20 @@ export default class extends Controller {
   connect() {
     // 交互模型：一次性取「全部历史」（buildUrl 里 range 恒为 all），之后在本地窗口里左右滑动回看。
     // activeRange 只表示「当前窗口落在哪个预设档位」，用于按钮高亮，不再参与请求参数
-    this.activeRange = "10y"
+    this.activeRange = "8y"
     this.adj = "qfq"
     this.requestId = 0
     this.disposed = false
     this.chart = null
+    // 信息框固定锚点：月K格顶边（画布坐标系），renderChart 测量后回写，供 tooltip.position 读取
+    this.klineGridTop = 0
     this.echartsPromise = null
     this.resizeHandler = null
     this.zoomHandler = null
     // 滚轮/触控板手势监听（捕获阶段挂在画布容器上）与横向平移的亚像素余量
     this.wheelHandler = null
     this.panRemainder = 0
-    // 重渲染（切换复权）后要恢复的窗口；null 表示回到默认「近10年」
+    // 重渲染（切换复权）后要恢复的窗口；null 表示回到默认「近8年」
     this.pendingWindow = null
     this.barData = []
     this.macdData = []
@@ -95,7 +101,7 @@ export default class extends Controller {
     this.disposeChart()
   }
 
-  // 「近10年 / 全部」= 瞬时定位：数据早已全量在手，只把 dataZoom 窗口挪到位，不再发请求
+  // 「近8年 / 全部」= 瞬时定位：数据早已全量在手，只把 dataZoom 窗口挪到位，不再发请求
   switchRange(event) {
     const value = event.currentTarget.dataset.range
 
@@ -185,10 +191,13 @@ export default class extends Controller {
     }
 
     // caption 行（MACD 标题行等）随 overlay 左右内边距一起内缩，使其左右端点正好落在绘图区左右边界上，
-    // 而不是顶到卡片边缘（右侧 72px 是 y 轴标签的位置，caption 顶到那里会横跨整张卡片）；
+    // 而不是顶到卡片边缘（右侧 RIGHT_GUTTER 留白是 y 轴标签的位置，caption 顶到那里会横跨整张卡片）；
     // 内缩值直接取自上面算出的 grid 边界，常量只在 JS 侧维护一份，避免 ERB 再写一套导致漂移
     this.overlayTarget.style.paddingLeft = `${grids[0].left}px`
     this.overlayTarget.style.paddingRight = `${grids[0].right}px`
+
+    // 信息框固定左上角的锚点：月K格顶边即画布坐标系里的 grids[0].top（含 topInset 补偿）
+    this.klineGridTop = grids[0].top
 
     let echarts
     try {
@@ -218,12 +227,12 @@ export default class extends Controller {
     this.chart.setOption(this.buildOption(labels, grids), { notMerge: true })
 
     // 整体替换会把 dataZoom 窗口重置为「全部」，故此处必须重新定位：
-    // 切换复权时回到用户原位置，其余情况回到默认「近10年」
-    this.applyWindow(this.pendingWindow || "10y")
+    // 切换复权时回到用户原位置，其余情况回到默认「近8年」
+    this.applyWindow(this.pendingWindow || "8y")
     this.pendingWindow = null
   }
 
-  // 窗口定位：target 为预设档位名（"10y" / "all"），或 { startValue, endValue }（复权重画后原地恢复）
+  // 窗口定位：target 为预设档位名（"8y" / "all"），或 { startValue, endValue }（复权重画后原地恢复）
   applyWindow(target) {
     const last = this.barData.length - 1
     if (!this.chart || last < 0) return
@@ -242,11 +251,11 @@ export default class extends Controller {
     this.setActiveRange(this.windowRange(zoomWindow))
   }
 
-  // 窗口落在哪个预设档位：**盖住全部历史**才算「全部」，否则一律归「近10年」。
-  // 不能只看 startValue —— 上市不足 120 个月的新股点「近10年」时 startValue 本来就是 0，
+  // 窗口落在哪个预设档位：**盖住全部历史**才算「全部」，否则一律归「近8年」。
+  // 不能只看 startValue —— 上市不足 96 个月的新股点「近8年」时 startValue 本来就是 0，
   // 在最左端放大到只看早期若干年时 startValue 也是 0，两种都会误亮「全部」
   windowRange(zoomWindow) {
-    return zoomWindow.startValue <= 0 && zoomWindow.endValue >= this.barData.length - 1 ? "all" : "10y"
+    return zoomWindow.startValue <= 0 && zoomWindow.endValue >= this.barData.length - 1 ? "all" : "8y"
   }
 
   // 读回当前窗口（复权切换前先存下来）。ECharts 会把 start/end（百分比）与 startValue/endValue（下标）
@@ -268,8 +277,8 @@ export default class extends Controller {
     }
   }
 
-  // 用户拖动/滚轮缩放后，让「近10年 / 全部」高亮跟随窗口实际范围：
-  // 窗口盖住全部历史才算「全部」，其余（含滚轮缩放出的任意区间）都归到「近10年」
+  // 用户拖动/滚轮缩放后，让「近8年 / 全部」高亮跟随窗口实际范围：
+  // 窗口盖住全部历史才算「全部」，其余（含滚轮缩放出的任意区间）都归到「近8年」
   bindZoom() {
     if (!this.chart || this.zoomHandler) return
 
@@ -422,10 +431,11 @@ export default class extends Controller {
         this.buildYAxis(2, false, "%", this.roeFloor())
       ],
 
-      // 跨三图联动十字准星（官方只承诺指示线同步；tooltip 内容由 buildTooltip 自拼）
+      // 跨三图联动十字准星（官方只承诺指示线同步；tooltip 内容由 buildTooltip 自拼）。
+      // 轴上标签不再一刀切隐藏：底部月份标签只在最下格给出、三格右侧 y 轴显示十字星高度对应值，
+      // 具体开关与格式化见 buildXAxis / buildYAxis（轴级配置优先级高于 tooltip.axisPointer）
       axisPointer: {
-        link: [{ xAxisIndex: "all" }],
-        label: { show: false }
+        link: [{ xAxisIndex: "all" }]
       },
 
       dataZoom: [
@@ -459,9 +469,12 @@ export default class extends Controller {
 
       tooltip: {
         trigger: "axis",
-        axisPointer: { type: "cross", snap: true, label: { show: false } },
-        // 卡片是 overflow-hidden，不挂 body 会被裁切
-        appendToBody: true,
+        axisPointer: { type: "cross", snap: true },
+        // 信息框不再跟随鼠标：固定钉在月K格左上角（画布坐标系），内容仍随十字星更新。
+        // appendToBody 随之改回 false —— 坐标按画布相对定位，框体恒在 K 线格内部，
+        // 不会被卡片 overflow-hidden 裁切；鼠标移出图表时信息框随十字星一并隐藏
+        appendToBody: false,
+        position: () => [LEFT_GUTTER + 8, this.klineGridTop + 8],
         backgroundColor: "rgba(17, 24, 39, 0.92)",
         borderWidth: 0,
         padding: [6, 8],
@@ -520,17 +533,16 @@ export default class extends Controller {
         },
         {
           name: "ROE",
-          type: "line",
+          type: "bar",
           xAxisIndex: 2,
           yAxisIndex: 2,
           data: roe.map((item) => item.value),
-          showSymbol: false,
-          // 阶梯方向与后端「生效月」语义一致：当月起向后延伸
-          step: "end",
-          // 无年报覆盖的月份是 null，默认不连接 → 自动断线，不画 0
-          connectNulls: false,
-          lineStyle: { width: 1.5, color: ROE_COLOR },
-          itemStyle: { color: ROE_COLOR }
+          barMaxWidth: 10,
+          // 正值琥珀、负值灰色（亏损月自 0 基线向下延伸）；
+          // 无年报覆盖的月份是 null → 不画柱（不画 0），与「年报按报告期 +4 个月生效」语义一致
+          itemStyle: {
+            color: (params) => (params.value >= 0 ? ROE_COLOR : ROE_NEGATIVE_COLOR)
+          }
         }
       ]
     }
@@ -545,6 +557,16 @@ export default class extends Controller {
       axisTick: { show: false },
       axisLine: { lineStyle: { color: AXIS_LINE_COLOR } },
       splitLine: { show: false },
+      // 十字星竖线的月份标签只在最下格（ROE）底部出现一次，上两格隐藏避免三条重复
+      axisPointer: {
+        label: {
+          show: showLabel,
+          backgroundColor: "rgba(17, 24, 39, 0.92)",
+          color: "#f9fafb",
+          fontSize: 10,
+          padding: [2, 4]
+        }
+      },
       axisLabel: showLabel
         ? {
             fontSize: 10,
@@ -568,7 +590,19 @@ export default class extends Controller {
       axisLine: { show: false },
       axisTick: { show: false },
       axisLabel: { fontSize: 10, color: TICK_COLOR, formatter: `{value}${unit}` },
-      splitLine: { lineStyle: { color: SPLIT_LINE_COLOR } }
+      splitLine: { lineStyle: { color: SPLIT_LINE_COLOR } },
+      // 十字星横线的数值标签：贴在三格右侧 y 轴上，随横线高度实时显示对应刻度值
+      // （K线格=价格、MACD格=指标值、ROE格=百分比，统一两位小数）
+      axisPointer: {
+        label: {
+          show: true,
+          formatter: (params) => `${this.fmt(params.value)}${unit}`,
+          backgroundColor: "rgba(17, 24, 39, 0.92)",
+          color: "#f9fafb",
+          fontSize: 10,
+          padding: [2, 4]
+        }
+      }
     }
 
     // 显式给定轴底就用它（ROE 的 0% 基准）；否则交由 ECharts 自动取整
@@ -577,7 +611,7 @@ export default class extends Controller {
     return axis
   }
 
-  // ROE 轴底：正常为 0%；历史出现过亏损（ROE < 0）时下探到最低值，避免曲线被轴底截断；无数据则退化为 0
+  // ROE 轴底：正常为 0%；历史出现过亏损（ROE < 0）时下探到最低值，避免负柱被轴底截断；无数据则退化为 0
   roeFloor() {
     const values = this.roeData
       .map((item) => (item && item.value !== null && item.value !== undefined ? Number(item.value) : NaN))
