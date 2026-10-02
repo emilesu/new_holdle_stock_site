@@ -134,8 +134,8 @@ module DataSources
       Task.new(
         key: "update_all_pyramid", name: "全局更新金字塔分数", group: "CALC", market: nil,
         service: "DataSources::StockPyramidBatchService", method_name: "call",
-        kwargs: { full_recalc: true }, accepts_stock_scope: false, heavy: true,
-        description: "重算全站金字塔分数，耗时较长，建议低峰执行"
+        kwargs: { full_recalc: true }, accepts_stock_scope: true, heavy: true,
+        description: "重算金字塔分数：默认全站（耗时较长，建议低峰执行），支持指定股票按需补算"
       ),
       Task.new(
         key: "refresh_all_radar", name: "雷达缓存(增量)", group: "CALC", market: nil,

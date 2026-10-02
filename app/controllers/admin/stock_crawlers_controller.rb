@@ -20,16 +20,45 @@ module Admin
         return
       end
 
+      symbols = parse_symbols(params[:symbols])
+      scope_params = crawl_params
+      unmatched_count = 0
+
+      if symbols.any?
+        unless task.accepts_stock_scope?
+          redirect_to admin_stock_crawlers_path, alert: "「#{task.name}」不支持按指定股票执行"
+          return
+        end
+
+        # 代码 → stock_ids：解析结果即执行范围，避免 symbols 与 stock_ids 双口径
+        matched_ids = Stock.where(symbol: symbols).pluck(:id)
+        # 与看板批量补抓同款防护：指定了代码但一只都没匹配时绝不退化为全量执行
+        if matched_ids.empty?
+          redirect_to admin_stock_crawlers_path,
+                      alert: "未匹配到任何股票：#{symbols.first(5).join(', ')}#{'…' if symbols.size > 5}"
+          return
+        end
+
+        unmatched_count = symbols.size - matched_ids.size
+        scope_params = scope_params.merge(stock_ids: matched_ids)
+      end
+
       execution = DataSources::CrawlerExecutionStarter.call(
         task: task,
         trigger_source: "manual",
-        params: crawl_params
+        params: scope_params
       )
-      redirect_to admin_stock_crawlers_path,
-                  notice: "「#{task.name}」已提交后台执行（记录 ##{execution.id}），可在下方查看进度"
+      notice = "「#{task.name}」已提交后台执行（记录 ##{execution.id}），可在下方查看进度"
+      notice += "（#{unmatched_count} 个代码未匹配，已忽略）" if unmatched_count > 0
+      redirect_to admin_stock_crawlers_path, notice: notice
     end
 
     private
+
+    # 「指定股票」输入框：逗号/分号/空白分隔的代码列表
+    def parse_symbols(raw)
+      raw.to_s.split(/[,，;；\s]+/).map(&:strip).reject(&:blank?).uniq
+    end
 
     # 手动触发时可携带的范围参数（测试用 limit、指定股票 stock_ids 等）
     def crawl_params

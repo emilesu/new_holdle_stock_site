@@ -40,7 +40,7 @@
                 <% end %>
               </p>
             </div>
-            <div class="flex items-center gap-2 flex-shrink-0">
+            <div class="flex items-center gap-2 flex-wrap flex-shrink-0">
               <%= link_to "执行",
                     admin_run_stock_crawler_path(task.key),
                     data: { turbo_method: :post, turbo_confirm: "确认执行「#{task.name}」？" },
@@ -50,6 +50,14 @@
                       admin_run_stock_crawler_path(task.key, limit: 5),
                       data: { turbo_method: :post, turbo_confirm: "确认执行「#{task.name}」测试 5 只？" },
                       rel: "nofollow", class: "hl-btn hl-btn-line" %>
+                <%# 指定股票按需执行：代码解析为 stock_ids 入队，空输入被 required 拦截，不会误触发全量 %>
+                <%= form_with url: admin_run_stock_crawler_path(task.key), method: :post,
+                      class: "flex items-center gap-1.5 min-w-0" do %>
+                  <input type="text" name="symbols" required
+                         placeholder="代码逗号分隔，按需执行"
+                         class="w-40 px-2 py-1.5 text-hl-12 border border-line rounded min-w-0">
+                  <button type="submit" class="hl-btn hl-btn-line whitespace-nowrap">指定股票</button>
+                <% end %>
               <% end %>
             </div>
           </div>
