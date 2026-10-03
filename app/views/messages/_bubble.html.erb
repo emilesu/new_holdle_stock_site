@@ -5,7 +5,7 @@
   </div>
 <% elsif msg.sender == "admin" %>
   <div class="flex items-end gap-2 mb-3" data-msg-id="<%= msg.id %>">
-    <span class="w-7 h-7 rounded-full bg-link text-white text-hl-11 flex items-center justify-center shrink-0 mb-0.5">苏</span>
+    <%= image_tag "https://video.holdle.com/image/default/DB438C3A8E5A4422A99C71EB48B1F3B9-6-2.jpg", alt: "大苏", class: "w-7 h-7 rounded-full object-cover shrink-0 mb-0.5" %>
     <div class="max-w-[75%] bg-white border border-line rounded-lg rounded-bl-sm px-3.5 py-2.5 text-hl-13 text-ink whitespace-pre-wrap break-words shadow-sm"><%= msg.content %></div>
   </div>
 <% else %>

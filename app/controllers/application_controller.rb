@@ -20,6 +20,15 @@ class ApplicationController < ActionController::Base
         redirect_to request.referer || root_path
     end
 
+    # 当前用户未读的站长回复数（悬浮按钮红点 / 导航栏「我的留言」红圈共用，单请求 memo 避免重复查询）
+    helper_method :unread_messages_count
+
+    def unread_messages_count
+        return 0 unless user_signed_in?
+
+        @unread_messages_count ||= current_user.messages.unread_for_user.count
+    end
+
     private
 
     # 当前用户在本批股票中的已收藏 id 集合（单次查询，供结果列表显示「已收藏」小图标）

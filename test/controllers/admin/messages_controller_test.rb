@@ -11,9 +11,9 @@ class Admin::MessagesControllerTest < ActionDispatch::IntegrationTest
   test "index lists conversations grouped by user with unread badge" do
     get admin_messages_path
     assert_response :success
-    # 用户二有一条未读 user 消息 → 显示 1 未读徽章与预览
+    # 用户二有一条未读 user 消息 → 显示红圈数字徽章「1」与预览（data-unread 钩子与类名解耦）
     assert_includes @response.body, "这是未读留言二"
-    assert_includes @response.body, "1 未读"
+    assert_includes @response.body, "data-unread=\"1\""
   end
 
   test "show renders thread and marks user messages read" do

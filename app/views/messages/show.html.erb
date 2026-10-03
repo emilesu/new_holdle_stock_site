@@ -1,9 +1,9 @@
 <%# 微信式会话页：卡片化聊天容器（头像页头 / 灰底消息画布 / 白色输入栏），手机端 16px 留白、桌面居中 %>
 <div class="max-w-[720px] mx-auto px-4 md:px-6 py-4 md:py-6" data-controller="message">
-  <div class="flex flex-col rounded-lg border border-line bg-white shadow-sm min-h-[65vh]">
+  <div id="message_card" class="flex flex-col rounded-lg border border-line bg-white shadow-sm min-h-[65vh]">
     <%# 会话页头：头像 + 身份说明，建立「与站长对话」的连续会话心智 %>
     <div class="flex items-center gap-3 px-4 md:px-5 py-3.5 border-b border-line">
-      <span class="w-9 h-9 rounded-full bg-link text-white text-hl-13 font-medium flex items-center justify-center shrink-0">苏</span>
+      <%= image_tag "https://video.holdle.com/image/default/DB438C3A8E5A4422A99C71EB48B1F3B9-6-2.jpg", alt: "大苏", class: "w-9 h-9 rounded-full object-cover shrink-0" %>
       <div class="flex-1 min-w-0">
         <p class="text-hl-15 font-semibold text-ink">大苏</p>
         <p class="text-hl-11 text-muted-4">HOLD LE 站长 · 留言与回复都在这条会话里</p>

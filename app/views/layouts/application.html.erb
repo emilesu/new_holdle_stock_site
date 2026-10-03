@@ -233,7 +233,7 @@
 
     <!-- 留言功能：右下角悬浮入口，点击进入微信式会话页；登录态显示未读回复红点；会话页内不重复显示 -->
     <% unless user_signed_in? && current_page?(messages_path) %>
-      <% unread_replies = user_signed_in? ? current_user.messages.unread_for_user.count : 0 %>
+      <% unread_replies = unread_messages_count %>
       <%= link_to messages_path, class: "message-float" do %>留言<% if unread_replies > 0 %><span class="message-badge"><%= unread_replies > 99 ? "99+" : unread_replies %></span><% end %><% end %>
     <% end %>
   </body>

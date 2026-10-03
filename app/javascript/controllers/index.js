@@ -54,3 +54,6 @@ application.register("crawler-progress", CrawlerProgressController)
 
 import AdminNavController from "./admin_nav_controller"
 application.register("admin-nav", AdminNavController)
+
+import AdminChatController from "./admin_chat_controller"
+application.register("admin-chat", AdminChatController)

@@ -1,18 +1,21 @@
 import { Controller } from "@hotwired/stimulus"
 
 // 会话页（/messages）控制器：
-// - 进入页面自动滚到最新消息（窗口级滚动，整页即会话流）
+// - 进入/刷新页面自动定位到最新消息（滚动到聊天卡片底部，输入栏贴视口底、footer 不占屏）
 // - 「加载更早消息」按钮：fetch earlier 游标页 → turbo_stream prepend，并做滚动补偿保持视觉位置
-// - 发送表单：turbo:submit-end 成功后滚回底部（textarea 由服务端 replace 表单重置）
+// - 发送表单：turbo:submit-end 成功后滚回最新消息处（textarea 由服务端 replace 表单重置）
 export default class extends Controller {
   static targets = ["contentInput"]
 
   connect() {
-    this.scrollToBottom()
+    this.scrollToLatest()
   }
 
-  scrollToBottom() {
-    window.scrollTo({ top: document.documentElement.scrollHeight })
+  // 以聊天卡片为锚滚动：卡片底边对齐视口底边；rAF 等待布局完成，避免滚到文档底部或停在顶部
+  scrollToLatest() {
+    const card = document.getElementById("message_card")
+    if (!card) return
+    requestAnimationFrame(() => card.scrollIntoView({ block: "end" }))
   }
 
   loadEarlier(e) {
@@ -40,6 +43,6 @@ export default class extends Controller {
   }
 
   afterSubmit(e) {
-    if (e.detail.success) this.scrollToBottom()
+    if (e.detail.success) this.scrollToLatest()
   }
 }
