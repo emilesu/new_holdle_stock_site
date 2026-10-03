@@ -39,6 +39,7 @@ class PyramidsController < ApplicationController
     end
     Stock.preload_pyramid_financials(@stocks)
     @tags = Stock.pyramid_tags_for(@stocks)
+    @favorite_stock_ids = favorite_stock_ids(@stocks)
     @top_stock = @stocks.first
 
     @sectors = Rails.cache.fetch("pyramid_sectors_#{@market}_#{Date.current}", expires_in: 1.hour) do
@@ -104,6 +105,7 @@ class PyramidsController < ApplicationController
     @stocks = stocks.order(pyramid_total_score: :desc, id: :desc).offset((@page - 1) * PER_PAGE).limit(PER_PAGE)
     Stock.preload_pyramid_financials(@stocks)
     @tags = Stock.pyramid_tags_for(@stocks)
+    @favorite_stock_ids = favorite_stock_ids(@stocks)
     @top_stock = @stocks.first
 
     @compare_data = if @top_stock
@@ -137,6 +139,7 @@ class PyramidsController < ApplicationController
     @stocks = stocks.order(pyramid_total_score: :desc, id: :desc).offset((@page - 1) * PER_PAGE).limit(PER_PAGE)
     Stock.preload_pyramid_financials(@stocks)
     @tags = Stock.pyramid_tags_for(@stocks)
+    @favorite_stock_ids = favorite_stock_ids(@stocks)
 
     respond_to do |format|
       format.turbo_stream

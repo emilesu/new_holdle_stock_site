@@ -22,6 +22,17 @@ class ApplicationController < ActionController::Base
 
     private
 
+    # 当前用户在本批股票中的已收藏 id 集合（单次查询，供结果列表显示「已收藏」小图标）
+    # 筛选结果页与金字塔排行页共用
+    def favorite_stock_ids(stocks)
+        return [] unless user_signed_in?
+
+        ids = stocks.map(&:id)
+        return [] if ids.empty?
+
+        current_user.user_favorites.where(stock_id: ids).pluck(:stock_id)
+    end
+
     # 登录/注册后要跳回的页面：入口链接带 return_to（导航栏「登录」等），登录页/注册页渲染时暂存进 session，
     # Devise 默认的 after_sign_in_path_for 会读取（stored_location_for）并跳回，读取后自动清除。
     # 只接受站内路径（url_from 拒绝外域与 // 协议相对地址），并排除登录注册自身，避免跳转循环。

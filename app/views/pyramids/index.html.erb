@@ -214,6 +214,13 @@
                           <% else %>
                             <span class="ml-1 align-middle inline-block px-2 py-0.5 rounded-full text-hl-11 border border-line text-muted-3 font-mono">**</span>
                           <% end %>
+                          <%# 已收藏标记：实心星，颜色跟随当前市场主题色（A股绿/港股琥珀/美股蓝） %>
+                          <% if @favorite_stock_ids.include?(stock.id) %>
+                            <span class="ml-1.5 align-middle inline-flex cursor-help <%= market_star_class(@market) %>" title="已收藏"
+                                  aria-label="已收藏" role="img">
+                              <%= favorite_icon_tag %>
+                            </span>
+                          <% end %>
                         </div>
                         <div class="text-hl-11 text-muted-3 truncate"><%= stock.symbol %></div>
                       </div>

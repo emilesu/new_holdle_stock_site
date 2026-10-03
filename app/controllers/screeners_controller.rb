@@ -57,16 +57,6 @@ class ScreenersController < ApplicationController
     end
   end
 
-  # 当前用户在本页结果中的已收藏股票 id 集合（单次查询，供结果列表显示「已收藏」小图标）
-  def favorite_stock_ids(stocks)
-    return [] unless user_signed_in?
-
-    ids = stocks.map(&:id)
-    return [] if ids.empty?
-
-    current_user.user_favorites.where(stock_id: ids).pluck(:stock_id)
-  end
-
   # 非会员示例：缓存 stock_id 列表与服务端解析后的示例条件
   # 条件用于让示例表与会员真实结果表同构（同样的年份列与指标行），指标数值仍按 id 取最新数据但渲染为掩码，无需缓存
   # 键名带 v2：旧版缓存值是纯数组，结构变更后换键避免类型冲突

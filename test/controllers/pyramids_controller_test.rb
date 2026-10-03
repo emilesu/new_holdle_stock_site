@@ -14,21 +14,26 @@ class PyramidsControllerTest < ActionDispatch::IntegrationTest
   end
 
   def teardown
+    UserFavorite.where(stock_id: [@cn, @hk, @us, @cn_gas, @cn_semi].compact.map(&:id)).delete_all
     [@cn, @hk, @us, @cn_gas, @cn_semi].compact.each(&:destroy!)
   end
 
   test "index 警示徽章使用对应市场主题色" do
-    get pyramid_path(market: "CN")
+    # 会员墙（2ace2a9）后警示徽章仅会员视角渲染（非会员示例的标签打码），改用会员视角验证三市场主题色
+    # 带 sector 筛选公用事业：setup 股票无分数排最后，避免被 fixtures 高分股挤出首页
+    sign_in users(:two) # admin fixture，is_member? 为 true
+
+    get pyramid_path(market: "CN", sector: "公用事业")
     assert_response :success
     assert_match(/bg-green-100 text-green-800/, response.body, "A股警示徽章应为绿色主题")
     # 警示徽章不应再使用灰色样式（限定在股票行内，避免页面其他区域干扰）
     assert_select ".stock-name span.bg-bg-mute.text-muted-2", count: 0, message: "警示徽章不应再使用灰色样式"
 
-    get pyramid_path(market: "HK")
+    get pyramid_path(market: "HK", sector: "公用事业")
     assert_response :success
     assert_match(/bg-amber-100 text-amber-800/, response.body, "港股警示徽章应为琥珀主题")
 
-    get pyramid_path(market: "US")
+    get pyramid_path(market: "US", sector: "公用事业")
     assert_response :success
     assert_match(/bg-blue-100 text-blue-800/, response.body, "美股警示徽章应为蓝色主题")
   end
@@ -50,6 +55,9 @@ class PyramidsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "update_list 与 load_more 渲染成功且无灰色徽章" do
+    # 会员墙后筛选 / 分页接口仅对会员开放，未登录一律 403
+    sign_in users(:two)
+
     get "/pyramid/update_list", params: { market: "CN" }, headers: { "Accept" => "text/vnd.turbo-stream.html" }
     assert_response :success
     assert_match(/bg-green-100 text-green-800/, response.body, "update_list 徽章应为 A股绿色主题")
@@ -105,20 +113,48 @@ class PyramidsControllerTest < ActionDispatch::IntegrationTest
     assert_match(/data-industry="电力公用"/, response.body, "sentinel 应回显当前行业用于无限滚动")
   end
 
-  test "非会员请求 update_industries 返回空行业列表" do
+  test "非会员请求 update_industries 被会员墙拦截" do
+    # 会员墙后非会员直接 403，不再返回行业列表
     get "/pyramid/update_industries", params: { market: "CN", sector: "公用事业" }, headers: { "Accept" => "text/vnd.turbo-stream.html" }
-    assert_response :success
-    # 非会员不应返回任何行业选项（仅「全部」）
-    assert_no_match(/电力公用/, response.body)
-    assert_no_match(/燃气公用/, response.body)
-    # 非会员渲染的下拉应处于 disabled 状态
-    assert_match(/id="pyramid-industry"[^>]*disabled/, response.body)
+    assert_response :forbidden
   end
 
-  test "非会员 load_more 带 industry 参数被忽略" do
+  test "非会员 load_more 被会员墙拦截" do
+    # 会员墙后非会员直接 403，industry 参数无从生效
     get "/pyramid/load_more", params: { market: "CN", sector: "公用事业", industry: "电力公用", page: 1 }, headers: { "Accept" => "text/vnd.turbo-stream.html" }
+    assert_response :forbidden
+  end
+
+  test "已收藏股票在榜单显示市场主题色星标" do
+    UserFavorite.create!(user: users(:two), stock: @cn)
+    sign_in users(:two) # admin fixture，is_member? 为 true
+
+    # A股：绿色主题星标（限 .stock-name 内，避免页面其他区域干扰）
+    # 带 sector 筛选公用事业：setup 股票无分数排最后，避免被 fixtures 高分股挤出首页
+    get pyramid_path(market: "CN", sector: "公用事业")
     assert_response :success
-    # 非会员强制 industry=''，公用事业板块下燃气股也应出现
-    assert_match(/data-stock-symbol="PYR_CN_GAS"/, response.body)
+    assert_select ".stock-name span.text-green-600[title='已收藏']", count: 1, message: "已收藏的A股股票应渲染绿色主题星标"
+
+    # 港股：琥珀主题星标，且同页未收藏股票不渲染星标
+    UserFavorite.create!(user: users(:two), stock: @hk)
+    get pyramid_path(market: "HK", sector: "公用事业")
+    assert_response :success
+    assert_select ".stock-name span.text-amber-600[title='已收藏']", count: 1, message: "已收藏的港股股票应渲染琥珀主题星标"
+    assert_select ".stock-name span[title='已收藏']", count: 1, message: "未收藏股票不应渲染星标"
+  end
+
+  test "收藏星标覆盖未登录视角与 load_more 分页块" do
+    UserFavorite.create!(user: users(:two), stock: @cn)
+
+    # 未登录：不渲染星标
+    get pyramid_path(market: "CN", sector: "公用事业")
+    assert_response :success
+    assert_select ".stock-name span[title='已收藏']", count: 0, message: "未登录不应渲染收藏星标"
+
+    # load_more 分页块同样渲染星标
+    sign_in users(:two)
+    get "/pyramid/load_more", params: { market: "CN", page: 1 }, headers: { "Accept" => "text/vnd.turbo-stream.html" }
+    assert_response :success
+    assert_select ".stock-name span.text-green-600[title='已收藏']", count: 1, message: "load_more 分页块应渲染绿色主题星标"
   end
 end

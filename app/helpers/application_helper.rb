@@ -189,6 +189,16 @@ module ApplicationHelper
     end
   end
 
+  # 市场主题色文字类（与 market_badge_class 同一色系，取 600 档适配小图标）
+  # 用于已收藏星标等无底色小图标的着色，全站统一
+  def market_star_class(market)
+    case market
+    when "CN" then "text-green-600"
+    when "HK" then "text-amber-600"
+    else "text-blue-600"
+    end
+  end
+
   # 财务表右侧季报同比两列的市场主题样式
   # head：表头底色（100 档，与徽章一致）；cell：单元格底色（50 档，大面积浅底保证数字可读）；
   # hover：该市场列 hover 加深时用的 CSS 变量类（配合 application.tailwind.css 的 .financial-row 分区高亮）
