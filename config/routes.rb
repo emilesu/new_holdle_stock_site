@@ -95,10 +95,10 @@ Rails.application.routes.draw do
     end
   end
 
-  # 前台登录用户留言
-  resources :message_boards, only: [:create] do
-    get :my, on: :collection
-  end
+  # 前台登录用户会话页（微信式消息流：一问一答正序展示，向上翻历史）
+  get  "/messages",         to: "messages#show",    as: :messages
+  post "/messages",         to: "messages#create"
+  get  "/messages/earlier", to: "messages#earlier", as: :earlier_messages
 
   namespace :users do
     get "profile", to: "profiles#show", as: :profile
@@ -129,12 +129,12 @@ Rails.application.routes.draw do
     get  "data_quality",             to: "data_quality#index"
     post "data_quality/:id/resolve", to: "data_quality#resolve", as: :resolve_data_quality
 
-    # 管理员后台留言管理
-    resources :message_boards, only: [:index, :update, :destroy] do
-      patch :reply, on: :member      # 回复留言
-      patch :mark_read, on: :member  # 标记已读
-      patch :restore, on: :member    # 恢复软删除留言
+    # 管理员后台会话管理：列表按用户聚合，详情正序消息流，回复=新建 admin 消息
+    resources :messages, only: [:index, :destroy] do
+      member { patch :restore } # 恢复软删除消息
     end
+    get  "messages/:user_id",       to: "messages#show",  as: :message_thread  # 某用户的会话详情
+    post "messages/:user_id/reply", to: "messages#reply", as: :reply_message_thread
     
     resources :users, only: [:index, :show, :new, :create, :edit, :update, :destroy] do
       member do

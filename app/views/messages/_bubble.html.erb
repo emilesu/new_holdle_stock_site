@@ -1,0 +1,15 @@
+<%# 单条消息气泡（微信式）：用户右对齐主题色实底、大苏左对齐白底描边带小头像；不对称圆角+微阴影制造层次 %>
+<% if msg.deleted_at.present? %>
+  <div class="text-center py-1">
+    <span class="text-hl-11 text-muted-4">该消息已被管理员隐藏</span>
+  </div>
+<% elsif msg.sender == "admin" %>
+  <div class="flex items-end gap-2 mb-3" data-msg-id="<%= msg.id %>">
+    <span class="w-7 h-7 rounded-full bg-link text-white text-hl-11 flex items-center justify-center shrink-0 mb-0.5">苏</span>
+    <div class="max-w-[75%] bg-white border border-line rounded-lg rounded-bl-sm px-3.5 py-2.5 text-hl-13 text-ink whitespace-pre-wrap break-words shadow-sm"><%= msg.content %></div>
+  </div>
+<% else %>
+  <div class="flex justify-end mb-3" data-msg-id="<%= msg.id %>">
+    <div class="max-w-[75%] bg-link rounded-lg rounded-br-sm px-3.5 py-2.5 text-hl-13 text-white whitespace-pre-wrap break-words shadow-sm"><%= msg.content %></div>
+  </div>
+<% end %>

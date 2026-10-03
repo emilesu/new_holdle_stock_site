@@ -783,7 +783,7 @@
   }
 }
 
-/* ==================== 留言弹窗 ==================== */
+/* ==================== 留言悬浮入口（会话页链接） ==================== */
 @layer components {
   .message-float {
     position: fixed;
@@ -801,9 +801,27 @@
   .message-float:hover {
     background: var(--color-link-hover);
   }
+  /* 未读回复红点数字徽章 */
+  .message-badge {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    background: #ef4444;
+    color: #fff;
+    font-size: 11px;
+    line-height: 18px;
+    text-align: center;
+    border-radius: 999px;
+  }
+  /* 手机端保留入口（会话改为独立页面后体验可用），仅收紧尺寸 */
   @media (max-width: 767px) {
     .message-float {
-      display: none !important;
+      right: 16px;
+      bottom: 24px;
+      padding: 10px 16px;
     }
   }
 }

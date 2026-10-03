@@ -45,7 +45,7 @@
       { label: "用户管理", url: admin_users_path, desc: "注册与会员" },
       { label: "订单管理", url: admin_orders_path, desc: "交易记录" },
       { label: "AI 提问分析", url: admin_usage_analytics_path, desc: "用量报表" },
-      { label: "留言管理", url: admin_message_boards_path, desc: "用户反馈" }
+      { label: "留言管理", url: admin_messages_path, desc: "用户反馈" }
     ].each do |entry| %>
       <a href="<%= entry[:url] %>" class="hl-card hl-card-hover px-4 py-3 block">
         <p class="text-hl-13 font-medium text-ink"><%= entry[:label] %></p>

@@ -1,0 +1,84 @@
+<%# 会话详情：与用户端同一套气泡体系（镜像方向：用户左白底描边、大苏右主题色），灰底画布 + 底部回复栏卡片化 %>
+<div class="flex items-center gap-3 mb-6">
+  <span class="w-9 h-9 rounded-full bg-bg-mute border border-line text-muted text-hl-13 font-medium flex items-center justify-center shrink-0"><%= (@user.nickname.presence || @user.email)[0] %></span>
+  <div class="flex-1 min-w-0">
+    <div class="flex items-center gap-2">
+      <h1 class="text-hl-16 font-semibold text-ink truncate"><%= @user.nickname.presence || @user.email %></h1>
+      <span class="inline-flex px-1.5 py-0.5 text-hl-11 text-muted-4 bg-bg-mute rounded shrink-0"><%= human_role(@user.role) %></span>
+    </div>
+    <p class="mt-0.5"><%= link_to "← 返回会话列表", admin_messages_path, class: "text-hl-12 text-link hover:underline" %></p>
+  </div>
+</div>
+
+<div class="hl-card overflow-hidden p-0">
+  <%# 消息画布（灰底），手机端收窄内边距 %>
+  <div class="bg-bg-soft px-4 md:px-6 py-5">
+    <% if @messages.empty? %>
+      <p class="text-center text-hl-13 text-muted-4 py-12">该用户暂无留言</p>
+    <% else %>
+      <% prev_at = nil %>
+      <% @messages.each do |msg| %>
+        <% if prev_at.nil? || msg.created_at.to_date != prev_at.to_date || (msg.created_at - prev_at) > 30.minutes %>
+          <div class="text-center py-2">
+            <span class="inline-block px-2.5 py-0.5 text-hl-11 text-muted-4 bg-white border border-line rounded-full"><%= msg.created_at.strftime("%Y-%m-%d %H:%M") %></span>
+          </div>
+        <% end %>
+        <% if msg.sender == "admin" %>
+          <%# 大苏消息：右对齐主题色实底（与用户端视角镜像） %>
+          <div class="flex justify-end mb-3">
+            <div class="max-w-[75%]">
+              <div class="bg-link rounded-lg rounded-br-sm px-3.5 py-2.5 text-hl-13 text-white whitespace-pre-wrap break-words shadow-sm"><%= msg.content %></div>
+              <div class="flex justify-end items-center gap-2 mt-1">
+                <% if msg.deleted_at.present? %><span class="text-hl-11 text-profit">已隐藏</span><% end %>
+                <%= render "admin/messages/msg_actions", msg: msg %>
+              </div>
+            </div>
+          </div>
+        <% else %>
+          <%# 用户消息：左对齐白底描边带小头像 %>
+          <div class="flex items-end gap-2 mb-3">
+            <span class="w-7 h-7 rounded-full bg-bg-mute border border-line text-muted text-hl-11 flex items-center justify-center shrink-0 mb-0.5"><%= (@user.nickname.presence || @user.email)[0] %></span>
+            <div class="max-w-[75%]">
+              <div class="bg-white border border-line rounded-lg rounded-bl-sm px-3.5 py-2.5 text-hl-13 text-ink whitespace-pre-wrap break-words shadow-sm <%= 'opacity-50' if msg.deleted_at.present? %>"><%= msg.content %></div>
+              <div class="flex justify-start items-center gap-2 mt-1">
+                <% if msg.deleted_at.present? %><span class="text-hl-11 text-profit">已隐藏</span><% end %>
+                <%= render "admin/messages/msg_actions", msg: msg %>
+              </div>
+            </div>
+          </div>
+        <% end %>
+        <% prev_at = msg.created_at %>
+      <% end %>
+
+      <% if @messages.respond_to?(:total_pages) && @messages.total_pages > 1 %>
+        <div class="flex items-center justify-center gap-2 mt-5 pt-4 border-t border-line">
+          <% if @messages.prev_page %>
+            <%= link_to "← 上一页", admin_message_thread_path(@user.id, page: @messages.prev_page),
+                  class: "px-3 py-1.5 text-hl-13 text-muted border border-line rounded bg-white hover:bg-bg-mute transition-colors" %>
+          <% end %>
+          <span class="text-hl-12 text-muted-4 px-2"><%= @messages.current_page %> / <%= @messages.total_pages %></span>
+          <% if @messages.next_page %>
+            <%= link_to "下一页 →", admin_message_thread_path(@user.id, page: @messages.next_page),
+                  class: "px-3 py-1.5 text-hl-13 text-muted border border-line rounded bg-white hover:bg-bg-mute transition-colors" %>
+          <% end %>
+        </div>
+      <% end %>
+    <% end %>
+  </div>
+
+  <%# 底部回复栏：新建一条 admin 消息，用户端悬浮按钮红点提示 %>
+  <div class="border-t border-line bg-white px-4 md:px-6 py-4">
+    <p class="text-hl-12 text-muted-4 mb-2">回复「<%= @user.nickname.presence || @user.email %>」</p>
+    <%= form_with url: admin_reply_message_thread_path(@user.id), method: :post do |f| %>
+      <div class="flex items-end gap-2">
+        <%= f.text_area :reply,
+              rows: 2,
+              maxlength: 500,
+              placeholder: "回复内容（最多500字）",
+              required: true,
+              class: "flex-1 border border-line rounded-lg p-3 text-hl-13 text-ink placeholder:text-muted-4 resize-none focus:outline-none focus:border-link transition-colors" %>
+        <%= f.submit "发送回复", class: "hl-btn hl-btn-primary cursor-pointer" %>
+      </div>
+    <% end %>
+  </div>
+</div>

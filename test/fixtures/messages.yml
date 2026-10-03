@@ -1,0 +1,33 @@
+# 会话消息样本：覆盖 用户已读留言 / 站长未读回复（前台红点）/ 用户未读留言（后台未读数）/ 软删除隐藏消息
+user_msg_read:
+  user: one
+  sender: user
+  content: 这是正常留言一
+  is_read: true
+  created_at: <%= 2.days.ago.to_fs(:db) %>
+  updated_at: <%= 2.days.ago.to_fs(:db) %>
+
+admin_msg_unread:
+  user: one
+  sender: admin
+  content: 这是站长回复一
+  is_read: false
+  created_at: <%= 1.day.ago.to_fs(:db) %>
+  updated_at: <%= 1.day.ago.to_fs(:db) %>
+
+user_msg_unread:
+  user: two
+  sender: user
+  content: 这是未读留言二
+  is_read: false
+  created_at: <%= 1.day.ago.to_fs(:db) %>
+  updated_at: <%= 1.day.ago.to_fs(:db) %>
+
+deleted_msg:
+  user: one
+  sender: user
+  content: 这是已隐藏消息
+  is_read: true
+  deleted_at: <%= 1.hour.ago.to_fs(:db) %>
+  created_at: <%= 3.days.ago.to_fs(:db) %>
+  updated_at: <%= 1.hour.ago.to_fs(:db) %>

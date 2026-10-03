@@ -4,7 +4,7 @@ module AdminNavHelper
   def admin_nav_groups
     [
       { label: "运营", items: [
-        { label: "留言管理", url: admin_message_boards_path },
+        { label: "留言管理", url: admin_messages_path },
         { label: "用户管理", url: admin_users_path },
         { label: "订单管理", url: admin_orders_path }
       ] },

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_10_02_120000) do
+ActiveRecord::Schema[7.1].define(version: 2026_10_03_120100) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -327,6 +327,18 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_02_120000) do
     t.index ["user_id"], name: "index_message_boards_on_user_id"
   end
 
+  create_table "messages", comment: "会话消息（用户↔站长多轮问答，按user_id聚合为一条会话）", force: :cascade do |t|
+    t.bigint "user_id", null: false, comment: "会话归属用户ID，关联users表"
+    t.string "sender", null: false, comment: "发送方（user=用户 / admin=站长大苏）"
+    t.text "content", null: false, comment: "消息内容"
+    t.boolean "is_read", default: false, null: false, comment: "接收方是否已读（user消息=站长已读；admin消息=用户已读）"
+    t.datetime "deleted_at", comment: "软删除时间，非空代表已隐藏"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["is_read"], name: "index_messages_on_is_read"
+    t.index ["user_id", "created_at"], name: "index_messages_on_user_id_and_created_at"
+  end
+
   create_table "orders", force: :cascade do |t|
     t.string "order_no", null: false
     t.bigint "user_id", null: false
@@ -639,6 +651,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_02_120000) do
   add_foreign_key "income_statements", "stocks"
   add_foreign_key "lessons", "chapters"
   add_foreign_key "message_boards", "users", on_delete: :cascade
+  add_foreign_key "messages", "users"
   add_foreign_key "orders", "users"
   add_foreign_key "solid_queue_blocked_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_claimed_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade

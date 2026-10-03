@@ -1,0 +1,39 @@
+<%# 微信式会话页：卡片化聊天容器（头像页头 / 灰底消息画布 / 白色输入栏），手机端 16px 留白、桌面居中 %>
+<div class="max-w-[720px] mx-auto px-4 md:px-6 py-4 md:py-6" data-controller="message">
+  <div class="flex flex-col rounded-lg border border-line bg-white shadow-sm min-h-[65vh]">
+    <%# 会话页头：头像 + 身份说明，建立「与站长对话」的连续会话心智 %>
+    <div class="flex items-center gap-3 px-4 md:px-5 py-3.5 border-b border-line">
+      <span class="w-9 h-9 rounded-full bg-link text-white text-hl-13 font-medium flex items-center justify-center shrink-0">苏</span>
+      <div class="flex-1 min-w-0">
+        <p class="text-hl-15 font-semibold text-ink">大苏</p>
+        <p class="text-hl-11 text-muted-4">HOLD LE 站长 · 留言与回复都在这条会话里</p>
+      </div>
+    </div>
+
+    <%# 发送结果提示区（turbo_stream 替换） %>
+    <div id="message_flash"></div>
+
+    <%# 消息画布：灰底衬托白色/主题色气泡，与输入栏形成层次 %>
+    <div class="flex-1 bg-bg-soft px-4 md:px-5 py-4">
+      <% if @messages.any? %>
+        <%= render "messages/earlier_control", cursor_at: @earlier_cursor_at, cursor_id: @earlier_cursor_id, has_earlier: @has_earlier %>
+      <% end %>
+      <div id="message_thread">
+        <% if @messages.any? %>
+          <%= render "messages/thread", messages: @messages %>
+        <% else %>
+          <div id="thread_empty_hint" class="text-center py-16">
+            <p class="text-hl-13 text-muted-4">还没有留言，发第一条给大苏吧</p>
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+    <%# 底部输入栏：白底 + 上边框，sticky 吸底 %>
+    <div class="sticky bottom-0 border-t border-line bg-white rounded-b-lg px-4 md:px-5 py-3">
+      <div id="message_form_area">
+        <%= render "messages/form" %>
+      </div>
+    </div>
+  </div>
+</div>

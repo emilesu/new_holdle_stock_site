@@ -1,0 +1,11 @@
+<%# 消息流片段：正序气泡 + 时间胶囊（间隔>30分钟或跨日时插入）；供首屏与「加载更早」复用 %>
+<% prev_at = nil %>
+<% messages.each do |msg| %>
+  <% if prev_at.nil? || msg.created_at.to_date != prev_at.to_date || (msg.created_at - prev_at) > 30.minutes %>
+    <div class="text-center py-2">
+      <span class="inline-block px-2.5 py-0.5 text-hl-11 text-muted-4 bg-white border border-line rounded-full"><%= msg.created_at.strftime("%Y-%m-%d %H:%M") %></span>
+    </div>
+  <% end %>
+  <%= render "messages/bubble", msg: msg %>
+  <% prev_at = msg.created_at %>
+<% end %>

@@ -1,0 +1,54 @@
+<%# 会话列表：微信式一行一会话（头像 + 昵称 + 预览 + 时间 + 未读红点），手机端收窄内边距避免留白过多 %>
+<div class="flex items-center justify-between mb-6">
+  <h1 class="text-hl-22 font-semibold text-ink">留言会话</h1>
+  <span class="text-hl-12 text-muted-4">按用户聚合 · 点击进入会话</span>
+</div>
+
+<div class="hl-card overflow-hidden">
+  <% if @threads.empty? %>
+    <div class="px-4 md:px-6 py-12 text-center text-hl-13 text-muted-4">暂无会话</div>
+  <% else %>
+    <div class="divide-y divide-line">
+      <% @threads.each do |uid, last_at| %>
+        <% u = @users[uid]
+           unread = @unread_counts[uid].to_i
+           preview = @previews[uid]
+           name = u ? (u.nickname.presence || u.email) : "用户#{uid}" %>
+        <%= link_to admin_message_thread_path(uid), class: "flex items-center gap-3 px-4 md:px-6 py-4 hover:bg-bg-mute transition-colors" do %>
+          <span class="w-9 h-9 rounded-full bg-bg-mute border border-line text-muted text-hl-13 font-medium flex items-center justify-center shrink-0"><%= name[0] %></span>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2">
+              <span class="text-hl-13 font-medium text-ink truncate"><%= name %></span>
+              <% if u && u.role != "user" %>
+                <span class="inline-flex px-1.5 py-0.5 text-hl-11 text-muted-4 bg-bg-mute rounded shrink-0"><%= human_role(u.role) %></span>
+              <% end %>
+            </div>
+            <p class="mt-1 text-hl-12 text-muted-4 truncate">
+              <% if preview %><%= preview[1] == "admin" ? "大苏：" : "" %><%= preview[2] %><% end %>
+            </p>
+          </div>
+          <div class="flex flex-col items-end gap-1.5 shrink-0">
+            <span class="text-hl-11 text-muted-4"><%= last_at.strftime("%m-%d %H:%M") %></span>
+            <% if unread > 0 %>
+              <span class="min-w-[18px] h-[18px] px-1.5 bg-red-500 text-white text-hl-11 rounded-full flex items-center justify-center"><%= unread %></span>
+            <% end %>
+          </div>
+        <% end %>
+      <% end %>
+    </div>
+  <% end %>
+
+  <% if @has_prev || @has_next %>
+    <div class="flex items-center justify-center gap-2 px-4 md:px-6 py-4 border-t border-line">
+      <% if @has_prev %>
+        <%= link_to "← 上一页", admin_messages_path(page: @page - 1),
+              class: "px-3 py-1.5 text-hl-13 text-muted border border-line rounded hover:bg-bg-mute transition-colors" %>
+      <% end %>
+      <span class="text-hl-12 text-muted-4 px-2">第 <%= @page %> 页</span>
+      <% if @has_next %>
+        <%= link_to "下一页 →", admin_messages_path(page: @page + 1),
+              class: "px-3 py-1.5 text-hl-13 text-muted border border-line rounded hover:bg-bg-mute transition-colors" %>
+      <% end %>
+    </div>
+  <% end %>
+</div>

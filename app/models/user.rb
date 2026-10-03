@@ -15,7 +15,7 @@ class User < ApplicationRecord
 
   has_many :user_favorites, dependent: :destroy
   has_many :favorite_stocks, through: :user_favorites, source: :stock
-  has_many :message_boards, dependent: :destroy
+  has_many :messages, dependent: :destroy
   has_many :orders, dependent: :destroy
   has_many :api_keys, dependent: :destroy
   has_many :usage_logs, dependent: :destroy

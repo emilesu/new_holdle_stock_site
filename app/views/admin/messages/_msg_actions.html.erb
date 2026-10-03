@@ -1,0 +1,11 @@
+<%# 会话内单条消息的隐藏/恢复操作（软删除语义沿用旧留言管理） %>
+<% if msg.deleted_at.present? %>
+  <%= button_to "恢复", restore_admin_message_path(msg), method: :patch,
+        form_class: "inline",
+        class: "text-hl-11 text-link hover:underline cursor-pointer" %>
+<% else %>
+  <%= button_to "隐藏", admin_message_path(msg), method: :delete,
+        form_class: "inline",
+        data: { turbo_confirm: "确定隐藏这条消息？用户端将显示隐藏占位" },
+        class: "text-hl-11 text-profit hover:underline cursor-pointer" %>
+<% end %>

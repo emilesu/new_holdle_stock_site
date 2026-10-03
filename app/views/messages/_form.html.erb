@@ -1,0 +1,12 @@
+<%= form_with url: messages_path, data: { turbo: true, action: "turbo:submit-end->message#afterSubmit" } do |f| %>
+  <div class="flex items-end gap-2">
+    <%= f.text_area :content,
+          maxlength: 500,
+          rows: 2,
+          placeholder: "给大苏发消息（最多500字）",
+          required: true,
+          data: { message_target: "contentInput" },
+          class: "flex-1 border border-line rounded p-3 text-hl-13 text-ink placeholder:text-muted-4 resize-none focus:outline-none focus:border-link transition-colors" %>
+    <%= f.submit "发送", class: "hl-btn hl-btn-primary cursor-pointer" %>
+  </div>
+<% end %>

@@ -103,8 +103,7 @@
                   </svg>
                   个人中心
                 <% end %>
-                <%= link_to "#", class: "flex items-center gap-3 px-4 py-2 text-hl-13 text-muted hover:text-ink hover:bg-bg-mute transition-colors",
-                            data: { action: "click->message#open:prevent" } do %>
+                <%= link_to messages_path, class: "flex items-center gap-3 px-4 py-2 text-hl-13 text-muted hover:text-ink hover:bg-bg-mute transition-colors" do %>
                   <svg class="w-4 h-4 text-muted-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
                   </svg>
@@ -181,10 +180,7 @@
           </div>
           <div class="space-y-1">
             <%= link_to '个人中心', users_profile_path, class: "block px-4 py-2 text-hl-13 text-muted hover:text-ink hover:bg-bg-mute rounded" %>
-            <%= link_to "#", class: "block px-4 py-2 text-hl-13 text-muted hover:text-ink hover:bg-bg-mute rounded",
-                        data: { action: "click->message#open:prevent" } do %>
-              我的留言
-            <% end %>
+            <%= link_to "我的留言", messages_path, class: "block px-4 py-2 text-hl-13 text-muted hover:text-ink hover:bg-bg-mute rounded" %>
             <% if current_user.is_admin? %>
               <%= link_to '后台管理', admin_root_path, class: "block px-4 py-2 text-hl-13 text-muted hover:text-ink hover:bg-bg-mute rounded" %>
             <% end %>
