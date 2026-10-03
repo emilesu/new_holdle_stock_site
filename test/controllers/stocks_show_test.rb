@@ -34,12 +34,14 @@ class StocksShowTest < ActionDispatch::IntegrationTest
     stock&.destroy!
   end
 
-  test "美股详情页不展示上市日期行" do
-    stock = Stock.create!(symbol: "DET_US", name: "No List", market: "US", exchange: "NASDAQ",
-                          sector: "科技", industry: "软件", status: "active")
+  # 7fa2a5c 起美股上市日期已接入展示（Yahoo firstTradeDate），原「不展示」断言为遗留坏测试，已按预期行为修正
+  test "美股详情页展示上市日期行" do
+    stock = Stock.create!(symbol: "DET_US", name: "US Listing Date", market: "US", exchange: "NASDAQ",
+                          sector: "科技", industry: "软件", status: "active", listing_date: Date.new(2020, 3, 18))
     get stock_path(stock)
     assert_response :success
-    refute_match(/上市日期/, response.body, "美股不支持上市日期，不应展示该行")
+    assert_match(/上市日期/, response.body, "美股详情页应展示上市日期行")
+    assert_match(/2020-03-18/, response.body)
   ensure
     stock&.destroy!
   end
@@ -79,6 +81,31 @@ class StocksShowTest < ActionDispatch::IntegrationTest
     # 栏目标题切换为行业金字塔对比
     assert_match(/行业金字塔对比/, response.body)
     refute_match(/近五年ROE对比/, response.body)
+  ensure
+    @roe_high&.destroy! && @py_high&.destroy! && @base&.destroy!
+  end
+
+  test "会员视角对比栏已收藏股票名后显示市场主题色星标" do
+    setup_comparison_stocks
+    favorite = UserFavorite.create!(user: users(:two), stock: @roe_high)
+    sign_in users(:two) # admin fixture，is_member? 为 true
+
+    get stock_path(@base)
+    assert_response :success
+    # CN 市场主题色绿色星标；对比栏共 3 只，仅已收藏的 1 只渲染
+    assert_select "span.text-green-600[title='已收藏']", count: 1, message: "已收藏的对比股票应渲染绿色主题星标"
+    assert_select "span[title='已收藏']", count: 1, message: "未收藏股票不应渲染星标"
+  ensure
+    favorite&.destroy!
+    @roe_high&.destroy! && @py_high&.destroy! && @base&.destroy!
+  end
+
+  test "访客对比栏不渲染收藏星标" do
+    setup_comparison_stocks
+
+    get stock_path(@base)
+    assert_response :success
+    assert_select "span[title='已收藏']", count: 0, message: "未登录不应渲染收藏星标"
   ensure
     @roe_high&.destroy! && @py_high&.destroy! && @base&.destroy!
   end

@@ -116,6 +116,8 @@ class StocksController < ApplicationController
     comparison_stocks = @industry_comparison_data.map { |item| item[:stock] }
     Stock.preload_pyramid_financials(comparison_stocks)
     @comparison_tags = Stock.pyramid_tags_for(comparison_stocks)
+    # 对比栏已收藏集合（单次查询，与筛选/金字塔页共用），命中的股票名后渲染市场主题色星标
+    @favorite_stock_ids = favorite_stock_ids(comparison_stocks)
 
     @radar_data = build_radar_data(@stock)
     @comparison_radar_data = build_comparison_radar_data

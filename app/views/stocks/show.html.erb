@@ -282,6 +282,13 @@
                           <div class="flex flex-col min-w-0">
                             <div class="flex items-center space-x-1 min-w-0">
                               <span class="text-hl-13 font-medium text-ink truncate"><%= stock.display_name_for_comparison %></span>
+                              <%# 已收藏标记：实心星，颜色跟随该股市场主题色（A股绿/港股琥珀/美股蓝），与筛选/金字塔页同款 %>
+                              <% if @favorite_stock_ids.include?(stock.id) %>
+                                <span class="shrink-0 align-middle inline-flex cursor-help <%= market_star_class(stock.market) %>" title="已收藏"
+                                      aria-label="已收藏" role="img">
+                                  <%= favorite_icon_tag %>
+                                </span>
+                              <% end %>
                               <% (@comparison_tags[stock.id] || []).each do |tag| %>
                                 <span class="shrink-0 align-middle inline-block px-2 py-0.5 rounded-full text-hl-11 border <%= @market_badge_bg %>"
                                       title="<%= Stock.pyramid_tag_hint(tag) %>"><%= tag %></span>
