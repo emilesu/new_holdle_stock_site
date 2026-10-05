@@ -26,9 +26,10 @@ module DataSources
     # 财务扫描的问题类型（value_overflow 由 BaseFetcher 实时上报，不在扫描判定范围）
     FINANCIAL_ISSUE_TYPES = %w[partial_period empty_financials future_report_date].freeze
 
-    # 因子下降容差：后复权因子定点存储存在 ~1e-7 量级的舍入噪声，
-    # 相对降幅超过该值才算口径被写坏（与 YahooMonthlyBarService::FACTOR_EPSILON 口径一致）
-    FACTOR_DECREASE_EPSILON = 1e-6
+    # 因子下降容差：库内后复权因子为逐月递推乘积后按 scale 10 舍入存储，
+    # 递推舍入噪声实测落在相对降幅 1e-6~1e-5 量级（2026-10-05 扫描 475 条全部在此区间、无一超 1e-4）；
+    # 真实除权口径写坏至少百分之几量级，故取 1e-5——仍低于真实异常 3 个数量级，不会漏报
+    FACTOR_DECREASE_EPSILON = 1e-5
     # 缺月只报近 N 个月内结束的：历史缺月绝大多数是整月停牌（库内无日线无法离线判别），重抓补不齐
     MONTH_GAP_RECENT_MONTHS = 12
     # 价格半分钱误差（存储列实为 decimal(12,4)，但行情展示口径 2 位），用于估算复权比值的舍入噪声。
@@ -131,7 +132,7 @@ module DataSources
       end
 
       # 后复权因子只增不改：相对降幅超过 FACTOR_DECREASE_EPSILON 才算口径被写坏，
-      # 以内为定点存储舍入噪声（实测存量 4882 条中 4823 条降幅 <1e-6）
+      # 以内为递推乘积的定点舍入噪声（2026-10-05 实测 475 条残留全部落在 1e-6~1e-5 区间）
       def record_factor_decrease(stock, bars)
         bars.each_cons(2) do |(prev_date, prev_factor, *), (date, factor, *)|
           next if prev_factor.nil? || factor.nil?

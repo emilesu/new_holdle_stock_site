@@ -61,6 +61,15 @@ module DataSources
       refute issue?("hfq_factor_decrease")
     end
 
+    test "递推舍入噪声带（1e-6~1e-5）不报因子下降" do
+      # 实测残留误报全部落在该区间：递推乘积按 scale 10 舍入的正常噪声
+      create_bar("2024-01-31", hfq_factor: 1.0)
+      create_bar("2024-02-29", hfq_factor: 0.999995)
+
+      assert_equal 0, DataQualityService.check_monthly_bars(@stock)
+      refute issue?("hfq_factor_decrease")
+    end
+
     test "前后复权常数关系偏离时报错" do
       create_bar("2024-01-31", qfq_close: 5, hfq_close: 10)
       create_bar("2024-02-29", qfq_close: 5.4, hfq_close: 11)
