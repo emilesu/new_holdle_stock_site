@@ -371,29 +371,54 @@ module DataSources
         { status: :failed, error: e.message }
       end
 
+      # 指标接口分页拉取：返回全部行；无数据返回 []；页数不可信（超上限）返回 nil 作废本次拉取
+      def fetch_indicator_pages(secucode, report_name)
+        params = {
+          reportName: report_name,
+          columns: "SECUCODE,REPORT_DATE,DATE_TYPE,REPORT_TYPE,BASIC_EPS,DILUTED_EPS,ROE_AVG,ROA," \
+                   "GROSS_PROFIT_RATIO,NET_PROFIT_RATIO,CURRENT_RATIO,SPEED_RATIO,DEBT_ASSET_RATIO",
+          filter: %((SECUCODE="#{secucode}")),
+          pageNumber: 1, pageSize: 5000,
+          sortTypes: -1, sortColumns: "REPORT_DATE",
+          source: "SECURITIES", client: "PC"
+        }
+        items = []
+        page = 1
+        loop do
+          params[:pageNumber] = page
+          response = http_get(BASE_URL, params: params)
+          batch = extract_data_list(response)
+          break if batch.empty?
+
+          items.concat(batch)
+          total_pages = response.dig("result", "pages").to_i
+          break if total_pages <= page
+
+          if page >= MAX_PERIOD_PAGES
+            Rails.logger.error "[#{self.class}] #{secucode} 指标分页超过上限 #{MAX_PERIOD_PAGES} 页（已取 #{items.size} 行），本次拉取作废"
+            return nil
+          end
+
+          page += 1
+        end
+        items
+      end
+
       # 美股财务指标
       # 注意：API 的期次字段与其他报表相反——DATE_TYPE 为期次类型文本，REPORT_TYPE 为期次标签
       # 注意：API可能返回同一DATE多条记录（不同合并层面），
       # 通过按日期分组后取 BASIC_EPS 最大的记录（合并报表级别 > 分部级别）
       def fetch_and_save_indicator(stock, secucode, market, periods)
-        params = {
-          reportName: "RPT_USF10_FN_GMAININDICATOR",
-          columns: "SECUCODE,REPORT_DATE,DATE_TYPE,REPORT_TYPE,BASIC_EPS,DILUTED_EPS,ROE_AVG,ROA," \
-                   "GROSS_PROFIT_RATIO,NET_PROFIT_RATIO,CURRENT_RATIO,SPEED_RATIO,DEBT_ASSET_RATIO",
-          filter: %((SECUCODE="#{secucode}")),
-          pageNumber: 1, pageSize: 1000,
-          sortTypes: -1, sortColumns: "REPORT_DATE",
-          source: "SECURITIES", client: "PC"
-        }
-        response = http_get(BASE_URL, params: params)
-        items = extract_data_list(response)
+        # 分页拉取：长历史股票的指标行数可能超过单页上限（同一报告日有单季报/累计季报等多个变体），
+        # 只取第一页会静默截断早期期次，与期次列表接口同理
+        gmain = fetch_indicator_pages(secucode, "RPT_USF10_FN_GMAININDICATOR")
+        items = gmain || []
+        items = fetch_indicator_pages(secucode, "RPT_USF10_FN_IMAININDICATOR") || [] if items.empty?
         unless items.any?
-          params[:reportName] = "RPT_USF10_FN_IMAININDICATOR"
-          response = http_get(BASE_URL, params: params)
-          items = extract_data_list(response)
-        end
-        unless items.any?
-          log_progress(stock, "财务指标", :failed, "API 无返回数据")
+          # gmain 为 nil 表示主接口分页超上限被作废（fetch_indicator_pages 内已记 error 日志），
+          # 与「接口确实无数据」区分开，避免失败原因误导排查
+          reason = gmain.nil? ? "分页超过上限 #{MAX_PERIOD_PAGES} 页，本次拉取作废" : "API 无返回数据"
+          log_progress(stock, "财务指标", :failed, reason)
           return { status: :failed }
         end
 
