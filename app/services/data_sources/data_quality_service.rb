@@ -3,7 +3,7 @@ module DataSources
   #
   # 覆盖两类数据：
   #   - 月K：缺月、后复权因子下降（应只增不改）、前后复权常数关系偏离
-  #   - 财务：同一报告期只入库了部分子表、关键字段全空、报告日在未来
+  #   - 财务：同一报告期只入库了部分子表（剔除数据源覆盖边界与披露时滞）、关键字段全空、报告日在未来
   # 「数值溢出被置空」不在这里扫描，由 BaseFetcher 写入时实时上报。
   class DataQualityService
     # 财务四张子表：完整的一期财务数据应四表齐全
@@ -13,6 +13,27 @@ module DataSources
       "cash_flow" => CashFlow,
       "financial_indicator" => FinancialIndicator
     }.freeze
+
+    # 披露时滞：报告日距今不足天数的期次跳过完整性检查。
+    # 财报季数据源常已列出期次但部分子表尚未披露；取 A股年报最晚截止（120 天）之上再留余量
+    DISCLOSURE_GRACE_DAYS = 150
+    # 检查窗口：只核对近 N 年（≈近 16 期季报 + 近 4 期年报）的期次完整性。
+    # 窗口外的历史期次数据源存在散点缺失（小盘股/SPAC 招股期次等），重抓也无法补齐，不做判定
+    CHECK_WINDOW_YEARS = 4
+
+    # 月K扫描的问题类型（用于复检通过后自动关闭不再复现的记录）
+    MONTHLY_ISSUE_TYPES = %w[month_gap hfq_factor_decrease ratio_deviation].freeze
+    # 财务扫描的问题类型（value_overflow 由 BaseFetcher 实时上报，不在扫描判定范围）
+    FINANCIAL_ISSUE_TYPES = %w[partial_period empty_financials future_report_date].freeze
+
+    # 因子下降容差：后复权因子定点存储存在 ~1e-7 量级的舍入噪声，
+    # 相对降幅超过该值才算口径被写坏（与 YahooMonthlyBarService::FACTOR_EPSILON 口径一致）
+    FACTOR_DECREASE_EPSILON = 1e-6
+    # 缺月只报近 N 个月内结束的：历史缺月绝大多数是整月停牌（库内无日线无法离线判别），重抓补不齐
+    MONTH_GAP_RECENT_MONTHS = 12
+    # 价格半分钱误差（存储列实为 decimal(12,4)，但行情展示口径 2 位），用于估算复权比值的舍入噪声。
+    # 作为噪声上界偏保守（高估噪声 → 少误报），与 record_ratio_deviation 的容差模型配套
+    PRICE_ROUNDING = BigDecimal("0.005")
 
     class << self
       # 全量/按市场扫描；结果写入 DataQualityIssue（同一问题只保留一条未处理记录）
@@ -42,14 +63,15 @@ module DataSources
       # ── 月K ──
       # 返回检出的问题条数
       def check_monthly_bars(stock)
+        found = []
         bars = stock.stock_monthly_bars.chronological.pluck(:trade_date, :hfq_factor, :hfq_close, :qfq_close)
-        return 0 if bars.size < 2
-
-        issues = 0
-        issues += 1 if record_month_gap(stock, bars)
-        issues += 1 if record_factor_decrease(stock, bars)
-        issues += 1 if record_ratio_deviation(stock, bars)
-        issues
+        if bars.size >= 2
+          found << "month_gap" if record_month_gap(stock, bars)
+          found << "hfq_factor_decrease" if record_factor_decrease(stock, bars)
+          found << "ratio_deviation" if record_ratio_deviation(stock, bars)
+        end
+        auto_resolve_stale(stock, "monthly_bar", found, MONTHLY_ISSUE_TYPES)
+        found.size
       end
 
       # ── 财务 ──
@@ -57,11 +79,12 @@ module DataSources
         report_dates = stock.financial_reports.pluck(:report_date).compact.uniq
         return 0 if report_dates.empty?
 
-        issues = 0
-        issues += 1 if record_partial_period(stock, report_dates)
-        issues += 1 if record_empty_financials(stock, report_dates)
-        issues += 1 if record_future_report_date(stock, report_dates)
-        issues
+        found = []
+        found << "partial_period" if record_partial_period(stock, report_dates)
+        found << "empty_financials" if record_empty_financials(stock, report_dates)
+        found << "future_report_date" if record_future_report_date(stock, report_dates)
+        auto_resolve_stale(stock, "financial", found, FINANCIAL_ISSUE_TYPES)
+        found.size
       end
 
       private
@@ -79,11 +102,23 @@ module DataSources
         end
       end
 
-      # 相邻两个月K行之间月份差 > 1（整月停牌会误报，detail 里记区间供人工复核）
+      # 复检通过：自动关闭该股票此数据类型下不再复现的未处理记录，
+      # 使判定规则收紧后存量误报在下次扫描自然消化，台账不跨周期累积过时问题
+      def auto_resolve_stale(stock, data_type, found_types, all_types)
+        stale = all_types - found_types
+        return if stale.empty?
+
+        DataQualityIssue.open.where(stock_id: stock.id, data_type: data_type, issue_type: stale)
+                         .update_all(resolved_at: Time.current, resolution: "auto_resolved")
+      end
+
+      # 相邻两个月K行之间月份差 > 1。历史缺月多为整月停牌（重抓补不齐、无法离线判别），
+      # 只报缺月结束于近 MONTH_GAP_RECENT_MONTHS 个月内的，detail 记区间供人工复核
       def record_month_gap(stock, bars)
+        recent_start = (Date.current - MONTH_GAP_RECENT_MONTHS.months).beginning_of_month
         bars.each_cons(2) do |(prev_date, *), (date, *)|
           gap = (date.year * 12 + date.month) - (prev_date.year * 12 + prev_date.month)
-          next if gap <= 1
+          next if gap <= 1 || date < recent_start
 
           DataQualityIssue.record!(
             stock, "monthly_bar", "month_gap",
@@ -95,18 +130,25 @@ module DataSources
         false
       end
 
-      # 后复权因子只增不改：出现下降说明复权口径被写坏
+      # 后复权因子只增不改：相对降幅超过 FACTOR_DECREASE_EPSILON 才算口径被写坏，
+      # 以内为定点存储舍入噪声（实测存量 4882 条中 4823 条降幅 <1e-6）
       def record_factor_decrease(stock, bars)
         bars.each_cons(2) do |(prev_date, prev_factor, *), (date, factor, *)|
           next if prev_factor.nil? || factor.nil?
-          next if factor.to_d >= prev_factor.to_d
+
+          prev = prev_factor.to_d
+          next if prev.zero?
+
+          rel_decrease = (factor.to_d - prev) / prev
+          next if rel_decrease >= -FACTOR_DECREASE_EPSILON
 
           DataQualityIssue.record!(
             stock, "monthly_bar", "hfq_factor_decrease",
             severity: "error",
             detail: {
               from: prev_date.to_s, to: date.to_s,
-              prev_factor: prev_factor.to_s, factor: factor.to_s
+              prev_factor: prev_factor.to_s, factor: factor.to_s,
+              relative_decrease: rel_decrease.to_f
             }
           )
           return true
@@ -114,41 +156,65 @@ module DataSources
         false
       end
 
-      # 同一只股票任意两行的 后复权收盘 ÷ 前复权收盘 必须是同一常数
+      # 同一只股票任意两行的 后复权收盘 ÷ 前复权收盘 必须是同一常数。
+      # 收盘价定点存储存在舍入误差，比值的相对噪声 ≈ 2×(0.005/后复权价 + 0.005/前复权价)，
+      # 低价股可达 0.5% 量级；基准行（首行＝上市初期，最易极低价）自身也有噪声，
+      # 偏差需同时超过基础容差与「偏差行噪声 + 基准行噪声」才报（存量 1953 条中 1704 条 <0.1%）
       def record_ratio_deviation(stock, bars)
         ratios = bars.filter_map do |(date, _factor, hfq_close, qfq_close)|
-          next if hfq_close.blank? || qfq_close.to_d.zero?
+          hfq = hfq_close.to_d
+          qfq = qfq_close.to_d
+          next if hfq_close.blank? || qfq.zero? || hfq.zero?
 
-          [ date, hfq_close.to_d / qfq_close.to_d ]
+          noise = 2 * (PRICE_ROUNDING / hfq + PRICE_ROUNDING / qfq)
+          [ date, hfq / qfq, noise ]
         end
         return false if ratios.size < 2
 
-        expected = ratios.first.last
-        date, ratio = ratios.max_by { |(_d, r)| ((r - expected) / expected).abs }
+        expected, expected_noise = ratios.first[1], ratios.first[2]
+        date, ratio, noise = ratios.max_by { |(_d, r, _n)| ((r - expected) / expected).abs }
         deviation = ((ratio - expected) / expected).abs
-        return false if deviation <= SinaMonthlyBarService::RATIO_TOLERANCE
+        tolerance = [ SinaMonthlyBarService::RATIO_TOLERANCE, noise + expected_noise ].max
+        return false if deviation <= tolerance
 
         DataQualityIssue.record!(
           stock, "monthly_bar", "ratio_deviation",
           severity: "error",
           detail: { sample_date: date.to_s, expected_ratio: expected.to_s, actual_ratio: ratio.to_s,
-                    max_deviation: deviation.to_f }
+                    max_deviation: deviation.to_f, tolerance: tolerance.to_f }
         )
         true
       end
 
       # 同一报告期只入库了部分子表
+      #
+      # 三类「不齐全」不算抓取错误，予以剔除：
+      #   - 历史覆盖边界：各子表在数据源中的历史起点不同（如 A股现金流量表 1996 年才有披露要求、
+      #     东财美股/港股资产负债表深度有限），只检查「有数据的子表」共同起点之后的期次；
+      #     整只股票都没有数据的子表视为数据源不覆盖，不参与判定
+      #   - 披露时滞：报告日距今不足 DISCLOSURE_GRACE_DAYS 的期次跳过（财报季部分子表尚未披露）
+      #   - 窗口外历史散点缺失：只检查近 CHECK_WINDOW_YEARS 年的期次
       def record_partial_period(stock, report_dates)
         present = child_report_dates(stock)
-        report_dates.sort.reverse_each do |date|
-          tables = present.keys.select { |name| present[name].include?(date) }
-          next if tables.size.zero? || tables.size == CHILD_MODELS.size
+        covered = present.reject { |_name, dates| dates.empty? }
+        return false if covered.size < 2
+
+        coverage_start = covered.values.map(&:min).max
+        window_start = Date.current - CHECK_WINDOW_YEARS.years
+        deadline = Date.current - DISCLOSURE_GRACE_DAYS
+        checkable = report_dates.select do |d|
+          d >= coverage_start && d >= window_start && d <= deadline
+        end
+
+        checkable.sort.reverse_each do |date|
+          tables = covered.keys.select { |name| covered[name].include?(date) }
+          next if tables.size.zero? || tables.size == covered.size
 
           DataQualityIssue.record!(
             stock, "financial", "partial_period",
             severity: "warning",
             detail: { report_date: date.to_s, present_tables: tables,
-                      missing_tables: CHILD_MODELS.keys - tables }
+                      missing_tables: covered.keys - tables }
           )
           return true
         end
