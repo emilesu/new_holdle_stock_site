@@ -293,6 +293,23 @@ class YahooMonthlyBarServiceTest < ActiveSupport::TestCase
     assert_equal BigDecimal("5.0"), prev_row.qfq_open, "前复权 = 后复权 ÷ hfq_last(2) = 5"
   end
 
+  test "增量模式：库内 hfq 为负的源缺陷遗留事件月被判为未修正，走日线聚合重算自愈" do
+    stub_http
+    Service.refresh(@stock, mode: :full)
+
+    # 模拟负 adjclose 时代全量重建写入的脏数据：3 月事件月 hfq 列为负
+    march = @stock.stock_monthly_bars.find_by(trade_date: MAR)
+    march.update_columns(hfq_open: -10.0, hfq_close: -20.0, hfq_high: -22.0, hfq_low: -9.0)
+
+    stub_http
+    Service.refresh(@stock, mode: :incremental)
+
+    march.reload
+    assert_equal BigDecimal("10.0"), march.hfq_open, "负 hfq 行应重新请求日线修正而非回灌库内负值"
+    assert_equal BigDecimal("20.0"), march.hfq_close
+    assert_operator march.qfq_close, :>, 0, "前复权列不得由负 hfq 推导"
+  end
+
   # ====================================================
   # 异常与边界
   # ====================================================
@@ -323,6 +340,51 @@ class YahooMonthlyBarServiceTest < ActiveSupport::TestCase
     feb = @stock.stock_monthly_bars.find_by(trade_date: FEB)
     assert_equal BigDecimal("2.0"), feb.qfq_factor, "2 月应沿用 1 月的 qf=2 → qfq_factor = 2/1"
     assert_equal BigDecimal("5.0"), feb.qfq_close
+  end
+
+  # ====================================================
+  # 负 adjclose 源缺陷防御（2026-10 生产事故：SAFE/VHI 等 Yahoo 早期月份 adjclose 整段为负，
+  # 负号沿 qf_first/qf 因子链扩散，导致 hfq/qfq 双侧重写为负）
+  # ====================================================
+  test "负 adjclose 不采信：头部无效段回补首个有效因子，因子链恒为正" do
+    # 1-2 月 adjclose 为负（源缺陷段早于首个有效因子，模拟 SAFE 上市初期），3 月起正常
+    stub_http(month: month_body(days: %w[2024-01-01 2024-02-01 2024-03-01 2024-04-01],
+                                adjcloses: [-5.0, -5.0, 5.0, 5.0]))
+
+    result = Service.refresh(@stock, mode: :full)
+
+    assert_equal 4, result[:total], "无效月回填后行数不丢（全量重建才能覆盖历史负值行）"
+    @stock.stock_monthly_bars.find_each do |row|
+      assert_operator row.hfq_factor, :>, 0, "#{row.trade_date} hfq_factor 不得为负"
+      assert_operator row.qfq_factor, :>, 0, "#{row.trade_date} qfq_factor 不得为负"
+      assert_operator row.hfq_close, :>, 0
+      assert_operator row.qfq_close, :>, 0
+    end
+    jan = @stock.stock_monthly_bars.find_by(trade_date: JAN)
+    assert_equal BigDecimal("1.0"), jan.qfq_factor, "头部无效段 qf 回补为首个有效因子 2 → qfq=2/2=1"
+    assert_equal BigDecimal("1.0"), jan.hfq_factor, "hfq=2/2=1"
+  end
+
+  test "负 adjclose 不采信：中间无效月沿用上一有效因子，且符号翻转不误判为事件月" do
+    stub_http(month: month_body(days: %w[2024-01-01 2024-02-01 2024-03-01], adjcloses: [5.0, -5.0, 5.0]))
+
+    Service.refresh(@stock, mode: :full)
+
+    assert Service.http_client.calls.none? { |url| url.include?("interval=1d") },
+           "2 月负比值已被丢弃、沿用 1 月因子，2→-2→2 的符号跳变不应触发日线修正"
+    feb = @stock.stock_monthly_bars.find_by(trade_date: FEB)
+    assert_equal BigDecimal("1.0"), feb.qfq_factor
+    assert_equal BigDecimal("1.0"), feb.hfq_factor
+    assert_equal BigDecimal("10.0"), feb.hfq_close
+  end
+
+  test "全序列 adjclose 均为负时整只跳过，不以未复权口径入库" do
+    stub_http(month: month_body(days: %w[2024-01-01 2024-02-01 2024-03-01], adjcloses: [-5.0, -5.0, -5.0]))
+
+    result = Service.refresh(@stock, mode: :full)
+
+    assert_equal 0, result[:total]
+    assert_equal 0, @stock.stock_monthly_bars.count
   end
 
   private

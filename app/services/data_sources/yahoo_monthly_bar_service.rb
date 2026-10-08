@@ -197,8 +197,12 @@ module DataSources
           close = to_decimal(closes[i])
           next if close.nil?
 
+          # 与月K同源防御：负/零比值（Yahoo 偶发负 adjclose）不采信，沿用上一有效因子
           adj = to_decimal(adjcloses[i])
-          carried = (close / adj) if adj.present? && !adj.zero?
+          if adj.present? && !adj.zero?
+            ratio = close / adj
+            carried = ratio if ratio.positive?
+          end
           next if carried.nil?
 
           {
@@ -306,7 +310,6 @@ module DataSources
         adjcloses = Array(result.dig("indicators", "adjclose"))[0]&.fetch("adjclose") || []
         closes = Array(quote["close"])
 
-        carried = nil
         bars = timestamps.each_with_index.filter_map do |ts, i|
           next if ts.nil?
 
@@ -314,9 +317,14 @@ module DataSources
           close = to_decimal(closes[i])
           next if close.nil?
 
+          # Yahoo 源偶发负 adjclose（实测 SAFE 1993-12 前整段为负）：负/零比值不采信，
+          # qf 置 nil 交由 fill_missing_factors 用邻近有效因子回填，杜绝负号沿因子链扩散
           adj = to_decimal(adjcloses[i])
-          carried = (close / adj) if adj.present? && !adj.zero?
-          next if carried.nil? # 全序列都拿不到 adjclose 时整只跳过，避免静默写未复权口径
+          qf = nil
+          if adj.present? && !adj.zero?
+            ratio = close / adj
+            qf = ratio if ratio.positive?
+          end
 
           {
             trade_date: date.end_of_month,
@@ -325,10 +333,30 @@ module DataSources
             low: to_decimal(quote["low"]&.[](i)),
             close: close,
             volume: to_integer(quote["volume"]&.[](i)),
-            qf: carried
+            qf: qf
           }
         end
-        merge_bars_by_month(bars)
+        merge_bars_by_month(fill_missing_factors(bars))
+      end
+
+      # 无效因子月回填：中间月沿用上一有效因子（因子分段常数语义）；
+      # 头部无效段（源缺陷早于首个有效因子，如 SAFE 上市初期）回补为首个有效因子，
+      # 保证因子链恒为正且行数不丢（全量重建时才能覆盖历史负值行）。
+      # 全序列都无效时保持 nil，由 build_bars 判空整只跳过
+      def fill_missing_factors(bars)
+        last = nil
+        bars.each do |bar|
+          if bar[:qf].nil?
+            bar[:qf] = last
+          else
+            last = bar[:qf]
+          end
+        end
+        first_valid = bars.find { |bar| !bar[:qf].nil? }
+        return bars if first_valid.nil?
+
+        bars.take_while { |bar| bar[:qf].nil? }.each { |bar| bar[:qf] = first_valid[:qf] }
+        bars
       end
 
       # 同月多根合并（当月进行中 = 「月初缓存根 + 最新盘中根」两根同月）：
@@ -366,7 +394,7 @@ module DataSources
       end
 
       def first_and_latest_factor(month_bars)
-        valid = month_bars.reject { |b| b[:qf].nil? }
+        valid = month_bars.reject { |b| b[:qf].nil? || b[:qf] <= 0 }
         [valid.first&.dig(:qf), valid.last&.dig(:qf)]
       end
 
@@ -435,6 +463,7 @@ module DataSources
 
       # 增量模式的事件月分流（与 Sina 版同构）：
       #   需要重新修正：未落库的新行 / 当月进行中的行 / 库里 hfq_open 仍是「不复权open × 月末因子」旧算法值的行
+      #     / 库里 hfq 为负的源缺陷遗留行（负 adjclose 时代写入，回灌只会延续污染，重算才能自愈）
       #   已修正过：用库里 hfq 列按恒等式 前复权 = 后复权 ÷ 常数(hfq_last) 推导出本轮要重写的前复权列
       def pick_uncorrected_bars(stock, affected, bars, qf_first, qf_latest)
         stored_rows = stock.stock_monthly_bars
@@ -445,7 +474,8 @@ module DataSources
 
         affected.select do |bar|
           row = stored_rows[bar[:trade_date]]
-          if row.nil? || row.hfq_open.nil? || bar[:trade_date] == latest_date || row.hfq_open == bar[:hfq_open]
+          if row.nil? || row.hfq_open.nil? || !row.hfq_open.positive? ||
+             bar[:trade_date] == latest_date || row.hfq_open == bar[:hfq_open]
             true
           else
             # 已修正过：回填库内 hfq 聚合值（「当月+上月」行走整行覆盖 upsert，
