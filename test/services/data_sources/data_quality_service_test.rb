@@ -6,6 +6,8 @@ module DataSources
       DataQualityIssue.delete_all
       @stock = Stock.where(market: "CN").order(:id).first
       skip "需要 CN 股票样本" if @stock.nil?
+      # 置空上市日期，保证既有用例不受样本股真实上市日影响
+      @stock.update_column(:listing_date, nil)
     end
 
     # ── 月K ──
@@ -148,6 +150,26 @@ module DataSources
       refute issue?("partial_period", data_type: "financial")
     end
 
+    test "上市前招股期次只入库部分子表不报期次不完整" do
+      # 模拟新股（如美股 SPAC）：数据源回溯披露上市前招股期次，但资产负债表回溯深度不一，
+      # 四表起点相同使「覆盖边界」规则失效，须靠上市日期排除
+      @stock.update_column(:listing_date, Date.current - 1.year)
+      create_period(Date.current - 3.years, %w[income balance cash indicator])
+      create_period(Date.current - 2.years, %w[income balance indicator])
+
+      assert_equal 0, DataQualityService.check_financials(@stock)
+      refute issue?("partial_period", data_type: "financial")
+    end
+
+    test "上市后部分子表缺失仍报期次不完整" do
+      @stock.update_column(:listing_date, Date.current - 1.year)
+      create_period(Date.current - 3.years, %w[income balance cash indicator])
+      create_period(Date.current - 6.months, %w[income balance indicator])
+
+      DataQualityService.check_financials(@stock)
+      assert issue?("partial_period", data_type: "financial")
+    end
+
     test "整只股票无数据的子表不参与完整性判定" do
       # 模拟数据源不覆盖该股票的财务指标：只入库三张表也不应报
       create_period(Date.current - 2.years, %w[income balance cash])
@@ -192,6 +214,15 @@ module DataSources
 
       DataQualityService.check_financials(@stock)
       assert issue?("empty_financials", data_type: "financial")
+    end
+
+    test "上市前招股期次关键字段为空不报关键字段为空" do
+      # 招股期次的数据源本就残缺，营收/总资产全空不算质量问题
+      @stock.update_column(:listing_date, Date.current - 1.year)
+      create_period(Date.current - 2.years, %w[income balance])
+
+      assert_equal 0, DataQualityService.check_financials(@stock)
+      refute issue?("empty_financials", data_type: "financial")
     end
 
     test "财报日期在未来时报错" do

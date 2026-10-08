@@ -3,7 +3,8 @@ module DataSources
   #
   # 覆盖两类数据：
   #   - 月K：缺月、后复权因子下降（应只增不改）、前后复权常数关系偏离
-  #   - 财务：同一报告期只入库了部分子表（剔除数据源覆盖边界与披露时滞）、关键字段全空、报告日在未来
+  #   - 财务：同一报告期只入库了部分子表（剔除数据源覆盖边界、上市前区间与披露时滞）、
+  #     关键字段全空、报告日在未来
   # 「数值溢出被置空」不在这里扫描，由 BaseFetcher 写入时实时上报。
   class DataQualityService
     # 财务四张子表：完整的一期财务数据应四表齐全
@@ -189,10 +190,12 @@ module DataSources
 
       # 同一报告期只入库了部分子表
       #
-      # 三类「不齐全」不算抓取错误，予以剔除：
+      # 四类「不齐全」不算抓取错误，予以剔除：
       #   - 历史覆盖边界：各子表在数据源中的历史起点不同（如 A股现金流量表 1996 年才有披露要求、
       #     东财美股/港股资产负债表深度有限），只检查「有数据的子表」共同起点之后的期次；
       #     整只股票都没有数据的子表视为数据源不覆盖，不参与判定
+      #   - 上市前区间：新股数据源会回溯披露上市前招股期次，且各子表回溯深度不一
+      #     （2026-10-08 生产实测：1562 条中 1041 条缺失期次早于上市日，重抓补不齐）
       #   - 披露时滞：报告日距今不足 DISCLOSURE_GRACE_DAYS 的期次跳过（财报季部分子表尚未披露）
       #   - 窗口外历史散点缺失：只检查近 CHECK_WINDOW_YEARS 年的期次
       def record_partial_period(stock, report_dates)
@@ -203,8 +206,9 @@ module DataSources
         coverage_start = covered.values.map(&:min).max
         window_start = Date.current - CHECK_WINDOW_YEARS.years
         deadline = Date.current - DISCLOSURE_GRACE_DAYS
+        listing = stock.listing_date
         checkable = report_dates.select do |d|
-          d >= coverage_start && d >= window_start && d <= deadline
+          d >= coverage_start && d >= window_start && d <= deadline && !pre_listing?(listing, d)
         end
 
         checkable.sort.reverse_each do |date|
@@ -222,12 +226,15 @@ module DataSources
         false
       end
 
-      # 营收与总资产同时为空（两表都有行但关键字段全空）
+      # 营收与总资产同时为空（两表都有行但关键字段全空）。
+      # 与 partial_period 同理剔除上市前区间：招股期次的关键字段本就残缺
       def record_empty_financials(stock, report_dates)
         revenue = IncomeStatement.where(stock_id: stock.id).pluck(:report_date, :total_revenue).to_h
         assets = BalanceSheet.where(stock_id: stock.id).pluck(:report_date, :total_assets).to_h
+        listing = stock.listing_date
 
         report_dates.sort.reverse_each do |date|
+          next if pre_listing?(listing, date)
           next unless revenue.key?(date) && assets.key?(date)
           next unless revenue[date].blank? && assets[date].blank?
 
@@ -251,6 +258,11 @@ module DataSources
           detail: { report_date: date.to_s, today: Date.current.to_s }
         )
         true
+      end
+
+      # 期次是否落在上市前的招股区间（上市日期未知时不排除，维持原判定）
+      def pre_listing?(listing, date)
+        listing.present? && date < listing
       end
 
       # { "income_statement" => Set<Date>, ... }
