@@ -19,8 +19,7 @@
     <% if @executions.present? %>
       <% @executions.each do |record| %>
         <div class="px-5 py-4 flex items-start space-x-4 hover:bg-bg-mute transition-colors">
-          <div class="w-3 h-3 mt-1 rounded-full flex-shrink-0
-            <%= record.status == 'success' ? 'bg-green-500' : record.status == 'running' ? 'bg-yellow-500' : 'bg-red-500' %>"></div>
+          <div class="w-3 h-3 mt-1 rounded-full flex-shrink-0 <%= record.status_dot_class %>"></div>
           <div class="flex-1 min-w-0">
             <div class="flex items-center gap-2 flex-wrap">
               <a href="<%= admin_crawler_execution_path(record) %>" class="text-hl-13 font-medium text-ink hover:underline">

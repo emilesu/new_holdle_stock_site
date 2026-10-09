@@ -32,7 +32,7 @@
               <p class="mt-1 text-hl-11 text-muted-5">
                 <% if last %>
                   上次
-                  <%= last.status == "success" ? "成功" : last.status == "running" ? "执行中" : "失败" %>
+                  <%= CrawlerExecution::STATUS_LABELS.fetch(last.status, last.status) %>
                   · <%= relative_time(last.executed_at) %>
                   <% if last.finished_at.present? %>· 耗时 <%= last.duration.to_f.round(1) %>s<% end %>
                 <% else %>

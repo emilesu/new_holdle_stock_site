@@ -1,7 +1,9 @@
 class CrawlerExecution < ApplicationRecord
-  # 状态三态：running / success / failed
+  # 状态四态：running / success / failed / skipped
+  # skipped 仅由定时触发器写入：全局互斥闸门（已有任务在跑）导致本次定时未执行
   # 历史记录中的 "error" 已在迁移 20260930120000 中归一为 "failed"
-  STATUSES = %w[running success failed].freeze
+  STATUSES = %w[running success failed skipped].freeze
+  STATUS_LABELS = { "running" => "执行中", "success" => "成功", "failed" => "失败", "skipped" => "跳过" }.freeze
 
   # 心跳超时阈值：超过该时长未刷新心跳，即认为执行进程已死（部署重启 / OOM）
   # 取值为 CrawlContext::THROTTLE_SECONDS(5s) 的 120 倍，给「单只股票抓取耗时较长」留足余量
@@ -37,6 +39,16 @@ class CrawlerExecution < ApplicationRecord
 
   def running?
     status == "running"
+  end
+
+  # 状态圆点颜色（后台列表/详情共用，避免各视图重复维护三元表达式）
+  def status_dot_class
+    case status
+    when "success" then "bg-green-500"
+    when "running" then "bg-yellow-500"
+    when "skipped" then "bg-gray-400"
+    else "bg-red-500"
+    end
   end
 
   # 是否存在可用于续跑的断点

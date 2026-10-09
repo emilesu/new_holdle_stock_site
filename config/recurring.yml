@@ -22,11 +22,12 @@ production:
     class: CrawlerScheduleJob
     args: [ { task_key: "monthly_bars_refresh_cn" } ]
     schedule: "0 22 * * 1-5"
-  # 港股月K增量：工作日 22:15，港股收盘（北京 16:00）后、与 A股 22:00 任务错峰
+  # 港股月K增量：工作日 16:30，港股收盘（北京 16:00）后即抓取；
+  # 原 22:15 时段 A股月K增量（22:00 起跑约 140 分钟）仍在执行，会被全局互斥闸门天天跳过
   crawler_monthly_bars_hk:
     class: CrawlerScheduleJob
     args: [ { task_key: "monthly_bars_refresh_hk" } ]
-    schedule: "15 22 * * 1-5"
+    schedule: "30 16 * * 1-5"
   # 美股月K增量：周二至周六 06:30（美股收盘在北京时间凌晨 4~5 点，取当日完整数据）
   crawler_monthly_bars_us:
     class: CrawlerScheduleJob

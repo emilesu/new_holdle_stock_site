@@ -19,6 +19,20 @@ class CrawlerScheduleJob < ApplicationJob
 
     if CrawlerExecution.running.exists?
       Rails.logger.info "[CrawlerScheduleJob] 已有爬虫任务在执行，本次定时跳过 #{task.name}"
+      # 落一条 skipped 记录，让「被互斥闸门跳过」在后台可见，而非静默消失
+      now = Time.current
+      CrawlerExecution.create!(
+        task_key: task.key,
+        task_name: task.name,
+        status: "skipped",
+        message: "已有爬虫任务在执行，本次定时跳过",
+        duration: 0,
+        executed_at: now,
+        finished_at: now,
+        trigger_source: "schedule",
+        market: task.market,
+        params: params || {}
+      )
       return
     end
 
