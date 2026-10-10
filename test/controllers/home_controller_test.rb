@@ -26,4 +26,28 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
     assert_match "ABOUT THE AUTHOR", @response.body
     assert_match "FAQ", @response.body
   end
+
+  # hero 右栏简介视频区块：用 data-* 稳定钩子断言，不耦合 Tailwind 类名
+  test "index hero renders intro video player block" do
+    get root_url
+    assert_select "[data-controller='video-player']"
+    assert_select "[data-video-player-target='cover']"
+    assert_select "[data-video-player-target='player']"
+    assert_select "[data-video-player-title-value='HOLDLE 网站简介视频']"
+  end
+
+  # 外链按钮随 HomeHelper 常量状态自适应：常量填入真实链接后此测试无需修改
+  test "index hero video links follow helper config" do
+    get root_url
+    if HomeHelper::HOME_VIDEO_BVID.blank?
+      assert_select "button[disabled]", text: "在 B站观看"
+    else
+      assert_select "a[href*='bilibili.com']", text: "在 B站观看"
+    end
+    if HomeHelper::HOME_VIDEO_YOUTUBE_URL.blank?
+      assert_select "button[disabled]", text: "在 YouTube 观看"
+    else
+      assert_select "a[href=?]", HomeHelper::HOME_VIDEO_YOUTUBE_URL, text: "在 YouTube 观看"
+    end
+  end
 end

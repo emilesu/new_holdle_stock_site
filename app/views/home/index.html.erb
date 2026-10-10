@@ -5,24 +5,67 @@
 <%# ========== 1. Hero：首屏即 AI ========== %>
 <section class="py-hl-hero bg-white border-b border-line relative overflow-hidden">
   <div aria-hidden="true" class="absolute inset-0 hidden md:block bg-gradient-to-r from-white/85 via-white/70 to-white/60"></div>
-  <div class="container-hl relative z-10">
-    <div class="text-hl-11 text-muted-5 tracking-wide-3 mb-5 font-medium">HOLDLE · 2.0 — 基础课程免费 + AI陪练</div>
-    <h1 class="text-hl-22 md:text-hl-40 font-bold leading-tight text-ink mb-3">
-      HOLDLE <span class="text-profit text-muted-2"> - AI 投研助手 </span>
-    </h1>
-    <p class="text-hl-18 text-muted-2 mb-7 leading-snug">
-      把 17 年方法论，装进你的 AI。
-    </p>
-    <p class="text-hl-14 text-muted max-w-160 leading-relaxed mb-4">
-      它不是荐股工具，而是帮你建立一套<span class="text-ink font-medium">识别、等待最具概率优势时机</span>的体系，会重新改变你对股票交易的认知。<br>
-      提高你的胜率。<br>
-    </p>
-    <div class="flex flex-wrap gap-3">
-      <%= link_to "使用AI助手", ai_assistant_path, class: "hl-btn hl-btn-primary" %>
-      <%= link_to "加入会员", join_path, class: "hl-btn hl-btn-line" %>
-      <%= link_to "开始学习", courses_path, class: "hl-btn hl-btn-line" %>
-      <%= link_to "金字塔排行", pyramid_path, class: "hl-btn hl-btn-line" %>
-      <%# <button data-action="click->message#open" class="hl-btn hl-btn-line">给大苏写信</button> %>
+  <div class="container-hl relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-12 items-center">
+    <%# 左栏：简介文案 + CTA %>
+    <div>
+      <div class="text-hl-11 text-muted-5 tracking-wide-3 mb-5 font-medium">HOLDLE · 2.0 — 基础课程免费 + AI陪练</div>
+      <h1 class="text-hl-22 md:text-hl-40 font-bold leading-tight text-ink mb-3">
+        HOLDLE <span class="text-profit text-muted-2"> - 股票投资策略 </span>
+      </h1>
+      <p class="text-hl-18 text-muted-2 mb-7 leading-snug">
+        给你分享一套识别、等待最具概率优势时机的体系策略
+      </p>
+      <p class="text-hl-14 text-muted max-w-160 leading-relaxed mb-4">
+        HOLDLE会<span class="text-ink font-medium">重新改变你对股票交易的认知</span>。<br>
+        提高交易的胜率。<br>
+      </p>
+      <div class="flex flex-wrap gap-3">
+        <%= link_to "使用AI助手", ai_assistant_path, class: "hl-btn hl-btn-primary" %>
+        <%= link_to "加入会员", join_path, class: "hl-btn hl-btn-line" %>
+        <%= link_to "开始学习", courses_path, class: "hl-btn hl-btn-line" %>
+        <%= link_to "金字塔排行", pyramid_path, class: "hl-btn hl-btn-line" %>
+        <%# <button data-action="click->message#open" class="hl-btn hl-btn-line">给大苏写信</button> %>
+      </div>
+    </div>
+
+    <%# 右栏：网站简介视频（封面占位 → 点击注入 B站 iframe；视频未配置时仅显示「制作中」） %>
+    <div class="space-y-4">
+      <div class="relative aspect-video bg-bg-mute border border-line rounded overflow-hidden"
+           data-controller="video-player"
+           data-video-player-video-url-value="<%= home_video_bvid.present? ? "https://player.bilibili.com/player.html?bvid=#{home_video_bvid}&page=1" : "" %>"
+           data-video-player-title-value="HOLDLE 网站简介视频">
+        <div data-video-player-target="cover" class="absolute inset-0 flex items-center justify-center">
+          <% if home_video_cover_url.present? %>
+            <%= image_tag home_video_cover_url, alt: "HOLDLE 网站简介视频封面", class: "w-full h-full object-cover" %>
+          <% else %>
+            <div class="text-center px-6">
+              <p class="text-hl-14 text-muted-4 mb-2">网站简介视频 · 制作中</p>
+              <p class="text-hl-12 text-muted-5">视频发布后自动替换为可播放内容</p>
+            </div>
+          <% end %>
+          <% if home_video_bvid.present? %>
+            <button type="button" data-action="click->video-player#play"
+                    class="absolute inset-0 m-auto w-16 h-16 flex items-center justify-center bg-white border border-line rounded-full text-ink hover:border-ink transition-colors"
+                    aria-label="播放网站简介视频">
+              <svg class="w-6 h-6 ml-1" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+            </button>
+          <% end %>
+        </div>
+        <div data-video-player-target="player" class="hidden absolute inset-0"></div>
+      </div>
+
+      <div class="flex flex-wrap gap-3">
+        <% if home_video_bvid.present? %>
+          <%= link_to "在 B站观看", "https://www.bilibili.com/video/#{home_video_bvid}", target: "_blank", rel: "noopener", class: "hl-btn hl-btn-primary" %>
+        <% else %>
+          <button type="button" disabled class="hl-btn hl-btn-primary disabled:opacity-40 disabled:pointer-events-none">在 B站观看</button>
+        <% end %>
+        <% if home_video_youtube_url.present? %>
+          <%= link_to "在 YouTube 观看", home_video_youtube_url, target: "_blank", rel: "noopener", class: "hl-btn hl-btn-line" %>
+        <% else %>
+          <button type="button" disabled class="hl-btn hl-btn-line disabled:opacity-40 disabled:pointer-events-none">在 YouTube 观看</button>
+        <% end %>
+      </div>
     </div>
   </div>
 </section>

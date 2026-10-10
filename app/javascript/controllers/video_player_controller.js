@@ -2,9 +2,10 @@ import { Controller } from "@hotwired/stimulus"
 
 // 宣传视频：封面占位 → 点击注入 B站 iframe（懒加载，不占首屏）。
 // videoUrlValue 为空时（视频未发布）播放按钮不渲染，仅显示「制作中」占位。
+// titleValue 为注入 iframe 的可访问性标题，各页面显式传入；默认值兼容 AI 助手教程页旧用法。
 export default class extends Controller {
   static targets = ["cover", "player"]
-  static values = { videoUrl: String }
+  static values = { videoUrl: String, title: { type: String, default: "HOLDLE AI 投研助手宣传视频" } }
 
   play() {
     if (!this.videoUrlValue) return
@@ -17,7 +18,7 @@ export default class extends Controller {
     iframe.allowFullscreen = true
     iframe.setAttribute("frameborder", "0")
     iframe.scrolling = "no"
-    iframe.title = "HOLDLE AI 投研助手宣传视频"
+    iframe.title = this.titleValue
 
     this.playerTarget.appendChild(iframe)
     this.playerTarget.classList.remove("hidden")
