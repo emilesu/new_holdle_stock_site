@@ -6,7 +6,7 @@ module HomeHelper
 
   # 简介视频封面图（16:9，图床 URL）。空 = 未提供，封面区显示「制作中」占位块。
   # 注意：站点为 HTTPS（assume_ssl + Nginx SSL 终结），图床必须使用 https:// 前缀，否则浏览器 mixed content 拦截。
-  HOME_VIDEO_COVER_URL = "https://video.holdle.com/image/default/BED6D051E78F4BA29D252F4FA6D952C4-6-2.png"
+  HOME_VIDEO_COVER_URL = "https://video.holdle.com/image/default/7C608E13AE5B4C28A55DB48EE7620568-6-2.jpeg"
 
   # 简介视频 YouTube 地址（海外观众渠道）。空 = 未提供，按钮呈禁用态。
   HOME_VIDEO_YOUTUBE_URL = "https://youtu.be/k1VHpdQBhCM"
