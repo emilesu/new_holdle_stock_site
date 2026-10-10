@@ -31,7 +31,7 @@ class CrawlerScheduleJob < ApplicationJob
         finished_at: now,
         trigger_source: "schedule",
         market: task.market,
-        params: params || {}
+        params: DataSources::CrawlerExecutionStarter.normalize(params)
       )
       return
     end

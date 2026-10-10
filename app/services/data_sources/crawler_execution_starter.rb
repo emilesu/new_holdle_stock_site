@@ -25,8 +25,8 @@ module DataSources
         execution
       end
 
-      private
-
+      # 范围参数规范化（白名单过滤 + 类型转换）。
+      # 公开供跳过分支复用：skipped 记录与正常记录保持同一 params 口径
       def normalize(params)
         params = (params || {}).symbolize_keys.slice(*SCOPE_KEYS)
         params[:stock_ids] = Array(params[:stock_ids]).map(&:to_i).uniq if params[:stock_ids].present?

@@ -116,8 +116,7 @@
       <% if @recent_executions.any? %>
         <% @recent_executions.each do |record| %>
           <div class="px-5 py-3 flex items-center gap-3">
-            <span class="w-2 h-2 rounded-full shrink-0
-              <%= record.status == 'success' ? 'bg-green-500' : record.status == 'running' ? 'bg-yellow-500' : 'bg-red-500' %>"></span>
+            <span class="w-2 h-2 rounded-full shrink-0 <%= record.status_dot_class %>"></span>
             <div class="flex-1 min-w-0">
               <a href="<%= admin_crawler_execution_path(record) %>" class="text-hl-13 font-medium text-ink hover:underline truncate block">
                 <%= record.task_name %>

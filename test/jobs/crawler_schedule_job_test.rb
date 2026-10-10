@@ -11,14 +11,16 @@ class CrawlerScheduleJobTest < ActiveSupport::TestCase
 
     assert_no_enqueued_jobs(only: CrawlerJob) do
       assert_difference -> { CrawlerExecution.where(status: "skipped").count }, 1 do
-        CrawlerScheduleJob.perform_now(task_key: "a_stock_list")
+        CrawlerScheduleJob.perform_now(task_key: "a_finance", params: { "stale_after" => "7", "evil_key" => 1 })
       end
     end
 
     skipped = CrawlerExecution.order(:id).last
-    assert_equal "a_stock_list", skipped.task_key
+    assert_equal "a_finance", skipped.task_key
     assert_equal "schedule", skipped.trigger_source
     assert_equal "已有爬虫任务在执行，本次定时跳过", skipped.message
+    # params 与正常入队记录同口径：白名单过滤 + 类型转换
+    assert_equal({ "stale_after" => 7 }, skipped.params)
   end
 
   test "无任务执行时创建执行记录并入队" do
