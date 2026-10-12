@@ -34,9 +34,8 @@
           </td>
           <td class="px-4 py-3 text-muted max-w-70 truncate"><%= p.title %></td>
           <td class="px-4 py-3">
-            <% dot = { 'draft' => 'bg-gray-400', 'pending_review' => 'bg-amber-500', 'published' => 'bg-green-600', 'withdrawn' => 'bg-red-500', 'superseded' => 'bg-blue-400' } %>
             <span class="inline-flex items-center gap-1.5 text-muted">
-              <span class="w-2 h-2 rounded-full <%= dot[p.status] %>"></span><%= p.status_label %>
+              <span class="w-2 h-2 rounded-full <%= p.status_dot_class %>"></span><%= p.status_label %>
             </span>
           </td>
           <td class="px-4 py-3 text-muted font-mono">v<%= p.current_version_no %><% if p.published_version_no %><span class="text-muted-4"> / 现v<%= p.published_version_no %></span><% end %></td>

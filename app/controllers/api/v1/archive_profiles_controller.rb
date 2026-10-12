@@ -24,7 +24,10 @@ module Api
         return render_error("title 缺失", 422) if params[:title].to_s.strip.empty?
         return render_error("markdown 缺失", 422) if params[:markdown].to_s.strip.empty?
 
-        meta = params[:meta].respond_to?(:to_unsafe_h) ? params[:meta].to_unsafe_h : params[:meta].to_h
+        raw_meta = params[:meta]
+        return render_error("meta 必须为对象", 422) unless raw_meta.respond_to?(:to_h)
+
+        meta = raw_meta.respond_to?(:to_unsafe_h) ? raw_meta.to_unsafe_h : raw_meta.to_h
         return render_error("meta.gate_passed 必须为布尔值", 422) unless [true, false].include?(meta["gate_passed"])
         return render_error("meta.ai_generated 必须为布尔值", 422) unless [true, false].include?(meta["ai_generated"])
 
@@ -57,7 +60,7 @@ module Api
 
       # 查询列表（code/period/status 均可选）
       def index
-        scope = QualityProfile.order(updated_at: :desc).limit(100)
+        scope = QualityProfile.includes(:stock).order(updated_at: :desc).limit(100)
         if (stock = find_stock)
           scope = scope.where(stock_id: stock.id)
           scope = scope.where(period: params[:period].to_s.strip) if params[:period].present?

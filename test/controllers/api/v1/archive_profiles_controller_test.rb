@@ -74,6 +74,9 @@ class Api::V1::ArchiveProfilesControllerTest < ActionDispatch::IntegrationTest
     assert_response 422
     post_profile(meta: { "gate_passed" => true, "ai_generated" => 1 })
     assert_response 422
+    post_profile(meta: "不是对象")
+    assert_response 422
+    assert_includes response.parsed_body["error"], "meta 必须为对象"
   end
 
   # ---- 发布与幂等 ----

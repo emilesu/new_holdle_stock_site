@@ -136,6 +136,19 @@ class QualityProfileTest < ActiveSupport::TestCase
     assert_raise(ActiveRecord::RecordNotFound) { profile.rollback_to!(99, users(:two)) }
   end
 
+  test "rollback_to! 换文并将同股票旧 published 转 superseded" do
+    old_pub = build_profile(period: "2025年报", status: "published", published_version_no: 1)
+    add_version(old_pub, 1, markdown: "旧发布稿")
+    fresh = build_profile(period: "2026年报", status: "pending_review",
+                          current_version_no: 2, published_version_no: 1, markdown: "问题新稿")
+    add_version(fresh, 1, markdown: "干净旧稿")
+
+    fresh.rollback_to!(1, users(:two))
+
+    assert_equal "published", fresh.reload.status
+    assert_equal "superseded", old_pub.reload.status
+  end
+
   # ---- 期次排序（最新期判定） ----
 
   test "period_sort_key 先年份后披露顺序（年报同年最前）" do

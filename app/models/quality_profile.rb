@@ -18,8 +18,11 @@ class QualityProfile < ApplicationRecord
   PERIOD_FORMAT = /\A\d{4}(年报|中报|一季报|三季报)\z/
   # URL 短码映射（展示层，API 契约仍用中文字符串）
   PERIOD_SHORT = { "A" => "年报", "H1" => "中报", "Q1" => "一季报", "Q3" => "三季报" }.freeze
-  SHORT_TO_LABEL = PERIOD_SHORT.transform_values { |v| v }.freeze
   PERIOD_TYPE_BY_LABEL = PERIOD_TYPE_LABELS.invert.freeze
+  # 状态圆点颜色（后台列表统一使用，避免各视图重复维护）
+  STATUS_DOT_CLASSES = { "draft" => "bg-gray-400", "pending_review" => "bg-amber-500",
+                         "published" => "bg-green-600", "withdrawn" => "bg-red-500",
+                         "superseded" => "bg-blue-400" }.freeze
 
   belongs_to :stock
   belongs_to :published_by, class_name: "User", optional: true
@@ -38,6 +41,10 @@ class QualityProfile < ApplicationRecord
 
   def status_label
     STATUS_LABELS[status]
+  end
+
+  def status_dot_class
+    STATUS_DOT_CLASSES[status] || "bg-gray-400"
   end
 
   # 对外可见内容 = 已发布版本快照（主表行可能是待审新稿，绝不直接对外）
@@ -75,8 +82,7 @@ class QualityProfile < ApplicationRecord
     raise "gate_passed 未通过，禁止发布" unless meta["gate_passed"] == true
 
     ActiveRecord::Base.transaction do
-      QualityProfile.where(stock_id: stock_id).where(status: "published")
-                    .where.not(id: id).update_all(status: "superseded")
+      supersede_other_published
       update!(status: "published", published_version_no: current_version_no,
               published_at: Time.current, published_by: user)
     end
@@ -99,8 +105,17 @@ class QualityProfile < ApplicationRecord
       save!
       versions.create!(version_no: current_version_no, title: snapshot.title,
                        markdown: snapshot.markdown, meta: snapshot.meta)
+      supersede_other_published
       update!(status: "published", published_version_no: current_version_no,
               published_at: Time.current, published_by: user)
     end
+  end
+
+  private
+
+  # 不变式：每只股票至多一条 published。发布/回滚换文前必须先把同股票其他 published 转为 superseded
+  def supersede_other_published
+    QualityProfile.where(stock_id: stock_id).where(status: "published")
+                  .where.not(id: id).update_all(status: "superseded")
   end
 end
