@@ -92,6 +92,10 @@ Rails.application.routes.draw do
         post :confirm
         post :release
       end
+
+      # 企业质量档案只读数据接口（Bearer token 鉴权，见 企业质量档案接口对齐方案_20261012.md）
+      get "archive/pyramid", to: "archive#pyramid"
+      get "archive/financials", to: "archive#financials"
     end
   end
 

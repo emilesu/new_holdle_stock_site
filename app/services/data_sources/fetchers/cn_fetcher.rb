@@ -61,6 +61,10 @@ module DataSources
         results << fetch_cashflow(stock, secucode, market)
         results << fetch_indicator(stock, secucode, market)
 
+        # F10 补充字段（扣非归母净利/扣非加权ROE/披露日期/稀释EPS）：
+        # 只更新已存在的 FinancialIndicator 记录，成败不计入四表判定
+        fetch_f10_supplement(stock, secucode, market)
+
         success_count = results.count { |r| r[:status] == :success }
         fail_count = results.count { |r| r[:status] == :failed }
 
@@ -151,6 +155,65 @@ module DataSources
         response = http_get(CN_DATA_URL, params: params)
         items = extract_data_list(response)
         save_indicator_items(stock, items, market, "indicator")
+      end
+
+      # F10 主要财务数据补充抓取：扣非归母净利润/扣非加权ROE/披露日期/稀释EPS
+      # 按 (stock_id, report_date, market) 匹配已入库的 FinancialIndicator 并更新，
+      # 记录不存在则跳过（不新建期次，保留策略由四表主流程控制）
+      def fetch_f10_supplement(stock, secucode, market)
+        params = {
+          reportName: "RPT_F10_FINANCE_MAINFINADATA",
+          columns: "SECUCODE,REPORT_DATE,NOTICE_DATE,KCFJCXSYJLR,ROEKCJQ,EPSXS",
+          filter: %((SECUCODE="#{secucode}")),
+          pageNumber: 1, pageSize: 500,
+          sortTypes: -1, sortColumns: "REPORT_DATE",
+          source: "WEB", client: "WEB"
+        }
+        response = http_get(CN_DATA_URL, params: params)
+        items = extract_data_list(response)
+        unless items.any?
+          log_progress(stock, "f10_supplement", :failed, "no data")
+          return { status: :failed }
+        end
+
+        updated = 0
+        items.each do |item|
+          date_str = item["REPORT_DATE"].to_s.split(" ").first
+          next if date_str.empty?
+          report_date = Date.parse(date_str)
+
+          indicator = FinancialIndicator.find_by(stock_id: stock.id, report_date: report_date, market: market)
+          next unless indicator
+
+          data = {
+            deducted_net_profit: parse_decimal(item["KCFJCXSYJLR"]),
+            deducted_roe_weighted: parse_decimal(item["ROEKCJQ"]),
+            eps_diluted: parse_decimal(item["EPSXS"]),
+            disclosed_at: parse_notice_date(item["NOTICE_DATE"])
+          }
+          next unless data.any? { |k, v| !v.nil? && indicator.send(k) != v }
+
+          indicator.update!(data)
+          updated += 1
+        rescue ArgumentError
+          next
+        end
+
+        status = updated > 0 ? :success : :skipped
+        log_progress(stock, "f10_supplement", status, updated > 0 ? "#{updated} updated" : nil)
+        { status: status, count: updated }
+      rescue => e
+        log_progress(stock, "f10_supplement", :failed, e.message)
+        { status: :failed, error: e.message }
+      end
+
+      # NOTICE_DATE 形如 "2026-08-04 00:00:00"，取日期部分；空/异常返回 nil
+      def parse_notice_date(value)
+        str = value.to_s.split(" ").first
+        return nil if str.nil? || str.empty?
+        Date.parse(str)
+      rescue ArgumentError
+        nil
       end
 
       def fetch_cn_data(report_name, secucode)

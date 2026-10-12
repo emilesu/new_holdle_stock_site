@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_10_03_120100) do
+ActiveRecord::Schema[7.1].define(version: 2026_10_12_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -231,6 +231,10 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_03_120100) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "period_type", default: "annual", null: false, comment: "期次类型（annual/q1/h1/q3，累计口径）"
+    t.decimal "deducted_net_profit", precision: 20, scale: 2, comment: "扣非归母净利润"
+    t.decimal "deducted_roe_weighted", precision: 20, scale: 2, comment: "扣非加权平均ROE"
+    t.date "disclosed_at", comment: "披露日期"
+    t.decimal "eps_diluted", precision: 20, scale: 2, comment: "稀释每股收益（源EPSXS）"
     t.index ["financial_report_id", "report_date"], name: "idx_fin_indicators_report_date"
     t.index ["financial_report_id"], name: "index_financial_indicators_on_financial_report_id"
     t.index ["report_date"], name: "idx_fi_annual_report_date", where: "((period_type)::text = 'annual'::text)"
