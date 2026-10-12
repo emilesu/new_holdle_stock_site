@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_10_12_120000) do
+ActiveRecord::Schema[7.1].define(version: 2026_10_12_180000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -380,6 +380,38 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_12_120000) do
     t.index ["plan_code"], name: "index_plans_on_plan_code", unique: true
   end
 
+  create_table "quality_profile_versions", force: :cascade do |t|
+    t.bigint "quality_profile_id", null: false, comment: "所属档案"
+    t.integer "version_no", null: false, comment: "版本号（从 1 递增）"
+    t.string "title", null: false, comment: "该版本标题快照"
+    t.text "markdown", null: false, comment: "该版本正文快照"
+    t.jsonb "meta", default: "{}", null: false, comment: "该版本元数据快照"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["quality_profile_id", "version_no"], name: "idx_qpv_profile_version", unique: true
+    t.index ["quality_profile_id"], name: "index_quality_profile_versions_on_quality_profile_id"
+  end
+
+  create_table "quality_profiles", force: :cascade do |t|
+    t.bigint "stock_id", null: false, comment: "关联股票"
+    t.string "period", null: false, comment: "财报期标签（如 2025年报），与取数接口 period 完全一致"
+    t.string "title", null: false, comment: "档案标题"
+    t.text "markdown", null: false, comment: "最新稿正文（Markdown，待审内容不直接对外）"
+    t.jsonb "meta", default: "{}", null: false, comment: "发布元数据快照（data_cutoff/disclosed_at/pyramid_score/pyramid_calc_at/gate_passed/ai_generated 等）"
+    t.string "status", default: "draft", null: false, comment: "状态：draft/pending_review/published/withdrawn/superseded"
+    t.integer "current_version_no", default: 0, null: false, comment: "当前版本号（每次覆盖发布 +1）"
+    t.integer "published_version_no", comment: "对外可见版本号（闸门放行时写入，指向 versions.version_no）"
+    t.datetime "published_at", comment: "最近一次发布时间"
+    t.bigint "published_by_id", comment: "发布操作人（人工闸门追责）"
+    t.datetime "withdrawn_at", comment: "撤回时间"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["published_by_id"], name: "index_quality_profiles_on_published_by_id"
+    t.index ["status"], name: "index_quality_profiles_on_status"
+    t.index ["stock_id", "period"], name: "idx_quality_profiles_stock_period", unique: true
+    t.index ["stock_id"], name: "index_quality_profiles_on_stock_id"
+  end
+
   create_table "solid_queue_blocked_executions", force: :cascade do |t|
     t.bigint "job_id", null: false
     t.string "queue_name", null: false
@@ -657,6 +689,9 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_12_120000) do
   add_foreign_key "message_boards", "users", on_delete: :cascade
   add_foreign_key "messages", "users"
   add_foreign_key "orders", "users"
+  add_foreign_key "quality_profile_versions", "quality_profiles"
+  add_foreign_key "quality_profiles", "stocks"
+  add_foreign_key "quality_profiles", "users", column: "published_by_id"
   add_foreign_key "solid_queue_blocked_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_claimed_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_failed_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade

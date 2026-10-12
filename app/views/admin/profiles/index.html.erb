@@ -1,0 +1,55 @@
+<div class="mb-6">
+  <h1 class="text-hl-22 font-bold text-ink">企业质量档案</h1>
+  <p class="text-hl-13 text-muted-4 mt-1">人工闸门：待审稿件在此预览后发布；撤回立即下架，数据保留</p>
+</div>
+
+<%# 状态筛选 %>
+<div class="flex flex-wrap gap-2 mb-4">
+  <%= link_to '全部', admin_profiles_path, class: "text-hl-13 px-3 py-1 rounded border #{'border-link text-link' if params[:status].blank?} #{'border-line-soft text-muted hover:text-ink' if params[:status].present?}" %>
+  <% QualityProfile::STATUSES.each do |s| %>
+    <%= link_to "#{QualityProfile::STATUS_LABELS[s]}", admin_profiles_path(status: s),
+        class: "text-hl-13 px-3 py-1 rounded border #{params[:status] == s ? 'border-link text-link' : 'border-line-soft text-muted hover:text-ink'}" %>
+  <% end %>
+</div>
+
+<div class="hl-card overflow-x-auto">
+  <table class="w-full text-hl-13">
+    <thead>
+      <tr class="border-b border-line text-left text-muted-3">
+        <th class="px-4 py-3 font-medium">股票 / 期次</th>
+        <th class="px-4 py-3 font-medium">标题</th>
+        <th class="px-4 py-3 font-medium">状态</th>
+        <th class="px-4 py-3 font-medium">版本</th>
+        <th class="px-4 py-3 font-medium">金字塔分</th>
+        <th class="px-4 py-3 font-medium">更新 / 发布</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-line-soft">
+      <% @profiles.each do |p| %>
+        <tr class="hover:bg-bg-soft transition">
+          <td class="px-4 py-3">
+            <%= link_to admin_profile_path(p), class: 'text-ink font-medium hover:text-link' do %>
+              <%= p.stock.name %>（<%= p.period %>）
+            <% end %>
+          </td>
+          <td class="px-4 py-3 text-muted max-w-70 truncate"><%= p.title %></td>
+          <td class="px-4 py-3">
+            <% dot = { 'draft' => 'bg-gray-400', 'pending_review' => 'bg-amber-500', 'published' => 'bg-green-600', 'withdrawn' => 'bg-red-500', 'superseded' => 'bg-blue-400' } %>
+            <span class="inline-flex items-center gap-1.5 text-muted">
+              <span class="w-2 h-2 rounded-full <%= dot[p.status] %>"></span><%= p.status_label %>
+            </span>
+          </td>
+          <td class="px-4 py-3 text-muted font-mono">v<%= p.current_version_no %><% if p.published_version_no %><span class="text-muted-4"> / 现v<%= p.published_version_no %></span><% end %></td>
+          <td class="px-4 py-3 text-muted font-mono"><%= p.meta['pyramid_score'] %></td>
+          <td class="px-4 py-3 text-muted-4 text-hl-12">
+            <%= p.updated_at.strftime('%m-%d %H:%M') %>
+            <% if p.published_at %><div>发布 <%= p.published_at.strftime('%m-%d %H:%M') %></div><% end %>
+          </td>
+        </tr>
+      <% end %>
+      <% if @profiles.empty? %>
+        <tr><td colspan="6" class="px-4 py-10 text-center text-muted-4">暂无档案条目（内容侧调用发布 API 后出现在这里）</td></tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>

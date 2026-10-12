@@ -13,6 +13,7 @@ class Stock < ApplicationRecord
   has_many :balance_sheets, through: :financial_reports
   has_many :cash_flows, through: :financial_reports
   has_many :financial_indicators, through: :financial_reports
+  has_many :quality_profiles, dependent: :destroy
   has_many :stock_monthly_bars, dependent: :destroy
   has_many :stock_data_sync_states, dependent: :destroy
   has_many :data_quality_issues, dependent: :destroy

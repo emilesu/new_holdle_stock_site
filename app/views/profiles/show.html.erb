@@ -1,0 +1,106 @@
+<% content_title = @content ? "#{@profile.title} - 企业质量档案" : "企业质量档案 - #{@stock.name}" %>
+<% set_page_title content_title %>
+<% set_page_description "企业质量档案：基于金字塔评分与财报口径的质量拆解（付费会员内容）" %>
+<% set_og_type "article" %>
+<div class="py-10 md:py-16">
+  <div class="container-narrow-flush">
+
+    <%# 面包屑 %>
+    <div class="text-hl-12 text-muted-4 mb-6 px-6 md:px-0">
+      <%= link_to '金字塔', pyramid_path, class: 'hover:text-link transition-colors' %>
+      <span class="mx-1.5 text-muted-5">/</span>
+      <span class="text-ink font-medium"><%= @stock.name %>（<%= @stock.symbol %>）</span>
+    </div>
+
+    <% if @content.nil? %>
+      <%# 引导页：无档案 / 已撤回 / 尚未发布（免费可见） %>
+      <div class="hl-card p-6 sm:p-8 text-center">
+        <p class="text-hl-16 font-medium text-ink mb-2">该期档案暂不可读</p>
+        <p class="text-hl-13 text-muted leading-relaxed mb-6">
+          <% if @latest %>
+            「<%= @profile&.period || @stock.name %>」档案已更新或尚未发布，
+            最新版本为「<%= @latest.period %>」。
+          <% else %>
+            <%= @stock.name %> 的企业质量档案尚在制作中，敬请期待。
+          <% end %>
+        </p>
+        <% if @latest %>
+          <%= link_to '查看最新版档案',
+              "/archive/#{@stock.symbol}/#{@latest.period[0, 4]}#{QualityProfile::PERIOD_SHORT.invert[@latest.period[4..]]}",
+              class: 'inline-flex items-center px-4 py-2 text-hl-13 font-medium text-white bg-link rounded hover:opacity-90 transition' %>
+        <% end %>
+      </div>
+    <% else %>
+      <%# 标题 + 元数据条（框架层，第一眼可见：数据截止/来源/金字塔分+重算时间/AI标识/常驻免责） %>
+      <div class="hl-card p-6 sm:p-8 mb-6">
+        <div class="flex flex-wrap items-center gap-2 mb-3 text-hl-12">
+          <span class="inline-flex px-2 py-0.5 font-medium bg-bg-mute text-muted-3 border border-line-soft rounded">会员</span>
+          <% if @content.meta["ai_generated"] == true %>
+            <span class="inline-flex px-2 py-0.5 font-medium bg-bg-mute text-muted-3 border border-line-soft rounded">AI 生成</span>
+          <% end %>
+          <span class="text-muted-4 ml-auto"><%= l(@profile.published_at.to_date, format: :long) if @profile.published_at %></span>
+        </div>
+
+        <h1 class="text-hl-22 font-semibold text-ink mb-4"><%= @content.title %></h1>
+
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-2 text-hl-12 border-t border-line-soft pt-4">
+          <div>
+            <div class="text-muted-4 mb-0.5">数据截止</div>
+            <div class="text-ink font-medium"><%= @content.meta["data_cutoff"] %></div>
+            <div class="text-muted-4"><% if @content.meta["disclosed_at"].present? %>披露 <%= @content.meta["disclosed_at"] %><% end %></div>
+          </div>
+          <div>
+            <div class="text-muted-4 mb-0.5">金字塔分</div>
+            <div class="text-ink font-medium"><%= @content.meta["pyramid_score"] %></div>
+            <div class="text-muted-4"><% if @content.meta["pyramid_calc_at"].present? %><%= @content.meta["pyramid_calc_at"] %> 重算<% end %></div>
+          </div>
+          <div>
+            <div class="text-muted-4 mb-0.5">数据来源</div>
+            <div class="text-ink font-medium">HOLDLE 财报库</div>
+            <div class="text-muted-4"><%= @content.meta["source"] %></div>
+          </div>
+          <div>
+            <div class="text-muted-4 mb-0.5">期次</div>
+            <div class="text-ink font-medium"><%= @profile.period %></div>
+            <div class="text-muted-4">v<%= @content.version_no %></div>
+          </div>
+        </div>
+        <p class="text-hl-11 text-muted-4 mt-4">（本文为方法学习资料，不构成投资建议）</p>
+      </div>
+
+      <%# 历史期次入口（superseded 可查） %>
+      <% if @history&.any? %>
+        <div class="flex flex-wrap gap-2 mb-6 px-6 md:px-0">
+          <span class="text-hl-12 text-muted-4 leading-6">历史期次：</span>
+          <% @history.each do |h| %>
+            <%= link_to h.period,
+                "/archive/#{@stock.symbol}/#{h.period[0, 4]}#{QualityProfile::PERIOD_SHORT.invert[h.period[4..]]}",
+                class: 'text-hl-12 px-2 py-0.5 border border-line-soft rounded text-muted hover:text-link hover:border-link transition' %>
+          <% end %>
+        </div>
+      <% end %>
+
+      <%# 正文：render_safe 白名单管道（details 折叠/表格横向滚动已支持），Admin 预览同管道 %>
+      <div class="hl-card p-6 sm:p-8 mb-6">
+        <article class="prose prose-gray max-w-none
+          prose-headings:font-semibold prose-headings:text-ink
+          prose-h2:text-hl-18 prose-h3:text-hl-16
+          prose-p:text-hl-14 prose-p:text-muted prose-p:leading-relaxed
+          prose-a:text-link prose-a:no-underline hover:prose-a:text-link-hover
+          prose-strong:text-ink prose-strong:font-semibold
+          prose-code:text-hl-13 prose-code:bg-bg-mute prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:before:content-none prose-code:after:content-none
+          prose-pre:bg-bg-mute prose-pre:text-ink prose-pre:rounded prose-pre:overflow-x-auto prose-pre:p-4 prose-pre:text-hl-13 prose-pre:leading-relaxed prose-pre:border prose-pre:border-line-soft prose-pre:font-mono
+          prose-table:w-full prose-table:text-hl-13
+          prose-th:bg-bg-soft prose-th:text-muted-2 prose-th:font-medium prose-th:px-4 prose-th:py-2
+          prose-td:px-4 prose-td:py-2 prose-td:border-b prose-td:border-line-soft
+          prose-blockquote:border-l-link prose-blockquote:text-muted-3 prose-blockquote:not-italic
+          prose-ul:text-muted prose-ol:text-muted
+          prose-li:text-hl-14
+          prose-hr:border-line-soft">
+          <%= @content.render_html %>
+        </article>
+      </div>
+    <% end %>
+
+  </div>
+</div>

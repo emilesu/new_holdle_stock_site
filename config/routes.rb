@@ -66,6 +66,11 @@ Rails.application.routes.draw do
   get "video", to: "pages#video"
   get "about", to: "pages#about"
 
+  # 企业质量档案前台详情（付费会员可见；列表页 P0-b 再加，详情路径已锁定不改）
+  get "archive/:symbol", to: "profiles#show", constraints: { symbol: /[A-Za-z0-9._-]+/ }
+  get "archive/:symbol/:period_code", to: "profiles#show",
+      constraints: { symbol: /[A-Za-z0-9._-]+/, period_code: /\d{4}(A|H1|Q1|Q3)/ }
+
   # 微信支付订单
   resources :orders, only: [:new, :create, :show] do
     member do
@@ -96,6 +101,11 @@ Rails.application.routes.draw do
       # 企业质量档案只读数据接口（Bearer token 鉴权，见 企业质量档案接口对齐方案_20261012.md）
       get "archive/pyramid", to: "archive#pyramid"
       get "archive/financials", to: "archive#financials"
+
+      # 企业质量档案发布通道（Bearer HOLDLE_PUBLISH_TOKEN 鉴权，见 19/20/22 对齐系列）
+      get "archive/profiles", to: "archive_profiles#index"
+      post "archive/profiles", to: "archive_profiles#create"
+      post "archive/profiles/:id/withdraw", to: "archive_profiles#withdraw"
     end
   end
 
@@ -169,6 +179,15 @@ Rails.application.routes.draw do
     end
     resources :articles
     resources :videos
+
+    # 企业质量档案人工闸门（审核发布/撤回/回滚）
+    resources :profiles, only: [:index, :show] do
+      member do
+        post :publish
+        post :withdraw
+        post :rollback
+      end
+    end
 
     # 后台订单管理
     resources :orders, only: [:index, :show]
