@@ -193,7 +193,8 @@ module DataSources
           }
           next unless data.any? { |k, v| !v.nil? && indicator.send(k) != v }
 
-          indicator.update!(data)
+          # compact：与上方「nil 不触发」的守卫同口径，源端某轮返回 null 不得抹掉已回填值
+          indicator.update!(data.compact)
           updated += 1
         rescue ArgumentError
           next

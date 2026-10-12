@@ -57,6 +57,23 @@ class CnFetcherF10SupplementTest < ActiveSupport::TestCase
     assert_nil @indicator.deducted_net_profit
   end
 
+  # 回归：源端某轮对已回填字段返回 null、另一字段同时有变化时，
+  # 变更检测虽排除 nil，写入也必须跳过 nil，不得抹掉已回填值
+  test "已回填字段本轮返回 null 时保留原值，仅更新有变化的非 nil 字段" do
+    @indicator.update!(deducted_net_profit: 100.0, disclosed_at: Date.new(2026, 3, 23))
+    payload = { "result" => { "data" => [
+      { "REPORT_DATE" => "2025-12-31 00:00:00", "NOTICE_DATE" => nil,
+        "KCFJCXSYJLR" => 200.0, "ROEKCJQ" => nil, "EPSXS" => nil }
+    ] } }
+
+    result = fetcher_with_payload(payload).send(:fetch_f10_supplement, @stock, "603259.SH", "CN")
+
+    assert_equal :success, result[:status]
+    @indicator.reload
+    assert_equal BigDecimal("200.0"), @indicator.deducted_net_profit
+    assert_equal Date.new(2026, 3, 23), @indicator.disclosed_at
+  end
+
   test "NOTICE_DATE 为空时披露日期不写入" do
     payload = { "result" => { "data" => [
       { "REPORT_DATE" => "2025-12-31 00:00:00", "NOTICE_DATE" => nil,
