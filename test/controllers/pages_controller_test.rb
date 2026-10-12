@@ -7,9 +7,9 @@ class PagesControllerTest < ActionDispatch::IntegrationTest
     Plan.create!(plan_code: "member_permanent", name: "永久会员", price_cents: 46800, quota: nil, active: true, is_member_upgrade: true)
     get join_path
     assert_response :success
-    assert_match "免费领 15 次体验", response.body
+    assert_match "免费送 15 次体验", response.body
     assert_match "永久会员", response.body
-    assert_select "a[href='/ai-assistant']", text: "看使用教程"
+    assert_select "a[href='/ai-assistant']", text: "AI使用教程"
   end
 
   test "join 页在无套餐数据时显示筹备中空态" do
@@ -41,7 +41,7 @@ class PagesControllerTest < ActionDispatch::IntegrationTest
     get plans_path
     assert_response :success
     assert_match "永久会员", response.body
-    assert_match "立即购买", response.body
+    assert_match "解锁进阶实战 · AI投研助手无限次", response.body
     assert_match "当前账号", response.body
   end
 end
