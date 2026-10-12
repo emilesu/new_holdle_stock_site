@@ -64,6 +64,17 @@ class Api::V1::ArchiveControllerTest < ActionDispatch::IntegrationTest
     assert_equal 2, data["peers"]["rank_in_sw_l2"]
   end
 
+  test "pyramid 前缀式 code 大小写不敏感" do
+    create_cn_stock_with_annual(symbol: "SH603259", name: "药明康德", score: 800)
+
+    get "/api/v1/archive/pyramid?code=sh603259", headers: @auth
+    assert_response 200
+    assert_equal "603259.SH", response.parsed_body["data"]["code"]
+
+    get "/api/v1/archive/financials?code=sz300750", headers: @auth
+    assert_response 404  # 未入库股票仍应 404，不因归一化误命中
+  end
+
   test "financials 归母口径派生字段与药明 2025 年报验收值一致" do
     _stock, fr = create_cn_stock_with_annual(
       symbol: "SH603259", name: "药明康德", score: 800,

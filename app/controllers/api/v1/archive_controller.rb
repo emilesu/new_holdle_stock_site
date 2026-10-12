@@ -51,13 +51,16 @@ module Api
         render json: { success: false, error: "stock not found" }, status: 404
       end
 
-      # code 归一化：支持 603259.SH 后缀式（库内为 SH603259 前缀式）与原始 symbol
+      # code 归一化：支持 603259.SH 后缀式（库内为 SH603259 前缀式）与原始 symbol，
+      # 前缀式大小写不敏感（sh603259 → SH603259）
       def find_stock
         raw = params[:code].to_s.strip
         return nil if raw.empty?
 
         if (m = raw.match(/\A(\d{6})\.(SH|SZ|BJ)\z/i))
           stock = Stock.find_by(symbol: "#{m[2].upcase}#{m[1]}")
+        elsif (m = raw.match(/\A(SH|SZ|BJ)(\d{6})\z/i))
+          stock = Stock.find_by(symbol: "#{m[1].upcase}#{m[2]}")
         end
         stock || Stock.find_by(symbol: raw)
       end
