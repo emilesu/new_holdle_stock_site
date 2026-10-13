@@ -44,12 +44,7 @@ export default class extends Controller {
 
   _activate(id) {
     this.linkTargets.forEach((link) => {
-      const on = link.dataset.tocId === id
-      link.classList.toggle("text-link", on)
-      link.classList.toggle("border-link", on)
-      link.classList.toggle("font-medium", on)
-      link.classList.toggle("text-muted-3", !on)
-      link.classList.toggle("border-line", !on)
+      link.classList.toggle("is-active", link.dataset.tocId === id)
     })
   }
 }

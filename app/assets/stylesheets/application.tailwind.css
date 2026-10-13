@@ -224,6 +224,27 @@
   .profile-archive article :is(h1, h2, h3)[id] {
     scroll-margin-top: var(--spacing-hl-nav);
   }
+  /* 企业质量档案目录：市场主题色（A股绿/港股琥珀/美股蓝），与 market_star_class 同源引用 theme 变量 */
+  .profile-archive { --toc-accent: var(--color-blue-600); }
+  .profile-archive[data-market="CN"] { --toc-accent: var(--color-green-600); }
+  .profile-archive[data-market="HK"] { --toc-accent: var(--color-amber-600); }
+  /* 默认色也定义在本层（不带 text-* utility），避免 utilities 层压制 is-active/:hover 的市场色 */
+  .toc-link {
+    color: var(--color-muted-3);
+    border-left: 2px solid transparent;
+    transition: color 0.15s ease, border-color 0.15s ease;
+  }
+  .toc-link:hover { color: var(--toc-accent); }
+  .toc-link.is-active {
+    border-left-color: var(--toc-accent);
+    color: var(--toc-accent);
+    font-weight: 500;
+  }
+  /* 移动端折叠目录：隐藏原生三角，展开时箭头翻转 */
+  .toc-fold summary { list-style: none; }
+  .toc-fold summary::-webkit-details-marker { display: none; }
+  .toc-chevron { transition: transform 0.2s ease; }
+  .toc-fold[open] .toc-chevron { transform: rotate(180deg); }
   /* 手机端表格：中文按词组断行避免单字换行、数字不拆断，按内容宽度展开由滚动容器左右滑动查看 */
   @media (width < theme(--breakpoint-md)) {
     .md-table-wrap table {

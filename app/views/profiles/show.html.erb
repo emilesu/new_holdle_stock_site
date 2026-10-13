@@ -26,55 +26,52 @@
       </div>
     </div>
   <% else %>
-    <div class="container-hl profile-archive" data-controller="profile-toc">
-
-      <%# 标题 + 徽标条（数据源信息已后置到正文之后） %>
-      <div class="hl-card p-6 sm:p-8 mb-6">
-        <div class="flex flex-wrap items-center gap-2 mb-3 text-hl-12">
-          <span class="inline-flex px-2 py-0.5 font-medium bg-bg-mute text-muted-3 border border-line-soft rounded">会员</span>
-          <% if @content.meta["ai_generated"] == true %>
-            <span class="inline-flex px-2 py-0.5 font-medium bg-bg-mute text-muted-3 border border-line-soft rounded">AI 生成</span>
-          <% end %>
-          <span class="text-muted-4 ml-auto"><%= l(@profile.published_at.to_date, format: :long) if @profile.published_at %></span>
-        </div>
-
-        <h1 class="text-hl-22 font-semibold text-ink"><%= @content.title %></h1>
-      </div>
-
-      <%# 历史期次入口（superseded 可查） %>
-      <% if @history&.any? %>
-        <div class="flex flex-wrap gap-2 mb-6">
-          <span class="text-hl-12 text-muted-4 leading-6">历史期次：</span>
-          <% @history.each do |h| %>
-            <%= link_to h.period,
-                "/archive/#{@stock.symbol}/#{h.period[0, 4]}#{QualityProfile::PERIOD_SHORT.invert[h.period[4..]]}",
-                class: 'text-hl-12 px-2 py-0.5 border border-line-soft rounded text-muted hover:text-link hover:border-link transition' %>
-          <% end %>
-        </div>
-      <% end %>
-
-      <%# 移动端目录：正文前可折叠（details 纯 HTML，零 JS） %>
-      <% if toc.any? %>
-        <div class="hl-card mb-6 lg:hidden">
-          <details>
-            <summary class="px-6 py-4 text-hl-13 font-medium text-ink cursor-pointer select-none">目录</summary>
-            <nav class="px-6 pb-4 border-t border-line-soft pt-3">
-              <% toc.each do |item| %>
-                <%= link_to item[:text], "##{item[:id]}",
-                    class: "block py-1 text-hl-13 text-muted hover:text-link transition-colors #{'pl-4' if item[:level] >= 3}" %>
-              <% end %>
-            </nav>
-          </details>
-        </div>
-      <% end %>
-
+    <%# 单一文章面：masthead（徽标+标题+日期）→ 移动端折叠目录 → 正文 → 尾部元数据，全部收进一张卡，内部用发丝线分区 %>
+    <div class="container-hl profile-archive" data-controller="profile-toc" data-market="<%= @stock.market %>">
       <div class="lg:flex lg:gap-10 lg:items-start">
-        <%# 正文：render_profile 管道（锚点 id 已注入，details 折叠/表格横向滚动已支持） %>
-        <div class="min-w-0 lg:flex-1">
-          <div class="hl-card p-6 sm:p-8">
-            <article class="prose prose-gray max-w-none
+
+        <%# 左列：文章面（一张卡） %>
+        <article class="hl-card min-w-0 lg:flex-1 overflow-hidden">
+
+          <%# ① Masthead：徽标条 + 大标题 + 发布日期，与正文仅一线之隔 %>
+          <header class="px-6 sm:px-10 pt-8 sm:pt-10 pb-6">
+            <div class="flex flex-wrap items-center gap-2 mb-4 text-hl-12">
+              <span class="inline-flex px-2 py-0.5 font-medium bg-bg-mute text-muted-3 border border-line-soft rounded">会员</span>
+              <span class="inline-flex px-2 py-0.5 font-medium rounded <%= market_badge_class(@stock.market) %>"><%= market_label(@stock.market) %></span>
+              <% if @content.meta["ai_generated"] == true %>
+                <span class="inline-flex px-2 py-0.5 font-medium bg-bg-mute text-muted-3 border border-line-soft rounded">AI 生成</span>
+              <% end %>
+              <span class="text-muted-4 ml-auto"><%= l(@profile.published_at.to_date, format: :long) if @profile.published_at %></span>
+            </div>
+            <h1 class="text-hl-22 font-semibold text-ink leading-snug"><%= @content.title %></h1>
+          </header>
+
+          <%# ② 移动端折叠目录：正文前，纯 details；桌面端隐藏（改用右侧悬浮面板） %>
+          <% if toc.any? %>
+            <details class="toc-fold lg:hidden border-t border-line-soft">
+              <summary class="px-6 sm:px-10 py-4 flex items-center gap-2 text-hl-13 font-medium text-ink cursor-pointer select-none hover:bg-bg-soft transition-colors">
+                <span>目录</span>
+                <span class="text-hl-12 text-muted-4"><%= toc.size %> 节</span>
+                <svg class="toc-chevron w-4 h-4 ml-auto text-muted-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                </svg>
+              </summary>
+              <nav class="px-6 sm:px-10 pb-5 border-t border-line-soft pt-3">
+                <% toc.each do |item| %>
+                  <% sub = item[:level] >= 3 %>
+                  <%= link_to item[:text], "##{item[:id]}",
+                      class: "block py-1.5 text-muted hover:text-link transition-colors #{sub ? 'pl-4 text-hl-12' : 'text-hl-13'}" %>
+                <% end %>
+              </nav>
+            </details>
+          <% end %>
+
+          <%# ③ 正文：render_profile 管道（锚点 id 已注入，details 折叠/表格横向滚动已支持） %>
+          <div class="px-6 sm:px-10 py-8 border-t border-line-soft">
+            <div class="prose prose-gray max-w-none
               prose-headings:font-semibold prose-headings:text-ink
-              prose-h2:text-hl-18 prose-h3:text-hl-16
+              prose-h2:text-hl-18 prose-h2:mt-9 prose-h2:mb-4
+              prose-h3:text-hl-16 prose-h3:mt-7 prose-h3:mb-3
               prose-p:text-hl-14 prose-p:text-muted prose-p:leading-relaxed
               prose-a:text-link prose-a:no-underline hover:prose-a:text-link-hover
               prose-strong:text-ink prose-strong:font-semibold
@@ -83,17 +80,17 @@
               prose-table:w-full prose-table:text-hl-13
               prose-th:bg-bg-soft prose-th:text-muted-2 prose-th:font-medium prose-th:px-4 prose-th:py-2
               prose-td:px-4 prose-td:py-2 prose-td:border-b prose-td:border-line-soft
-              prose-blockquote:border-l-link prose-blockquote:text-muted-3 prose-blockquote:not-italic
+              prose-blockquote:border-l-2 prose-blockquote:border-l-link prose-blockquote:text-muted-3 prose-blockquote:not-italic
               prose-ul:text-muted prose-ol:text-muted
               prose-li:text-hl-14
               prose-hr:border-line-soft">
               <%= @body_html %>
-            </article>
+            </div>
           </div>
 
-          <%# 数据源信息（后置）：数据截止/金字塔分/来源/期次 + 常驻免责 %>
-          <div class="hl-card p-6 sm:p-8 mt-6">
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-2 text-hl-12 border-line-soft">
+          <%# ④ 尾部降权区：数据源信息 + 免责 + 历史期次，统一收在发丝线下，视觉退后 %>
+          <footer class="px-6 sm:px-10 py-6 border-t border-line-soft bg-bg-soft">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-3 text-hl-12">
               <div>
                 <div class="text-muted-4 mb-0.5">数据截止</div>
                 <div class="text-ink font-medium"><%= @content.meta["data_cutoff"] %></div>
@@ -115,20 +112,33 @@
                 <div class="text-muted-4">v<%= @content.version_no %></div>
               </div>
             </div>
-            <p class="text-hl-11 text-muted-4 mt-4 border-t border-line-soft pt-4">（本文为方法学习资料，不构成投资建议）</p>
-          </div>
-        </div>
 
-        <%# 右侧悬浮目录：sticky 跟随滚动，点击锚点平滑定位，当前章节高亮 %>
+            <div class="flex flex-wrap items-center gap-x-4 gap-y-2 mt-5 pt-4 border-t border-line-soft">
+              <p class="text-hl-11 text-muted-4">（本文为方法学习资料，不构成投资建议）</p>
+              <% if @history&.any? %>
+                <div class="flex flex-wrap items-center gap-2 ml-auto">
+                  <span class="text-hl-12 text-muted-4">历史期次：</span>
+                  <% @history.each do |h| %>
+                    <%= link_to h.period,
+                        "/archive/#{@stock.symbol}/#{h.period[0, 4]}#{QualityProfile::PERIOD_SHORT.invert[h.period[4..]]}",
+                        class: 'text-hl-12 px-2 py-0.5 bg-white border border-line rounded text-muted hover:text-link hover:border-link transition' %>
+                  <% end %>
+                </div>
+              <% end %>
+            </div>
+          </footer>
+        </article>
+
+        <%# 右列：悬浮目录面板（独立小卡，sticky 跟随；当前章节用市场色竖条高亮） %>
         <% if toc.any? %>
-          <aside class="hidden lg:block shrink-0 w-56 sticky top-24 self-start max-h-[calc(100vh-7rem)] overflow-y-auto">
-            <nav aria-label="目录">
+          <aside class="hidden lg:block shrink-0 w-60 sticky top-24 self-start">
+            <nav aria-label="目录" class="hl-card p-5 max-h-[calc(100vh-7rem)] overflow-y-auto">
               <p class="text-hl-11 text-muted-5 tracking-wide-2 font-medium mb-3">目录</p>
-              <ul class="space-y-0.5">
+              <ul>
                 <% toc.each do |item| %>
                   <li>
                     <%= link_to item[:text], "##{item[:id]}",
-                        class: 'block py-1 text-hl-12 leading-snug border-l border-line pl-3 text-muted-3 hover:text-link transition-colors',
+                        class: "toc-link block py-1.5 leading-snug text-hl-12 #{'pl-5' if item[:level] >= 3} #{'pl-3' if item[:level] < 3}",
                         data: { profile_toc_target: 'link', toc_id: item[:id], action: 'click->profile-toc#click' } %>
                   </li>
                 <% end %>
@@ -136,6 +146,7 @@
             </nav>
           </aside>
         <% end %>
+
       </div>
     </div>
   <% end %>
