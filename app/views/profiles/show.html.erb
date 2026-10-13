@@ -4,7 +4,8 @@
 <% set_og_type "article" %>
 <%# 正文与目录由控制器走档案专用管道生成（剥离首个 H1 + 注入锚点 + toc，与 Admin 预览同管道） %>
 <% toc = @toc || [] %>
-<div class="py-10 md:py-16">
+<%# 正文分支手机端四边贴屏（无上下灰边）；引导页保留常规留白 %>
+<div class="<%= @content.nil? ? 'py-10 md:py-16' : 'md:py-16' %>">
   <% if @content.nil? %>
     <%# 引导页：无档案 / 已撤回 / 尚未发布（免费可见） %>
     <div class="container-narrow-flush">
@@ -27,7 +28,7 @@
     </div>
   <% else %>
     <%# 单一文章面：masthead（徽标+标题+日期）→ 移动端折叠目录 → 正文 → 尾部元数据，全部收进一张卡，内部用发丝线分区 %>
-    <div class="container-hl profile-archive" data-controller="profile-toc" data-market="<%= @stock.market %>">
+    <div class="container-hl-flush profile-archive" data-controller="profile-toc" data-market="<%= @stock.market %>">
       <div class="lg:flex lg:gap-10 lg:items-start">
 
         <%# 左列：文章面（一张卡） %>
