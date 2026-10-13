@@ -73,7 +73,7 @@
                 <% end %>
               </div>
               <% if @archive_profile %>
-                <%# 企业质量档案入口（全站唯一入口）：跳转最新可读期详情，正文会员墙 %>
+                <%# 企业质量档案入口（全站唯一入口，测试期仅管理员可见）：跳转最新可读期详情，正文会员墙 %>
                 <%= link_to "/archive/#{@stock.symbol}",
                     class: 'w-full hl-btn hl-btn-line mt-3 flex items-center justify-between' do %>
                   <span>企业质量档案</span>
