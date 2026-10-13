@@ -134,6 +134,9 @@ class StocksController < ApplicationController
 
     # 金字塔警示标签（数据<5年 / 亏损年份 / 次新股），与金字塔列表口径一致
     @pyramid_tags = @stock.pyramid_tags
+
+    # 企业质量档案入口：仅当该股存在可读（已发布/被取代未撤回）档案时展示
+    @archive_profile = @stock.quality_profiles.readable.max_by(&:period_sort_key)
   end
 
   def indicator_detail

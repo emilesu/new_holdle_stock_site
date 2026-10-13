@@ -72,6 +72,14 @@
                   </div>
                 <% end %>
               </div>
+              <% if @archive_profile %>
+                <%# 企业质量档案入口（全站唯一入口）：跳转最新可读期详情，正文会员墙 %>
+                <%= link_to "/archive/#{@stock.symbol}",
+                    class: 'w-full hl-btn hl-btn-line mt-3 flex items-center justify-between' do %>
+                  <span>企业质量档案</span>
+                  <span class="text-hl-11 text-muted-4"><%= @archive_profile.period %> →</span>
+                <% end %>
+              <% end %>
               <%= turbo_frame_tag "follow_stock_#{@stock.id}" do %>
                 <% if user_signed_in? && @user_favorite.present? %>
                   <%= button_to "已收藏", user_favorite_path(@user_favorite, stock_id: @stock.id), method: :delete,

@@ -109,4 +109,25 @@ class StocksShowTest < ActionDispatch::IntegrationTest
   ensure
     @roe_high&.destroy! && @py_high&.destroy! && @base&.destroy!
   end
+
+  # 企业质量档案全站唯一入口：金字塔分与收藏按钮之间，仅有可读档案时展示
+  test "详情页档案入口有可读档案才展示且指向最新期" do
+    stock = Stock.create!(symbol: "DET_AR", name: "档案入口测试", market: "CN", exchange: "SH",
+                          sector: "消费", status: "active")
+    get stock_path(stock)
+    assert_response :success
+    refute_includes response.body, "企业质量档案"
+
+    profile, = QualityProfilePublisher.call(stock: stock, period: "2025年报", title: "入口档案",
+                                            markdown: "x",
+                                            meta: { "gate_passed" => true, "ai_generated" => true })
+    profile.publish!(users(:two))
+
+    get stock_path(stock)
+    assert_includes response.body, "企业质量档案"
+    assert_includes response.body, "/archive/DET_AR"
+    assert_includes response.body, "2025年报"
+  ensure
+    stock&.destroy!
+  end
 end
