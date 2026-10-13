@@ -36,6 +36,8 @@
   --spacing-hl-container: 1200px;
   --spacing-hl-narrow: 880px;
   --spacing-hl-hero: 88px;
+  /* sticky 导航栏占位高度（60px 内容 + 1px 底边框 + 3px 余量），锚点定位与悬浮组件共用 */
+  --spacing-hl-nav: 64px;
 
   --spacing-20: 5rem;
   --spacing-24: 6rem;
@@ -212,6 +214,15 @@
       border-width: 0;
       border-radius: 0;
     }
+    /* 企业质量档案：宽容器下正文/元数据卡片同样贴边 */
+    .profile-archive .hl-card {
+      border-width: 0;
+      border-radius: 0;
+    }
+  }
+  /* 企业质量档案：锚点定位时为 sticky 导航栏预留高度（与 JS 目录滚动共用同一 Token） */
+  .profile-archive article :is(h1, h2, h3)[id] {
+    scroll-margin-top: var(--spacing-hl-nav);
   }
   /* 手机端表格：中文按词组断行避免单字换行、数字不拆断，按内容宽度展开由滚动容器左右滑动查看 */
   @media (width < theme(--breakpoint-md)) {

@@ -10,8 +10,8 @@ module Admin
 
     def show
       @versions = @profile.versions
-      # 预览走与前台完全相同的 render_safe 管道（所见即所得）
-      @preview_html = MarkdownRenderer.render_safe(@profile.markdown)
+      # 预览走与前台完全相同的 render_profile 管道（剥离首 H1 + 锚点注入，所见即所得）
+      @preview_html, = MarkdownRenderer.render_profile(@profile.markdown)
     end
 
     def publish

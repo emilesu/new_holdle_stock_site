@@ -2,18 +2,12 @@
 <% set_page_title content_title %>
 <% set_page_description "企业质量档案：基于金字塔评分与财报口径的质量拆解（付费会员内容）" %>
 <% set_og_type "article" %>
+<%# 正文与目录由控制器走档案专用管道生成（剥离首个 H1 + 注入锚点 + toc，与 Admin 预览同管道） %>
+<% toc = @toc || [] %>
 <div class="py-10 md:py-16">
-  <div class="container-narrow-flush">
-
-    <%# 面包屑 %>
-    <div class="text-hl-12 text-muted-4 mb-6 px-6 md:px-0">
-      <%= link_to '金字塔', pyramid_path, class: 'hover:text-link transition-colors' %>
-      <span class="mx-1.5 text-muted-5">/</span>
-      <span class="text-ink font-medium"><%= @stock.name %>（<%= @stock.symbol %>）</span>
-    </div>
-
-    <% if @content.nil? %>
-      <%# 引导页：无档案 / 已撤回 / 尚未发布（免费可见） %>
+  <% if @content.nil? %>
+    <%# 引导页：无档案 / 已撤回 / 尚未发布（免费可见） %>
+    <div class="container-narrow-flush">
       <div class="hl-card p-6 sm:p-8 text-center">
         <p class="text-hl-16 font-medium text-ink mb-2">该期档案暂不可读</p>
         <p class="text-hl-13 text-muted leading-relaxed mb-6">
@@ -30,8 +24,11 @@
               class: 'inline-flex items-center px-4 py-2 text-hl-13 font-medium text-white bg-link rounded hover:opacity-90 transition' %>
         <% end %>
       </div>
-    <% else %>
-      <%# 标题 + 元数据条（框架层，第一眼可见：数据截止/来源/金字塔分+重算时间/AI标识/常驻免责） %>
+    </div>
+  <% else %>
+    <div class="container-hl profile-archive" data-controller="profile-toc">
+
+      <%# 标题 + 徽标条（数据源信息已后置到正文之后） %>
       <div class="hl-card p-6 sm:p-8 mb-6">
         <div class="flex flex-wrap items-center gap-2 mb-3 text-hl-12">
           <span class="inline-flex px-2 py-0.5 font-medium bg-bg-mute text-muted-3 border border-line-soft rounded">会员</span>
@@ -41,36 +38,12 @@
           <span class="text-muted-4 ml-auto"><%= l(@profile.published_at.to_date, format: :long) if @profile.published_at %></span>
         </div>
 
-        <h1 class="text-hl-22 font-semibold text-ink mb-4"><%= @content.title %></h1>
-
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-2 text-hl-12 border-t border-line-soft pt-4">
-          <div>
-            <div class="text-muted-4 mb-0.5">数据截止</div>
-            <div class="text-ink font-medium"><%= @content.meta["data_cutoff"] %></div>
-            <div class="text-muted-4"><% if @content.meta["disclosed_at"].present? %>披露 <%= @content.meta["disclosed_at"] %><% end %></div>
-          </div>
-          <div>
-            <div class="text-muted-4 mb-0.5">金字塔分</div>
-            <div class="text-ink font-medium"><%= @content.meta["pyramid_score"] %></div>
-            <div class="text-muted-4"><% if @content.meta["pyramid_calc_at"].present? %><%= @content.meta["pyramid_calc_at"] %> 重算<% end %></div>
-          </div>
-          <div>
-            <div class="text-muted-4 mb-0.5">数据来源</div>
-            <div class="text-ink font-medium">HOLDLE 财报库</div>
-            <div class="text-muted-4"><%= @content.meta["source"] %></div>
-          </div>
-          <div>
-            <div class="text-muted-4 mb-0.5">期次</div>
-            <div class="text-ink font-medium"><%= @profile.period %></div>
-            <div class="text-muted-4">v<%= @content.version_no %></div>
-          </div>
-        </div>
-        <p class="text-hl-11 text-muted-4 mt-4">（本文为方法学习资料，不构成投资建议）</p>
+        <h1 class="text-hl-22 font-semibold text-ink"><%= @content.title %></h1>
       </div>
 
       <%# 历史期次入口（superseded 可查） %>
       <% if @history&.any? %>
-        <div class="flex flex-wrap gap-2 mb-6 px-6 md:px-0">
+        <div class="flex flex-wrap gap-2 mb-6">
           <span class="text-hl-12 text-muted-4 leading-6">历史期次：</span>
           <% @history.each do |h| %>
             <%= link_to h.period,
@@ -80,27 +53,90 @@
         </div>
       <% end %>
 
-      <%# 正文：render_safe 白名单管道（details 折叠/表格横向滚动已支持），Admin 预览同管道 %>
-      <div class="hl-card p-6 sm:p-8 mb-6">
-        <article class="prose prose-gray max-w-none
-          prose-headings:font-semibold prose-headings:text-ink
-          prose-h2:text-hl-18 prose-h3:text-hl-16
-          prose-p:text-hl-14 prose-p:text-muted prose-p:leading-relaxed
-          prose-a:text-link prose-a:no-underline hover:prose-a:text-link-hover
-          prose-strong:text-ink prose-strong:font-semibold
-          prose-code:text-hl-13 prose-code:bg-bg-mute prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:before:content-none prose-code:after:content-none
-          prose-pre:bg-bg-mute prose-pre:text-ink prose-pre:rounded prose-pre:overflow-x-auto prose-pre:p-4 prose-pre:text-hl-13 prose-pre:leading-relaxed prose-pre:border prose-pre:border-line-soft prose-pre:font-mono
-          prose-table:w-full prose-table:text-hl-13
-          prose-th:bg-bg-soft prose-th:text-muted-2 prose-th:font-medium prose-th:px-4 prose-th:py-2
-          prose-td:px-4 prose-td:py-2 prose-td:border-b prose-td:border-line-soft
-          prose-blockquote:border-l-link prose-blockquote:text-muted-3 prose-blockquote:not-italic
-          prose-ul:text-muted prose-ol:text-muted
-          prose-li:text-hl-14
-          prose-hr:border-line-soft">
-          <%= @content.render_html %>
-        </article>
-      </div>
-    <% end %>
+      <%# 移动端目录：正文前可折叠（details 纯 HTML，零 JS） %>
+      <% if toc.any? %>
+        <div class="hl-card mb-6 lg:hidden">
+          <details>
+            <summary class="px-6 py-4 text-hl-13 font-medium text-ink cursor-pointer select-none">目录</summary>
+            <nav class="px-6 pb-4 border-t border-line-soft pt-3">
+              <% toc.each do |item| %>
+                <%= link_to item[:text], "##{item[:id]}",
+                    class: "block py-1 text-hl-13 text-muted hover:text-link transition-colors #{'pl-4' if item[:level] >= 3}" %>
+              <% end %>
+            </nav>
+          </details>
+        </div>
+      <% end %>
 
-  </div>
+      <div class="lg:flex lg:gap-10 lg:items-start">
+        <%# 正文：render_profile 管道（锚点 id 已注入，details 折叠/表格横向滚动已支持） %>
+        <div class="min-w-0 lg:flex-1">
+          <div class="hl-card p-6 sm:p-8">
+            <article class="prose prose-gray max-w-none
+              prose-headings:font-semibold prose-headings:text-ink
+              prose-h2:text-hl-18 prose-h3:text-hl-16
+              prose-p:text-hl-14 prose-p:text-muted prose-p:leading-relaxed
+              prose-a:text-link prose-a:no-underline hover:prose-a:text-link-hover
+              prose-strong:text-ink prose-strong:font-semibold
+              prose-code:text-hl-13 prose-code:bg-bg-mute prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:before:content-none prose-code:after:content-none
+              prose-pre:bg-bg-mute prose-pre:text-ink prose-pre:rounded prose-pre:overflow-x-auto prose-pre:p-4 prose-pre:text-hl-13 prose-pre:leading-relaxed prose-pre:border prose-pre:border-line-soft prose-pre:font-mono
+              prose-table:w-full prose-table:text-hl-13
+              prose-th:bg-bg-soft prose-th:text-muted-2 prose-th:font-medium prose-th:px-4 prose-th:py-2
+              prose-td:px-4 prose-td:py-2 prose-td:border-b prose-td:border-line-soft
+              prose-blockquote:border-l-link prose-blockquote:text-muted-3 prose-blockquote:not-italic
+              prose-ul:text-muted prose-ol:text-muted
+              prose-li:text-hl-14
+              prose-hr:border-line-soft">
+              <%= @body_html %>
+            </article>
+          </div>
+
+          <%# 数据源信息（后置）：数据截止/金字塔分/来源/期次 + 常驻免责 %>
+          <div class="hl-card p-6 sm:p-8 mt-6">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-2 text-hl-12 border-line-soft">
+              <div>
+                <div class="text-muted-4 mb-0.5">数据截止</div>
+                <div class="text-ink font-medium"><%= @content.meta["data_cutoff"] %></div>
+                <div class="text-muted-4"><% if @content.meta["disclosed_at"].present? %>披露 <%= @content.meta["disclosed_at"] %><% end %></div>
+              </div>
+              <div>
+                <div class="text-muted-4 mb-0.5">金字塔分</div>
+                <div class="text-ink font-medium"><%= @content.meta["pyramid_score"] %></div>
+                <div class="text-muted-4"><% if @content.meta["pyramid_calc_at"].present? %><%= @content.meta["pyramid_calc_at"] %> 重算<% end %></div>
+              </div>
+              <div>
+                <div class="text-muted-4 mb-0.5">数据来源</div>
+                <div class="text-ink font-medium">HOLDLE 财报库</div>
+                <div class="text-muted-4"><%= @content.meta["source"] %></div>
+              </div>
+              <div>
+                <div class="text-muted-4 mb-0.5">期次</div>
+                <div class="text-ink font-medium"><%= @profile.period %></div>
+                <div class="text-muted-4">v<%= @content.version_no %></div>
+              </div>
+            </div>
+            <p class="text-hl-11 text-muted-4 mt-4 border-t border-line-soft pt-4">（本文为方法学习资料，不构成投资建议）</p>
+          </div>
+        </div>
+
+        <%# 右侧悬浮目录：sticky 跟随滚动，点击锚点平滑定位，当前章节高亮 %>
+        <% if toc.any? %>
+          <aside class="hidden lg:block shrink-0 w-56 sticky top-24 self-start max-h-[calc(100vh-7rem)] overflow-y-auto">
+            <nav aria-label="目录">
+              <p class="text-hl-11 text-muted-5 tracking-wide-2 font-medium mb-3">目录</p>
+              <ul class="space-y-0.5">
+                <% toc.each do |item| %>
+                  <li>
+                    <%= link_to item[:text], "##{item[:id]}",
+                        class: 'block py-1 text-hl-12 leading-snug border-l border-line pl-3 text-muted-3 hover:text-link transition-colors',
+                        data: { profile_toc_target: 'link', toc_id: item[:id], action: 'click->profile-toc#click' } %>
+                  </li>
+                <% end %>
+              </ul>
+            </nav>
+          </aside>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
 </div>

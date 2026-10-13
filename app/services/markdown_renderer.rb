@@ -31,5 +31,26 @@ class MarkdownRenderer
       Rails::Html::WhiteListSanitizer.new.sanitize(render(source),
                                                    tags: SAFE_TAGS, attributes: SAFE_ATTRS).html_safe
     end
+
+    # 档案正文专用管道：render_safe → 剥离首个 H1 → 注入锚点 id → 生成目录。
+    # 返回 [html, toc]：
+    #   html —— 处理后的正文（html_safe）
+    #   toc  —— [{ level: 2, text: "…", id: "sec-1" }, …]，供右侧悬浮目录/移动端折叠目录渲染
+    # 前台详情与 Admin 预览共用本管道，保持所见即所得
+    def render_profile(source)
+      doc = Nokogiri::HTML5.fragment(render_safe(source))
+
+      # AI 稿常以「# 标题」开头，与框架层卡片标题重复，剥离正文首个 H1
+      first = doc.elements.first
+      first.unlink if first&.name == "h1"
+
+      toc = []
+      doc.css("h1, h2, h3").each_with_index do |node, i|
+        id = "sec-#{i + 1}"
+        node["id"] = id
+        toc << { level: node.name.delete("h").to_i, text: node.text.strip, id: id }
+      end
+      [doc.to_html.html_safe, toc]
+    end
   end
 end

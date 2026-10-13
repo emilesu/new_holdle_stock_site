@@ -31,6 +31,9 @@ class ProfilesController < ApplicationController
     return redirect_to(join_path, alert: "企业质量档案为付费会员权益，请升级会员后阅读") unless current_user.is_member?
 
     @history = @stock.quality_profiles.readable.where.not(id: @profile.id).to_a.sort_by(&:period_sort_key).reverse
+
+    # 正文走档案专用管道（剥离首 H1 + 锚点注入 + 目录），与 Admin 预览同管道；会员墙通过后才渲染
+    @body_html, @toc = MarkdownRenderer.render_profile(@content.markdown)
   end
 
   private

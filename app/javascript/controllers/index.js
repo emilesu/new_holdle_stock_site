@@ -57,3 +57,6 @@ application.register("admin-nav", AdminNavController)
 
 import AdminChatController from "./admin_chat_controller"
 application.register("admin-chat", AdminChatController)
+
+import ProfileTocController from "./profile_toc_controller"
+application.register("profile-toc", ProfileTocController)
