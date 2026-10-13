@@ -225,4 +225,12 @@ class Api::V1::ArchiveControllerTest < ActionDispatch::IntegrationTest
     assert_response 200
     assert_equal "limit 超过上限，已按 1000 截断", response.parsed_body["data"]["warning"]
   end
+
+  test "ranking 数组型畸形参数不报 500" do
+    get "/api/v1/archive/ranking", params: { market: ["cn"] }, headers: @auth
+    assert_response 400  # 数组 to_s 后不匹配 cn，走市场校验分支
+
+    get "/api/v1/archive/ranking", params: { limit: ["1500"], offset: ["0"], min_score: ["600"] }, headers: @auth
+    assert_response 200  # 数组 to_s 后 to_i 为 0，limit 落默认下限、offset 归 0，不崩溃
+  end
 end

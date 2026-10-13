@@ -44,19 +44,20 @@ module Api
       # 排除未计算标的：pyramid_total_score 为 default 0 NOT NULL，「已计算」的唯一标记是 last_pyramid_calc_at 非空
       # 本期仅 market=cn（A股，含北交所）；港美股未纳入
       def ranking
-        market = params[:market].presence || "cn"
+        # 参数一律先 to_s 再转换：数组型畸形参数（?limit[]=1）to_s 后走默认值/400 路径，避免 NoMethodError→500
+        market = params[:market].to_s.presence || "cn"
         unless market.casecmp?("cn")
           return render json: { success: false, error: "本期仅支持 market=cn（A股，含北交所）" }, status: 400
         end
 
-        raw_limit = (params[:limit].presence || RANKING_DEFAULT_LIMIT).to_i
+        raw_limit = (params[:limit].to_s.presence || RANKING_DEFAULT_LIMIT).to_i
         raw_limit = 1 if raw_limit < 1
         capped = raw_limit > RANKING_MAX_LIMIT
         limit = [raw_limit, RANKING_MAX_LIMIT].min
-        offset = [params[:offset].to_i, 0].max
+        offset = [params[:offset].to_s.to_i, 0].max
 
         scope = Stock.where(market: "CN").where.not(last_pyramid_calc_at: nil)
-        min_score = params[:min_score].presence
+        min_score = params[:min_score].to_s.presence
         scope = scope.where("pyramid_total_score >= ?", min_score.to_i) if min_score
 
         total = scope.count
