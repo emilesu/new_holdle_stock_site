@@ -100,7 +100,9 @@ module DataSources
         secucode = resolve_secucode(symbol)
         unless secucode
           log_progress(stock, "SECUCODE", :failed, "无法解析美股代码")
-          return false
+          # 东财 orgprofile 对部分正常标的（实测 AVB/EQR/WBS 等）也返回空，
+          # 若库内已有报表期次，则用库内期次走 Yahoo 回退补指标，避免这类股票指标永远为空
+          return fallback_indicator_with_db_periods(stock)
         end
         puts "  SECUCODE: #{secucode}"
 
@@ -108,7 +110,7 @@ module DataSources
         periods = fetch_report_periods(secucode)
         unless periods.any?
           log_progress(stock, "报告期次", :failed, "未获取到报告期次")
-          return false
+          return fallback_indicator_with_db_periods(stock)
         end
         annual_count = periods.count { |p| p[:period_type] == "annual" }
         puts "  获取到 #{periods.size} 个报告期次（其中年报 #{annual_count} 期）"
@@ -526,6 +528,23 @@ module DataSources
       rescue => e
         log_progress(stock, "财务指标", :failed, "Yahoo 回退异常: #{e.message}")
         { status: :failed, error: e.message }
+      end
+
+      # Step1/Step2 东财失败时的兜底：用库内已有年报期次走 Yahoo 指标回退
+      # 适用场景（实测 AVB/EQR/WBS 等 25 只）：东财 orgprofile/期次接口对历史曾正常入库的
+      # 标的也返回空，若直接 return false 其指标将永远缺失；库内有期次即可对齐 Yahoo 数据。
+      # 无任何报表的标的（权证/优先股等）库内无期次可对齐，维持原失败行为返回 false。
+      # 返回值语义：报表步确实失败故 success 恒为 false；指标补录成功时 changed=true 触发缓存失效
+      def fallback_indicator_with_db_periods(stock)
+        db_periods = FinancialReport.where(stock_id: stock.id, market: "US", period_type: "annual")
+                                    .distinct.pluck(:report_date)
+                                    .map { |d| { report_date: d, period_type: "annual" } }
+        return false if db_periods.empty?
+
+        result = save_yahoo_indicator(stock, "US", db_periods)
+        return false unless result[:status] == :success
+
+        { success: false, changed: true }
       end
     end
   end

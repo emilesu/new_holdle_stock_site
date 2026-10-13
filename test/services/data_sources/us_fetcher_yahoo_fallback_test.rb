@@ -99,6 +99,37 @@ class UsFetcherYahooFallbackTest < ActiveSupport::TestCase
     assert_equal BigDecimal("171.40"), indicator.roe_avg
   end
 
+  # Step1 东财 orgprofile 失败（实测 AVB/EQR/WBS 等 25 只）：库内有年报期次时用库内期次走 Yahoo 回退
+  test "东财 secucode 解析失败但库内有期次时用库内期次回退补指标" do
+    fr = FinancialReport.create!(stock: @stock, report_date: Date.new(2025, 12, 31),
+                                 report_type: "US_ANNUAL", market: "US", period_type: "annual")
+    yahoo = { "2025-12" => { basic_eps: BigDecimal("1.1") } }
+    @fetcher.define_singleton_method(:resolve_secucode) { |_symbol| nil }
+
+    result = Yahoo.stub(:fetch_annual, yahoo) do
+      @fetcher.fetch_all(@stock)
+    end
+
+    assert_equal false, result[:success], "报表步失败，success 应为 false"
+    assert_equal true, result[:changed], "指标补录成功应触发 changed 使缓存失效"
+    indicator = FinancialIndicator.find_by(stock_id: @stock.id, report_date: Date.new(2025, 12, 31))
+    assert_not_nil indicator
+    assert_equal fr.id, indicator.financial_report_id
+  end
+
+  # 无任何报表的标的（权证/优先股）：库内无期次可对齐，维持原失败行为、不请求 Yahoo
+  test "东财失败且库内无期次时维持失败且不触发 Yahoo" do
+    yahoo_called = false
+    @fetcher.define_singleton_method(:resolve_secucode) { |_symbol| nil }
+
+    result = Yahoo.stub(:fetch_annual, ->(_stock) { yahoo_called = true; {} }) do
+      @fetcher.fetch_all(@stock)
+    end
+
+    assert_equal false, result
+    assert_not yahoo_called
+  end
+
   private
 
   def stub_eastmoney_empty
