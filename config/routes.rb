@@ -66,7 +66,8 @@ Rails.application.routes.draw do
   get "video", to: "pages#video"
   get "about", to: "pages#about"
 
-  # 企业质量档案前台详情（付费会员可见；列表页 P0-b 再加，详情路径已锁定不改）
+  # 企业质量档案前台（P0-b）：/archive 列表页免费可见目录，详情付费会员可见；详情路径已锁定不改
+  get "archive", to: "profiles#index", as: :archive
   get "archive/:symbol", to: "profiles#show", constraints: { symbol: /[A-Za-z0-9._-]+/ }
   get "archive/:symbol/:period_code", to: "profiles#show",
       constraints: { symbol: /[A-Za-z0-9._-]+/, period_code: /\d{4}(A|H1|Q1|Q3)/ }

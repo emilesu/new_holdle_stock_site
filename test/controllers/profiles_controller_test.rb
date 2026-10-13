@@ -22,6 +22,35 @@ class ProfilesControllerTest < ActionDispatch::IntegrationTest
     profile
   end
 
+  # ---- P0-b 列表页 ----
+
+  test "列表页游客免费可见目录元数据但正文绝不进响应" do
+    publish_profile(period: "2025年报", title: "药明康德 2025 年报档案", markdown: "列表页不该出现的正文机密")
+    get archive_path
+    assert_response 200
+    assert_includes response.body, "药明康德 2025 年报档案"
+    assert_includes response.body, "SH603259"
+    assert_includes response.body, "2025年报"
+    refute_includes response.body, "列表页不该出现的正文机密"
+  end
+
+  test "列表页只列 published：被取代/待审/撤回不出现" do
+    publish_profile(period: "2025年报", title: "去年档案")
+    publish_profile(period: "2026年报", title: "今年档案") # 2025 → superseded
+    QualityProfilePublisher.call(stock: @stock, period: "2026中报", title: "待审档案", markdown: "x",
+                                 meta: { "gate_passed" => true, "ai_generated" => true })
+
+    get archive_path
+    assert_includes response.body, "今年档案"
+    refute_includes response.body, "去年档案"
+    refute_includes response.body, "待审档案"
+
+    QualityProfile.find_by(stock_id: @stock.id, period: "2026年报").withdraw!
+    get archive_path
+    assert_response 200
+    assert_includes response.body, "档案制作中"
+  end
+
   # ---- URL 归一化 ----
 
   test "后缀式与小写前缀式 301 归一化到站内格式" do

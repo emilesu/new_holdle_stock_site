@@ -69,6 +69,11 @@ class QualityProfile < ApplicationRecord
          .exists?
   end
 
+  # URL 期次短码：「2025年报」→「2025A」（前台详情路径使用）
+  def period_url_code
+    "#{period[0, 4]}#{PERIOD_SHORT.invert[period[4..]]}"
+  end
+
   # 期次排序键：先年份后披露顺序（同年年报最晚披露→排最前），用于「最新期」判定
   def period_sort_key
     year = period[0, 4].to_i

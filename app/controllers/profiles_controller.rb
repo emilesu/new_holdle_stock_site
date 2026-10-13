@@ -1,4 +1,13 @@
 class ProfilesController < ApplicationController
+  # 企业质量档案栏目列表页（P0-b）：免费可见，只展示标题/股票/期次/分数等目录元数据，
+  # 正文一律经 show 的会员墙。只列当前 published 条目（每股票至多一条，天然「最新期」口径）
+  def index
+    @profiles = QualityProfile.published
+                              .includes(:stock)
+                              .order(published_at: :desc, id: :desc)
+                              .page(params[:page]).per(20)
+  end
+
   # 企业质量档案前台详情（付费会员可见，可见性判定在服务端执行——对齐确认稿 §四）
   # 路径：/archive/SH603259（最新期） /archive/SH603259/2025A（指定期）
   # 后缀式 603259.SH / 小写 sh603259 自动 301 归一化；对外内容只取已发布版本快照
