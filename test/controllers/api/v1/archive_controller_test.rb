@@ -8,10 +8,12 @@ class Api::V1::ArchiveControllerTest < ActionDispatch::IntegrationTest
   end
 
   # 构造 A 股 + 一期年报（四子表齐），返回 [stock, indicator]
+  # calc_at 传入即视为「已重算」，ranking 榜单只收 last_pyramid_calc_at 非空的标的
   def create_cn_stock_with_annual(symbol:, name:, score:, sector: "医药生物", industry: "医疗服务",
-                                  year: 2025, revenue: nil, parent: nil, **indicator_attrs)
+                                  year: 2025, revenue: nil, parent: nil, calc_at: nil, **indicator_attrs)
     stock = Stock.create!(symbol: symbol, name: name, market: "CN", sector: sector, industry: industry,
-                          exchange: "SHSE", status: "active", pyramid_total_score: score)
+                          exchange: "SHSE", status: "active", pyramid_total_score: score,
+                          last_pyramid_calc_at: calc_at)
     report_date = Date.new(year, 12, 31)
     fr = FinancialReport.create!(stock: stock, report_date: report_date, report_type: "CN_ANNUAL",
                                  market: "CN", period_type: "annual", currency: "CNY")
@@ -135,5 +137,92 @@ class Api::V1::ArchiveControllerTest < ActionDispatch::IntegrationTest
 
     get "/api/v1/archive/financials?code=SH600001&period=2019", headers: @auth
     assert_response 404
+  end
+
+  # ---------- ranking 榜单（契约 23_Trae榜单接口需求_20261013.md） ----------
+
+  test "ranking 无 token 返回 401" do
+    get "/api/v1/archive/ranking"
+    assert_response 401
+  end
+
+  test "ranking 本期仅支持 cn，其他市场 400" do
+    get "/api/v1/archive/ranking?market=hk", headers: @auth
+    assert_response 400
+
+    get "/api/v1/archive/ranking?market=CN", headers: @auth
+    assert_response 200
+  end
+
+  test "ranking 排除未计算标的并按 score DESC、id DESC 稳定排序" do
+    calc = Time.zone.parse("2026-10-01 10:00:00")
+    create_cn_stock_with_annual(symbol: "SH600519", name: "贵州茅台", score: 900, calc_at: calc)
+    create_cn_stock_with_annual(symbol: "SZ300001", name: "并列先", score: 800, calc_at: calc)
+    create_cn_stock_with_annual(symbol: "SZ300002", name: "并列后", score: 800, calc_at: calc)
+    create_cn_stock_with_annual(symbol: "SH600000", name: "未计算", score: 999)  # calc_at 为 nil，不入榜
+
+    get "/api/v1/archive/ranking", headers: @auth
+    assert_response 200
+    data = response.parsed_body["data"]
+
+    assert_equal 3, data["total"]
+    assert_equal %w[600519.SH 300002.SZ 300001.SZ], data["items"].map { |i| i["code"] }
+    assert_equal [1, 2, 3], data["items"].map { |i| i["rank"] }
+    assert_equal calc.in_time_zone.iso8601, data["snapshot_at"]
+  end
+
+  test "ranking 榜首与 pyramid 单只接口逐值一致（同源验收）" do
+    calc = Time.zone.parse("2026-10-02 08:30:00")
+    create_cn_stock_with_annual(symbol: "SH688617", name: "惠泰医疗", score: 875, calc_at: calc)
+
+    get "/api/v1/archive/ranking?limit=1", headers: @auth
+    item = response.parsed_body["data"]["items"].first
+
+    get "/api/v1/archive/pyramid?code=688617.SH", headers: @auth
+    single = response.parsed_body["data"]
+
+    assert_equal single["pyramid_score"], item["pyramid_score"]
+    assert_equal single["data_period"], item["data_period"]
+    assert_equal single["last_calc_at"], item["last_calc_at"]
+    assert_equal single["board"], item["board"]
+    assert_equal single["sw_l1"], item["sw_l1"]
+    assert_equal single["sw_l2"], item["sw_l2"]
+  end
+
+  test "ranking 分页无交集且并集覆盖 total" do
+    calc = Time.current
+    3.times do |i|
+      create_cn_stock_with_annual(symbol: format("SH60000%d", i + 1), name: "分页股#{i}",
+                                  score: 700 - i * 10, calc_at: calc)
+    end
+
+    get "/api/v1/archive/ranking?limit=2&offset=0", headers: @auth
+    page1 = response.parsed_body["data"]["items"].map { |i| i["code"] }
+    get "/api/v1/archive/ranking?limit=2&offset=2", headers: @auth
+    page2 = response.parsed_body["data"]["items"].map { |i| i["code"] }
+
+    assert_empty page1 & page2
+    assert_equal 3, (page1 | page2).size
+    assert_equal [3], response.parsed_body["data"]["items"].map { |i| i["rank"] }
+  end
+
+  test "ranking min_score 过滤生效且北交所正常入榜" do
+    calc = Time.current
+    create_cn_stock_with_annual(symbol: "SH600519", name: "贵州茅台", score: 900, calc_at: calc)
+    create_cn_stock_with_annual(symbol: "BJ920201", name: "北交所股", score: 650, calc_at: calc)
+    create_cn_stock_with_annual(symbol: "SH600000", name: "低分股", score: 500, calc_at: calc)
+
+    get "/api/v1/archive/ranking?min_score=600", headers: @auth
+    data = response.parsed_body["data"]
+
+    assert_equal 2, data["total"]
+    assert_equal %w[600519.SH 920201.BJ], data["items"].map { |i| i["code"] }
+    assert_equal "北交所", data["items"].last["board"]
+  end
+
+  test "ranking limit 超上限按 1000 截断并给出 warning" do
+    get "/api/v1/archive/ranking?limit=1500", headers: @auth
+    assert_response 200
+    assert_equal "limit 超过上限，已按 1000 截断", response.parsed_body["data"]["warning"]
   end
 end

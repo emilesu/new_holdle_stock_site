@@ -101,6 +101,7 @@ Rails.application.routes.draw do
       # 企业质量档案只读数据接口（Bearer token 鉴权，见 企业质量档案接口对齐方案_20261012.md）
       get "archive/pyramid", to: "archive#pyramid"
       get "archive/financials", to: "archive#financials"
+      get "archive/ranking", to: "archive#ranking"
 
       # 企业质量档案发布通道（Bearer HOLDLE_PUBLISH_TOKEN 鉴权，见 19/20/22 对齐系列）
       get "archive/profiles", to: "archive_profiles#index"
