@@ -415,9 +415,10 @@ module DataSources
         items = gmain || []
         items = fetch_indicator_pages(secucode, "RPT_USF10_FN_IMAININDICATOR") || [] if items.empty?
         unless items.any?
-          # gmain 为 nil 表示主接口分页超上限被作废（fetch_indicator_pages 内已记 error 日志），
-          # 与「接口确实无数据」区分开，避免失败原因误导排查
-          reason = gmain.nil? ? "分页超过上限 #{MAX_PERIOD_PAGES} 页，本次拉取作废" : "API 无返回数据"
+          # 东财两接口均无数据（实测 SOFI 等约 800 只）→ 回退 Yahoo 补近 4 年年报指标；
+          # gmain 为 nil（分页超上限作废）时不回退——站内期次已残缺，写入反而误导
+          return save_yahoo_indicator(stock, market, periods) if gmain == []
+          reason = "分页超过上限 #{MAX_PERIOD_PAGES} 页，本次拉取作废"
           log_progress(stock, "财务指标", :failed, reason)
           return { status: :failed }
         end
@@ -481,6 +482,49 @@ module DataSources
         { status: status, count: saved_count }
       rescue => e
         log_progress(stock, "财务指标", :failed, e.message)
+        { status: :failed, error: e.message }
+      end
+
+      # 东财指标回退：Yahoo fundamentals-timeseries 补近 4 年年报指标（实测 SOFI 等约 800 只东财两接口全空）
+      # 仅写入本轮期次白名单内真实存在的年报期次（按「同年同月」对齐），避免孤儿期次入库；
+      # 季报不回退——东财季报指标为累计口径，Yahoo 为单季口径，跨财年累加不可靠
+      def save_yahoo_indicator(stock, market, periods)
+        yahoo = DataSources::YahooIndicatorService.fetch_annual(stock)
+        if yahoo.empty?
+          log_progress(stock, "财务指标", :failed, "东财 API 无数据，Yahoo 回退亦无数据")
+          return { status: :failed }
+        end
+
+        annual_by_month = periods.select { |p| p[:period_type] == "annual" }
+                                 .index_by { |p| p[:report_date].strftime("%Y-%m") }
+
+        saved_count = 0
+        skipped_count = 0
+        yahoo.each do |month_key, data|
+          period = annual_by_month[month_key]
+          next if period.nil?
+
+          report_date = period[:report_date]
+          financial_report = find_or_create_financial_report(
+            stock, report_date: report_date, report_type: REPORT_TYPE_CODE, market: market,
+            period_type: "annual"
+          )
+          result = save_model_record(
+            stock, financial_report, FinancialIndicator, report_date, market,
+            data.merge(report_type: REPORT_TYPE_CODE), period_type: "annual"
+          )
+          case result
+          when :success then saved_count += 1
+          when :skipped then skipped_count += 1
+          end
+        end
+
+        status = saved_count > 0 ? :success : (skipped_count > 0 ? :skipped : :failed)
+        detail = status == :failed ? "Yahoo 数据与站内年报期次无一匹配" : "#{saved_count} 条（Yahoo 回退）"
+        log_progress(stock, "财务指标", status, detail)
+        { status: status, count: saved_count }
+      rescue => e
+        log_progress(stock, "财务指标", :failed, "Yahoo 回退异常: #{e.message}")
         { status: :failed, error: e.message }
       end
     end
