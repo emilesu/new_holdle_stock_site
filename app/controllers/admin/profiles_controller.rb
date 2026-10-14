@@ -56,8 +56,9 @@ module Admin
 
       if params[:preview].present?
         # 仅渲染预览、不落库（与前台同管道，所见即所得）
+        # Turbo 表单提交只就地渲染 422，200 会被静默忽略
         @preview_html, = MarkdownRenderer.render_profile(@draft_markdown)
-        return render :edit
+        return render :edit, status: :unprocessable_entity
       end
 
       @profile.manual_edit!(title: @draft_title, markdown: @draft_markdown, user: current_user)
@@ -91,14 +92,17 @@ module Admin
     def bulk_review
       @profiles = QualityProfile.includes(:stock).where(id: bulk_ids).order(:updated_at, :id)
       if @profiles.empty?
-        redirect_to admin_profiles_path, alert: "未选择任何档案"
-      else
-        @eligible = @profiles.select { |p| p.status == "pending_review" && p.meta["gate_passed"] == true }
-        @excluded = @profiles - @eligible
-        if @eligible.size > BULK_PUBLISH_LIMIT
-          redirect_to admin_profiles_path, alert: "符合发布条件的档案超过单批上限 #{BULK_PUBLISH_LIMIT} 条，请缩小范围"
-        end
+        return redirect_to admin_profiles_path, alert: "未选择任何档案"
       end
+
+      @eligible = @profiles.select { |p| p.status == "pending_review" && p.meta["gate_passed"] == true }
+      @excluded = @profiles - @eligible
+      if @eligible.size > BULK_PUBLISH_LIMIT
+        return redirect_to admin_profiles_path, alert: "符合发布条件的档案超过单批上限 #{BULK_PUBLISH_LIMIT} 条，请缩小范围"
+      end
+
+      # Turbo 表单提交只就地渲染 422，200 会被静默忽略（确认页需就地展示）
+      render :bulk_review, status: :unprocessable_entity
     end
 
     # 批量执行：每条独立事务，单条失败不影响其余，逐条报告结果

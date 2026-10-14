@@ -187,7 +187,7 @@ class Admin::ProfilesControllerTest < ActionDispatch::IntegrationTest
     sign_in @admin
     patch admin_profile_path(profile),
           params: { profile: { title: "改了标题", markdown: "# 预览\n正文" }, preview: "1" }
-    assert_response 200
+    assert_response :unprocessable_entity
     assert_includes response.body, "预览渲染效果"
     assert_equal "待审正文", profile.reload.markdown
     assert_equal 1, profile.current_version_no
@@ -226,7 +226,7 @@ class Admin::ProfilesControllerTest < ActionDispatch::IntegrationTest
 
     sign_in @admin
     post bulk_review_admin_profiles_path, params: { ids: [p1.id, draft.id] }
-    assert_response 200
+    assert_response :unprocessable_entity
     assert_includes response.body, "批量发布确认"
     assert_includes response.body, "将发布（1 条）"
     assert_includes response.body, "已排除（1 条"
@@ -283,7 +283,7 @@ class Admin::ProfilesControllerTest < ActionDispatch::IntegrationTest
 
     sign_in @admin
     post bulk_review_admin_profiles_path, params: { ids: ids + [draft.id] }
-    assert_response 200
+    assert_response :unprocessable_entity
     assert_includes response.body, "将发布（20 条）"
     assert_includes response.body, "已排除（1 条"
   end
