@@ -20,7 +20,7 @@ module Admin
       if @chapter.save
         redirect_to admin_course_chapters_path(@course), notice: '章节创建成功'
       else
-        render :new, status: :unprocessable_entity
+        render :new, status: :unprocessable_content
       end
     end
 
@@ -31,7 +31,7 @@ module Admin
       if @chapter.update(chapter_params)
         redirect_to admin_course_chapters_path(@course), notice: '章节更新成功'
       else
-        render :edit, status: :unprocessable_entity
+        render :edit, status: :unprocessable_content
       end
     end
 

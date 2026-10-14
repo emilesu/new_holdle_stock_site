@@ -187,7 +187,7 @@ class Admin::ProfilesControllerTest < ActionDispatch::IntegrationTest
     sign_in @admin
     patch admin_profile_path(profile),
           params: { profile: { title: "改了标题", markdown: "# 预览\n正文" }, preview: "1" }
-    assert_response :unprocessable_entity
+    assert_response :unprocessable_content
     assert_includes response.body, "预览渲染效果"
     assert_equal "待审正文", profile.reload.markdown
     assert_equal 1, profile.current_version_no
@@ -212,7 +212,7 @@ class Admin::ProfilesControllerTest < ActionDispatch::IntegrationTest
     profile = submit(markdown: "待审正文")
     sign_in @admin
     patch admin_profile_path(profile), params: { profile: { title: "用户新标题", markdown: "" } }
-    assert_response :unprocessable_entity
+    assert_response :unprocessable_content
     assert_includes response.body, 'value="用户新标题"'
     assert_match "保存失败", response.body
     assert_equal "待审正文", profile.reload.markdown
@@ -226,7 +226,7 @@ class Admin::ProfilesControllerTest < ActionDispatch::IntegrationTest
 
     sign_in @admin
     post bulk_review_admin_profiles_path, params: { ids: [p1.id, draft.id] }
-    assert_response :unprocessable_entity
+    assert_response :unprocessable_content
     assert_includes response.body, "批量发布确认"
     assert_includes response.body, "将发布（1 条）"
     assert_includes response.body, "已排除（1 条"
@@ -283,9 +283,28 @@ class Admin::ProfilesControllerTest < ActionDispatch::IntegrationTest
 
     sign_in @admin
     post bulk_review_admin_profiles_path, params: { ids: ids + [draft.id] }
-    assert_response :unprocessable_entity
+    assert_response :unprocessable_content
     assert_includes response.body, "将发布（20 条）"
     assert_includes response.body, "已排除（1 条"
+  end
+
+  test "bulk_review 未选择任何档案时重定向回列表" do
+    sign_in @admin
+    post bulk_review_admin_profiles_path, params: { ids: [] }
+    assert_redirected_to admin_profiles_path
+    follow_redirect!
+    assert_match "未选择任何档案", response.body
+  end
+
+  test "bulk_review 符合条件超过单批上限时重定向拒绝" do
+    ids = Array.new(Admin::ProfilesController::BULK_PUBLISH_LIMIT + 1) { |i| "20#{10 + i}年报" }
+                .map { |per| QualityProfilePublisher.call(stock: @stock, period: per, title: "批量 #{per}",
+                                                          markdown: "正文", meta: { "gate_passed" => true })[0].id }
+    sign_in @admin
+    post bulk_review_admin_profiles_path, params: { ids: ids }
+    assert_redirected_to admin_profiles_path
+    follow_redirect!
+    assert_match "超过单批上限", response.body
   end
 
   test "bulk_apply 未选择 / 未知操作 / 超上限均被拒绝" do

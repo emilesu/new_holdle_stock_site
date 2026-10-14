@@ -58,7 +58,7 @@ module Admin
         # 仅渲染预览、不落库（与前台同管道，所见即所得）
         # Turbo 表单提交只就地渲染 422，200 会被静默忽略
         @preview_html, = MarkdownRenderer.render_profile(@draft_markdown)
-        return render :edit, status: :unprocessable_entity
+        return render :edit, status: :unprocessable_content
       end
 
       @profile.manual_edit!(title: @draft_title, markdown: @draft_markdown, user: current_user)
@@ -66,7 +66,7 @@ module Admin
                   notice: "已保存为新版本 v#{@profile.current_version_no}，发布后对外生效"
     rescue => e
       flash.now[:alert] = "保存失败：#{e.message}"
-      render :edit, status: :unprocessable_entity
+      render :edit, status: :unprocessable_content
     end
 
     def publish
@@ -102,7 +102,7 @@ module Admin
       end
 
       # Turbo 表单提交只就地渲染 422，200 会被静默忽略（确认页需就地展示）
-      render :bulk_review, status: :unprocessable_entity
+      render :bulk_review, status: :unprocessable_content
     end
 
     # 批量执行：每条独立事务，单条失败不影响其余，逐条报告结果

@@ -19,7 +19,7 @@ module Admin
       if @lesson.save
         redirect_to admin_course_chapter_lessons_path(@course, @chapter), notice: '小节创建成功'
       else
-        render :new, status: :unprocessable_entity
+        render :new, status: :unprocessable_content
       end
     end
 
@@ -30,7 +30,7 @@ module Admin
       if @lesson.update(lesson_params)
         redirect_to admin_course_chapter_lessons_path(@course, @chapter), notice: '小节更新成功'
       else
-        render :edit, status: :unprocessable_entity
+        render :edit, status: :unprocessable_content
       end
     end
 

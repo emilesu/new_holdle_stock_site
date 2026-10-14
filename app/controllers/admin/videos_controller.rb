@@ -16,7 +16,7 @@ module Admin
       if @video.save
         redirect_to admin_videos_path, notice: "视频创建成功"
       else
-        render :new, status: :unprocessable_entity
+        render :new, status: :unprocessable_content
       end
     end
 
@@ -29,7 +29,7 @@ module Admin
       if @video.save
         redirect_to admin_videos_path, notice: "视频更新成功"
       else
-        render :edit, status: :unprocessable_entity
+        render :edit, status: :unprocessable_content
       end
     end
 

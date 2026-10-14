@@ -19,7 +19,7 @@ module Admin
       if @article.save
         redirect_to admin_articles_path, notice: '文章创建成功'
       else
-        render :new, status: :unprocessable_entity
+        render :new, status: :unprocessable_content
       end
     end
 
@@ -32,7 +32,7 @@ module Admin
       if @article.save
         redirect_to admin_articles_path, notice: '文章更新成功'
       else
-        render :edit, status: :unprocessable_entity
+        render :edit, status: :unprocessable_content
       end
     end
 
