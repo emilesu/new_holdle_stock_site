@@ -95,7 +95,7 @@
               <div>
                 <div class="text-muted-4 mb-0.5">数据截止</div>
                 <div class="text-ink font-medium"><%= @content.meta["data_cutoff"] %></div>
-                <div class="text-muted-4"><% if @content.meta["disclosed_at"].present? %>披露 <%= @content.meta["disclosed_at"] %><% end %></div>
+                <div class="text-muted-4"><% if @content.meta["disclosed_at"].present? %>披露 <%= @content.meta["disclosed_at"] %><% else %>披露日待确认<% end %></div>
               </div>
               <div>
                 <div class="text-muted-4 mb-0.5">金字塔分</div>

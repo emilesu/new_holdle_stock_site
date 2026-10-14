@@ -2,6 +2,9 @@ module DataSources
   module Fetchers
     class CnFetcher < BaseFetcher
       CN_DATA_URL = "https://datacenter-web.eastmoney.com/api/data/v1/get".freeze
+      # 公告接口：北交所年报披露日的权威来源（F10 NOTICE_DATE 对北交所不可靠，
+      # 实测会回填业绩快报/上市备案批量日期，2026-10-14 呆头儿报告核实）
+      BJ_ANNOUNCE_URL = "https://np-anotice-stock.eastmoney.com/api/security/ann".freeze
 
       # 利润表字段映射：API列名 → 模型字段
       INCOME_FIELDS = {
@@ -176,7 +179,14 @@ module DataSources
           return { status: :failed }
         end
 
+        # 北交所年报披露日以公告接口为权威主源：F10 NOTICE_DATE 对北交所返回的
+        # 疑似为业绩快报/上市备案批量日期（实测 4/4 出错，沪深 0 例外），不可信
+        bj_annual = secucode.to_s.end_with?(".BJ")
+        needed_years = bj_annual ? annual_report_years(items) : []
+        notice_map = bj_annual ? fetch_annual_notice_dates(secucode, needed_years) : {}
+
         updated = 0
+        gated = 0
         items.each do |item|
           date_str = item["REPORT_DATE"].to_s.split(" ").first
           next if date_str.empty?
@@ -185,11 +195,20 @@ module DataSources
           indicator = FinancialIndicator.find_by(stock_id: stock.id, report_date: report_date, market: market)
           next unless indicator
 
+          f10_date = parse_notice_date(item["NOTICE_DATE"])
+          disclosed = if bj_annual && report_date.month == 12
+                        # 年报期次只认公告接口结果；查不到则留空，由消费侧公告兜底接管
+                        notice_map[report_date.year]
+                      else
+                        f10_date if disclosed_at_valid?(f10_date, report_date, stock)
+                      end
+          gated += 1 if f10_date && disclosed.nil?
+
           data = {
             deducted_net_profit: parse_decimal(item["KCFJCXSYJLR"]),
             deducted_roe_weighted: parse_decimal(item["ROEKCJQ"]),
             eps_diluted: parse_decimal(item["EPSXS"]),
-            disclosed_at: parse_notice_date(item["NOTICE_DATE"])
+            disclosed_at: disclosed
           }
           next unless data.any? { |k, v| !v.nil? && indicator.send(k) != v }
 
@@ -201,11 +220,80 @@ module DataSources
         end
 
         status = updated > 0 ? :success : :skipped
-        log_progress(stock, "f10_supplement", status, updated > 0 ? "#{updated} updated" : nil)
-        { status: status, count: updated }
+        detail = [updated > 0 ? "#{updated} updated" : nil, gated > 0 ? "#{gated} gated" : nil].compact.join(", ")
+        log_progress(stock, "f10_supplement", status, detail.presence)
+        { status: status, count: updated, gated: gated }
       rescue => e
         log_progress(stock, "f10_supplement", :failed, e.message)
         { status: :failed, error: e.message }
+      end
+
+      # 披露日语义校验门：期次法定窗口（年报 6-30、中报 10-31、一季报 5-31、三季报 11-30 放宽）
+      # 上市晚于窗口起点的次新/新三板转板股票，仅豁免「上市日之前」的披露（招股书/挂牌期合法日期），
+      # 上市日之后的日期仍走窗口校验，防止荒谬值借豁免写入；
+      # "窗口内的快报日期"拦不住，那类问题由北交所年报公告主源解决
+      def disclosed_at_valid?(date, report_date, stock)
+        return false if date.nil?
+        y = report_date.year
+        window = case report_date.month
+                 when 12 then (Date.new(y + 1, 1, 1)..Date.new(y + 1, 6, 30))
+                 when 6  then (Date.new(y, 7, 1)..Date.new(y, 10, 31))
+                 when 3  then (Date.new(y, 4, 1)..Date.new(y, 5, 31))
+                 when 9  then (Date.new(y, 10, 1)..Date.new(y, 11, 30))
+                 end
+        return true unless window
+        return date <= stock.listing_date if stock.listing_date && stock.listing_date > window.begin
+        window.cover?(date)
+      end
+
+      # items 中出现的年报期次年份集合（report_date 为 12-31）
+      def annual_report_years(items)
+        items.filter_map do |item|
+          str = item["REPORT_DATE"].to_s.split(" ").first
+          next if str.nil? || str.empty?
+          d = (Date.parse(str) rescue nil)
+          d.year if d && d.month == 12
+        end.uniq
+      end
+
+      # 公告接口逐年年报公告日：{ 年份 => 最早公告日期 }
+      # 标题匹配「YYYY年年度报告」，排除摘要/更正/编制提示等衍生公告；
+      # 公告按日期倒序分页：needed_years 全部收集到即提前终止，
+      # 否则翻到超出近 5 年范围或最多 6 页为止
+      def fetch_annual_notice_dates(secucode, needed_years = [])
+        code = secucode.to_s.split(".").first
+        map = {}
+        stop_before = Date.new(Date.today.year - 5, 1, 1)
+        6.times do |page|
+          response = http_get(BJ_ANNOUNCE_URL, params: {
+            sr: -1, page_size: 100, page_index: page + 1, ann_type: "A",
+            client_source: "web", stock_list: code, f_node: 0, s_node: 0
+          })
+          list = response.is_a?(Hash) ? response.dig("data", "list") : nil
+          break unless list.is_a?(Array) && list.any?
+          list.each do |ann|
+            title = ann["title"].to_s
+            m = title.match(/(\d{4})年年度报告/)
+            next unless m
+            next if title.match?(/摘要|更正|英文|制度|规则|细则|指引|说明会|预告|决议|披露|编制|提示性|专项说明|审议|议案/)
+            date_str = ann["notice_date"].to_s.split(" ").first
+            next if date_str.nil? || date_str.empty?
+            d = Date.parse(date_str)
+            year = m[1].to_i
+            map[year] = d if map[year].nil? || d < map[year]
+          rescue ArgumentError
+            next
+          end
+          break if needed_years.any? && (needed_years - map.keys).empty?
+          oldest = list.last["notice_date"].to_s.split(" ").first
+          break if oldest.present? && Date.parse(oldest) < stop_before
+        rescue ArgumentError
+          next
+        end
+        map
+      rescue => e
+        Rails.logger.warn "[CnFetcher] #{secucode} 公告接口获取年报披露日失败: #{e.message}"
+        {}
       end
 
       # NOTICE_DATE 形如 "2026-08-04 00:00:00"，取日期部分；空/异常返回 nil

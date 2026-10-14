@@ -14,7 +14,7 @@
       </p>
       <p class="text-hl-12 text-muted-4 mt-2 font-mono">
         金字塔分 <%= @profile.meta['pyramid_score'] %>（<%= @profile.meta['pyramid_calc_at'] %> 重算）·
-        数据截止 <%= @profile.meta['data_cutoff'] %> · 披露 <%= @profile.meta['disclosed_at'] %> ·
+        数据截止 <%= @profile.meta['data_cutoff'] %> · 披露 <%= @profile.meta['disclosed_at'].presence || '未回填' %> ·
         gate_passed=<%= @profile.meta['gate_passed'] %> · ai_generated=<%= @profile.meta['ai_generated'] %> ·
         schema=<%= @profile.meta['schema_version'] %>
       </p>
