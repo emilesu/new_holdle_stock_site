@@ -263,7 +263,7 @@ module DataSources
       def fetch_annual_notice_dates(secucode, needed_years = [])
         code = secucode.to_s.split(".").first
         map = {}
-        stop_before = Date.new(Date.today.year - 5, 1, 1)
+        stop_before = Date.new(Date.current.year - 5, 1, 1)
         6.times do |page|
           response = http_get(BJ_ANNOUNCE_URL, params: {
             sr: -1, page_size: 100, page_index: page + 1, ann_type: "A",
