@@ -1,0 +1,41 @@
+<div class="mb-6">
+  <%= link_to '← 返回档案详情', admin_profile_path(@profile), class: 'text-hl-13 text-muted hover:text-link transition-colors' %>
+</div>
+
+<div class="hl-card p-5 mb-6">
+  <h1 class="text-hl-18 font-bold text-ink">手动编辑： <%= @profile.stock.name %>（<%= @profile.period %>）</h1>
+  <p class="text-hl-13 text-muted mt-1">
+    当前状态 <span class="font-medium text-ink"><%= @profile.status_label %></span> ·
+    版本 v<%= @profile.current_version_no %><% if @profile.published_version_no %> · 对外 v<%= @profile.published_version_no %><% end %>
+  </p>
+  <p class="text-hl-12 text-muted-4 mt-2">
+    编辑将保存为<b>新版本</b>（可回滚、留痕）；元数据（金字塔分 / 校验门等）只读不可改；
+    已发布稿编辑后转「覆盖待审」，对外仍读旧快照，需再次发布才换文。
+  </p>
+</div>
+
+<%= form_with url: admin_profile_path(@profile), method: :patch, class: "space-y-6" do %>
+  <div class="hl-card p-5">
+    <label class="block text-hl-13 font-medium text-ink mb-1" for="profile_title">标题</label>
+    <input type="text" id="profile_title" name="profile[title]" value="<%= @draft_title.presence || @profile.title %>"
+           class="w-full px-3 py-2 text-hl-13 border border-line-soft rounded-md focus:outline-none focus:border-link text-ink">
+
+    <label class="block text-hl-13 font-medium text-ink mt-5 mb-1" for="profile_markdown">正文（Markdown）</label>
+    <textarea id="profile_markdown" name="profile[markdown]" rows="28"
+              class="w-full px-3 py-2 text-hl-13 font-mono border border-line-soft rounded-md focus:outline-none focus:border-link text-ink"><%= @draft_markdown.presence || @profile.markdown %></textarea>
+
+    <div class="flex flex-wrap gap-2 mt-4">
+      <button type="submit" class="px-4 py-2 text-hl-13 font-medium text-white bg-link rounded hover:opacity-90 transition cursor-pointer">保存为新版本</button>
+      <button type="submit" name="preview" value="1" class="px-4 py-2 text-hl-13 border border-line-soft rounded text-muted hover:text-link hover:border-link transition cursor-pointer">预览渲染效果（不保存）</button>
+    </div>
+  </div>
+<% end %>
+
+<% if @preview_html %>
+  <div class="hl-card p-5">
+    <h2 class="text-hl-15 font-semibold text-ink mb-4">预览（与前台同渲染管道，未保存）</h2>
+    <article class="prose prose-gray max-w-none prose-table:text-hl-12">
+      <%= @preview_html %>
+    </article>
+  </div>
+<% end %>

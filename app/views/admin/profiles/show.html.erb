@@ -24,6 +24,10 @@
         <%= button_to '发布（闸门放行）', publish_admin_profile_path(@profile), method: :post,
             class: 'px-4 py-2 text-hl-13 font-medium text-white bg-green-600 rounded hover:opacity-90 transition cursor-pointer' %>
       <% end %>
+      <% if @profile.status.in?(QualityProfile::EDITABLE_STATUSES) %>
+        <%= link_to '编辑', edit_admin_profile_path(@profile),
+            class: 'px-4 py-2 text-hl-13 font-medium border border-line-soft rounded text-muted hover:text-link hover:border-link transition' %>
+      <% end %>
       <% if @profile.status.in?(%w[published superseded]) %>
         <%= button_to '撤回下架', withdraw_admin_profile_path(@profile), method: :post,
             class: 'px-4 py-2 text-hl-13 font-medium text-white bg-red-500 rounded hover:opacity-90 transition cursor-pointer',
@@ -35,6 +39,9 @@
   </div>
   <% if @profile.status == "draft" %>
     <p class="text-hl-12 text-amber-600 mt-3">该稿 gate_passed=false，只能作为草稿；内容侧校验通过后重新发布才进入待审队列。</p>
+  <% end %>
+  <% if @profile.status == "pending_review" && @profile.published_version_no %>
+    <p class="text-hl-12 text-amber-600 mt-3">覆盖待审：最新稿 v<%= @profile.current_version_no %> 尚未发布，对外仍显示 v<%= @profile.published_version_no %>；点击「发布」后换文。</p>
   <% end %>
 </div>
 
@@ -61,7 +68,9 @@
             <p class="text-hl-13 text-ink font-medium">v<%= v.version_no %>
               <% if v.version_no == @profile.published_version_no %><span class="text-green-600 text-hl-11">· 对外</span><% end %>
             </p>
-            <p class="text-hl-11 text-muted-4"><%= v.created_at.strftime('%Y-%m-%d %H:%M') %></p>
+            <p class="text-hl-11 text-muted-4"><%= v.created_at.strftime('%Y-%m-%d %H:%M') %>
+              <% if v.meta['manual_edited_by'] %><span class="text-amber-600">· 人工编辑（<%= v.meta['manual_edited_by'] %> <%= v.meta['manual_edited_at'] %>）</span><% end %>
+            </p>
           </div>
           <% if @profile.status.in?(%w[published superseded pending_review withdrawn]) && v.version_no != @profile.current_version_no %>
             <%= button_to '回滚并发布', rollback_admin_profile_path(@profile, version_no: v.version_no), method: :post,

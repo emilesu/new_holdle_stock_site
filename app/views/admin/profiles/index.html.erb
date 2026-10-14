@@ -3,52 +3,131 @@
   <p class="text-hl-13 text-muted-4 mt-1">人工闸门：待审稿件在此预览后发布；撤回立即下架，数据保留</p>
 </div>
 
-<%# 状态筛选 %>
+<%# 搜索 + 市场 + 时间范围（GET 表单，与状态筛选叠加） %>
+<%= form_with url: admin_profiles_path, method: :get, class: "flex flex-wrap items-center gap-2 mb-4" do %>
+  <input type="hidden" name="status" value="<%= params[:status] if params[:status].in?(QualityProfile::STATUSES) %>">
+  <input type="text" name="q" value="<%= @q %>" placeholder="股票名称 / 代码 / 标题 / 期次"
+         class="w-64 px-3 py-1.5 text-hl-13 border border-line-soft rounded-md focus:outline-none focus:border-link text-ink placeholder:text-muted-4">
+  <select name="market" class="px-3 py-1.5 text-hl-13 border border-line-soft rounded-md text-ink bg-white focus:outline-none focus:border-link">
+    <option value="">全部市场</option>
+    <% Admin::ProfilesController::MARKET_LABELS.each do |code, label| %>
+      <option value="<%= code %>" <%= 'selected' if @market == code %>><%= label %></option>
+    <% end %>
+  </select>
+  <select name="range" class="px-3 py-1.5 text-hl-13 border border-line-soft rounded-md text-ink bg-white focus:outline-none focus:border-link">
+    <option value="">全部时间</option>
+    <% Admin::ProfilesController::TIME_RANGES.each do |key, label| %>
+      <option value="<%= key %>" <%= 'selected' if @range == key %>><%= label %></option>
+    <% end %>
+  </select>
+  <button type="submit" class="px-4 py-1.5 text-hl-13 font-medium text-white bg-link rounded-md hover:opacity-90 transition cursor-pointer">搜索</button>
+  <% if @q.present? || @market.present? || @range.present? %>
+    <%= link_to '清除条件', admin_profiles_path(status: params[:status]), class: 'text-hl-13 text-muted hover:text-link transition' %>
+  <% end %>
+<% end %>
+
+<%# 状态筛选（保留搜索条件） %>
 <div class="flex flex-wrap gap-2 mb-4">
-  <%= link_to '全部', admin_profiles_path, class: "text-hl-13 px-3 py-1 rounded border #{'border-link text-link' if params[:status].blank?} #{'border-line-soft text-muted hover:text-ink' if params[:status].present?}" %>
+  <%= link_to '全部', admin_profiles_path(q: @q.presence, market: @market.presence, range: @range.presence),
+      class: "text-hl-13 px-3 py-1 rounded border #{params[:status].blank? ? 'border-link text-link' : 'border-line-soft text-muted hover:text-ink'}" %>
   <% QualityProfile::STATUSES.each do |s| %>
-    <%= link_to "#{QualityProfile::STATUS_LABELS[s]}", admin_profiles_path(status: s),
+    <%= link_to QualityProfile::STATUS_LABELS[s],
+        admin_profiles_path(status: s, q: @q.presence, market: @market.presence, range: @range.presence),
         class: "text-hl-13 px-3 py-1 rounded border #{params[:status] == s ? 'border-link text-link' : 'border-line-soft text-muted hover:text-ink'}" %>
   <% end %>
 </div>
 
-<div class="hl-card overflow-x-auto">
-  <table class="w-full text-hl-13">
-    <thead>
-      <tr class="border-b border-line text-left text-muted-3">
-        <th class="px-4 py-3 font-medium">股票 / 期次</th>
-        <th class="px-4 py-3 font-medium">标题</th>
-        <th class="px-4 py-3 font-medium">状态</th>
-        <th class="px-4 py-3 font-medium">版本</th>
-        <th class="px-4 py-3 font-medium">金字塔分</th>
-        <th class="px-4 py-3 font-medium">更新 / 发布</th>
-      </tr>
-    </thead>
-    <tbody class="divide-y divide-line-soft">
-      <% @profiles.each do |p| %>
-        <tr class="hover:bg-bg-soft transition">
-          <td class="px-4 py-3">
-            <%= link_to admin_profile_path(p), class: 'text-ink font-medium hover:text-link' do %>
-              <%= p.stock.name %>（<%= p.period %>）
-            <% end %>
-          </td>
-          <td class="px-4 py-3 text-muted max-w-70 truncate"><%= p.title %></td>
-          <td class="px-4 py-3">
-            <span class="inline-flex items-center gap-1.5 text-muted">
-              <span class="w-2 h-2 rounded-full <%= p.status_dot_class %>"></span><%= p.status_label %>
-            </span>
-          </td>
-          <td class="px-4 py-3 text-muted font-mono">v<%= p.current_version_no %><% if p.published_version_no %><span class="text-muted-4"> / 现v<%= p.published_version_no %></span><% end %></td>
-          <td class="px-4 py-3 text-muted font-mono"><%= p.meta['pyramid_score'] %></td>
-          <td class="px-4 py-3 text-muted-4 text-hl-12">
-            <%= p.updated_at.strftime('%m-%d %H:%M') %>
-            <% if p.published_at %><div>发布 <%= p.published_at.strftime('%m-%d %H:%M') %></div><% end %>
-          </td>
+<%# 批量操作表单：勾选 → 批量发布（先确认页）/ 批量撤回（直接执行） %>
+<%= form_with url: bulk_apply_admin_profiles_path, method: :post, id: 'bulk-profiles-form' do %>
+  <div class="hl-card overflow-x-auto">
+    <table class="w-full text-hl-13">
+      <thead>
+        <tr class="border-b border-line text-left text-muted-3">
+          <th class="px-4 py-3 font-medium w-8">
+            <input type="checkbox" data-select-all class="cursor-pointer" aria-label="全选">
+          </th>
+          <th class="px-4 py-3 font-medium">股票 / 期次</th>
+          <th class="px-4 py-3 font-medium">标题</th>
+          <th class="px-4 py-3 font-medium">状态</th>
+          <th class="px-4 py-3 font-medium">版本</th>
+          <th class="px-4 py-3 font-medium">金字塔分</th>
+          <th class="px-4 py-3 font-medium">更新 / 发布</th>
+          <th class="px-4 py-3 font-medium">操作</th>
         </tr>
-      <% end %>
-      <% if @profiles.empty? %>
-        <tr><td colspan="6" class="px-4 py-10 text-center text-muted-4">暂无档案条目（内容侧调用发布 API 后出现在这里）</td></tr>
-      <% end %>
-    </tbody>
-  </table>
+      </thead>
+      <tbody class="divide-y divide-line-soft">
+        <% @profiles.each do |p| %>
+          <tr class="hover:bg-bg-soft transition">
+            <td class="px-4 py-3">
+              <input type="checkbox" name="ids[]" value="<%= p.id %>" class="cursor-pointer" aria-label="选择 <%= p.stock.name %>（<%= p.period %>）">
+            </td>
+            <td class="px-4 py-3">
+              <%= link_to admin_profile_path(p), class: 'text-ink font-medium hover:text-link' do %>
+                <%= p.stock.name %>（<%= p.period %>）
+              <% end %>
+            </td>
+            <td class="px-4 py-3 text-muted max-w-70 truncate"><%= p.title %></td>
+            <td class="px-4 py-3">
+              <span class="inline-flex items-center gap-1.5 text-muted">
+                <span class="w-2 h-2 rounded-full <%= p.status_dot_class %>"></span><%= p.status_label %>
+              </span>
+            </td>
+            <td class="px-4 py-3 text-muted font-mono">v<%= p.current_version_no %><% if p.published_version_no %><span class="text-muted-4"> / 现v<%= p.published_version_no %></span><% end %></td>
+            <td class="px-4 py-3 text-muted font-mono"><%= p.meta['pyramid_score'] %></td>
+            <td class="px-4 py-3 text-muted-4 text-hl-12">
+              <%= p.updated_at.strftime('%m-%d %H:%M') %>
+              <% if p.published_at %><div>发布 <%= p.published_at.strftime('%m-%d %H:%M') %></div><% end %>
+            </td>
+            <td class="px-4 py-3">
+              <% if p.status.in?(QualityProfile::EDITABLE_STATUSES) %>
+                <%= link_to '编辑', edit_admin_profile_path(p), class: 'text-hl-12 px-2.5 py-1 border border-line-soft rounded text-muted hover:text-link hover:border-link transition' %>
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+        <% if @profiles.empty? %>
+          <tr><td colspan="8" class="px-4 py-10 text-center text-muted-4"><%= @q.present? || @market.present? || @range.present? ? '没有符合搜索条件的档案' : '暂无档案条目（内容侧调用发布 API 后出现在这里）' %></td></tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="flex flex-wrap items-center gap-3 mt-4">
+    <span class="text-hl-13 text-muted">已选 <span id="bulk-selected-count" class="font-mono text-ink">0</span> 条</span>
+    <button type="submit" name="bulk_action" value="publish" formaction="<%= bulk_review_admin_profiles_path %>"
+            class="px-4 py-2 text-hl-13 font-medium text-white bg-green-600 rounded hover:opacity-90 transition cursor-pointer">
+      批量发布（先逐条确认，≤<%= Admin::ProfilesController::BULK_PUBLISH_LIMIT %> 条）
+    </button>
+    <button type="submit" name="bulk_action" value="withdraw" data-turbo-confirm="确认批量撤回所选档案？已发布条目前台立即下架（数据保留，可回滚恢复）"
+            class="px-4 py-2 text-hl-13 font-medium text-white bg-red-500 rounded hover:opacity-90 transition cursor-pointer">
+      批量撤回
+    </button>
+  </div>
+<% end %>
+
+<div class="mt-6">
+  <%= paginate @profiles %>
 </div>
+
+<script>
+  // 批量勾选：全选联动 + 已选计数（Turbo 适配：每次 turbo:load 重新绑定，用 dataset 防重复）
+  document.addEventListener("turbo:load", function() {
+    const form = document.getElementById("bulk-profiles-form");
+    if (!form || form.dataset.bulkBound === "1") return;
+    form.dataset.bulkBound = "1";
+
+    const updateCount = function() {
+      const counter = document.getElementById("bulk-selected-count");
+      if (counter) counter.textContent = form.querySelectorAll('input[name="ids[]"]:checked').length;
+    };
+
+    form.addEventListener("change", function(e) {
+      if (e.target.hasAttribute("data-select-all")) {
+        form.querySelectorAll('input[name="ids[]"]').forEach(function(cb) { cb.checked = e.target.checked; });
+        updateCount();
+      } else if (e.target.name === "ids[]") {
+        updateCount();
+      }
+    });
+  });
+</script>

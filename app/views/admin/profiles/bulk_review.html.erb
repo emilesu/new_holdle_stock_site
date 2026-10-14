@@ -1,0 +1,69 @@
+<div class="mb-6">
+  <%= link_to '← 返回档案列表', admin_profiles_path, class: 'text-hl-13 text-muted hover:text-link transition-colors' %>
+</div>
+
+<div class="hl-card p-5 mb-6">
+  <h1 class="text-hl-18 font-bold text-ink">批量发布确认</h1>
+  <p class="text-hl-13 text-muted mt-1">
+    人工闸门不因批量而放松：请逐条核对以下摘要，确认后再放行。发布后同股票旧期次自动转「已被取代」。
+  </p>
+</div>
+
+<% eligible = @profiles.select { |p| p.status == "pending_review" && p.meta["gate_passed"] == true } %>
+<% excluded = @profiles - eligible %>
+<% dup_stock_ids = @profiles.group_by(&:stock_id).select { |_, ps| ps.size > 1 }.keys %>
+
+<div class="hl-card overflow-hidden mb-6">
+  <div class="px-5 py-4 border-b border-line flex items-center justify-between">
+    <h2 class="text-hl-15 font-semibold text-ink">将发布（<%= eligible.size %> 条）</h2>
+    <% if dup_stock_ids.any? %>
+      <span class="text-hl-12 text-amber-600">同一股票选中多条：按更新时间升序执行，最后一条保持对外可见</span>
+    <% end %>
+  </div>
+  <div class="divide-y divide-line-soft">
+    <% eligible.each do |p| %>
+      <div class="px-5 py-4">
+        <p class="text-hl-13 text-ink font-medium">
+          <%= p.stock.name %>（<%= p.stock.symbol %>）· <%= p.period %>
+          <% if dup_stock_ids.include?(p.stock_id) %><span class="text-amber-600 text-hl-11 ml-1">同股票多条</span><% end %>
+        </p>
+        <p class="text-hl-13 text-muted mt-1"><%= p.title %></p>
+        <p class="text-hl-12 text-muted-4 mt-1 font-mono">
+          v<%= p.current_version_no %><% if p.published_version_no %> / 现v<%= p.published_version_no %><% end %> ·
+          金字塔分 <%= p.meta['pyramid_score'] %> · gate_passed=<%= p.meta['gate_passed'] %> ·
+          数据截止 <%= p.meta['data_cutoff'] %> · 更新 <%= p.updated_at.strftime('%m-%d %H:%M') %>
+          <% if p.meta['manual_edited_by'] %><span class="text-amber-600">· 含人工编辑（<%= p.meta['manual_edited_by'] %>）</span><% end %>
+        </p>
+        <p class="text-hl-12 mt-1"><%= link_to '查看完整预览', admin_profile_path(p), class: 'text-muted hover:text-link', target: '_blank', rel: 'noopener' %></p>
+      </div>
+    <% end %>
+    <% if eligible.empty? %>
+      <p class="px-5 py-8 text-center text-hl-13 text-muted-4">所选档案均不符合批量发布条件（须为待审核且 gate_passed）</p>
+    <% end %>
+  </div>
+</div>
+
+<% if excluded.any? %>
+  <div class="hl-card overflow-hidden mb-6">
+    <div class="px-5 py-4 border-b border-line">
+      <h2 class="text-hl-15 font-semibold text-muted">已排除（<%= excluded.size %> 条，不随本次发布）</h2>
+    </div>
+    <div class="divide-y divide-line-soft">
+      <% excluded.each do |p| %>
+        <div class="px-5 py-3 flex items-center justify-between gap-2 text-hl-13">
+          <span class="text-muted"><%= p.stock.name %>（<%= p.period %>）<%= p.title %></span>
+          <span class="text-muted-4 shrink-0"><%= p.status_label %><%= ' · gate 未过' unless p.meta['gate_passed'] == true %></span>
+        </div>
+      <% end %>
+    </div>
+  </div>
+<% end %>
+
+<% if eligible.any? %>
+  <div class="flex gap-3">
+    <%= button_to "确认发布 #{eligible.size} 条", bulk_apply_admin_profiles_path(bulk_action: "publish", ids: eligible.map(&:id)), method: :post,
+        class: 'px-5 py-2 text-hl-13 font-medium text-white bg-green-600 rounded hover:opacity-90 transition cursor-pointer',
+        form: { data: { turbo_confirm: "确认逐条核对完毕，发布这 #{eligible.size} 条档案？" } } %>
+    <%= link_to '取消', admin_profiles_path, class: 'px-5 py-2 text-hl-13 border border-line-soft rounded text-muted hover:text-ink transition' %>
+  </div>
+<% end %>

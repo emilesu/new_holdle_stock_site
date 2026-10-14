@@ -108,4 +108,174 @@ class Admin::ProfilesControllerTest < ActionDispatch::IntegrationTest
     follow_redirect!
     assert_match "目标版本不存在", response.body
   end
+
+  # ---- 搜索 / 筛选 ----
+
+  test "index 搜索：名称 / 代码（前后缀式大小写不敏感）/ 标题 / 期次" do
+    submit(period: "2025年报")
+    submit(period: "2026年报")
+
+    sign_in @admin
+    { "药明" => true, "603259.SH" => true, "sh603259" => true, "SH603259" => true,
+      "2025年报" => true, "不存在关键词" => false, "SZ000001" => false }.each do |q, hit|
+      get admin_profiles_path(q: q)
+      if hit
+        assert_includes response.body, "档案 2025年报", "q=#{q} 应命中"
+      else
+        refute_includes response.body, "档案 2025年报", "q=#{q} 不应命中"
+      end
+    end
+
+    get admin_profiles_path(q: "2025年报")
+    assert_includes response.body, "档案 2025年报"
+    refute_includes response.body, "档案 2026年报"
+  end
+
+  test "index 市场与时间范围筛选" do
+    cn = submit
+    us_stock = Stock.find_or_create_by!(symbol: "AAPL", market: "US") do |s|
+      s.name = "Apple"
+      s.status = "active"
+      s.pyramid_total_score = 100
+    end
+    us = QualityProfilePublisher.call(stock: us_stock, period: "2025年报", title: "苹果档案",
+                                      markdown: "正文", meta: { "gate_passed" => true })[0]
+
+    sign_in @admin
+    get admin_profiles_path(market: "US")
+    assert_includes response.body, "苹果档案"
+    refute_includes response.body, "档案 #{cn.period}"
+
+    get admin_profiles_path(market: "CN")
+    assert_includes response.body, "档案 #{cn.period}"
+    refute_includes response.body, "苹果档案"
+
+    get admin_profiles_path(range: "7d")
+    assert_response 200
+    get admin_profiles_path(range: "7d", market: "US")
+    assert_includes response.body, "苹果档案"
+  end
+
+  # ---- 手动编辑 ----
+
+  test "update 保存为新版本，对外内容不变，再发布才换文" do
+    profile = submit(markdown: "原稿")
+    profile.publish!(@admin)
+
+    sign_in @admin
+    get edit_admin_profile_path(profile)
+    assert_response 200
+
+    patch admin_profile_path(profile), params: { profile: { title: "档案 2025年报", markdown: "修正稿" } }
+    assert_redirected_to admin_profile_path(profile)
+
+    profile.reload
+    assert_equal "pending_review", profile.status
+    assert_equal 2, profile.current_version_no
+    assert_equal 1, profile.published_version_no
+    assert_equal "原稿", profile.visible_content.markdown
+
+    post publish_admin_profile_path(profile)
+    profile.reload
+    assert_equal "published", profile.status
+    assert_equal 2, profile.published_version_no
+    assert_equal "修正稿", profile.visible_content.markdown
+  end
+
+  test "update 预览模式不落库" do
+    profile = submit(markdown: "待审正文")
+    sign_in @admin
+    patch admin_profile_path(profile),
+          params: { profile: { title: "改了标题", markdown: "# 预览\n正文" }, preview: "1" }
+    assert_response 200
+    assert_includes response.body, "预览渲染效果"
+    assert_equal "待审正文", profile.reload.markdown
+    assert_equal 1, profile.current_version_no
+  end
+
+  test "withdrawn 状态不可进入编辑" do
+    profile = submit
+    profile.publish!(@admin)
+    profile.withdraw!
+
+    sign_in @admin
+    get edit_admin_profile_path(profile)
+    assert_redirected_to admin_profile_path(profile)
+  end
+
+  # ---- 批量处理 ----
+
+  test "bulk_review 确认页逐条列出摘要并排除不符合条件的稿件" do
+    p1 = submit(period: "2025年报")
+    draft = submit(period: "2026年报", gate: false)
+
+    sign_in @admin
+    post bulk_review_admin_profiles_path, params: { ids: [p1.id, draft.id] }
+    assert_response 200
+    assert_includes response.body, "批量发布确认"
+    assert_includes response.body, "将发布（1 条）"
+    assert_includes response.body, "已排除（1 条"
+  end
+
+  test "bulk_apply publish 同股票按更新时间升序执行，不变式保持" do
+    p1 = submit(period: "2025年报", markdown: "旧期")
+    p2 = submit(period: "2026年报", markdown: "新期")
+
+    sign_in @admin
+    post bulk_apply_admin_profiles_path, params: { bulk_action: "publish", ids: [p1.id, p2.id] }
+    assert_redirected_to admin_profiles_path
+    follow_redirect!
+    assert_match "成功 2 条", response.body
+
+    # 后发布的 p2 保持 published，p1 被取代 → 每只股票至多一条 published
+    assert_equal "published", p2.reload.status
+    assert_equal "superseded", p1.reload.status
+    assert_equal 1, QualityProfile.where(stock_id: @stock.id, status: "published").count
+  end
+
+  test "bulk_apply publish 非待审状态逐条失败不阻断其余" do
+    p1 = submit(period: "2025年报")
+    draft = submit(period: "2026年报", gate: false)
+
+    sign_in @admin
+    post bulk_apply_admin_profiles_path, params: { bulk_action: "publish", ids: [p1.id, draft.id] }
+    follow_redirect!
+    assert_match "成功 1 条", response.body
+    assert_match "失败 1 条", response.body
+    assert_equal "published", p1.reload.status
+    assert_equal "draft", draft.reload.status
+  end
+
+  test "bulk_apply withdraw 批量下架" do
+    p1 = submit(period: "2025年报")
+    p1.publish!(@admin)
+    p2 = submit(period: "2026年报")
+    p2.publish!(@admin)
+
+    sign_in @admin
+    post bulk_apply_admin_profiles_path, params: { bulk_action: "withdraw", ids: [p1.id, p2.id] }
+    follow_redirect!
+    assert_match "成功 2 条", response.body
+    assert_equal "withdrawn", p1.reload.status
+    assert_equal "withdrawn", p2.reload.status
+  end
+
+  test "bulk_apply 未选择 / 未知操作 / 超上限均被拒绝" do
+    sign_in @admin
+    post bulk_apply_admin_profiles_path, params: { bulk_action: "publish", ids: [] }
+    follow_redirect!
+    assert_match "未选择任何档案", response.body
+
+    p = submit
+    post bulk_apply_admin_profiles_path, params: { bulk_action: "delete", ids: [p.id] }
+    follow_redirect!
+    assert_match "未知批量操作", response.body
+
+    ids = Array.new(Admin::ProfilesController::BULK_PUBLISH_LIMIT + 1) { |i| "20#{10 + i}年报" }
+                        .map { |per| QualityProfilePublisher.call(stock: @stock, period: per, title: "批量 #{per}",
+                                                                  markdown: "正文", meta: { "gate_passed" => true })[0].id }
+    post bulk_apply_admin_profiles_path, params: { bulk_action: "publish", ids: ids }
+    follow_redirect!
+    assert_match "单批上限", response.body
+  end
 end

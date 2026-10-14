@@ -76,6 +76,33 @@ class QualityProfile < ApplicationRecord
     [year, type_rank]
   end
 
+  # 后台手动编辑（仅 title + markdown，meta 只读不可改）：
+  #   每次编辑生成新版本快照留痕，可回滚可追责；
+  #   published 稿编辑后转「覆盖待审」（对外仍读已发布快照），必须再过一次发布闸门才换文；
+  #   draft 编辑后仍是 draft，gate_passed 未过依旧不可发布（闸门约束不因编辑放松）。
+  EDITABLE_STATUSES = %w[draft pending_review published].freeze
+
+  def manual_edit!(title:, markdown:, user:)
+    raise "「#{status_label}」状态不支持编辑" unless status.in?(EDITABLE_STATUSES)
+    raise "标题不能为空" if title.to_s.strip.empty?
+    raise "正文不能为空" if markdown.to_s.strip.empty?
+
+    ActiveRecord::Base.transaction do
+      self.current_version_no += 1
+      self.title = title.to_s.strip
+      self.markdown = markdown.to_s
+      self.status = "pending_review" if status == "published"
+      save!
+      edit_meta = meta.merge(
+        "manual_edited_by" => (user.nickname.presence || user.email).to_s,
+        "manual_edited_at" => Time.current.strftime("%Y-%m-%d %H:%M")
+      )
+      versions.create!(version_no: current_version_no, title: self.title,
+                       markdown: self.markdown, meta: edit_meta)
+    end
+    self
+  end
+
   # 人工闸门放行：同股票其他 published 转 superseded（不碰 withdrawn），本条对外换文
   def publish!(user)
     # 闸门兜底：内容侧校验门未过的稿件技术上不可发布

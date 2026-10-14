@@ -149,6 +149,48 @@ class QualityProfileTest < ActiveSupport::TestCase
     assert_equal "superseded", old_pub.reload.status
   end
 
+  # ---- 手动编辑 ----
+
+  test "manual_edit! 生成新版本快照留痕，主表 meta 不被污染" do
+    profile = build_profile(status: "pending_review", current_version_no: 2)
+    add_version(profile, 2, markdown: "原始正文")
+
+    profile.manual_edit!(title: "编辑后标题", markdown: "编辑后正文", user: users(:two))
+
+    assert_equal 3, profile.current_version_no
+    assert_equal "编辑后标题", profile.title
+    snap = profile.versions.find_by(version_no: 3)
+    assert_equal "编辑后正文", snap.markdown
+    assert snap.meta["manual_edited_by"].present?
+    assert_nil profile.reload.meta["manual_edited_by"]
+  end
+
+  test "manual_edit! published 稿转覆盖待审，对外仍读旧快照" do
+    profile = build_profile(status: "published", current_version_no: 1, published_version_no: 1)
+    add_version(profile, 1, markdown: "旧版已发布")
+
+    profile.manual_edit!(title: profile.title, markdown: "修正后正文", user: users(:two))
+
+    assert_equal "pending_review", profile.status
+    assert_equal 1, profile.published_version_no
+    assert_equal "旧版已发布", profile.visible_content.markdown
+  end
+
+  test "manual_edit! draft 编辑后仍是 draft；withdrawn/superseded 不可编辑；空内容拒绝" do
+    draft = build_profile(status: "draft", gate: false)
+    draft.manual_edit!(title: "标题", markdown: "正文", user: users(:two))
+    assert_equal "draft", draft.status
+
+    withdrawn = build_profile(period: "2026一季报", status: "withdrawn", published_version_no: 1)
+    assert_raise(RuntimeError) { withdrawn.manual_edit!(title: "t", markdown: "m", user: users(:two)) }
+
+    superseded = build_profile(period: "2026中报", status: "superseded", published_version_no: 1)
+    assert_raise(RuntimeError) { superseded.manual_edit!(title: "t", markdown: "m", user: users(:two)) }
+
+    assert_raise(RuntimeError) { draft.manual_edit!(title: "  ", markdown: "正文", user: users(:two)) }
+    assert_raise(RuntimeError) { draft.manual_edit!(title: "标题", markdown: "", user: users(:two)) }
+  end
+
   # ---- 期次排序（最新期判定） ----
 
   test "period_sort_key 先年份后披露顺序（年报同年最前）" do

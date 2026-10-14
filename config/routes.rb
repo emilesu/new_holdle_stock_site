@@ -181,12 +181,16 @@ Rails.application.routes.draw do
     resources :articles
     resources :videos
 
-    # 企业质量档案人工闸门（审核发布/撤回/回滚）
-    resources :profiles, only: [:index, :show] do
+    # 企业质量档案人工闸门（审核发布/撤回/回滚/手动编辑/批量处理）
+    resources :profiles, only: [:index, :show, :edit, :update] do
       member do
         post :publish
         post :withdraw
         post :rollback
+      end
+      collection do
+        post :bulk_review  # 批量发布前的逐条摘要确认页
+        post :bulk_apply   # 执行批量发布/批量撤回
       end
     end
 
