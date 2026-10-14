@@ -193,7 +193,7 @@ class Admin::ProfilesControllerTest < ActionDispatch::IntegrationTest
     assert_equal 1, profile.current_version_no
   end
 
-  test "withdrawn 状态不可进入编辑" do
+  test "withdrawn 状态不可进入编辑，直接 POST 亦被重定向" do
     profile = submit
     profile.publish!(@admin)
     profile.withdraw!
@@ -201,6 +201,21 @@ class Admin::ProfilesControllerTest < ActionDispatch::IntegrationTest
     sign_in @admin
     get edit_admin_profile_path(profile)
     assert_redirected_to admin_profile_path(profile)
+
+    patch admin_profile_path(profile), params: { profile: { title: "t", markdown: "m" } }
+    assert_redirected_to admin_profile_path(profile)
+    assert_equal "withdrawn", profile.reload.status
+    assert_equal 1, profile.current_version_no
+  end
+
+  test "update 校验失败重渲染保留用户草稿，不回退原值" do
+    profile = submit(markdown: "待审正文")
+    sign_in @admin
+    patch admin_profile_path(profile), params: { profile: { title: "用户新标题", markdown: "" } }
+    assert_response :unprocessable_entity
+    assert_includes response.body, 'value="用户新标题"'
+    assert_match "保存失败", response.body
+    assert_equal "待审正文", profile.reload.markdown
   end
 
   # ---- 批量处理 ----
@@ -258,6 +273,19 @@ class Admin::ProfilesControllerTest < ActionDispatch::IntegrationTest
     assert_match "成功 2 条", response.body
     assert_equal "withdrawn", p1.reload.status
     assert_equal "withdrawn", p2.reload.status
+  end
+
+  test "bulk_review 上限按符合条件条数计：20 待审 + 1 草稿仍可通过确认页" do
+    ids = Array.new(Admin::ProfilesController::BULK_PUBLISH_LIMIT) { |i| "20#{10 + i}年报" }
+                .map { |per| QualityProfilePublisher.call(stock: @stock, period: per, title: "批量 #{per}",
+                                                          markdown: "正文", meta: { "gate_passed" => true })[0].id }
+    draft = submit(period: "2099年报", gate: false)
+
+    sign_in @admin
+    post bulk_review_admin_profiles_path, params: { ids: ids + [draft.id] }
+    assert_response 200
+    assert_includes response.body, "将发布（20 条）"
+    assert_includes response.body, "已排除（1 条"
   end
 
   test "bulk_apply 未选择 / 未知操作 / 超上限均被拒绝" do

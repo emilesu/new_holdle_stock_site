@@ -17,12 +17,12 @@
 <%= form_with url: admin_profile_path(@profile), method: :patch, class: "space-y-6" do %>
   <div class="hl-card p-5">
     <label class="block text-hl-13 font-medium text-ink mb-1" for="profile_title">标题</label>
-    <input type="text" id="profile_title" name="profile[title]" value="<%= @draft_title.presence || @profile.title %>"
+    <input type="text" id="profile_title" name="profile[title]" value="<%= @draft_title.nil? ? @profile.title : @draft_title %>"
            class="w-full px-3 py-2 text-hl-13 border border-line-soft rounded-md focus:outline-none focus:border-link text-ink">
 
     <label class="block text-hl-13 font-medium text-ink mt-5 mb-1" for="profile_markdown">正文（Markdown）</label>
     <textarea id="profile_markdown" name="profile[markdown]" rows="28"
-              class="w-full px-3 py-2 text-hl-13 font-mono border border-line-soft rounded-md focus:outline-none focus:border-link text-ink"><%= @draft_markdown.presence || @profile.markdown %></textarea>
+              class="w-full px-3 py-2 text-hl-13 font-mono border border-line-soft rounded-md focus:outline-none focus:border-link text-ink"><%= @draft_markdown.nil? ? @profile.markdown : @draft_markdown %></textarea>
 
     <div class="flex flex-wrap gap-2 mt-4">
       <button type="submit" class="px-4 py-2 text-hl-13 font-medium text-white bg-link rounded hover:opacity-90 transition cursor-pointer">保存为新版本</button>

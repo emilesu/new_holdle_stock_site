@@ -47,6 +47,10 @@ module Admin
     end
 
     def update
+      unless @profile.status.in?(QualityProfile::EDITABLE_STATUSES)
+        return redirect_to admin_profile_path(@profile), alert: "「#{@profile.status_label}」状态不支持编辑"
+      end
+
       @draft_title = params.dig(:profile, :title).to_s
       @draft_markdown = params.dig(:profile, :markdown).to_s
 
@@ -88,8 +92,12 @@ module Admin
       @profiles = QualityProfile.includes(:stock).where(id: bulk_ids).order(:updated_at, :id)
       if @profiles.empty?
         redirect_to admin_profiles_path, alert: "未选择任何档案"
-      elsif @profiles.size > BULK_PUBLISH_LIMIT
-        redirect_to admin_profiles_path, alert: "批量发布单批上限 #{BULK_PUBLISH_LIMIT} 条，请缩小范围"
+      else
+        @eligible = @profiles.select { |p| p.status == "pending_review" && p.meta["gate_passed"] == true }
+        @excluded = @profiles - @eligible
+        if @eligible.size > BULK_PUBLISH_LIMIT
+          redirect_to admin_profiles_path, alert: "符合发布条件的档案超过单批上限 #{BULK_PUBLISH_LIMIT} 条，请缩小范围"
+        end
       end
     end
 
@@ -102,8 +110,11 @@ module Admin
 
       profiles = QualityProfile.includes(:stock).where(id: bulk_ids).order(:updated_at, :id)
 
-      if action == "publish" && profiles.size > BULK_PUBLISH_LIMIT
-        return redirect_to admin_profiles_path, alert: "批量发布单批上限 #{BULK_PUBLISH_LIMIT} 条"
+      if action == "publish"
+        publishable = profiles.count { |p| p.status == "pending_review" && p.meta["gate_passed"] == true }
+        if publishable > BULK_PUBLISH_LIMIT
+          return redirect_to admin_profiles_path, alert: "符合发布条件的档案超过单批上限 #{BULK_PUBLISH_LIMIT} 条"
+        end
       end
 
       succeeded = []

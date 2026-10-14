@@ -9,8 +9,8 @@
   </p>
 </div>
 
-<% eligible = @profiles.select { |p| p.status == "pending_review" && p.meta["gate_passed"] == true } %>
-<% excluded = @profiles - eligible %>
+<% eligible = @eligible %>
+<% excluded = @excluded %>
 <% dup_stock_ids = @profiles.group_by(&:stock_id).select { |_, ps| ps.size > 1 }.keys %>
 
 <div class="hl-card overflow-hidden mb-6">
