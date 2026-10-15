@@ -38,7 +38,11 @@ class ProfilesController < ApplicationController
       # 🔴 会员墙（服务端截断，对齐股票筛选页遮罩口径）：
       #   非会员/匿名只拿到「首段预览」渲染结果，完整正文绝不进响应（查看源码同样拿不到）；
       #   目录从全文标题行提取为纯文本（无锚点），仅作结构展示
-      @preview_html = MarkdownRenderer.render_profile(preview_markdown(@content.markdown)).first
+      # 🔴 金字塔分/行业名次属会员数据（与股票详情页「会员可见」门控口径一致），
+      #   档案速览块常落在预览区，须行级剔除含「金字塔/名次/排名」的行
+      preview = preview_markdown(@content.markdown)
+                  .each_line.reject { |line| line.match?(/金字塔|名次|排名/) }.join
+      @preview_html = MarkdownRenderer.render_profile(preview).first
       @outline = outline_from_markdown(@content.markdown)
     end
   end

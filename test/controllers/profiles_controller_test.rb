@@ -126,6 +126,19 @@ class ProfilesControllerTest < ActionDispatch::IntegrationTest
     refute_includes response.body, "超长机密尾部"
   end
 
+  test "预览行级剔除会员字段金字塔分与行业名次" do
+    publish_profile(markdown: "## 一、档案速览\n\n- **股票名称**：药明康德\n- **数据截止**：2025 年报\n- **金字塔分**：**851 分**\n- **行业名次**：「医疗服务」内第 1 名\n\n## 二、主营业务\n\n#{"正文内容。" * 100}")
+    get "/archive/SH603259"
+    assert_response 200
+    # 公开字段保留作钩子
+    assert_includes response.body, "股票名称"
+    assert_includes response.body, "数据截止"
+    # 🔴 会员数据行级剔除（生产事故回归：速览块金字塔分 851 透过遮罩可见）
+    refute_includes response.body, "851 分"
+    refute_includes response.body, "行业名次"
+    refute_includes response.body, "第 1 名"
+  end
+
   test "代码围栏内的伪标题行不进非会员目录" do
     publish_profile(markdown: "# 标题\n\n这是档案导语段。\n\n## 盈利质量\n\n```\n## 围栏内伪标题\n```\n\n归母净利拆解正文")
     get "/archive/SH603259"
