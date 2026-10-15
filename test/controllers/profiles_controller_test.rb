@@ -139,6 +139,35 @@ class ProfilesControllerTest < ActionDispatch::IntegrationTest
     refute_includes response.body, "第 1 名"
   end
 
+  test "横向表格速览块整块剔除，数据行数值不泄露" do
+    # 🔴 审查问题1回归：逐行剔除下「| 851 |」数据行无关键词会残留，表格须按块剔除
+    publish_profile(markdown: "## 一、档案速览\n\n| 数据截止 | 金字塔分 | 行业名次 |\n| --- | --- | --- |\n| 2025年报 | 851 | 第 1 名 |\n\n## 二、主营业务\n\n#{"正文内容。" * 100}")
+    get "/archive/SH603259"
+    assert_response 200
+    refute_includes response.body, "851"
+    refute_includes response.body, "第 1 名"
+    refute_includes response.body, "金字塔分"
+  end
+
+  test "标题命中会员关键词时非会员 masthead 回退通用标题" do
+    # 🔴 审查问题3回归：标题不过滤则「851」绕过一切正文过滤直出
+    publish_profile(title: "药明康德：金字塔分 851 深度档案")
+    get "/archive/SH603259"
+    assert_response 200
+    refute_includes response.body, "851"
+    assert_includes response.body, "药明康德 · 企业质量档案"
+  end
+
+  test "兜底截断切进代码围栏时回退到围栏起点，不产生未闭合 pre" do
+    # 🔴 审查问题2回归：400 字切片落在 ``` 内，未闭合围栏会吞渲染至文末
+    publish_profile(markdown: "## 第一节\n\n```rb\n#{"score = 1234\n" * 60}```\n\n## 第二节\n\n机密正文")
+    get "/archive/SH603259"
+    assert_response 200
+    refute_includes response.body, "<pre"
+    refute_includes response.body, "score = 1234"
+    refute_includes response.body, "机密正文"
+  end
+
   test "代码围栏内的伪标题行不进非会员目录" do
     publish_profile(markdown: "# 标题\n\n这是档案导语段。\n\n## 盈利质量\n\n```\n## 围栏内伪标题\n```\n\n归母净利拆解正文")
     get "/archive/SH603259"
