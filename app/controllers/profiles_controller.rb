@@ -1,4 +1,7 @@
 class ProfilesController < ApplicationController
+  # 非会员预览兜底截断长度：无导语段或未遇到二级标题边界时，按段落边界取前 ~400 字
+  PREVIEW_CHAR_LIMIT = 400
+
   # 企业质量档案前台详情（付费会员可见，可见性判定在服务端执行——对齐确认稿 §四）
   # 路径：/archive/SH603259（最新期） /archive/SH603259/2025A（指定期）
   # 后缀式 603259.SH / 小写 sh603259 自动 301 归一化；对外内容只取已发布版本快照
@@ -23,20 +26,70 @@ class ProfilesController < ApplicationController
     # 无档案 / 撤回 / 未发布 → 引导页（免费可见，不触发会员墙）
     return unless @content
 
-    # 🔴 会员墙：未登录先存回跳，无权限引导升级，正文绝不进响应
-    unless user_signed_in?
-      store_return_to_location(request.fullpath)
-      return redirect_to(new_user_session_path, alert: "企业质量档案仅限会员阅读，请先登录")
+    # 管理员经 is_member? 恒为 true，会员墙一个判断覆盖两类人
+    @is_member = user_signed_in? && current_user.is_member?
+
+    if @is_member
+      @history = @stock.quality_profiles.readable.where.not(id: @profile.id).to_a.sort_by(&:period_sort_key).reverse
+
+      # 正文走档案专用管道（剥离首 H1 + 锚点注入 + 目录），与 Admin 预览同管道；会员墙通过后才渲染
+      @body_html, @toc = MarkdownRenderer.render_profile(@content.markdown)
+    else
+      # 🔴 会员墙（服务端截断，对齐股票筛选页遮罩口径）：
+      #   非会员/匿名只拿到「首段预览」渲染结果，完整正文绝不进响应（查看源码同样拿不到）；
+      #   目录从全文标题行提取为纯文本（无锚点），仅作结构展示
+      @preview_html = MarkdownRenderer.render_profile(preview_markdown(@content.markdown)).first
+      @outline = outline_from_markdown(@content.markdown)
     end
-    return redirect_to(join_path, alert: "企业质量档案为付费会员权益，请升级会员后阅读") unless current_user.is_member?
-
-    @history = @stock.quality_profiles.readable.where.not(id: @profile.id).to_a.sort_by(&:period_sort_key).reverse
-
-    # 正文走档案专用管道（剥离首 H1 + 锚点注入 + 目录），与 Admin 预览同管道；会员墙通过后才渲染
-    @body_html, @toc = MarkdownRenderer.render_profile(@content.markdown)
   end
 
   private
+
+  # 预览源截断：取首个二级标题（##）前的导语段，代码围栏内的 ## 行不算边界；
+  # 导语含 H1 以外的实际正文即用导语。
+  # 🔴 未遇到 ## 边界（整篇无二级标题）或导语为空时，一律兜底取前 PREVIEW_CHAR_LIMIT 字——
+  #   防止无标题稿把整篇正文当「导语」泄露给非会员；
+  #   短文档（≤400 字）整篇可见属既定试读钩子策略（真实档案稿均为长文）
+  def preview_markdown(text)
+    intro = []
+    in_code = false
+    cut = false
+    text.each_line do |line|
+      if line.start_with?("```")
+        in_code = !in_code
+        intro << line
+        next
+      end
+      if !in_code && line.match?(/\A##\s/)
+        cut = true
+        break
+      end
+      intro << line
+    end
+    result = intro.join
+    return result if cut && result.sub(/\A#\s[^\n]*\n/, "").match?(/\S/)
+
+    head = text[0, PREVIEW_CHAR_LIMIT]
+    boundary = head.rindex("\n\n")
+    boundary && boundary > 80 ? text[0, boundary] : head
+  end
+
+  # 全文标题行 → [{ level:, text: }]（跳过代码围栏；仅二级/三级标题，与正文管道目录口径一致）
+  def outline_from_markdown(text)
+    outline = []
+    in_code = false
+    text.each_line do |line|
+      if line.start_with?("```")
+        in_code = !in_code
+        next
+      end
+      next if in_code
+
+      m = line.match(/\A(##|###)\s+(.+?)\s*\z/)
+      outline << { level: m[1].length, text: m[2] } if m
+    end
+    outline
+  end
 
   # 后缀式 → 前缀式、小写 → 大写；其余原样大写返回
   def normalize_symbol(raw)

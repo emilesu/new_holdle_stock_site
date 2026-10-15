@@ -4,6 +4,23 @@
 <% set_og_type "article" %>
 <%# 正文与目录由控制器走档案专用管道生成（剥离首个 H1 + 注入锚点 + toc，与 Admin 预览同管道） %>
 <% toc = @toc || [] %>
+<%# 正文 prose 共享样式类（会员全文 / 非会员首段预览共用，避免重复维护） %>
+<% prose_class = "prose prose-gray max-w-none
+  prose-headings:font-semibold prose-headings:text-ink
+  prose-h2:text-hl-18 prose-h2:mt-9 prose-h2:mb-4
+  prose-h3:text-hl-16 prose-h3:mt-7 prose-h3:mb-3
+  prose-p:text-hl-14 prose-p:text-muted prose-p:leading-relaxed
+  prose-a:text-link prose-a:no-underline hover:prose-a:text-link-hover
+  prose-strong:text-ink prose-strong:font-semibold
+  prose-code:text-hl-13 prose-code:bg-bg-mute prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:before:content-none prose-code:after:content-none
+  prose-pre:bg-bg-mute prose-pre:text-ink prose-pre:rounded prose-pre:overflow-x-auto prose-pre:p-4 prose-pre:text-hl-13 prose-pre:leading-relaxed prose-pre:border prose-pre:border-line-soft prose-pre:font-mono
+  prose-table:w-full prose-table:text-hl-13
+  prose-th:bg-bg-soft prose-th:text-muted-2 prose-th:font-medium prose-th:px-4 prose-th:py-2
+  prose-td:px-4 prose-td:py-2 prose-td:border-b prose-td:border-line-soft
+  prose-blockquote:border-l-2 prose-blockquote:border-l-link prose-blockquote:text-muted-3 prose-blockquote:not-italic
+  prose-ul:text-muted prose-ol:text-muted
+  prose-li:text-hl-14
+  prose-hr:border-line-soft" %>
 <%# 正文分支手机端四边贴屏（无上下灰边）；引导页保留常规留白 %>
 <div class="<%= @content.nil? ? 'py-10 md:py-16' : 'md:py-8' %>">
   <% if @content.nil? %>
@@ -26,7 +43,7 @@
         <% end %>
       </div>
     </div>
-  <% else %>
+  <% elsif @is_member %>
     <%# 单一文章面：masthead（徽标+标题+日期）→ 移动端折叠目录 → 正文 → 尾部元数据，全部收进一张卡，内部用发丝线分区 %>
     <div class="container-hl-flush profile-archive" data-controller="profile-toc" data-market="<%= @stock.market %>">
       <div class="lg:flex lg:gap-6 lg:items-start">
@@ -69,22 +86,7 @@
 
           <%# ③ 正文：render_profile 管道（锚点 id 已注入，details 折叠/表格横向滚动已支持） %>
           <div class="px-6 sm:px-10 py-8 border-t border-line-soft">
-            <div class="prose prose-gray max-w-none
-              prose-headings:font-semibold prose-headings:text-ink
-              prose-h2:text-hl-18 prose-h2:mt-9 prose-h2:mb-4
-              prose-h3:text-hl-16 prose-h3:mt-7 prose-h3:mb-3
-              prose-p:text-hl-14 prose-p:text-muted prose-p:leading-relaxed
-              prose-a:text-link prose-a:no-underline hover:prose-a:text-link-hover
-              prose-strong:text-ink prose-strong:font-semibold
-              prose-code:text-hl-13 prose-code:bg-bg-mute prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:before:content-none prose-code:after:content-none
-              prose-pre:bg-bg-mute prose-pre:text-ink prose-pre:rounded prose-pre:overflow-x-auto prose-pre:p-4 prose-pre:text-hl-13 prose-pre:leading-relaxed prose-pre:border prose-pre:border-line-soft prose-pre:font-mono
-              prose-table:w-full prose-table:text-hl-13
-              prose-th:bg-bg-soft prose-th:text-muted-2 prose-th:font-medium prose-th:px-4 prose-th:py-2
-              prose-td:px-4 prose-td:py-2 prose-td:border-b prose-td:border-line-soft
-              prose-blockquote:border-l-2 prose-blockquote:border-l-link prose-blockquote:text-muted-3 prose-blockquote:not-italic
-              prose-ul:text-muted prose-ol:text-muted
-              prose-li:text-hl-14
-              prose-hr:border-line-soft">
+            <div class="<%= prose_class %>">
               <%= @body_html %>
             </div>
           </div>
@@ -149,6 +151,66 @@
         <% end %>
 
       </div>
+    </div>
+  <% else %>
+    <%# 非会员/匿名：masthead + 目录 + 首段预览 + 遮罩引导（完整正文服务端已截断，绝不进响应） %>
+    <div class="container-hl-flush profile-archive">
+      <article class="hl-card min-w-0 overflow-hidden">
+
+        <%# ① Masthead：与会员视图同结构（徽标条 + 大标题 + 发布日期），标题期次公开、正文收费 %>
+        <header class="px-6 sm:px-10 pt-8 sm:pt-10 pb-6">
+          <div class="flex flex-wrap items-center gap-2 mb-4 text-hl-12">
+            <span class="inline-flex px-2 py-0.5 font-medium bg-bg-mute text-muted-3 border border-line-soft rounded">会员</span>
+            <span class="inline-flex px-2 py-0.5 font-medium rounded <%= market_badge_class(@stock.market) %>"><%= market_label(@stock.market) %></span>
+            <% if @content.meta["ai_generated"] == true %>
+              <span class="inline-flex px-2 py-0.5 font-medium bg-bg-mute text-muted-3 border border-line-soft rounded">AI 生成</span>
+            <% end %>
+            <span class="text-muted-4 ml-auto"><%= l(@profile.published_at.to_date, format: :long) if @profile.published_at %></span>
+          </div>
+          <h1 class="text-hl-22 font-semibold text-ink leading-snug"><%= @content.title %></h1>
+        </header>
+
+        <%# ② 目录：全文标题行提取的纯文本（无锚点，会员墙下不可点击） %>
+        <% if @outline&.any? %>
+          <div class="px-6 sm:px-10 py-5 border-t border-line-soft">
+            <p class="text-hl-11 text-muted-5 tracking-wide-2 font-medium mb-3">目录</p>
+            <ul>
+              <% @outline.each do |item| %>
+                <li class="py-1.5 leading-snug <%= item[:level] >= 3 ? 'pl-5 text-hl-12 text-muted-4' : 'pl-3 text-hl-13 text-muted-2' %>"><%= item[:text] %></li>
+              <% end %>
+            </ul>
+          </div>
+        <% end %>
+
+        <%# ③ 首段预览 + 遮罩：遮罩仅视觉层，真正的墙在服务端（响应里本就没有全文） %>
+        <div class="relative border-t border-line-soft min-h-65">
+          <div class="px-6 sm:px-10 py-8 <%= prose_class %>">
+            <%= @preview_html %>
+          </div>
+          <div class="absolute inset-0 flex items-center justify-center bg-white/70">
+            <div class="text-center px-6">
+              <p class="text-hl-16 font-semibold text-ink mb-1">企业质量档案为会员专属内容</p>
+              <p class="text-hl-13 text-muted mb-4">加入会员即可阅读完整档案与全部历史期次</p>
+              <div class="flex flex-wrap items-center justify-center gap-3">
+                <%= link_to '了解会员权益', join_path, class: 'hl-btn hl-btn-primary' %>
+                <% unless user_signed_in? %>
+                  <%= link_to '已有会员？登录', new_user_session_path(return_to: request.fullpath), class: 'hl-btn hl-btn-line' %>
+                <% end %>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <%# ④ 底部引导条：滚动到卡片末尾仍有转化入口 %>
+        <div class="px-6 sm:px-10 py-4 border-t border-line-soft bg-bg-mute flex flex-wrap items-center justify-between gap-3">
+          <p class="text-hl-13 text-muted">完整正文与全部历史期次为会员专属权益</p>
+          <% if user_signed_in? %>
+            <%= link_to '加入会员', join_path, class: 'hl-btn hl-btn-primary shrink-0' %>
+          <% else %>
+            <%= link_to '登录后阅读', new_user_session_path(return_to: request.fullpath), class: 'hl-btn hl-btn-primary shrink-0' %>
+          <% end %>
+        </div>
+      </article>
     </div>
   <% end %>
 </div>

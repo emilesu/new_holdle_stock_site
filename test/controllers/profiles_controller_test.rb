@@ -13,7 +13,9 @@ class ProfilesControllerTest < ActionDispatch::IntegrationTest
   end
 
   # 发布一份对外可见的档案（走真实闸门链路：Publisher → publish!）
-  def publish_profile(period: "2025年报", markdown: "归母净利拆解正文", title: "药明康德 2025 年报档案")
+  # 默认正文带标题结构：首段「这是档案导语段」在非会员预览可见，首个 ## 后「归母净利拆解正文」仅会员可见
+  def publish_profile(period: "2025年报", title: "药明康德 2025 年报档案",
+                      markdown: "# 药明康德 2025 年报档案\n\n这是档案导语段。\n\n## 盈利质量\n\n归母净利拆解正文")
     profile, = QualityProfilePublisher.call(stock: @stock, period: period, title: title,
                                             markdown: markdown,
                                             meta: { "gate_passed" => true, "ai_generated" => true,
@@ -73,26 +75,63 @@ class ProfilesControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "新期正文"
   end
 
-  # ---- 会员墙（服务端拦截，正文绝不进响应） ----
+  # ---- 会员墙（服务端截断 + 遮罩引导，全文绝不进响应） ----
 
-  test "未登录访问已发布档案 → 跳登录并存回跳地址" do
+  test "未登录访问已发布档案 → 遮罩引导页，预览可见但全文不进响应" do
     publish_profile
     get "/archive/SH603259"
-    assert_response :redirect
-    assert_match "/users/sign_in", response.location
-    assert_includes request.session[:user_return_to].to_s, "/archive/SH603259"
+    assert_response 200
+    # 遮罩引导卡 + 双 CTA（了解权益 / 登录回跳）
+    assert_includes response.body, "企业质量档案为会员专属内容"
+    assert_includes response.body, "了解会员权益"
+    assert_includes response.body, "已有会员？登录"
+    # 预览层：首段导语与全文目录标题可见
+    assert_includes response.body, "这是档案导语段"
+    assert_includes response.body, "盈利质量"
+    # 🔴 首个二级标题之后的正文绝不进响应
     refute_includes response.body, "归母净利拆解正文"
   end
 
-  test "登录非会员访问已发布档案 → 跳升级页" do
+  test "登录非会员访问已发布档案 → 遮罩引导页指向升级，全文不进响应" do
     publish_profile
     plain = User.create!(email: "plain@test.com", password: "password123",
                         nickname: "普通用户", onboarded_at: Time.current)
     sign_in plain
 
     get "/archive/SH603259"
-    assert_response :redirect
-    assert_match "/join", response.location
+    assert_response 200
+    assert_includes response.body, "企业质量档案为会员专属内容"
+    assert_includes response.body, "/join"
+    assert_includes response.body, "这是档案导语段"
+    # 已登录不再出现登录引导
+    refute_includes response.body, "已有会员？登录"
+    refute_includes response.body, "归母净利拆解正文"
+  end
+
+  # ---- 兜底截断路径（无导语 / 整篇无二级标题）与目录围栏跳过 ----
+
+  test "整篇无二级标题时预览受 400 字硬上限，正文不整体泄露" do
+    publish_profile(markdown: "# 标题\n\n#{"这是档案导语段。" * 100}\n\n尾部机密内容")
+    get "/archive/SH603259"
+    assert_response 200
+    assert_includes response.body, "这是档案导语段"
+    refute_includes response.body, "尾部机密内容"
+  end
+
+  test "无导语直接以二级标题开头时走兜底截断，超长正文不进响应" do
+    publish_profile(markdown: "## 第一节\n\n开头可见内容。\n\n## 第二节\n\n#{"中间段。" * 100}超长机密尾部")
+    get "/archive/SH603259"
+    assert_response 200
+    assert_includes response.body, "开头可见内容"
+    refute_includes response.body, "超长机密尾部"
+  end
+
+  test "代码围栏内的伪标题行不进非会员目录" do
+    publish_profile(markdown: "# 标题\n\n这是档案导语段。\n\n## 盈利质量\n\n```\n## 围栏内伪标题\n```\n\n归母净利拆解正文")
+    get "/archive/SH603259"
+    assert_response 200
+    assert_includes response.body, "盈利质量"
+    refute_includes response.body, "围栏内伪标题"
     refute_includes response.body, "归母净利拆解正文"
   end
 
