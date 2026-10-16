@@ -168,13 +168,15 @@ module DataSources
       end
 
       # 计算资产周转率分数（0-50分）
+      # 数据口径：asset_turnover_ratio = 营业总收入/总资产，存储为「次」的小数形式（如 0.54 = 54%），
+      # 与雷达图 normalize_asset_turnover 的 ×100 换算口径一致；阈值为 0.8 次（即 80%）
       def calculate_asset_turnover_score(all_data)
         turnover_values = all_data.map { |d| d[:asset_turnover_ratio] }.compact.map(&:to_f)
         return 0 if turnover_values.size < 5
 
         avg_turnover = turnover_values.sum / turnover_values.size
 
-        avg_turnover > 80 ? 50 : 0  # 周转率超过80%得50分
+        avg_turnover > 0.8 ? 50 : 0  # 周转率超过80%（0.8次）得50分
       end
 
       # 计算毛利率分数（0-50分）
