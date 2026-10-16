@@ -114,4 +114,25 @@ class UserTest < ActiveSupport::TestCase
     assert_equal "welcome", key.plan_code
     assert_equal 15, key.quota_remaining
   end
+
+  test "角色改为 member 时旧到期时间已过期则自动顺延" do
+    user = User.create!(email: "old_expired@test.com", password: "password123", nickname: "历史过期用户")
+    user.update_columns(member_expire_at: 1.year.ago) # 模拟早年会员留下的过期时间（后台表单会原样重提）
+
+    user.reload.update!(role: :member)
+
+    assert user.is_member?, "升级为 member 后过期的到期时间应被自动顺延"
+    assert_operator user.member_expire_at, :>, Time.current
+  end
+
+  test "已过期 member 编辑其他字段不自动顺延到期时间" do
+    user = User.create!(email: "expired_no_touch@test.com", password: "password123", nickname: "过期会员", role: :member)
+    expired_at = 1.day.ago
+    user.update_columns(member_expire_at: expired_at)
+
+    user.reload.update!(nickname: "改了昵称")
+
+    assert_not user.is_member?, "本次未改 role 时不应擅自顺延过期时间（避免误复活会员）"
+    assert_in_delta expired_at.to_f, user.member_expire_at.to_f, 1.0
+  end
 end

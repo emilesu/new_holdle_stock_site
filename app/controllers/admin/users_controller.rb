@@ -49,7 +49,13 @@ module Admin
 
     def update
       if @user.update(user_params)
-        redirect_to admin_user_path(@user), notice: '用户信息更新成功'
+        # 保护：role 保持 member 且到期时间已过期时（本次未改 role，模型不会自动顺延），
+        # 明确提示"升级未生效"，避免管理员以为已是会员（2026-10 Zzz.io 工单根因）
+        if @user.role == "member" && !@user.is_member?
+          redirect_to admin_user_path(@user), alert: '用户信息已更新，但该用户会员到期时间为空或已过期，会员功能仍不可用，请设置未来的到期日期'
+        else
+          redirect_to admin_user_path(@user), notice: '用户信息更新成功'
+        end
       else
         flash[:alert] = "更新失败：#{@user.errors.full_messages.join(', ')}"
         render :edit

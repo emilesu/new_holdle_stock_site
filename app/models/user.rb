@@ -108,9 +108,15 @@ class User < ApplicationRecord
   end
 
   def set_default_member_expire_at
-    return unless member_expire_at.blank?
     return unless %w[member admin super_admin].include?(role)
-    self.member_expire_at = 5.years.from_now
+
+    if member_expire_at.blank?
+      self.member_expire_at = 5.years.from_now
+    elsif role_changed? && member_expire_at <= Time.current
+      # 角色改为会员但沿用了旧的过期时间（后台编辑表单会原样重提旧值）：自动顺延，
+      # 否则 is_member? 仍为 false，会员遮罩不会消失（2026-10 Zzz.io 工单根因）
+      self.member_expire_at = 5.years.from_now
+    end
   end
 
   def avatar_char

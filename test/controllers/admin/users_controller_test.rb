@@ -102,4 +102,29 @@ class Admin::UsersControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to new_user_session_path
   end
+
+  test "后台改 role 为 member 且旧到期已过期时自动顺延生效" do
+    @user.update_columns(member_expire_at: 1.year.ago) # role 仍为 user，模拟早年过期会员
+    expired_date = @user.member_expire_at.to_date.to_s
+
+    patch admin_user_path(@user), params: {
+      user: { email: @user.email, nickname: @user.nickname, role: "member", member_expire_at: expired_date }
+    }
+
+    assert @user.reload.is_member?, "改 role 后过期的到期时间应被模型自动顺延"
+    assert_match "更新成功", flash[:notice].to_s
+  end
+
+  test "后台保存 member 但到期时间仍过期时提示会员功能不可用" do
+    @user.update_columns(role: "member", member_expire_at: 1.year.ago)
+    expired_date = @user.member_expire_at.to_date.to_s
+
+    patch admin_user_path(@user), params: {
+      user: { email: @user.email, nickname: @user.nickname, role: "member", member_expire_at: expired_date }
+    }
+
+    assert_redirected_to admin_user_path(@user)
+    assert_match "到期", flash[:alert].to_s
+    assert_not @user.reload.is_member?, "未改 role 时不应被擅自顺延"
+  end
 end
