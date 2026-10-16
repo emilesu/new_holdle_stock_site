@@ -399,5 +399,31 @@ module DataSources
       all_data5 = (1..2).map { { roe: 20.0, cash_to_assets_ratio: 25.0 } } + (1..3).map { { cash_to_assets_ratio: 25.0 } }
       assert_equal 0, StockPyramidService.send(:calculate_cash_ratio_score, all_data5)
     end
+
+    test "12. 资产周转率：存储为「次」小数，均值>0.8得50分（边界锁定，防单位错配回归）" do
+      # 0.81 = 81% → 得分；曾因阈值误写为 >80（百分制）导致全部A股此50分恒为0
+      assert_equal 50, StockPyramidService.send(:calculate_asset_turnover_score, (1..5).map { { asset_turnover_ratio: 0.81 } })
+      # 恰好 0.8 不得分（严格「超过」）
+      assert_equal 0, StockPyramidService.send(:calculate_asset_turnover_score, (1..5).map { { asset_turnover_ratio: 0.8 } })
+      assert_equal 0, StockPyramidService.send(:calculate_asset_turnover_score, (1..5).map { { asset_turnover_ratio: 0.79 } })
+      # 不足5年不得分
+      assert_equal 0, StockPyramidService.send(:calculate_asset_turnover_score, (1..4).map { { asset_turnover_ratio: 1.2 } })
+    end
+
+    test "13. 净利润规模：千亿/五百亿/百亿/盈利/亏损五档阶梯" do
+      assert_equal 200, StockPyramidService.send(:calculate_net_income_score, (1..5).map { { net_income: 1000_0000_0000 } })
+      assert_equal 150, StockPyramidService.send(:calculate_net_income_score, (1..5).map { { net_income: 500_0000_0000 } })
+      assert_equal 100, StockPyramidService.send(:calculate_net_income_score, (1..5).map { { net_income: 100_0000_0000 } })
+      assert_equal 50, StockPyramidService.send(:calculate_net_income_score, (1..5).map { { net_income: 20_0000_0000 } })
+      assert_equal 0, StockPyramidService.send(:calculate_net_income_score, (1..5).map { { net_income: -1_0000_0000 } })
+      # 不足5年不得分（与实现 size<5 口径一致）
+      assert_equal 0, StockPyramidService.send(:calculate_net_income_score, (1..4).map { { net_income: 2000_0000_0000 } })
+    end
+
+    test "14. 毛利率：5年均值>30%得50分，恰好30%不得分" do
+      assert_equal 50, StockPyramidService.send(:calculate_gross_margin_score, nil, (1..5).map { { gross_margin: 31.0 } })
+      assert_equal 0, StockPyramidService.send(:calculate_gross_margin_score, nil, (1..5).map { { gross_margin: 30.0 } })
+      assert_equal 0, StockPyramidService.send(:calculate_gross_margin_score, nil, (1..4).map { { gross_margin: 60.0 } })
+    end
   end
 end
