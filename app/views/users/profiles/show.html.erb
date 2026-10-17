@@ -18,12 +18,18 @@
         </div>
       </div>
 
-      <%# 导航标签 %>
-      <div class="flex border-b border-line px-6 sm:px-8">
-        <nav class="flex gap-6">
-          <a href="<%= users_profile_path %>" class="pb-3 border-b-2 border-ink text-ink font-medium text-hl-13">基本信息</a>
-          <a href="<%= users_profile_favorites_path %>" class="pb-3 text-muted-3 hover:text-ink transition-colors text-hl-13">我的收藏</a>
-        </nav>
+      <%# 收藏入口（原「基本信息 / 我的收藏」Tab 已摘除，「股票收藏」提升为导航栏下拉菜单中的并列入口） %>
+      <div class="px-6 sm:px-8 py-4 border-b border-line">
+        <%= link_to users_profile_favorites_path, class: "flex items-center justify-between gap-3 group" do %>
+          <span class="flex items-center gap-3 min-w-0">
+            <%= favorite_icon_tag(class_name: "w-4 h-4 text-muted-4 shrink-0") %>
+            <span class="text-hl-14 text-ink font-medium">我的收藏</span>
+            <span class="text-hl-12 text-muted-4"><%= current_user.user_favorites.count %> 只</span>
+          </span>
+          <svg class="w-4 h-4 text-muted-4 shrink-0 group-hover:text-ink transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5l7 7-7 7"/>
+          </svg>
+        <% end %>
       </div>
 
       <%# 信息区域 %>

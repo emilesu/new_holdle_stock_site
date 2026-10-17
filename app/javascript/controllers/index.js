@@ -60,3 +60,6 @@ application.register("admin-chat", AdminChatController)
 
 import ProfileTocController from "./profile_toc_controller"
 application.register("profile-toc", ProfileTocController)
+
+import FavoritesController from "./favorites_controller"
+application.register("favorites", FavoritesController)

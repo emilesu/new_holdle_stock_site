@@ -37,9 +37,36 @@ class Users::ProfilesController < ApplicationController
     render :edit
   end
 
+  # 收藏页每页条数（与金字塔页 PER_PAGE 同风格，前端哨兵由服务端下发避免漂移）
+  PER_PAGE = 20
+  # 关键词长度上限：超长视为无效查询，直接不过滤（不报错，保证输入即搜永不阻塞）
+  MAX_QUERY_LENGTH = 50
+  # 金字塔评分区间筛选（0 表示尚未评分）
+  SCORE_RANGES = {
+    "80_100" => 80..100,
+    "60_79"  => 60..79,
+    "40_59"  => 40..59,
+    "0_39"   => 0..39
+  }.freeze
+
+  # 股票收藏页：关键词搜索 + 市场/板块/评分区间筛选 + 排序 + 按市场分组
+  # 参数全部白名单化，非法值一律回退为「不过滤」，避免任何参数组合导致 500
   def favorites
     authorize @user
-    @favorites = UserFavorite.where(user: @user).includes(:stock).order(created_at: :desc).page(params[:page]).per(20)
+    @is_member = current_user.is_member?
+    @q = normalize_query(params[:q])
+    @market = whitelist(params[:market], %w[CN HK US])
+    @sector_options = favorite_sectors
+    @sector = @sector_options.include?(params[:sector].to_s) ? params[:sector].to_s : ""
+    # 评分区间筛选与评分排序仅会员可用：非会员直接丢弃参数（防伪造请求绕过会员墙）
+    @score_range = @is_member ? whitelist(params[:score_range], SCORE_RANGES.keys) : ""
+    @sort = @is_member ? (whitelist(params[:sort], %w[recent score]).presence || "recent") : "recent"
+    @group = whitelist(params[:group], %w[market])
+
+    scope = filtered_favorites_scope
+    @favorites = scope.order(*order_clause).page(params[:page]).per(PER_PAGE)
+    @total_favorites = @user.user_favorites.count
+    @filtered = @q.present? || @market.present? || @sector.present? || @score_range.present?
   end
 
   # 自助重新生成 Key：就地换（同 id 换新值），流水不断链；旧 key 立即失效
@@ -69,5 +96,59 @@ class Users::ProfilesController < ApplicationController
 
   def password_params
     params.require(:user).permit(:current_password, :password, :password_confirmation)
+  end
+
+  # 关键词归一化：去首尾与内部多余空白；超长直接丢弃（当作未搜索）
+  def normalize_query(value)
+    q = value.to_s.squish
+    q.length > MAX_QUERY_LENGTH ? "" : q
+  end
+
+  # 白名单校验：非法 / 缺失值一律回退为空串（= 不筛选）
+  def whitelist(value, allowed)
+    v = value.to_s
+    allowed.include?(v) ? v : ""
+  end
+
+  # 板块下拉选项：取该用户「全部收藏」中出现过的板块，
+  # 而不是当前筛选结果里的板块，否则选项会随筛选自我塌缩、用户无法改回
+  def favorite_sectors
+    @user.user_favorites.joins(:stock)
+         .where.not(stocks: { sector: [nil, ""] })
+         .distinct
+         .order("stocks.sector ASC")
+         .pluck("stocks.sector")
+  end
+
+  # 收藏查询：includes + references 走 eager_load 单查询，避免行内取 stock 字段时 N+1
+  def filtered_favorites_scope
+    scope = UserFavorite.where(user: @user).includes(:stock).references(:stock)
+
+    if @q.present?
+      # 代码 / 名称用模糊匹配；拼音首字母用「前缀」匹配，避免短首字母误命中
+      scope = scope.where(
+        "stocks.symbol ILIKE :like OR stocks.name ILIKE :like OR stocks.pinyin_initials ILIKE :initials",
+        like: "%#{Stock.sanitize_sql_like(@q)}%",
+        initials: "#{Stock.sanitize_sql_like(@q.upcase)}%"
+      )
+    end
+    scope = scope.where(stocks: { market: @market }) if @market.present?
+    scope = scope.where(stocks: { sector: @sector }) if @sector.present?
+    scope = scope.where(stocks: { pyramid_total_score: SCORE_RANGES[@score_range] }) if @score_range.present?
+    scope
+  end
+
+  # 排序：按市场分组优先 → 指定排序 → 收藏时间倒序
+  # eager_load 后 stocks / user_favorites 两表都有 created_at 与 id，必须显式限定表名，
+  # 否则 PostgreSQL 会直接抛「列名歧义」错误（order 的嵌套哈希写法也不支持，故用 SQL 片段）
+  def order_clause
+    orders = []
+    if @group == "market"
+      orders << Arel.sql("CASE stocks.market WHEN 'CN' THEN 0 WHEN 'HK' THEN 1 WHEN 'US' THEN 2 ELSE 3 END")
+    end
+    orders << Arel.sql("stocks.pyramid_total_score DESC") if @sort == "score"
+    # id 作稳定 tie-breaker，保证分页不重不漏
+    orders << Arel.sql("user_favorites.created_at DESC, user_favorites.id DESC")
+    orders
   end
 end

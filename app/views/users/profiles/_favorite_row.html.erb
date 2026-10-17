@@ -1,0 +1,33 @@
+<%# 收藏列表单行：紧凑列表行（金字塔榜单同款视觉，但用 data-favorite-row 标记，
+    避免与金字塔页内联 JS 的 .stock-row 全局查询互相干扰）
+    id 必须保持 favorite_card_<stock_id>，供 user_favorites/destroy.turbo_stream.erb 移除本行 %>
+<% stock = favorite.stock %>
+<div id="favorite_card_<%= stock.id %>" data-favorite-row
+     class="flex items-center justify-between gap-3 px-6 py-3 hover:bg-bg-mute transition-colors duration-150">
+  <div class="flex items-center gap-3 min-w-0">
+    <span class="hl-tag shrink-0 font-mono"><%= stock.symbol %></span>
+    <div class="min-w-0">
+      <%# data-turbo-frame="_top"：本行位于 turbo-frame 内，必须显式跳出，否则点击会被当作 frame 内部导航 %>
+      <a href="<%= stock_path(stock) %>" data-turbo-frame="_top"
+         class="block text-hl-13 font-medium text-ink truncate hover:text-link">
+        <%= stock.display_name_for_comparison %>
+      </a>
+      <div class="mt-0.5 flex items-center gap-2 text-hl-11 text-muted-3">
+        <span class="inline-flex px-1.5 py-0.5 rounded text-hl-11 shrink-0 <%= market_badge_class(stock.market) %>"><%= market_label(stock.market) %></span>
+        <span class="truncate"><%= stock.sector.presence || stock.industry.presence || "—" %></span>
+        <span class="text-muted-4 hidden sm:inline shrink-0">收藏于 <%= l(favorite.created_at, format: :short) %></span>
+      </div>
+    </div>
+  </div>
+  <div class="flex items-center gap-3 shrink-0">
+    <% if is_member %>
+      <span data-pyramid-score="<%= stock.pyramid_total_score %>"
+            class="text-hl-15 font-semibold <%= stock.pyramid_total_score >= 70 ? 'text-green-600' : stock.pyramid_total_score >= 40 ? 'text-yellow-600' : 'text-red-500' %>">
+        <%= stock.pyramid_total_score %>
+      </span>
+    <% end %>
+    <%= button_to "取消收藏", user_favorite_path(favorite, stock_id: stock.id), method: :delete,
+      class: "text-hl-12 text-muted-3 hover:text-profit transition-colors",
+      form: { data: { turbo_confirm: "确定取消收藏 #{stock.symbol} 吗？" } } %>
+  </div>
+</div>

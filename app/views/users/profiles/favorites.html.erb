@@ -1,80 +1,145 @@
 <% set_page_title "我的收藏" %>
 <% set_page_description "查看您收藏的股票和关注的金融市场数据。" %>
-<div class="py-16 bg-bg-soft min-h-screen">
+<div class="py-16 bg-bg-soft min-h-screen" data-controller="favorites"
+     data-action="turbo:before-fetch-request->favorites#loading">
   <div class="container-narrow">
 
     <div class="hl-card overflow-hidden">
 
       <%# 用户头部 %>
       <div class="bg-ink px-6 sm:px-8 py-8">
-        <div class="flex items-center gap-5">
-          <%= user_avatar_tag(@user, size: "w-20 h-20", css_class: "text-hl-22") %>
-          <div class="min-w-0">
-            <h1 class="text-hl-18 font-semibold text-white">我的收藏</h1>
-            <p class="text-hl-13 text-white/60 mt-0.5"><%= @user.nickname %> 的收藏股票</p>
+        <div class="flex items-center justify-between gap-5">
+          <div class="flex items-center gap-5 min-w-0">
+            <%= user_avatar_tag(@user, size: "w-20 h-20", css_class: "text-hl-22") %>
+            <div class="min-w-0">
+              <h1 class="text-hl-18 font-semibold text-white">我的收藏</h1>
+              <p class="text-hl-13 text-white/60 mt-0.5"><%= @user.nickname %> 的收藏股票</p>
+            </div>
           </div>
+          <%= link_to "个人中心", users_profile_path, class: "text-hl-12 text-white/60 hover:text-white transition-colors shrink-0" %>
         </div>
       </div>
 
-      <%# 导航标签 %>
-      <div class="flex border-b border-line px-6 sm:px-8">
-        <nav class="flex gap-6">
-          <a href="<%= users_profile_path %>" class="pb-3 text-muted-3 hover:text-ink transition-colors text-hl-13">基本信息</a>
-          <a href="<%= users_profile_favorites_path %>" class="pb-3 border-b-2 border-ink text-ink font-medium text-hl-13">我的收藏</a>
-        </nav>
-      </div>
+      <%# 工具栏：表单必须放在 turbo-frame 之外，局部刷新才不会替换输入框（保住焦点与输入法组词状态） %>
+      <%= form_with url: users_profile_favorites_path, method: :get,
+            data: { turbo_frame: "favorites_results", favorites_target: "form",
+                    action: "change->favorites#submitNow" },
+            class: "px-6 sm:px-8 py-4 border-b border-line bg-white space-y-3" do %>
+        <div class="relative">
+          <label for="favorites-query" class="sr-only">搜索收藏的股票</label>
+          <span class="absolute left-3 top-1/2 -translate-y-1/2 text-muted-4 select-none" aria-hidden="true">⌕</span>
+          <input type="search" id="favorites-query" name="q" value="<%= @q %>"
+                 placeholder="搜索代码 / 名称 / 拼音首字母..."
+                 autocomplete="off" enterkeyhint="search"
+                 data-favorites-target="query"
+                 data-action="input->favorites#search search->favorites#search compositionend->favorites#compositionEnd"
+                 class="w-full pl-8 pr-3 py-2 text-hl-13 text-ink border border-line rounded-md focus:border-link focus:outline-none bg-white placeholder:text-muted-4">
+          <button type="submit" class="sr-only">搜索</button>
+        </div>
 
-      <%# 收藏列表 %>
-      <div class="p-6 sm:p-8">
+        <%# 筛选与排序：手机端横向滚动，桌面端换行 %>
+        <div class="flex items-center gap-2 overflow-x-auto pb-1 -mx-1 px-1 sm:flex-wrap sm:overflow-visible sm:pb-0 sm:mx-0 sm:px-0">
+          <div class="flex items-center gap-1.5 shrink-0">
+            <label for="favorites-market" class="text-hl-13 font-medium text-muted-2 shrink-0">市场</label>
+            <select id="favorites-market" name="market" class="px-3 py-2 text-hl-13 border border-line rounded-md focus:border-link bg-white">
+              <option value="" <%= 'selected' if @market.blank? %>>全部</option>
+              <% [%w[CN A股], %w[HK 港股], %w[US 美股]].each do |code, label| %>
+                <option value="<%= code %>" <%= 'selected' if @market == code %>><%= label %></option>
+              <% end %>
+            </select>
+          </div>
+
+          <div class="flex items-center gap-1.5 shrink-0">
+            <label for="favorites-sector" class="text-hl-13 font-medium text-muted-2 shrink-0">板块</label>
+            <select id="favorites-sector" name="sector" class="px-3 py-2 text-hl-13 border border-line rounded-md focus:border-link bg-white max-w-40" <%= 'disabled' if @sector_options.empty? %>>
+              <option value="" <%= 'selected' if @sector.blank? %>>全部</option>
+              <% @sector_options.each do |sector| %>
+                <option value="<%= sector %>" <%= 'selected' if @sector == sector %>><%= sector %></option>
+              <% end %>
+            </select>
+          </div>
+
+          <div class="flex items-center gap-1.5 shrink-0">
+            <label for="favorites-score-range" class="text-hl-13 font-medium text-muted-2 shrink-0">评分</label>
+            <select id="favorites-score-range" name="score_range" class="px-3 py-2 text-hl-13 border border-line rounded-md focus:border-link bg-white" <%= 'disabled' unless @is_member %>>
+              <option value="" <%= 'selected' if @score_range.blank? %>>全部</option>
+              <option value="80_100" <%= 'selected' if @score_range == '80_100' %>>80 分以上</option>
+              <option value="60_79" <%= 'selected' if @score_range == '60_79' %>>60–79 分</option>
+              <option value="40_59" <%= 'selected' if @score_range == '40_59' %>>40–59 分</option>
+              <option value="0_39" <%= 'selected' if @score_range == '0_39' %>>40 分以下（含未评分）</option>
+            </select>
+          </div>
+
+          <div class="flex items-center gap-1.5 shrink-0">
+            <label for="favorites-sort" class="text-hl-13 font-medium text-muted-2 shrink-0">排序</label>
+            <select id="favorites-sort" name="sort" class="px-3 py-2 text-hl-13 border border-line rounded-md focus:border-link bg-white">
+              <option value="recent" <%= 'selected' if @sort == 'recent' %>>最近收藏</option>
+              <option value="score" <%= 'selected' if @sort == 'score' %> <%= 'disabled' unless @is_member %>>金字塔评分（高→低）</option>
+            </select>
+          </div>
+
+          <button type="button"
+                  class="hl-btn text-hl-12 shrink-0 aria-pressed:bg-ink aria-pressed:text-white aria-pressed:border-ink"
+                  aria-pressed="<%= @group == 'market' %>" data-favorites-target="groupButton"
+                  data-action="click->favorites#toggleGroup">按市场分组</button>
+          <%= hidden_field_tag :group, @group, data: { favorites_target: "groupInput" } %>
+        </div>
+
+        <% unless @is_member %>
+          <p class="text-hl-11 text-muted-3">
+            金字塔评分的筛选与排序为会员功能 ·
+            <%= link_to "了解会员权益", join_path, class: "text-link hover:underline" %>
+          </p>
+        <% end %>
+      <% end %>
+
+      <%# 结果区：Turbo Frame 局部刷新；frame 在空态/加载态下也必须存在，否则表单提交会无响应 %>
+      <%= turbo_frame_tag "favorites_results",
+            data: { favorites_target: "results",
+                    action: "turbo:frame-load->favorites#frameLoaded turbo:frame-render->favorites#frameRendered" } do %>
+        <div class="px-6 py-2 border-b border-line-soft flex items-center justify-between gap-3">
+          <span class="text-hl-12 text-muted-3">
+            共 <span id="favorites_summary" class="text-ink font-medium"><%= @total_favorites %></span> 只
+            <% if @filtered %> · 筛选出 <span class="text-ink font-medium"><%= @favorites.total_count %></span> 只<% end %>
+            <span class="hidden text-muted-4" data-favorites-target="loadingHint">· 搜索中…</span>
+          </span>
+          <% if @filtered %>
+            <button type="button" data-action="click->favorites#resetForm"
+                    class="text-hl-12 text-link hover:text-link-hover transition-colors shrink-0">清除筛选</button>
+          <% end %>
+        </div>
+
         <% if @favorites.empty? %>
           <div class="py-12 text-center">
-            <p class="text-hl-14 text-muted-4 font-medium">暂无收藏的股票</p>
-            <p class="text-hl-13 text-muted-5 mt-1">去股票详情页添加收藏吧</p>
-          </div>
-        <% else %>
-          <div class="grid gap-4 sm:grid-cols-1 md:grid-cols-2">
-            <% @favorites.each do |favorite| %>
-              <% stock = favorite.stock %>
-              <div id="favorite_card_<%= stock.id %>" class="hl-card overflow-hidden hover:shadow-md transition-shadow">
-                <a href="<%= stock_path(stock) %>" class="block p-5">
-                  <div class="flex items-start justify-between">
-                    <div class="min-w-0 flex-1">
-                      <div class="flex items-center gap-2">
-                        <h3 class="text-hl-15 font-semibold text-ink truncate"><%= stock.display_name_for_comparison %></h3>
-                        <span class="hl-tag shrink-0"><%= stock.symbol %></span>
-                      </div>
-                      <div class="flex items-center gap-3 mt-2">
-                        <span class="px-2 py-0.5 text-xs font-medium rounded whitespace-nowrap <%= stock.market == 'CN' ? 'bg-green-100 text-green-700' : stock.market == 'HK' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700' %>"><%= stock.market == 'CN' ? 'A股' : stock.market == 'HK' ? '港股' : '美股' %></span>
-                        <span class="text-hl-12 text-muted-4"><%= stock.sector.presence || stock.industry.presence || '-' %></span>
-                      </div>
-                      <% if current_user.is_member? && stock.pyramid_total_score > 0 %>
-                        <div class="mt-3 flex items-center gap-2">
-                          <span class="text-hl-12 text-muted-4">金字塔评分</span>
-                          <span class="text-hl-14 font-semibold <%= stock.pyramid_total_score >= 70 ? 'text-green-600' : stock.pyramid_total_score >= 40 ? 'text-yellow-600' : 'text-red-500' %>">
-                            <%= stock.pyramid_total_score %>
-                          </span>
-                        </div>
-                      <% end %>
-                    </div>
-                  </div>
-                </a>
-                <div class="px-5 pb-4 border-t border-line-soft pt-3 flex items-center justify-between">
-                  <span class="text-hl-12 text-muted-5">收藏于 <%= l(favorite.created_at, format: :short) %></span>
-                  <%= button_to "取消收藏", user_favorite_path(favorite, stock_id: stock.id), method: :delete,
-                    class: "text-hl-13 text-link hover:text-link-hover transition-colors",
-                    form: { data: { turbo_confirm: "确定取消收藏 #{stock.symbol} 吗？" } } %>
-                </div>
-              </div>
+            <% if @total_favorites.zero? %>
+              <p class="text-hl-14 text-muted-4 font-medium">暂无收藏的股票</p>
+              <p class="text-hl-13 text-muted-5 mt-1">去股票详情页添加收藏吧</p>
+            <% else %>
+              <p class="text-hl-14 text-muted-4 font-medium">没有符合条件的收藏</p>
+              <p class="text-hl-13 text-muted-5 mt-1">试试更换关键词或清空筛选条件</p>
             <% end %>
           </div>
-
-          <% if @favorites.total_pages > 1 %>
-            <div class="mt-8 flex justify-center">
-              <%= paginate @favorites %>
-            </div>
-          <% end %>
+        <% else %>
+          <div class="divide-y divide-line-soft">
+            <% if @group == 'market' %>
+              <% @favorites.group_by { |favorite| favorite.stock.market }.each do |market, favorites| %>
+                <div data-market-group="<%= market %>" class="px-6 py-2 bg-bg-mute">
+                  <span class="text-hl-12 font-medium text-muted-2"><%= market_label(market) %></span>
+                </div>
+                <%= render partial: "users/profiles/favorite_row", collection: favorites, as: :favorite, locals: { is_member: @is_member } %>
+              <% end %>
+            <% else %>
+              <%= render partial: "users/profiles/favorite_row", collection: @favorites, as: :favorite, locals: { is_member: @is_member } %>
+            <% end %>
+          </div>
         <% end %>
-      </div>
+
+        <% if @favorites.total_pages > 1 %>
+          <div class="px-6 py-4 border-t border-line flex justify-center">
+            <%= paginate @favorites %>
+          </div>
+        <% end %>
+      <% end %>
 
     </div>
   </div>

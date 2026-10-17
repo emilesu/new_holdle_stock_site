@@ -13,3 +13,8 @@
 <% end %>
 
 <%= turbo_stream.remove "favorite_card_#{@stock.id}" %>
+
+<%# 收藏页的「共 N 只」计数需随取消收藏同步；其他页面没有该元素，Turbo 对缺失目标静默跳过 %>
+<%= turbo_stream.replace "favorites_summary" do %>
+  <span id="favorites_summary" class="text-ink font-medium"><%= current_user.user_favorites.count %></span>
+<% end %>
