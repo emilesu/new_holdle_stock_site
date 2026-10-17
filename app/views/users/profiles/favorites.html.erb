@@ -38,11 +38,11 @@
           <button type="submit" class="sr-only">搜索</button>
         </div>
 
-        <%# 筛选与排序：手机端横向滚动，桌面端换行 %>
-        <div class="flex items-center gap-2 overflow-x-auto pb-1 -mx-1 px-1 sm:flex-wrap sm:overflow-visible sm:pb-0 sm:mx-0 sm:px-0">
+        <%# 筛选与排序：全端同一行不放换行，超宽时横向滚动兜底（控件宽度已压缩至常规桌面一行可容纳） %>
+        <div class="flex items-center gap-1.5 overflow-x-auto pb-1 -mx-1 px-1">
           <div class="flex items-center gap-1.5 shrink-0">
             <label for="favorites-market" class="text-hl-13 font-medium text-muted-2 shrink-0">市场</label>
-            <select id="favorites-market" name="market" class="px-3 py-2 text-hl-13 border border-line rounded-md focus:border-link bg-white">
+            <select id="favorites-market" name="market" class="px-2.5 py-2 text-hl-13 border border-line rounded-md focus:border-link bg-white">
               <option value="" <%= 'selected' if @market.blank? %>>全部</option>
               <% [%w[CN A股], %w[HK 港股], %w[US 美股]].each do |code, label| %>
                 <option value="<%= code %>" <%= 'selected' if @market == code %>><%= label %></option>
@@ -52,7 +52,7 @@
 
           <div class="flex items-center gap-1.5 shrink-0">
             <label for="favorites-sector" class="text-hl-13 font-medium text-muted-2 shrink-0">板块</label>
-            <select id="favorites-sector" name="sector" class="px-3 py-2 text-hl-13 border border-line rounded-md focus:border-link bg-white max-w-40" <%= 'disabled' if @sector_options.empty? %>>
+            <select id="favorites-sector" name="sector" class="px-2.5 py-2 text-hl-13 border border-line rounded-md focus:border-link bg-white max-w-32" <%= 'disabled' if @sector_options.empty? %>>
               <option value="" <%= 'selected' if @sector.blank? %>>全部</option>
               <% @sector_options.each do |sector| %>
                 <option value="<%= sector %>" <%= 'selected' if @sector == sector %>><%= sector %></option>
@@ -62,27 +62,27 @@
 
           <div class="flex items-center gap-1.5 shrink-0">
             <label for="favorites-score-range" class="text-hl-13 font-medium text-muted-2 shrink-0">评分</label>
-            <select id="favorites-score-range" name="score_range" class="px-3 py-2 text-hl-13 border border-line rounded-md focus:border-link bg-white" <%= 'disabled' unless @is_member %>>
+            <select id="favorites-score-range" name="score_range" title="未评分（0 分）计入 500 分以下" class="px-2.5 py-2 text-hl-13 border border-line rounded-md focus:border-link bg-white" <%= 'disabled' unless @is_member %>>
               <option value="" <%= 'selected' if @score_range.blank? %>>全部</option>
               <option value="900_1000" <%= 'selected' if @score_range == '900_1000' %>>900 分以上</option>
               <option value="800_899" <%= 'selected' if @score_range == '800_899' %>>800–899 分</option>
               <option value="700_799" <%= 'selected' if @score_range == '700_799' %>>700–799 分</option>
               <option value="600_699" <%= 'selected' if @score_range == '600_699' %>>600–699 分</option>
               <option value="500_599" <%= 'selected' if @score_range == '500_599' %>>500–599 分</option>
-              <option value="0_499" <%= 'selected' if @score_range == '0_499' %>>500 分以下（含未评分）</option>
+              <option value="0_499" <%= 'selected' if @score_range == '0_499' %>>500 分以下</option>
             </select>
           </div>
 
           <div class="flex items-center gap-1.5 shrink-0">
             <label for="favorites-sort" class="text-hl-13 font-medium text-muted-2 shrink-0">排序</label>
-            <select id="favorites-sort" name="sort" class="px-3 py-2 text-hl-13 border border-line rounded-md focus:border-link bg-white">
+            <select id="favorites-sort" name="sort" class="px-2.5 py-2 text-hl-13 border border-line rounded-md focus:border-link bg-white">
               <option value="recent" <%= 'selected' if @sort == 'recent' %>>最近收藏</option>
-              <option value="score" <%= 'selected' if @sort == 'score' %> <%= 'disabled' unless @is_member %>>金字塔评分（高→低）</option>
+              <option value="score" <%= 'selected' if @sort == 'score' %> <%= 'disabled' unless @is_member %>>金字塔评分</option>
             </select>
           </div>
 
           <button type="button"
-                  class="hl-btn text-hl-12 shrink-0 aria-pressed:bg-ink aria-pressed:text-white aria-pressed:border-ink"
+                  class="hl-btn shrink-0 px-3 py-2 text-hl-12 aria-pressed:bg-ink aria-pressed:text-white aria-pressed:border-ink"
                   aria-pressed="<%= @group == 'market' %>" data-favorites-target="groupButton"
                   data-action="click->favorites#toggleGroup">按市场分组</button>
           <%= hidden_field_tag :group, @group, data: { favorites_target: "groupInput" } %>
