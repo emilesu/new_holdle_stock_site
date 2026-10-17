@@ -1,7 +1,7 @@
 <% set_page_title "我的收藏" %>
 <% set_page_description "查看您收藏的股票和关注的金融市场数据。" %>
 <div class="py-16 bg-bg-soft min-h-screen" data-controller="favorites"
-     data-action="turbo:before-fetch-request->favorites#loading">
+     data-action="turbo:before-fetch-request->favorites#loading turbo:fetch-request-error->favorites#frameLoaded">
   <div class="container-narrow">
 
     <div class="hl-card overflow-hidden">
@@ -100,7 +100,7 @@
         <div class="px-6 py-2 border-b border-line-soft flex items-center justify-between gap-3">
           <span class="text-hl-12 text-muted-3">
             共 <span id="favorites_summary" class="text-ink font-medium"><%= @total_favorites %></span> 只
-            <% if @filtered %> · 筛选出 <span class="text-ink font-medium"><%= @favorites.total_count %></span> 只<% end %>
+            <% if @filtered %> · 筛选出 <span id="favorites_filtered_summary" class="text-ink font-medium"><%= @favorites.total_count %></span> 只<% end %>
             <span class="hidden text-muted-4" data-favorites-target="loadingHint">· 搜索中…</span>
           </span>
           <% if @filtered %>
@@ -109,36 +109,34 @@
           <% end %>
         </div>
 
-        <% if @favorites.empty? %>
-          <div class="py-12 text-center">
-            <% if @total_favorites.zero? %>
-              <p class="text-hl-14 text-muted-4 font-medium">暂无收藏的股票</p>
-              <p class="text-hl-13 text-muted-5 mt-1">去股票详情页添加收藏吧</p>
-            <% else %>
-              <p class="text-hl-14 text-muted-4 font-medium">没有符合条件的收藏</p>
-              <p class="text-hl-13 text-muted-5 mt-1">试试更换关键词或清空筛选条件</p>
-            <% end %>
-          </div>
-        <% else %>
-          <div class="divide-y divide-line-soft">
-            <% if @group == 'market' %>
-              <% @favorites.group_by { |favorite| favorite.stock.market }.each do |market, favorites| %>
-                <div data-market-group="<%= market %>" class="px-6 py-2 bg-bg-mute">
-                  <span class="text-hl-12 font-medium text-muted-2"><%= market_label(market) %></span>
-                </div>
-                <%= render partial: "users/profiles/favorite_row", collection: favorites, as: :favorite, locals: { is_member: @is_member } %>
+        <%# 列表区整体包一层 id：取消收藏到一条不剩时，turbo_stream 会整块替换成空态 %>
+        <div id="favorites_list">
+          <% if @favorites.empty? %>
+            <%= render partial: "users/profiles/empty_state", locals: { total: @total_favorites } %>
+          <% else %>
+            <div class="divide-y divide-line-soft">
+              <% if @group == 'market' %>
+                <% @favorites.group_by { |favorite| favorite.stock.market }.each do |market, favorites| %>
+                  <%# 该市场若从上一页延续过来，本页不重复渲染分组标题 %>
+                  <% unless market == @continued_market %>
+                    <div data-market-group="<%= market %>" class="px-6 py-2 bg-bg-mute">
+                      <span class="text-hl-12 font-medium text-muted-2"><%= market_label(market) %></span>
+                    </div>
+                  <% end %>
+                  <%= render partial: "users/profiles/favorite_row", collection: favorites, as: :favorite, locals: { is_member: @is_member } %>
+                <% end %>
+              <% else %>
+                <%= render partial: "users/profiles/favorite_row", collection: @favorites, as: :favorite, locals: { is_member: @is_member } %>
               <% end %>
-            <% else %>
-              <%= render partial: "users/profiles/favorite_row", collection: @favorites, as: :favorite, locals: { is_member: @is_member } %>
-            <% end %>
-          </div>
-        <% end %>
+            </div>
 
-        <% if @favorites.total_pages > 1 %>
-          <div class="px-6 py-4 border-t border-line flex justify-center">
-            <%= paginate @favorites %>
-          </div>
-        <% end %>
+            <% if @favorites.total_pages > 1 %>
+              <div class="px-6 py-4 border-t border-line flex justify-center">
+                <%= paginate @favorites %>
+              </div>
+            <% end %>
+          <% end %>
+        </div>
       <% end %>
 
     </div>

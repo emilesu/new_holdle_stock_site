@@ -311,6 +311,20 @@ class Users::ProfilesFavoritesTest < ActionDispatch::IntegrationTest
     assert_equal %w[CN], css_select("div[data-market-group]").map { |el| el["data-market-group"] }
   end
 
+  test "按市场分组跨页时不重复渲染同一市场的分组标题" do
+    21.times { |i| favorite(@user, Stock.create!(symbol: "TESTGR#{i}", name: "分组股#{i}", market: "CN")) }
+    sign_in @user
+
+    get users_profile_favorites_path, params: { group: "market", page: 1 }
+    assert_select "[data-favorite-row]", count: 20
+    assert_equal %w[CN], css_select("div[data-market-group]").map { |el| el["data-market-group"] }
+
+    # 第 2 页是该市场的延续，不应再渲染一次分组标题
+    get users_profile_favorites_path, params: { group: "market", page: 2 }
+    assert_select "[data-favorite-row]", count: 1
+    assert_select "div[data-market-group]", count: 0
+  end
+
   # ---------- 会员墙 ----------
 
   test "非会员页面不渲染金字塔分数" do
@@ -330,6 +344,42 @@ class Users::ProfilesFavoritesTest < ActionDispatch::IntegrationTest
     get users_profile_favorites_path
 
     assert_select "[data-pyramid-score]", count: 1
+  end
+
+  test "会员页面不渲染未评分（0 分）股票的分数" do
+    favorite(@member, Stock.create!(symbol: "TESTSC3", name: "未评分股", market: "CN", pyramid_total_score: 0))
+    sign_in @member
+
+    get users_profile_favorites_path
+
+    assert_select "[data-favorite-row]", count: 1
+    assert_select "[data-pyramid-score]", count: 0
+  end
+
+  # ---------- 取消收藏的 turbo_stream ----------
+
+  test "取消收藏后同步总数，全部取消完补渲染空态" do
+    stock = stocks(:one)
+    favorite(@user, stock)
+    favorite(@user, stocks(:two))
+    sign_in @user
+
+    delete user_favorite_path(@user.user_favorites.find_by(stock_id: stock.id), stock_id: stock.id),
+           headers: { "Accept" => "text/vnd.turbo-stream.html" }
+
+    assert_response :success
+    assert_match "favorite_card_#{stock.id}", response.body
+    assert_match(/id="favorites_summary" class="text-ink font-medium">1</, response.body)
+    assert_no_match "暂无收藏的股票", response.body, "仍有收藏时不应出现空态"
+
+    # 取消最后一条：总数归零并整块替换为空态
+    remaining = @user.user_favorites.first
+    delete user_favorite_path(remaining, stock_id: remaining.stock_id),
+           headers: { "Accept" => "text/vnd.turbo-stream.html" }
+
+    assert_response :success
+    assert_match(/id="favorites_summary" class="text-ink font-medium">0</, response.body)
+    assert_match "暂无收藏的股票", response.body
   end
 
   # ---------- 分页 ----------
@@ -353,6 +403,10 @@ class Users::ProfilesFavoritesTest < ActionDispatch::IntegrationTest
       get users_profile_favorites_path, params: { page: page }
       assert_response :success, "page=#{page} 应正常返回"
     end
+
+    # 数组形式的 page 参数（?page[]=1）曾让 Kaminari 直接对 Array 调 to_i 抛错
+    get users_profile_favorites_path, params: { page: ["1"] }
+    assert_response :success, "page[]=1 应正常返回"
   end
 
   # ---------- 空态 ----------

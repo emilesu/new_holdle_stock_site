@@ -1,0 +1,11 @@
+<%# 收藏页空态：total 为 0 → 从未收藏；大于 0 → 筛选 / 搜索后无结果
+    收藏页与「取消收藏」的 turbo_stream 共用本模板，避免空态文案两处维护 %>
+<div class="py-12 text-center">
+  <% if total.zero? %>
+    <p class="text-hl-14 text-muted-4 font-medium">暂无收藏的股票</p>
+    <p class="text-hl-13 text-muted-5 mt-1">去股票详情页添加收藏吧</p>
+  <% else %>
+    <p class="text-hl-14 text-muted-4 font-medium">没有符合条件的收藏</p>
+    <p class="text-hl-13 text-muted-5 mt-1">试试更换关键词或清空筛选条件</p>
+  <% end %>
+</div>

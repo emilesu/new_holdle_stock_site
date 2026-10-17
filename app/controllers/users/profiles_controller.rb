@@ -64,9 +64,11 @@ class Users::ProfilesController < ApplicationController
     @group = whitelist(params[:group], %w[market])
 
     scope = filtered_favorites_scope
-    @favorites = scope.order(*order_clause).page(params[:page]).per(PER_PAGE)
+    @favorites = scope.order(*order_clause).page(sanitized_page).per(PER_PAGE)
     @total_favorites = @user.user_favorites.count
     @filtered = @q.present? || @market.present? || @sector.present? || @score_range.present?
+    # 分组标题跨页去重：排序已保证同一市场连续，故只需知道「上一页最后一行的市场」
+    @continued_market = previous_page_last_market(@favorites.current_page)
   end
 
   # 自助重新生成 Key：就地换（同 id 换新值），流水不断链；旧 key 立即失效
@@ -104,6 +106,12 @@ class Users::ProfilesController < ApplicationController
     q.length > MAX_QUERY_LENGTH ? "" : q
   end
 
+  # 页码兜底：Kaminari 的 page() 对数组等非字符串参数会直接调用 to_i 抛错
+  #（?page[]=1 → NoMethodError → 500），统一转成字符串交给它自行容错
+  def sanitized_page
+    params[:page].to_s
+  end
+
   # 白名单校验：非法 / 缺失值一律回退为空串（= 不筛选）
   def whitelist(value, allowed)
     v = value.to_s
@@ -122,8 +130,24 @@ class Users::ProfilesController < ApplicationController
 
   # 收藏查询：includes + references 走 eager_load 单查询，避免行内取 stock 字段时 N+1
   def filtered_favorites_scope
-    scope = UserFavorite.where(user: @user).includes(:stock).references(:stock)
+    apply_filters(UserFavorite.where(user: @user).includes(:stock).references(:stock))
+  end
 
+  # 「按市场分组」时上一页最后一行的市场：与本页首组相同则本页跳过标题，
+  # 避免分组标题跨页重复（排序已保证同一市场的行连续，只有首组可能延续自上一页）
+  def previous_page_last_market(page_number)
+    return nil unless @group == "market" && page_number > 1
+
+    apply_filters(UserFavorite.where(user: @user).joins(:stock))
+      .order(*order_clause)
+      .offset((page_number - 1) * PER_PAGE - 1)
+      .limit(1)
+      .pluck("stocks.market")
+      .first
+  end
+
+  # 筛选条件（关键词 / 市场 / 板块 / 评分区间），供列表与分组标题去重共用
+  def apply_filters(scope)
     if @q.present?
       # 代码 / 名称用模糊匹配；拼音首字母用「前缀」匹配，避免短首字母误命中
       scope = scope.where(

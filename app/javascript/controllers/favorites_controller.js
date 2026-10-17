@@ -14,10 +14,28 @@ export default class extends Controller {
 
   connect() {
     this.timer = null
+    // 取消收藏由 turbo_stream 移除行：被移除的行必然属于当前筛选结果，
+    // 因此「筛选出 N 只」就地减 1（总数由服务端在同一个流里替换）
+    this.streamHandler = (event) => {
+      const stream = event.detail?.newStream
+      if (!stream || stream.getAttribute("action") !== "remove") return
+      if (!String(stream.getAttribute("target") || "").startsWith("favorite_card_")) return
+      this.decrementFilteredSummary()
+    }
+    document.addEventListener("turbo:before-stream-render", this.streamHandler)
   }
 
   disconnect() {
+    document.removeEventListener("turbo:before-stream-render", this.streamHandler)
     this.clearTimer()
+  }
+
+  decrementFilteredSummary() {
+    const el = this.element.querySelector("#favorites_filtered_summary")
+    if (!el) return
+    const current = Number.parseInt(el.textContent, 10)
+    if (Number.isNaN(current)) return
+    el.textContent = String(Math.max(0, current - 1))
   }
 
   // ---------- 输入即搜 ----------
@@ -78,7 +96,11 @@ export default class extends Controller {
 
   // ---------- 加载反馈与地址栏同步 ----------
 
-  loading() {
+  loading(event) {
+    // 只对「工具栏表单提交」与「frame 自身导航（点分页）」置位。
+    // 行内取消收藏（turbo_stream）与行内链接的 Turbo 预取都不会触发 turbo:frame-load，
+    // 若一并置位，结果区会永久停留在置灰 + pointer-events-none，列表点不动
+    if (event.target !== this.formTarget && event.target !== this.resultsTarget) return
     this.setLoading(true)
   }
 

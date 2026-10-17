@@ -7,8 +7,9 @@
   <div class="flex items-center gap-3 min-w-0">
     <span class="hl-tag shrink-0 font-mono"><%= stock.symbol %></span>
     <div class="min-w-0">
-      <%# data-turbo-frame="_top"：本行位于 turbo-frame 内，必须显式跳出，否则点击会被当作 frame 内部导航 %>
-      <a href="<%= stock_path(stock) %>" data-turbo-frame="_top"
+      <%# data-turbo-frame="_top"：本行位于 turbo-frame 内，必须显式跳出，否则点击会被当作 frame 内部导航
+          data-turbo-prefetch="false"：避免鼠标划过即触发 Turbo 预取请求（预取不触发 frame-load，会误触加载态） %>
+      <a href="<%= stock_path(stock) %>" data-turbo-frame="_top" data-turbo-prefetch="false"
          class="block text-hl-13 font-medium text-ink truncate hover:text-link">
         <%= stock.display_name_for_comparison %>
       </a>
@@ -20,7 +21,8 @@
     </div>
   </div>
   <div class="flex items-center gap-3 shrink-0">
-    <% if is_member %>
+    <%# 0 分表示尚未计算评分，按原口径不展示分数，避免被读成「极差」 %>
+    <% if is_member && stock.pyramid_total_score > 0 %>
       <span data-pyramid-score="<%= stock.pyramid_total_score %>"
             class="text-hl-15 font-semibold <%= stock.pyramid_total_score >= 70 ? 'text-green-600' : stock.pyramid_total_score >= 40 ? 'text-yellow-600' : 'text-red-500' %>">
         <%= stock.pyramid_total_score %>
