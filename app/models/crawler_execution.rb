@@ -12,7 +12,8 @@ class CrawlerExecution < ApplicationRecord
   # 「已置 running 但始终没有开始执行」的兜底阈值：这类记录（入队失败、作业被清理）
   # 没有心跳可判，只能用创建时间兜底。取值远大于 WATCHDOG_TIMEOUT —— crawlers 队列单线程
   # 串行，排在数小时长任务后面的记录可能长时间处于未开始状态，不能按 10 分钟误杀。
-  QUEUE_TIMEOUT = 12.hours
+  # 手动全量财务任务实测可达 13.6~14.7h，取 24h 留一倍余量
+  QUEUE_TIMEOUT = 24.hours
 
   scope :running, -> { where(status: "running") }
   scope :by_task, ->(key) { where(task_key: key) }
@@ -33,8 +34,16 @@ class CrawlerExecution < ApplicationRecord
     ((processed_count.to_i * 100.0) / total_count).round
   end
 
+  # 与 scope :stale 保持同一口径（两类僵尸）：已开始但心跳停滞，或无心跳且入队超时。
+  # 后台详情页据此显示异常提示；实际可续跑性由 resumable? 把关
   def stale?
-    running? && heartbeat_at.present? && heartbeat_at < WATCHDOG_TIMEOUT.ago
+    return false unless running?
+
+    if heartbeat_at.present?
+      heartbeat_at < WATCHDOG_TIMEOUT.ago
+    else
+      executed_at.present? && executed_at < QUEUE_TIMEOUT.ago
+    end
   end
 
   def running?

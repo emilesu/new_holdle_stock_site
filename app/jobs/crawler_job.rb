@@ -34,6 +34,15 @@ class CrawlerJob < ApplicationJob
       return
     end
 
+    # 看门狗判死防护：排队中的执行记录若已被看门狗标记为 failed（入队超时误杀等），
+    # 轮到执行时直接跳过。否则 CrawlContext#start! 会把状态强写回 running「复活」，
+    # 期间互斥闸门已放行新任务，造成任务积压与 failed→running→success 的状态线混乱。
+    # 后台续跑（retry）会新建执行记录，不受此防护影响。
+    if execution.status == "failed" && execution.finished_at.present?
+      Rails.logger.warn "[CrawlerJob] 执行记录 ##{execution.id}（#{task_key}）已被看门狗判死，跳过执行"
+      return
+    end
+
     context = DataSources::CrawlContext.new(execution: execution)
     params = (params || {}).symbolize_keys
 

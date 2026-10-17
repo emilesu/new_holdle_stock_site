@@ -22,6 +22,13 @@ class CrawlerExecutionTest < ActiveSupport::TestCase
     refute build_execution(status: "success", heartbeat_at: 20.minutes.ago).stale?
   end
 
+  test "stale? 与 scope :stale 同口径：无心跳且入队超时也算僵尸" do
+    assert build_execution(status: "running", heartbeat_at: nil,
+                           executed_at: CrawlerExecution::QUEUE_TIMEOUT.ago - 1.minute).stale?
+    refute build_execution(status: "running", heartbeat_at: nil,
+                           executed_at: 1.hour.ago).stale?
+  end
+
   test "by_task 与 for_market 支持筛选" do
     CrawlerExecution.create!(task_key: "a_finance", task_name: "A股财务", market: "CN",
                              status: "success", executed_at: Time.current, duration: 0)
