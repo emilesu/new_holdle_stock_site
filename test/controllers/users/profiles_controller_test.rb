@@ -247,16 +247,21 @@ class Users::ProfilesFavoritesTest < ActionDispatch::IntegrationTest
   end
 
   test "按评分区间筛选（会员）" do
-    high = Stock.create!(symbol: "TESTHIGH", name: "高分股", market: "CN", pyramid_total_score: 88)
+    high = Stock.create!(symbol: "TESTHIGH", name: "高分股", market: "CN", pyramid_total_score: 930)
+    mid = Stock.create!(symbol: "TESTMID", name: "中分股", market: "CN", pyramid_total_score: 630)
     low = Stock.create!(symbol: "TESTLOW", name: "低分股", market: "CN", pyramid_total_score: 0)
     favorite(@member, high)
+    favorite(@member, mid)
     favorite(@member, low)
     sign_in @member
 
-    get users_profile_favorites_path, params: { score_range: "80_100" }
+    get users_profile_favorites_path, params: { score_range: "900_1000" }
     assert_rows(high)
 
-    get users_profile_favorites_path, params: { score_range: "0_39" }
+    get users_profile_favorites_path, params: { score_range: "600_699" }
+    assert_rows(mid)
+
+    get users_profile_favorites_path, params: { score_range: "0_499" }
     assert_rows(low)
   end
 

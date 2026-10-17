@@ -6,6 +6,14 @@
     per_page:      number of items to fetch per page
     remote:        data-remote
 -%>
-<span class="prev">
-  <%= link_to_unless current_page.first?, t('views.pagination.previous').html_safe, url, rel: 'prev', remote: remote %>
-</span>
+<% if current_page.first? %>
+  <span class="pagination-prev inline-flex h-8 items-center gap-1 rounded-md border border-line-soft px-3 text-hl-13 text-muted-4 select-none" aria-disabled="true"><%= t('views.pagination.previous') %></span>
+<% else %>
+  <%= link_to url, rel: 'prev', remote: remote,
+        class: "pagination-prev inline-flex h-8 items-center gap-1 rounded-md border border-line bg-white px-3 text-hl-13 text-muted transition-colors hover:border-ink hover:text-ink" do %>
+    <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+    </svg>
+    <%= t('views.pagination.previous') %>
+  <% end %>
+<% end %>

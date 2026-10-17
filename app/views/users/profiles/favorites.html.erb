@@ -63,10 +63,12 @@
             <label for="favorites-score-range" class="text-hl-13 font-medium text-muted-2 shrink-0">评分</label>
             <select id="favorites-score-range" name="score_range" class="px-3 py-2 text-hl-13 border border-line rounded-md focus:border-link bg-white" <%= 'disabled' unless @is_member %>>
               <option value="" <%= 'selected' if @score_range.blank? %>>全部</option>
-              <option value="80_100" <%= 'selected' if @score_range == '80_100' %>>80 分以上</option>
-              <option value="60_79" <%= 'selected' if @score_range == '60_79' %>>60–79 分</option>
-              <option value="40_59" <%= 'selected' if @score_range == '40_59' %>>40–59 分</option>
-              <option value="0_39" <%= 'selected' if @score_range == '0_39' %>>40 分以下（含未评分）</option>
+              <option value="900_1000" <%= 'selected' if @score_range == '900_1000' %>>900 分以上</option>
+              <option value="800_899" <%= 'selected' if @score_range == '800_899' %>>800–899 分</option>
+              <option value="700_799" <%= 'selected' if @score_range == '700_799' %>>700–799 分</option>
+              <option value="600_699" <%= 'selected' if @score_range == '600_699' %>>600–699 分</option>
+              <option value="500_599" <%= 'selected' if @score_range == '500_599' %>>500–599 分</option>
+              <option value="0_499" <%= 'selected' if @score_range == '0_499' %>>500 分以下（含未评分）</option>
             </select>
           </div>
 
@@ -131,7 +133,7 @@
             </div>
 
             <% if @favorites.total_pages > 1 %>
-              <div class="px-6 py-4 border-t border-line flex justify-center">
+              <div class="px-6 py-4 border-t border-line">
                 <%= paginate @favorites %>
               </div>
             <% end %>

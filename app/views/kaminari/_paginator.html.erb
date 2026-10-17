@@ -6,9 +6,9 @@
     remote:        data-remote
     paginator:     the paginator that renders the pagination tags inside
 -%>
+<%# 全站统一分页器：线条风（上一页 · 页码 · 下一页），页码超宽自动省略号收拢 %>
 <%= paginator.render do -%>
-  <nav class="pagination" role="navigation" aria-label="pager">
-    <%= first_page_tag unless current_page.first? %>
+  <nav class="pagination flex flex-wrap items-center justify-center gap-1.5" role="navigation" aria-label="分页">
     <%= prev_page_tag unless current_page.first? %>
     <% each_page do |page| -%>
       <% if page.display_tag? -%>
@@ -19,7 +19,6 @@
     <% end -%>
     <% unless current_page.out_of_range? %>
       <%= next_page_tag unless current_page.last? %>
-      <%= last_page_tag unless current_page.last? %>
     <% end %>
   </nav>
 <% end -%>

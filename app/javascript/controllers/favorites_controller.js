@@ -11,6 +11,11 @@ import { Controller } from "@hotwired/stimulus"
 export default class extends Controller {
   static targets = ["form", "query", "groupInput", "groupButton", "results", "loadingHint"]
   static DEBOUNCE_MS = 300
+  // 记住上次筛选条件（与金字塔页 / 股票筛选页同一思路：localStorage + 7 天有效）
+  static STORAGE_KEY = "favorites_last_v1"
+  static STORAGE_TTL = 7 * 24 * 60 * 60 * 1000
+  // 参与记忆的筛选字段：URL 已带任一参数时以 URL 为准，不套用缓存
+  static FILTER_KEYS = ["q", "market", "sector", "score_range", "sort", "group"]
 
   connect() {
     this.timer = null
@@ -23,6 +28,7 @@ export default class extends Controller {
       this.decrementFilteredSummary()
     }
     document.addEventListener("turbo:before-stream-render", this.streamHandler)
+    this.restoreFromStorage()
   }
 
   disconnect() {
@@ -61,7 +67,48 @@ export default class extends Controller {
 
   submit() {
     this.clearTimer()
+    this.persist()
     this.formTarget.requestSubmit()
+  }
+
+  // ---------- 记住上次筛选条件 ----------
+
+  persist() {
+    const fields = {}
+    new FormData(this.formTarget).forEach((value, key) => { fields[key] = String(value) })
+    try {
+      localStorage.setItem(this.constructor.STORAGE_KEY, JSON.stringify({ fields, ts: Date.now() }))
+    } catch (e) { /* 无痕模式等存储不可用时静默忽略 */ }
+  }
+
+  clearStored() {
+    try { localStorage.removeItem(this.constructor.STORAGE_KEY) } catch (e) { /* 忽略 */ }
+  }
+
+  // 无参数进入时套用缓存；URL 已带条件（含分享 / 刷新回显）时以 URL 为准
+  restoreFromStorage() {
+    const params = new URLSearchParams(window.location.search)
+    if (this.constructor.FILTER_KEYS.some((key) => params.has(key))) return
+
+    let saved = null
+    try { saved = JSON.parse(localStorage.getItem(this.constructor.STORAGE_KEY)) } catch (e) { return }
+    if (!saved || !saved.fields || Date.now() - (saved.ts || 0) > this.constructor.STORAGE_TTL) return
+
+    const form = this.formTarget
+    Object.entries(saved.fields).forEach(([key, value]) => {
+      const el = form.elements[key]
+      if (!el) return
+      // 非会员的评分控件被禁用（disabled 控件不提交，服务端也会丢弃该参数）
+      if (el.disabled) return
+      // 缓存里的板块可能已被用户取消收藏而从下拉中消失，恢复不了就跳过（服务端白名单也会兜底回退）
+      if (el.tagName === "SELECT" && ![...el.options].some((option) => option.value === value)) return
+      el.value = value
+    })
+    this.groupButtonTarget.setAttribute("aria-pressed", String(this.groupInputTarget.value === "market"))
+    // 恢复后走一次正常提交：服务端渲染结果区 + frameRendered 同步地址栏
+    if (this.constructor.FILTER_KEYS.some((key) => form.elements[key]?.value)) {
+      this.submitNow()
+    }
   }
 
   clearTimer() {
@@ -91,6 +138,7 @@ export default class extends Controller {
     if (form.elements["sort"]) form.elements["sort"].value = "recent"
     this.groupInputTarget.value = ""
     this.groupButtonTarget.setAttribute("aria-pressed", "false")
+    this.clearStored()
     this.submitNow()
   }
 

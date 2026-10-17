@@ -6,6 +6,14 @@
     per_page:      number of items to fetch per page
     remote:        data-remote
 -%>
-<span class="next">
-  <%= link_to_unless current_page.last?, t('views.pagination.next').html_safe, url, rel: 'next', remote: remote %>
-</span>
+<% if current_page.last? %>
+  <span class="pagination-next inline-flex h-8 items-center gap-1 rounded-md border border-line-soft px-3 text-hl-13 text-muted-4 select-none" aria-disabled="true"><%= t('views.pagination.next') %></span>
+<% else %>
+  <%= link_to url, rel: 'next', remote: remote,
+        class: "pagination-next inline-flex h-8 items-center gap-1 rounded-md border border-line bg-white px-3 text-hl-13 text-muted transition-colors hover:border-ink hover:text-ink" do %>
+    <%= t('views.pagination.next') %>
+    <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+    </svg>
+  <% end %>
+<% end %>

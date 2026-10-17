@@ -3,16 +3,18 @@
     id 必须保持 favorite_card_<stock_id>，供 user_favorites/destroy.turbo_stream.erb 移除本行 %>
 <% stock = favorite.stock %>
 <div id="favorite_card_<%= stock.id %>" data-favorite-row
-     class="flex items-center justify-between gap-3 px-6 py-3 hover:bg-bg-mute transition-colors duration-150">
+     class="relative flex items-center justify-between gap-3 px-6 py-3 hover:bg-bg-mute transition-colors duration-150">
+  <%# stretched link：铺满整行，点击行内任意位置（除取消收藏按钮）新标签打开详情页。
+      target="_blank" 的链接 Turbo 不拦截（浏览器原生新开标签），无需 data-turbo-frame %>
+  <a href="<%= stock_path(stock) %>" target="_blank" rel="noopener"
+     class="absolute inset-0 cursor-pointer"
+     aria-label="查看 <%= stock.display_name_for_comparison %> 详情（新窗口打开）"></a>
   <div class="flex items-center gap-3 min-w-0">
     <span class="hl-tag shrink-0 font-mono"><%= stock.symbol %></span>
     <div class="min-w-0">
-      <%# data-turbo-frame="_top"：本行位于 turbo-frame 内，必须显式跳出，否则点击会被当作 frame 内部导航
-          data-turbo-prefetch="false"：避免鼠标划过即触发 Turbo 预取请求（预取不触发 frame-load，会误触加载态） %>
-      <a href="<%= stock_path(stock) %>" data-turbo-frame="_top" data-turbo-prefetch="false"
-         class="block text-hl-13 font-medium text-ink truncate hover:text-link">
+      <span class="block text-hl-13 font-medium text-ink truncate">
         <%= stock.display_name_for_comparison %>
-      </a>
+      </span>
       <div class="mt-0.5 flex items-center gap-2 text-hl-11 text-muted-3">
         <span class="inline-flex px-1.5 py-0.5 rounded text-hl-11 shrink-0 <%= market_badge_class(stock.market) %>"><%= market_label(stock.market) %></span>
         <span class="truncate"><%= stock.sector.presence || stock.industry.presence || "—" %></span>
@@ -24,12 +26,13 @@
     <%# 0 分表示尚未计算评分，按原口径不展示分数，避免被读成「极差」 %>
     <% if is_member && stock.pyramid_total_score > 0 %>
       <span data-pyramid-score="<%= stock.pyramid_total_score %>"
-            class="text-hl-15 font-semibold <%= stock.pyramid_total_score >= 70 ? 'text-green-600' : stock.pyramid_total_score >= 40 ? 'text-yellow-600' : 'text-red-500' %>">
+            class="text-hl-15 font-semibold <%= stock.pyramid_total_score >= 700 ? 'text-green-600' : stock.pyramid_total_score >= 400 ? 'text-yellow-600' : 'text-red-500' %>">
         <%= stock.pyramid_total_score %>
       </span>
     <% end %>
+    <%# 按钮须高于铺满整行的链接层，否则点击会落到详情页链接上 %>
     <%= button_to "取消收藏", user_favorite_path(favorite, stock_id: stock.id), method: :delete,
-      class: "text-hl-12 text-muted-3 hover:text-profit transition-colors",
+      class: "relative z-10 cursor-pointer text-hl-12 text-muted-3 hover:text-profit transition-colors",
       form: { data: { turbo_confirm: "确定取消收藏 #{stock.symbol} 吗？" } } %>
   </div>
 </div>
