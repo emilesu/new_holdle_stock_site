@@ -64,3 +64,8 @@ node_modules/
 
 # 编译资源
 public/assets/
+
+# 支付证书与私钥（绝对不能提交，放 shared/ 或工作区外目录）
+*.pem
+*.p12
+*.key
