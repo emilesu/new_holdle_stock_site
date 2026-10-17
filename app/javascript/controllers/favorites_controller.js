@@ -14,8 +14,8 @@ export default class extends Controller {
   // 记住上次筛选条件（与金字塔页 / 股票筛选页同一思路：localStorage + 7 天有效）
   static STORAGE_KEY = "favorites_last_v1"
   static STORAGE_TTL = 7 * 24 * 60 * 60 * 1000
-  // 参与记忆的筛选字段：URL 已带任一参数时以 URL 为准，不套用缓存
-  static FILTER_KEYS = ["q", "market", "sector", "score_range", "sort", "group"]
+  // 参与记忆的筛选字段：URL 已带任一参数（含页码）时以 URL 为准，不套用缓存
+  static FILTER_KEYS = ["q", "market", "sector", "score_range", "sort", "group", "page"]
 
   connect() {
     this.timer = null
@@ -74,10 +74,19 @@ export default class extends Controller {
   // ---------- 记住上次筛选条件 ----------
 
   persist() {
+    const form = this.formTarget
     const fields = {}
-    new FormData(this.formTarget).forEach((value, key) => { fields[key] = String(value) })
+    new FormData(form).forEach((value, key) => { fields[key] = String(value) })
+    // 全默认态（如清除筛选后的提交）不落缓存，避免下次无参进入时触发与首屏相同的冗余恢复提交
+    const hasFilter = ["q", "market", "sector", "score_range"].some((key) => form.elements[key]?.value) ||
+      form.elements["sort"]?.value === "score" ||
+      form.elements["group"]?.value === "market"
     try {
-      localStorage.setItem(this.constructor.STORAGE_KEY, JSON.stringify({ fields, ts: Date.now() }))
+      if (hasFilter) {
+        localStorage.setItem(this.constructor.STORAGE_KEY, JSON.stringify({ fields, ts: Date.now() }))
+      } else {
+        localStorage.removeItem(this.constructor.STORAGE_KEY)
+      }
     } catch (e) { /* 无痕模式等存储不可用时静默忽略 */ }
   }
 
@@ -100,8 +109,11 @@ export default class extends Controller {
       if (!el) return
       // 非会员的评分控件被禁用（disabled 控件不提交，服务端也会丢弃该参数）
       if (el.disabled) return
-      // 缓存里的板块可能已被用户取消收藏而从下拉中消失，恢复不了就跳过（服务端白名单也会兜底回退）
-      if (el.tagName === "SELECT" && ![...el.options].some((option) => option.value === value)) return
+      if (el.tagName === "SELECT") {
+        const option = [...el.options].find((candidate) => candidate.value === value)
+        // 缓存值可能已失效：板块随取消收藏从下拉消失，或会员降级后评分选项被禁用——恢复不了就跳过
+        if (!option || option.disabled) return
+      }
       el.value = value
     })
     this.groupButtonTarget.setAttribute("aria-pressed", String(this.groupInputTarget.value === "market"))

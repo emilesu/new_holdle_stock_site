@@ -9,7 +9,8 @@
 <%# 全站统一分页器：线条风（上一页 · 页码 · 下一页），页码超宽自动省略号收拢 %>
 <%= paginator.render do -%>
   <nav class="pagination flex flex-wrap items-center justify-center gap-1.5" role="navigation" aria-label="分页">
-    <%= prev_page_tag unless current_page.first? %>
+    <%# 首末页时上一页/下一页渲染为禁用占位（见 _prev_page/_next_page），保持分页器宽度稳定不位移 %>
+    <%= prev_page_tag %>
     <% each_page do |page| -%>
       <% if page.display_tag? -%>
         <%= page_tag page %>
@@ -18,7 +19,7 @@
       <% end -%>
     <% end -%>
     <% unless current_page.out_of_range? %>
-      <%= next_page_tag unless current_page.last? %>
+      <%= next_page_tag %>
     <% end %>
   </nav>
 <% end -%>
