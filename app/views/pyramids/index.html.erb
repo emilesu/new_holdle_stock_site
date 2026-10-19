@@ -750,6 +750,9 @@ document.addEventListener('turbo:load', function initPyramidPage() {
     return Math.max(1, Math.ceil(list.querySelectorAll('.stock-row').length / sentinelPerPage()));
   };
   let scrollCurrentPage = renderedPageCount();
+  // 权限失效标记：load_more 返回 401/403（典型场景：会员过期后浏览器仍展示缓存的旧会员页，
+  // 哨兵持续触发请求被服务端拒绝）时，重试永远不会成功，置位后停止一切自动重试
+  let scrollPermissionLost = false;
   // 本闭包失效标记（页面被 Turbo 整页替换时置位）：
   // loadNextPage 每次都重新 getElementById 取哨兵，若不失效，旧闭包会「复活」并按新哨兵的
   // 筛选条件继续加载，把分块重复追加到新页面的列表尾部
@@ -797,7 +800,7 @@ document.addEventListener('turbo:load', function initPyramidPage() {
 
   const loadNextPage = async () => {
     const sentinel = document.getElementById('pyramid-scroll-sentinel');
-    if (scrollStale() || !sentinel || scrollIsLoading) {
+    if (scrollStale() || scrollPermissionLost || !sentinel || scrollIsLoading) {
       console.log('[Scroll] loadNextPage 跳过: stale=' + scrollStale() + ', sentinel=' + !!sentinel + ', isLoading=' + scrollIsLoading);
       return;
     }
@@ -838,7 +841,11 @@ document.addEventListener('turbo:load', function initPyramidPage() {
         }
       });
 
-      if (!response.ok) throw new Error('请求失败');
+      if (!response.ok) {
+        const err = new Error('请求失败');
+        err.status = response.status;
+        throw err;
+      }
 
       const html = await response.text();
       // 响应期间页面可能已被 Turbo 整页替换（如恢复筛选触发的 Turbo.visit），或列表容器被 updateList 换掉：
@@ -898,6 +905,20 @@ document.addEventListener('turbo:load', function initPyramidPage() {
     } catch (e) {
       scrollIsLoading = false;
       const currentSentinel = document.getElementById('pyramid-scroll-sentinel');
+      // 401/403：登录态/会员权限已失效，重试永远不会成功——停止自动重试并断开观察器，
+      // 交给 refreshPermission 自愈（服务端状态与页面不一致时整页重载）
+      if (e.status === 401 || e.status === 403) {
+        scrollPermissionLost = true;
+        if (scrollObserver) {
+          scrollObserver.disconnect();
+          scrollObserver = null;
+        }
+        if (currentSentinel) {
+          currentSentinel.innerHTML = '<div class="flex flex-col items-center space-y-2 py-4"><span class="text-red-500">登录状态已变化，停止自动加载</span><a href="/pyramid" data-turbo="false" class="text-blue-600 underline">刷新页面</a></div>';
+        }
+        refreshPermission();
+        return;
+      }
       if (currentSentinel) {
         currentSentinel.innerHTML = '<div class="flex flex-col items-center space-y-2 py-4"><span class="text-red-500">加载失败</span></div>';
         setTimeout(() => {
