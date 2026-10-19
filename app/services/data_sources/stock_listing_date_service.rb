@@ -98,10 +98,9 @@ module DataSources
         stats
       end
 
-      private
-
       # 美股：通过 Yahoo chart API 的 meta.firstTradeDate 获取上市日期
       # firstTradeDate 是 Unix 时间戳（UTC），需按美东时区转换为当地日期
+      # 公开方法：美股列表爬虫（NasdaqStockListService）新股票入库时复用，避免两处实现口径漂移
       def fetch_us_listing_date(stock)
         yahoo_sym = DataSources::YahooMonthlyBarService.yahoo_symbol(stock)
         return nil if yahoo_sym.nil?
@@ -120,6 +119,8 @@ module DataSources
         Rails.logger.error "[ListingDate-US] #{stock.symbol} 响应解析失败：#{e.message}"
         nil
       end
+
+      private
 
       # Yahoo 请求（带重试），404 视为标的无数据返回 nil
       def yahoo_request(url)

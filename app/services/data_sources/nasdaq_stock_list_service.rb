@@ -113,14 +113,25 @@ module DataSources
           return :updated
         end
 
-        stock = Stock.create!(
+        stock = Stock.new(
           symbol: symbol,
           name: name,
           market: "US",
           exchange: market,
           status: "listed"
         )
+        # 仅对新增股票拉取上市日期（Yahoo chart firstTradeDate），与 A股/港股列表爬虫口径一致，
+        # 保证次新股入库即能显示「次新股」标签；抓取失败不阻断入库，
+        # 存量缺口由 DataSources::StockListingDateService 增量同步兜底
+        begin
+          date = DataSources::StockListingDateService.fetch_us_listing_date(stock)
+          stock.listing_date = date if date.present? && date <= Date.current
+        rescue => e
+          Rails.logger.warn "获取美股上市日期失败 #{symbol}（不阻断入库，由上市日期同步任务兜底）: #{e.message}"
+        end
+        stock.save!
         SyncStateRecorder.record(stock, :profile, ok: true)
+        sleep DataSources::StockListingDateService::REQUEST_INTERVAL
 
         :created
       rescue ActiveRecord::RecordInvalid => e
