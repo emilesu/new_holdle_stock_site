@@ -914,7 +914,10 @@ document.addEventListener('turbo:load', function initPyramidPage() {
           scrollObserver = null;
         }
         if (currentSentinel) {
-          currentSentinel.innerHTML = '<div class="flex flex-col items-center space-y-2 py-4"><span class="text-red-500">登录状态已变化，停止自动加载</span><a href="/pyramid" data-turbo="false" class="text-blue-600 underline">刷新页面</a></div>';
+          // 刷新链接保留当前地址栏的筛选 query（syncUrl 会把 market/sector/industry 写入 URL），
+          // & 转义为 &amp; 以满足 HTML 属性语法
+          const refreshHref = (location.pathname + location.search).replace(/&/g, '&amp;');
+          currentSentinel.innerHTML = '<div class="flex flex-col items-center space-y-2 py-4"><span class="text-red-500">登录状态已变化，停止自动加载</span><a href="' + refreshHref + '" data-turbo="false" class="text-blue-600 underline">刷新页面</a></div>';
         }
         refreshPermission();
         return;
