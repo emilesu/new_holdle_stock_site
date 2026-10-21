@@ -7,7 +7,7 @@
 class StockScreenerService
   PER_PAGE = 20
   MARKETS = %w[CN HK US].freeze
-  MARGIN_MODES = %w[all any last].freeze
+  MARGIN_MODES = %w[all avg any last].freeze
   MARGIN_OPS = %w[gte lte].freeze
   GROWTH_MODES = %w[yoy always_up].freeze
   SORTS = %w[pyramid roe_min roe_last ni_growth].freeze
@@ -262,6 +262,18 @@ class StockScreenerService
         end
       end
       sql = "SELECT stock_id FROM financial_indicators WHERE period_type = 'annual' AND market = ? AND report_date BETWEEN ? AND ? GROUP BY stock_id HAVING #{having.join(' AND ')}"
+      sanitize(sql, [@market, date_from, date_to] + thresholds)
+    when 'avg'
+      # 先按自然年聚合（同年多条年报取均值，避免财年切换导致某年被重复计入），再对年度均值判定阈值
+      # 缺年报的年份不参与平均；某指标全为空时 AVG 为 NULL，比较不成立即排除
+      yearly_cols = @margin_conditions.map { |c| "AVG(#{c[:column]}) AS #{c[:column]}" }
+      inner = "SELECT stock_id, #{yearly_cols.join(', ')} FROM financial_indicators " \
+              "WHERE period_type = 'annual' AND market = ? AND report_date BETWEEN ? AND ? " \
+              "GROUP BY stock_id, EXTRACT(YEAR FROM report_date)"
+      having = @margin_conditions.map do |c|
+        c[:op] == 'gte' ? "AVG(#{c[:column]}) >= ?" : "AVG(#{c[:column]}) <= ?"
+      end
+      sql = "SELECT stock_id FROM (#{inner}) yearly GROUP BY stock_id HAVING #{having.join(' AND ')}"
       sanitize(sql, [@market, date_from, date_to] + thresholds)
     when 'any'
       having = @margin_conditions.map do |c|

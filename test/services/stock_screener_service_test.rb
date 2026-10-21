@@ -23,12 +23,38 @@ class StockScreenerServiceTest < ActiveSupport::TestCase
     add_annual(@gap, 2023, roe: 30, gm: 52, npm: 21, ni: 80)
   end
 
-  # ---------- 盈利指标三口径 ----------
+  # ---------- 盈利指标四口径 ----------
 
   test "all 模式：区间内每个年度均达标才命中，缺年报股票排除" do
     result = screen(market: "CN", year_from: 2021, year_to: 2023, margin_mode: "all", roe_value: "20")
     assert result.ok?, result.errors.join("；")
     assert_equal [@good.id], result.stocks.map(&:id)
+  end
+
+  test "avg 模式：区间内平均值达标即命中，缺年报年份不参与平均" do
+    # ROE 均值：GOOD (25+28+30)/3≈27.67、MIX (10+30+30)/3≈23.33、GAP (30+30)/2=30
+    result = screen(market: "CN", year_from: 2021, year_to: 2023, margin_mode: "avg", roe_value: "25")
+    assert result.ok?, result.errors.join("；")
+    assert_equal [@good, @gap].map(&:id).sort, result.stocks.map(&:id).sort
+
+    result2 = screen(market: "CN", year_from: 2021, year_to: 2023, margin_mode: "avg", roe_value: "28")
+    assert_equal [@gap.id], result2.stocks.map(&:id)
+  end
+
+  test "avg 模式：同年多条年报先按年聚合，不重复计入平均" do
+    # DUP 各年 ROE：2021=20、2022 两条（财年切换）=100/20 年均值 60、2023=20
+    # 按年度平均 = (20+60+20)/3 ≈ 33.3；若错误地按行平均 = (20+100+20+20)/4 = 40
+    dup = create_stock("DUP")
+    add_annual(dup, 2021, roe: 20)
+    add_annual(dup, 2022, roe: 100, date: Date.new(2022, 6, 30))
+    add_annual(dup, 2022, roe: 20)
+    add_annual(dup, 2023, roe: 20)
+
+    hit = screen(market: "CN", year_from: 2021, year_to: 2023, margin_mode: "avg", roe_value: "30")
+    assert_includes hit.stocks.map(&:id), dup.id
+
+    miss = screen(market: "CN", year_from: 2021, year_to: 2023, margin_mode: "avg", roe_value: "35")
+    refute_includes miss.stocks.map(&:id), dup.id
   end
 
   test "any 模式：区间内至少一年达标即命中" do
@@ -217,8 +243,8 @@ class StockScreenerServiceTest < ActiveSupport::TestCase
                   exchange: "SSE", status: status, pyramid_total_score: score)
   end
 
-  def add_annual(stock, year, roe: nil, gm: nil, npm: nil, ni: nil)
-    rd = Date.new(year, 12, 31)
+  def add_annual(stock, year, roe: nil, gm: nil, npm: nil, ni: nil, date: nil)
+    rd = date || Date.new(year, 12, 31)
     report = FinancialReport.create!(stock: stock, report_date: rd, market: stock.market,
                                      report_type: "年报", period_type: "annual")
     FinancialIndicator.create!(financial_report: report, stock: stock, report_date: rd,

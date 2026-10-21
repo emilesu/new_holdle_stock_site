@@ -129,6 +129,7 @@
               <span class="text-hl-13 font-medium text-ink-soft">盈利指标</span>
               <select name="margin_mode" class="px-3 py-1.5 text-hl-12 border border-line rounded-md focus:border-link bg-white">
                 <option value="all" <%= 'selected' if sel_mode == 'all' %>>区间内每年均满足</option>
+                <option value="avg" <%= 'selected' if sel_mode == 'avg' %>>区间内平均满足</option>
                 <option value="any" <%= 'selected' if sel_mode == 'any' %>>区间内至少一年满足</option>
                 <option value="last" <%= 'selected' if sel_mode == 'last' %>>仅看末年</option>
               </select>
