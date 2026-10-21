@@ -384,6 +384,8 @@ class Stock < ApplicationRecord
       financing_cash_flow: cash&.financing_cash_flow,
       net_cash_change: cash&.net_cash_change,
       roe: indicator&.roe_avg || calculate_roe(income, balance),
+      # 扣非加权ROE：仅A股由东财 F10（ROEKCJQ）回填，港股/美股无此数据
+      deducted_roe_weighted: indicator&.deducted_roe_weighted,
       roa: calculate_roa(income, balance),
       eps: indicator&.basic_eps,
       cash_flow_ps: indicator&.ncf_from_oa_ps,

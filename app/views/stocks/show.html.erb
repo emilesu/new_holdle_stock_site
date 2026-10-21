@@ -116,6 +116,8 @@
               title: '获利能力', en: 'Profitability', unit_note: "(单位：#{financial_unit})",
               rows: [
                 ['净资产收益率（ROE）', :roe],
+                # 扣非加权ROE 仅A股有数据（东财 F10 回填），港股/美股不展示该行
+                *(@stock.market == 'CN' ? [['扣非加权 ROE', :deducted_roe_weighted]] : []),
                 ['总资产收益率（ROA）', :roa],
                 ['毛利率', :gross_margin],
                 ['净利率', :net_profit_margin],

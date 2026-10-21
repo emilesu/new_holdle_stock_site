@@ -158,6 +158,12 @@ class StocksController < ApplicationController
       render json: { success: false, error: "无效的指标类型: #{indicator_key}" }, status: :bad_request
       return
     end
+
+    # 扣非加权ROE 仅A股有数据（东财 F10），非A股市场拒绝，避免返回全空数据点+A股口径文案
+    if indicator_key.to_sym == :deducted_roe_weighted && @stock.market != "CN"
+      render json: { success: false, error: "该指标仅A股提供" }, status: :not_found
+      return
+    end
     
     # v3：季报恢复单线扁平格式（点附带 period_type 供前端逐点着色），升级 key 使分组格式缓存失效
     data = Rails.cache.fetch(
@@ -194,6 +200,7 @@ class StocksController < ApplicationController
   def valid_indicators
     [
       :roe, :roa, :gross_margin, :net_profit_margin, :eps,
+      :deducted_roe_weighted,
       :asset_liab_ratio, :asset_turnover_ratio, :net_income,
       :cash_to_assets_ratio, :receivable_turnover, :avg_collection_days,
       :fixed_asset_turnover, :cash_and_cash_equivalents,
@@ -259,6 +266,18 @@ class StocksController < ApplicationController
           good: '15% ≤ ROE ≤ 20%：盈利能力优秀，值得关注',
           normal: '10% ≤ ROE < 15%：盈利能力一般，需要综合评估',
           poor: 'ROE < 10%：盈利能力较弱，投资需谨慎'
+        }
+      },
+      deducted_roe_weighted: {
+        name: '扣非加权 ROE(扣非加权平均净资产收益率)',
+        description: '扣非加权ROE是在加权平均净资产收益率的基础上，扣除非经常性损益（如政府补助、出售资产收益、财务费用减免等一次性损益）后计算的净资产收益率。它剔除了偶发性因素对利润的干扰，更能反映公司主营业务的真实盈利能力，是识别ROE“含金量”的关键指标。若扣非加权ROE长期显著低于ROE，说明公司利润依赖非经常性损益，盈利质量存疑。',
+        formula: '扣非加权ROE = 归属于母公司股东的扣除非经常性损益后的净利润 / 加权平均净资产 × 100%',
+        unit: '%',
+        interpretation: {
+          excellent: '扣非加权ROE > 20%：主业盈利能力出色，ROE含金量高',
+          good: '15% ≤ 扣非加权ROE ≤ 20%：主业盈利能力优秀，值得关注',
+          normal: '10% ≤ 扣非加权ROE < 15%：主业盈利能力一般，需结合ROE对比评估',
+          poor: '扣非加权ROE < 10%：主业盈利能力较弱；若明显低于ROE，需警惕利润依赖一次性损益'
         }
       },
       roa: {
