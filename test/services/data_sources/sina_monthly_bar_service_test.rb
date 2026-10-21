@@ -297,6 +297,149 @@ class SinaMonthlyBarServiceTest < ActiveSupport::TestCase
     assert_equal BigDecimal("2.0000"), factors.first[:factor]
   end
 
+  # ====================================================
+  # 北交所 920 代码月K历史回补（新浪月K仅返回迁移后数据）
+  # ====================================================
+  test "BJ920 月K历史被截断时按日线聚合回补上市以来全历史" do
+    stock = Stock.create!(symbol: "BJ920982", name: "锦波生物", market: "CN", listing_date: Date.new(2024, 1, 2))
+    # 新浪月K只剩迁移后的 2 月、3 月；日线从上市日起完整，且含上市前的新三板行（应被裁掉）
+    stub_http(raw_body: raw_bars_body_for(%w[2024-02-29 2024-03-29]), daily_body: bj_daily_body)
+
+    result = Service.refresh(stock, mode: :full)
+
+    assert_equal 3, result[:total]
+    assert_equal [JAN, FEB, MAR], stock.stock_monthly_bars.order(:trade_date).pluck(:trade_date)
+    jan = stock.stock_monthly_bars.find_by(trade_date: JAN)
+    assert_equal BigDecimal("8.0"), jan.open
+    assert_equal BigDecimal("12.0"), jan.high
+    assert_equal BigDecimal("7.0"), jan.low
+    assert_equal BigDecimal("10.0"), jan.close
+    assert_equal 300, jan.volume, "成交量应为日线求和，且不含上市前的新三板行"
+    assert_equal BigDecimal("4.0"), jan.qfq_open, "前复权按哨兵因子 2.0 换算"
+
+    # 日线一次取回后复用给事件月修正，不重复请求
+    assert_equal 1, Service.http_client.calls.count { |url| url.include?("scale=240") }
+    march = stock.stock_monthly_bars.find_by(trade_date: MAR)
+    assert_equal BigDecimal("5.0"), march.qfq_open
+    assert_equal BigDecimal("11.0"), march.qfq_high
+    assert_equal BigDecimal("10.0"), march.hfq_open
+  end
+
+  test "BJ920 增量模式：库内已有上市以来历史后不再请求日线" do
+    stock = Stock.create!(symbol: "BJ920983", name: "月K回补增量", market: "CN", listing_date: Date.new(2024, 1, 2))
+    stub_http(raw_body: raw_bars_body_for(%w[2024-02-29 2024-03-29]), daily_body: bj_daily_body)
+    Service.refresh(stock, mode: :full)
+
+    # 源端月K仍只返回 2 月、3 月，但库内首月已回到上市月 → 不应再抓日线
+    stub_http(
+      raw_body: raw_bars_body_for(%w[2024-02-29 2024-03-29]),
+      hfq_events: [{ "d" => "1900-01-01", "f" => "1.0" }, { "d" => "2024-02-15", "f" => "2.0" }],
+      qfq_events: [{ "d" => "1900-01-01", "f" => "2.0" }, { "d" => "2024-02-15", "f" => "1.0" }]
+    )
+    Service.refresh(stock, mode: :incremental)
+
+    assert_equal 0, Service.http_client.calls.count { |url| url.include?("scale=240") }
+    assert_equal [JAN, FEB, MAR], stock.stock_monthly_bars.order(:trade_date).pluck(:trade_date),
+                 "回补后的历史行不得被增量清理"
+  end
+
+  test "BJ920 日线起点晚于月K时保留源端月K，不用更短的日线聚合" do
+    stock = Stock.create!(symbol: "BJ920984", name: "日线截断", market: "CN", listing_date: Date.new(2023, 12, 1))
+    # 月K从 1 月起，日线只有 3 月：日线本身被截断，不能反过来缩短月K历史
+    stub_http(raw_body: raw_bars_body, daily_body: sina_daily_body)
+
+    Service.refresh(stock, mode: :full)
+
+    assert_equal [JAN, FEB, MAR], stock.stock_monthly_bars.order(:trade_date).pluck(:trade_date)
+  end
+
+  test "非 BJ920 标的不触发日线回补" do
+    stub_http(hfq_events: [{ "d" => "1900-01-01", "f" => "1.0" }], qfq_events: [{ "d" => "1900-01-01", "f" => "1.0" }])
+
+    Service.refresh(@stock, mode: :full)
+
+    assert_equal 0, Service.http_client.calls.count { |url| url.include?("scale=240") }
+    assert_equal 3, @stock.stock_monthly_bars.count
+  end
+
+
+  test "BJ920 增量模式：新除权后回补段的前复权按新基准重算" do
+    stock = Stock.create!(symbol: "BJ920988", name: "回补前复权重算", market: "CN", listing_date: Date.new(2024, 1, 2))
+    stub_http(raw_body: raw_bars_body_for(%w[2024-02-29 2024-03-29]), daily_body: bj_daily_body)
+    Service.refresh(stock, mode: :full)
+    jan = stock.stock_monthly_bars.find_by(trade_date: JAN)
+    assert_equal BigDecimal("4.0"), jan.qfq_open, "全量回补后按当时 hfq_last=2 换算"
+
+    # 4 月新增除权：hfq_last 2 → 4；源端月K只返回 4 月，回补段不在本次序列内
+    stub_http(
+      raw_body: raw_bars_body_for(%w[2024-04-30]),
+      hfq_events: [{ "d" => "1900-01-01", "f" => "1.0" }, { "d" => "2024-03-15", "f" => "2.0" }, { "d" => "2024-04-20", "f" => "4.0" }],
+      qfq_events: [{ "d" => "1900-01-01", "f" => "4.0" }, { "d" => "2024-03-15", "f" => "2.0" }, { "d" => "2024-04-20", "f" => "1.0" }]
+    )
+    Service.refresh(stock, mode: :incremental)
+
+    jan.reload
+    assert_equal BigDecimal("8.0"), jan.hfq_open, "后复权只增不改"
+    assert_equal BigDecimal("2.0"), jan.qfq_open, "前复权应由 hfq 8 ÷ 新 hfq_last 4 推导"
+    assert_equal BigDecimal("4.0"), jan.qfq_factor
+    march = stock.stock_monthly_bars.find_by(trade_date: MAR)
+    assert_equal BigDecimal("2.5"), march.qfq_open, "已修正事件月同样按新基准重算"
+    assert_equal 4, stock.stock_monthly_bars.count
+  end
+
+  test "BJ920 缺少上市日期时跳过回补，不写入新三板期数据" do
+    stock = Stock.create!(symbol: "BJ920989", name: "无上市日", market: "CN")
+    stub_http(
+      raw_body: raw_bars_body_for(%w[2024-02-29 2024-03-29]),
+      daily_body: bj_daily_body,
+      hfq_events: [{ "d" => "1900-01-01", "f" => "1.0" }],
+      qfq_events: [{ "d" => "1900-01-01", "f" => "1.0" }]
+    )
+
+    Service.refresh(stock, mode: :full)
+
+    assert_equal 0, Service.http_client.calls.count { |url| url.include?("scale=240") }
+    assert_equal [FEB, MAR], stock.stock_monthly_bars.order(:trade_date).pluck(:trade_date)
+  end
+
+  test "BJ920 月K整段为空时改用日线回补" do
+    stock = Stock.create!(symbol: "BJ920990", name: "空月K回补", market: "CN", listing_date: Date.new(2024, 1, 2))
+    stub_http(
+      raw_body: "[]",
+      daily_body: bj_daily_body,
+      hfq_events: [{ "d" => "1900-01-01", "f" => "1.0" }],
+      qfq_events: [{ "d" => "1900-01-01", "f" => "1.0" }]
+    )
+
+    result = Service.refresh(stock, mode: :full)
+
+    assert_equal 3, result[:total]
+    assert_equal [JAN, FEB, MAR], stock.stock_monthly_bars.order(:trade_date).pluck(:trade_date)
+  end
+
+  test "BJ920 上市首月为事件月时，事件月修正只用上市后日线" do
+    stock = Stock.create!(symbol: "BJ920987", name: "上市首月事件", market: "CN", listing_date: Date.new(2024, 3, 15))
+    # 新浪月K只剩 4 月；日线含上市前的新三板行（03-01 价格 100，若混入会明显抬高首月高低点）
+    stub_http(raw_body: raw_bars_body_for(%w[2024-04-30]), daily_body: bj_listing_month_daily_body)
+
+    Service.refresh(stock, mode: :full)
+
+    march = stock.stock_monthly_bars.find_by(trade_date: MAR)
+    assert_equal BigDecimal("10.0"), march.open
+    assert_equal BigDecimal("12.0"), march.high, "上市首月原始高低点不得混入上市前交易日"
+    assert_equal BigDecimal("12.0"), march.qfq_high, "事件月修正同样只能用上市后日线"
+    assert_equal BigDecimal("9.0"), march.qfq_low
+  end
+
+  test "日线成交量缺失时月成交量置空而非归零" do
+    bars = Service.aggregate_monthly_bars([
+      { date: Date.new(2024, 1, 2), open: BigDecimal("1"), high: BigDecimal("2"),
+        low: BigDecimal("1"), close: BigDecimal("2"), volume: nil }
+    ])
+
+    assert_nil bars.first["volume"]
+  end
+
   private
 
   def raw_bars
@@ -351,6 +494,37 @@ class SinaMonthlyBarServiceTest < ActiveSupport::TestCase
       { "day" => "2024-03-29", "open" => "10.000", "high" => "11.000", "low" => "9.000", "close" => "10.000", "volume" => "100" }
     ]
     JSON.generate(rows)
+  end
+
+  # 北交所日线：含上市前的新三板行（2023-12-29），用于验证 listing_date 裁剪
+  #   1 月开 8 高 12 低 7 收 10；2 月开 10 高 11.5 低 9 收 11；3 月沿用事件月 fixture
+  def bj_daily_body
+    rows = [
+      ["2023-12-29", "5.000", "5.000", "5.000", "5.000", "10"],
+      ["2024-01-02", "8.000", "9.000", "7.000", "8.500", "100"],
+      ["2024-01-31", "8.500", "12.000", "8.000", "10.000", "200"],
+      ["2024-02-01", "10.000", "11.000", "9.000", "10.000", "300"],
+      ["2024-02-29", "10.000", "11.500", "9.500", "11.000", "400"],
+      ["2024-03-01", "10.000", "11.000", "9.000", "10.000", "500"],
+      ["2024-03-15", "10.000", "11.000", "9.000", "10.000", "600"],
+      ["2024-03-29", "10.000", "11.000", "9.000", "10.000", "700"]
+    ]
+    JSON.generate(rows.map do |day, open, high, low, close, volume|
+      { "day" => day, "open" => open, "high" => high, "low" => low, "close" => close, "volume" => volume }
+    end)
+  end
+
+  # 上市首月为事件月的日线：03-01 为上市前新三板行，03-15 为上市日（除权事件日）
+  def bj_listing_month_daily_body
+    rows = [
+      ["2024-03-01", "100.000", "120.000", "90.000", "100.000", "10"],
+      ["2024-03-15", "10.000", "12.000", "9.000", "10.000", "100"],
+      ["2024-03-29", "10.000", "11.000", "9.000", "10.000", "100"],
+      ["2024-04-30", "10.000", "11.000", "9.000", "10.000", "100"]
+    ]
+    JSON.generate(rows.map do |day, open, high, low, close, volume|
+      { "day" => day, "open" => open, "high" => high, "low" => low, "close" => close, "volume" => volume }
+    end)
   end
 
   def default_hfq_events

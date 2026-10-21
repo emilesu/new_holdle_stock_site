@@ -42,6 +42,11 @@ module DataSources
     # 常数比值自检的相对误差容差
     RATIO_TOLERANCE = 1e-4
 
+    # 北交所 920 代码段：2025 年起由 83xxxx/87xxxx 迁移而来。
+    # 新浪月K（scale=7200）在新代码下只返回迁移日之后的月份，日线（scale=240）则回填了全历史，
+    # 故这些标的的月K历史需由日线聚合回补（见 fetch_source_bars）
+    BJ_MIGRATED_PREFIX = "BJ920".freeze
+
     # HTTP 非 2xx 响应（纳入重试范围）
     class RequestError < StandardError; end
 
@@ -74,7 +79,7 @@ module DataSources
       # 抓取单只股票并落库
       # 返回 { total:, inserted:, updated:, bars: }
       def refresh(stock, mode: :full)
-        raw_bars = fetch_raw_bars(stock.symbol)
+        raw_bars, daily_bars = fetch_source_bars(stock, mode: mode)
         if raw_bars.empty?
           Rails.logger.warn "[SinaMonthlyBar] #{stock.symbol} 未获取到月K数据"
           return empty_result
@@ -93,7 +98,7 @@ module DataSources
         bars = build_bars(stock, raw_bars, qfq_factors, hfq_factors)
         return empty_result if bars.empty?
 
-        corrected_dates = correct_event_months(stock, bars, qfq_factors, hfq_factors, mode: mode)
+        corrected_dates = correct_event_months(stock, bars, qfq_factors, hfq_factors, mode: mode, daily_bars: daily_bars)
 
         verify_constant_ratio(stock, bars)
         cleanup_stale_dates(stock, bars)
@@ -106,6 +111,16 @@ module DataSources
             update_only: INCREMENTAL_UPDATE_COLUMNS,
             record_timestamps: false
           )
+          # 回补出来的历史行不在本次月K源序列内，单独按新基准重算前复权列
+          rebased = rebase_qfq_rows(stock, bars, hfq_factors)
+          if rebased.any?
+            stock.stock_monthly_bars.upsert_all(
+              rebased,
+              unique_by: %i[stock_id trade_date],
+              update_only: INCREMENTAL_UPDATE_COLUMNS,
+              record_timestamps: false
+            )
+          end
           # 本轮修正过的事件月行：后复权价列也要覆盖（其余行后复权保持「只增不改」）
           if corrected_dates.any?
             corrected_bars = bars.select { |bar| corrected_dates.include?(bar[:trade_date]) }
@@ -144,8 +159,127 @@ module DataSources
         []
       end
 
+      # 月K原始序列（必要时用日线聚合回补 BJ920 的历史缺口）
+      # 返回 [月K原始行, 已抓取的日线或 nil]；日线非 nil 时供事件月修正复用，避免二次请求
+      def fetch_source_bars(stock, mode:)
+        monthly = fetch_raw_bars(stock.symbol)
+        return [ monthly, nil ] unless bj920_history_missing?(stock, monthly, mode: mode)
+
+        daily =
+          begin
+            fetch_daily_bars(stock.symbol)
+          rescue StandardError => e
+            Rails.logger.error "[SinaMonthlyBar] #{stock.symbol} 日线抓取失败：#{e.message}"
+            []
+          end
+        if daily.empty?
+          Rails.logger.warn "[SinaMonthlyBar] #{stock.symbol} 日线缺失，月K历史暂不回补"
+          return [ monthly, nil ]
+        end
+
+        # 剔除新三板挂牌期后再聚合；同一份裁剪后的日线交给事件月修正，
+        # 避免上市首月（常为除权事件月）混入上市前交易日的价格
+        days = stock.listing_date ? daily.select { |day| day[:date] >= stock.listing_date } : daily
+        aggregated = aggregate_monthly_bars(days)
+        unless covers_monthly_start?(aggregated, monthly)
+          Rails.logger.warn "[SinaMonthlyBar] #{stock.symbol} 日线聚合起点晚于月K，放弃回补"
+          return [ monthly, days ]
+        end
+
+        [ aggregated, days ]
+      end
+
+      # BJ920 月K历史是否缺失：
+      #   源端首月晚于上市月，且（全量模式 / 库里也还没有上市以来的历史）
+      # 增量模式命中过一次回补后，库内首月已回到上市月，不再重复请求日线
+      def bj920_history_missing?(stock, monthly, mode:)
+        return false unless bj920_stock?(stock)
+
+        if stock.listing_date.nil?
+          Rails.logger.warn "[SinaMonthlyBar] #{stock.symbol} 缺少上市日期，跳过月K历史回补（请先同步上市日期）"
+          return false
+        end
+
+        listing = stock.listing_date.beginning_of_month
+        first_month = parse_trade_date(monthly.first&.dig("day"))&.beginning_of_month
+        # 月K整段为空：无法比较首月，直接改用日线回补
+        return true if first_month.nil?
+        return false if first_month <= listing
+        return true if mode.to_sym == :full
+
+        stored_first = stock.stock_monthly_bars.minimum(:trade_date)
+        stored_first.nil? || stored_first.beginning_of_month > listing
+      end
+
+      # 北交所 920 代码段（新三板旧代码迁移而来）
+      def bj920_stock?(stock)
+        stock.market == "CN" && stock.symbol.to_s.upcase.start_with?(BJ_MIGRATED_PREFIX)
+      end
+
+      # 日线按自然月聚合为月K，口径与新浪月K一致：
+      #   开=首日、高=区间最高、低=区间最低、收=末日、量=求和
+      # 调用方需先按 listing_date 剔除北交所标的新三板挂牌期
+      def aggregate_monthly_bars(daily)
+        daily.group_by { |day| day[:date].beginning_of_month }.sort.map do |_month, month_days|
+          volumes = month_days.map { |day| day[:volume] }
+          {
+            "day" => month_days.last[:date].iso8601,
+            "open" => month_days.first[:open].to_s("F"),
+            "high" => month_days.map { |day| day[:high] }.max.to_s("F"),
+            "low" => month_days.map { |day| day[:low] }.min.to_s("F"),
+            "close" => month_days.last[:close].to_s("F"),
+            # 任一交易日缺量即不采信求和结果，置空交由数据质量检查暴露
+            "volume" => volumes.all? ? volumes.sum.to_s : nil
+          }
+        end
+      end
+
+      # 聚合结果不能比月K更短，否则宁可保留源端序列（防止日线本身被截断时反而丢历史）
+      # 月K整段为空时没有可比起点，直接采信日线聚合结果
+      def covers_monthly_start?(aggregated, monthly)
+        return false if aggregated.empty?
+
+        aggregated_first = parse_trade_date(aggregated.first["day"])
+        monthly_first = parse_trade_date(monthly.first&.dig("day"))
+        return false if aggregated_first.nil?
+        return true if monthly_first.nil?
+
+        aggregated_first.beginning_of_month <= monthly_first.beginning_of_month
+      end
+
+      # 增量模式：回补出来的历史行不在本次月K源序列内，前复权列不会随新除权重算。
+      # 后复权「只增不改」且满足恒等式 前复权 = 后复权 ÷ hfq_last，
+      # 故直接由库内 hfq 列推导，不重抓日线；否则将来除权后回补段前复权会停在旧基准
+      def rebase_qfq_rows(stock, bars, hfq_factors)
+        return [] unless bj920_stock?(stock)
+        return [] if bars.empty? || hfq_factors.empty?
+
+        hfq_last = hfq_factors.last[:factor]
+        cutoff = bars.first[:trade_date].beginning_of_month
+        now = Time.current
+
+        stock.stock_monthly_bars.where(trade_date: ...cutoff).filter_map do |row|
+          next if row.hfq_open.nil? || row.hfq_factor.nil? || row.hfq_factor.zero?
+
+          {
+            stock_id: stock.id,
+            market: row.market,
+            trade_date: row.trade_date,
+            qfq_open: (row.hfq_open / hfq_last).round(PRICE_SCALE),
+            qfq_close: row.hfq_close && (row.hfq_close / hfq_last).round(PRICE_SCALE),
+            qfq_high: row.hfq_high && (row.hfq_high / hfq_last).round(PRICE_SCALE),
+            qfq_low: row.hfq_low && (row.hfq_low / hfq_last).round(PRICE_SCALE),
+            qfq_factor: (hfq_last / row.hfq_factor).round(FACTOR_SCALE),
+            # NOT NULL 在冲突判定前校验：即便命中 ON CONFLICT 更新，也要给出 created_at
+            created_at: row.created_at,
+            updated_at: now
+          }
+        end
+      end
+
       # 不复权日线全历史（同源新浪，scale=240），按交易日升序
-      # 返回 [{date:, open:, high:, low:, close:}]，供事件月逐日复权聚合使用
+      # 返回 [{date:, open:, high:, low:, close:, volume:}]，
+      # 供事件月逐日复权聚合与 BJ920 月K历史回补使用
       def fetch_daily_bars(symbol)
         code = SinaAdjFactorService.sina_code(symbol)
         url = "#{KLINE_URL}?symbol=#{code}&scale=#{DAILY_SCALE}&ma=no&datalen=#{DAILY_MAX_BARS}"
@@ -161,7 +295,7 @@ module DataSources
           low = to_decimal(item["low"])
           next if date.nil? || open.nil? || close.nil? || high.nil? || low.nil?
 
-          { date: date, open: open, high: high, low: low, close: close }
+          { date: date, open: open, high: high, low: low, close: close, volume: to_integer(item["volume"]) }
         end.sort_by { |d| d[:date] }
       rescue JSON::ParserError => e
         Rails.logger.error "[SinaMonthlyBar] #{code} 日线解析失败：#{e.message}"
@@ -264,7 +398,8 @@ module DataSources
       #   具备自愈能力。
       #
       # 返回本轮实际修正过的 trade_date 数组。
-      def correct_event_months(stock, bars, qfq_factors, hfq_factors, mode:)
+      # daily_bars 为调用方已抓取的日线（BJ920 历史回补时复用），避免同一只股票重复请求
+      def correct_event_months(stock, bars, qfq_factors, hfq_factors, mode:, daily_bars: nil)
         event_dates = qfq_factors.map { |f| f[:date] }.reject { |d| d.year < 1970 } # 剔除 1900 哨兵
         affected = bars.select do |bar|
           month_begin = bar[:trade_date].beginning_of_month
@@ -281,11 +416,15 @@ module DataSources
         return [] if pending.empty?
 
         daily =
-          begin
-            fetch_daily_bars(stock.symbol)
-          rescue StandardError => e
-            Rails.logger.error "[SinaMonthlyBar] #{stock.symbol} 日线抓取失败：#{e.message}"
-            []
+          if daily_bars
+            daily_bars
+          else
+            begin
+              fetch_daily_bars(stock.symbol)
+            rescue StandardError => e
+              Rails.logger.error "[SinaMonthlyBar] #{stock.symbol} 日线抓取失败：#{e.message}"
+              []
+            end
           end
         if daily.empty?
           Rails.logger.warn "[SinaMonthlyBar] #{stock.symbol} 日线缺失，事件月暂按单因子落库，下次增量自动重试"
