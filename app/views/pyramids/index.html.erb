@@ -135,20 +135,21 @@
             <% end %>
           </div>
           <div class="px-6 py-4 border-b border-line relative">
-            <div class="flex flex-col sm:flex-row sm:items-center gap-2 <%= 'opacity-60 pointer-events-none select-none' unless @is_member %>">
-              <div class="flex items-center gap-1.5 flex-1 min-w-0 sm:shrink-0">
+            <%# sm 起横向排布、放不下自动换行：下拉用固定宽度并去掉强制拉伸，避免 min-width 溢出分组框压到相邻标签 %>
+            <div class="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-2 sm:gap-x-4 <%= 'opacity-60 pointer-events-none select-none' unless @is_member %>">
+              <div class="flex items-center gap-1.5 w-full sm:w-auto">
                 <label class="text-hl-13 font-medium text-muted-2 w-10 shrink-0">市场</label>
-                <select name="market" id="pyramid-market" class="px-3 py-2 text-hl-13 border border-line rounded focus:border-link w-full sm:w-24 bg-white" <%= 'disabled' unless @is_member %>>
+                <select name="market" id="pyramid-market" class="px-3 py-2 text-hl-13 border border-line rounded focus:border-link flex-1 sm:flex-none sm:w-24 bg-white" <%= 'disabled' unless @is_member %>>
                   <option value="CN" <%= 'selected' if @market == 'CN' %>>A股</option>
                   <option value="HK" <%= 'selected' if @market == 'HK' %>>港股</option>
                   <option value="US" <%= 'selected' if @market == 'US' %>>美股</option>
                 </select>
               </div>
 
-              <div class="flex items-center gap-1.5 sm:flex-1 sm:min-w-0">
+              <div class="flex items-center gap-1.5 w-full sm:w-auto">
                 <label class="text-hl-13 font-medium text-muted-2 w-10 shrink-0">板块</label>
-                <div id="sector-container" class="flex-1 min-w-0">
-                  <select name="sector" id="pyramid-sector" class="px-3 py-2 text-hl-13 border border-line rounded focus:border-link w-full min-w-28 bg-white" <%= 'disabled' unless @can_select_sector %>>
+                <div id="sector-container" class="flex-1 min-w-0 sm:flex-none">
+                  <select name="sector" id="pyramid-sector" class="px-3 py-2 text-hl-13 border border-line rounded focus:border-link w-full sm:w-40 bg-white" <%= 'disabled' unless @can_select_sector %>>
                     <% if @can_select_sector %>
                       <option value="">全部</option>
                     <% end %>
@@ -159,27 +160,27 @@
                 </div>
               </div>
 
-              <div class="flex items-center gap-1.5 sm:flex-1 sm:min-w-0">
+              <div class="flex items-center gap-1.5 w-full sm:w-auto">
                 <label class="text-hl-13 font-medium text-muted-2 w-10 shrink-0">行业</label>
-                <div id="industry-container" class="flex-1 min-w-0">
+                <div id="industry-container" class="flex-1 min-w-0 sm:flex-none">
                   <% if @can_select_sector && @sector.present? %>
-                    <select name="industry" id="pyramid-industry" class="px-3 py-2 text-hl-13 border border-line rounded focus:border-link w-full min-w-28 bg-white">
+                    <select name="industry" id="pyramid-industry" class="px-3 py-2 text-hl-13 border border-line rounded focus:border-link w-full sm:w-40 bg-white">
                       <option value="">全部</option>
                       <% @industries.each do |industry| %>
                         <option value="<%= industry %>" <%= 'selected' if @industry == industry %>><%= industry %></option>
                       <% end %>
                     </select>
                   <% else %>
-                    <select name="industry" id="pyramid-industry" class="px-3 py-2 text-hl-13 border border-line rounded focus:border-link w-full min-w-28 bg-white" disabled>
+                    <select name="industry" id="pyramid-industry" class="px-3 py-2 text-hl-13 border border-line rounded focus:border-link w-full sm:w-40 bg-white" disabled>
                       <option value="">全部</option>
                     </select>
                   <% end %>
                 </div>
               </div>
 
-              <div class="flex items-center gap-1.5 sm:flex-1 sm:min-w-0">
+              <div class="flex items-center gap-1.5 w-full sm:w-auto">
                 <label class="text-hl-13 font-medium text-muted-2 w-14 shrink-0">次新股</label>
-                <select name="new_listing" id="pyramid-new-listing" class="px-3 py-2 text-hl-13 border border-line rounded focus:border-link w-full sm:w-24 bg-white" <%= 'disabled' unless @is_member %>>
+                <select name="new_listing" id="pyramid-new-listing" class="px-3 py-2 text-hl-13 border border-line rounded focus:border-link flex-1 sm:flex-none sm:w-24 bg-white" <%= 'disabled' unless @is_member %>>
                   <option value="show" <%= 'selected' if @new_listing != 'hide' %>>显示</option>
                   <option value="hide" <%= 'selected' if @new_listing == 'hide' %>>隐藏</option>
                 </select>
