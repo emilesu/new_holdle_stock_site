@@ -6,6 +6,7 @@
   c = (@result&.conditions if @screened) || {}
   sel_sector = @sector.to_s
   sel_industry = @industry.to_s
+  sel_new_listing = c[:new_listing].to_s
   sel_from = (c[:year_from] || @default_year_from).to_i
   sel_to = (c[:year_to] || @latest_year).to_i
   sel_mode = c[:margin_mode] || 'all'
@@ -59,8 +60,8 @@
         <%= form_with url: screener_path, method: :get, data: { turbo_frame: 'screener_results', screener_target: 'form', action: 'submit->screener#persist input->screener#markTouched change->screener#markTouched' }, class: 'space-y-5' do |f| %>
           <%= hidden_field_tag :screen, '1' %>
 
-          <%# 第一行：市场 / 板块 / 行业 / 年度区间 / 排序（手机端同一行横向滚动，桌面端五列网格） %>
-          <div class="flex gap-3 overflow-x-auto pb-1 lg:grid lg:grid-cols-5 lg:overflow-visible lg:pb-0">
+          <%# 第一行：市场 / 板块 / 行业 / 次新股 / 年度区间 / 排序（手机端同一行横向滚动，桌面端六列网格） %>
+          <div class="flex gap-3 overflow-x-auto pb-1 lg:grid lg:grid-cols-6 lg:overflow-visible lg:pb-0">
             <div class="flex items-center gap-1.5 shrink-0">
               <label class="text-hl-13 font-medium text-muted-2 shrink-0">市场</label>
               <select name="market" class="px-3 py-2 text-hl-13 border border-line rounded-md focus:border-link flex-1 min-w-0 bg-white"
@@ -88,6 +89,13 @@
                 <% @industries.each do |industry| %>
                   <option value="<%= industry %>" <%= 'selected' if sel_industry == industry %>><%= industry %></option>
                 <% end %>
+              </select>
+            </div>
+            <div class="flex items-center gap-1.5 shrink-0">
+              <label class="text-hl-13 font-medium text-muted-2 shrink-0">次新股</label>
+              <select name="new_listing" class="px-3 py-2 text-hl-13 border border-line rounded-md focus:border-link flex-1 min-w-0 bg-white">
+                <option value="show" <%= 'selected' if sel_new_listing != 'hide' %>>显示</option>
+                <option value="hide" <%= 'selected' if sel_new_listing == 'hide' %>>隐藏</option>
               </select>
             </div>
             <div class="flex items-center gap-1.5 shrink-0">

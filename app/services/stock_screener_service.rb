@@ -95,6 +95,8 @@ class StockScreenerService
     @sector = nil if @sector.empty? || @sector == 'all'
     @industry = @params['industry'].to_s.strip
     @industry = nil if @industry.empty? || @industry == 'all'
+    # 次新股筛选：仅认可 hide（隐藏次新股），其余取值一律视为默认「显示」
+    @new_listing = @params['new_listing'] == 'hide' ? 'hide' : 'show'
 
     latest_year = Date.current.year - 1 # 当年年报未披露完毕，默认区间截至上一完整财年
     @year_to = int_param(:year_to) || latest_year
@@ -153,7 +155,7 @@ class StockScreenerService
     @page = [[int_param(:page).to_i, 1].max, 1_000].min
 
     @result.conditions = {
-      market: @market, sector: @sector, industry: @industry,
+      market: @market, sector: @sector, industry: @industry, new_listing: @new_listing,
       year_from: @year_from, year_to: @year_to,
       margin_mode: @margin_mode, margin_conditions: @margin_conditions,
       growth_mode: @growth_mode, growth_value: @growth_value, sort: @sort
@@ -181,6 +183,7 @@ class StockScreenerService
       market: @params['market'].to_s,
       sector: @params['sector'].to_s.strip.presence,
       industry: @params['industry'].to_s.strip.presence,
+      new_listing: @params['new_listing'] == 'hide' ? 'hide' : 'show',
       year_from: int_param(:year_from),
       year_to: int_param(:year_to),
       margin_mode: @params['margin_mode'].to_s.presence || 'all',
@@ -235,6 +238,7 @@ class StockScreenerService
     scope = Stock.where(market: @market, status: 'listed')
     scope = scope.where(sector: @sector) if @sector
     scope = scope.where(industry: @industry) if @industry
+    scope = scope.excluding_new_listings if @new_listing == 'hide'
     scope
   end
 

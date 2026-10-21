@@ -79,6 +79,12 @@ class Stock < ApplicationRecord
     listing_date.present? && listing_date <= Date.current && listing_date >= (Date.current - 3.years)
   end
 
+  # 排除次新股的查询口径（与 new_listing? 一致）：
+  # listing_date 为空的股票无法判定上市时长，视为非次新保留
+  scope :excluding_new_listings, -> {
+    where("listing_date IS NULL OR listing_date < ? OR listing_date > ?", Date.current - 3.years, Date.current)
+  }
+
   before_save :set_pinyin_initials
 
   def to_param

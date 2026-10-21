@@ -68,6 +68,24 @@ class StockScreenerServiceTest < ActiveSupport::TestCase
     assert_equal "白酒", result.conditions[:industry]
   end
 
+  # ---------- 次新股过滤 ----------
+
+  test "次新股过滤：new_listing=hide 排除上市不足3年股票，listing_date 为空保留" do
+    @good.update!(listing_date: Date.current - 1.year)  # 次新股
+    @mix.update!(listing_date: Date.current - 5.years)  # 老股
+    # @gap 不设 listing_date：无法判定上市时长，视为非次新保留
+
+    hidden = screen(market: "CN", year_from: 2021, year_to: 2023, margin_mode: "any",
+                    roe_value: "20", new_listing: "hide")
+    assert_equal "hide", hidden.conditions[:new_listing]
+    assert_equal [@mix.id, @gap.id].sort, hidden.stocks.map(&:id).sort
+    refute_includes hidden.stocks.map(&:id), @good.id
+
+    shown = screen(market: "CN", year_from: 2021, year_to: 2023, margin_mode: "any", roe_value: "20")
+    assert_equal "show", shown.conditions[:new_listing]
+    assert_equal [@good, @mix, @gap].map(&:id).sort, shown.stocks.map(&:id).sort
+  end
+
   # ---------- 净利润增长 ----------
 
   test "yoy 模式：末年同比增长达阈值命中，回落不命中" do

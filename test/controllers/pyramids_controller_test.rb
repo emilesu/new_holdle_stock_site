@@ -11,11 +11,13 @@ class PyramidsControllerTest < ActionDispatch::IntegrationTest
     # 行业过滤测试专用股票
     @cn_gas = Stock.create!(symbol: "PYR_CN_GAS", name: "燃气测试", market: "CN", exchange: "SH", sector: "公用事业", industry: "燃气公用", status: "active")
     @cn_semi = Stock.create!(symbol: "PYR_CN_SEMI", name: "半导体测试", market: "CN", exchange: "SH", sector: "科技", industry: "半导体", status: "active")
+    # 次新股过滤测试专用股票（上市不足 3 年）
+    @cn_new = Stock.create!(symbol: "PYR_CN_NEW", name: "次新测试", market: "CN", exchange: "SH", sector: "公用事业", industry: "电力公用", status: "active", listing_date: Date.current - 1.year)
   end
 
   def teardown
-    UserFavorite.where(stock_id: [@cn, @hk, @us, @cn_gas, @cn_semi].compact.map(&:id)).delete_all
-    [@cn, @hk, @us, @cn_gas, @cn_semi].compact.each(&:destroy!)
+    UserFavorite.where(stock_id: [@cn, @hk, @us, @cn_gas, @cn_semi, @cn_new].compact.map(&:id)).delete_all
+    [@cn, @hk, @us, @cn_gas, @cn_semi, @cn_new].compact.each(&:destroy!)
   end
 
   test "index 警示徽章使用对应市场主题色" do
@@ -111,6 +113,28 @@ class PyramidsControllerTest < ActionDispatch::IntegrationTest
     assert_match(/data-stock-symbol="PYR_CN"/, response.body)
     assert_no_match(/data-stock-symbol="PYR_CN_GAS"/, response.body, "行业过滤后不应包含其他行业的股票")
     assert_match(/data-industry="电力公用"/, response.body, "sentinel 应回显当前行业用于无限滚动")
+  end
+
+  test "次新股过滤：默认显示，new_listing=hide 隐藏上市不足3年的股票" do
+    sign_in users(:two)
+
+    # 默认（无参数 / new_listing=show）：次新股正常出现在榜单
+    get pyramid_path(market: "CN", sector: "公用事业")
+    assert_response :success
+    assert_match(/data-stock-symbol="PYR_CN_NEW"/, response.body)
+    assert_match(/id="pyramid-new-listing"/, response.body, "筛选区应渲染次新股选择器")
+
+    # new_listing=hide：次新股被隐藏，listing_date 为空的股票视为非次新保留
+    get pyramid_path(market: "CN", sector: "公用事业", new_listing: "hide")
+    assert_response :success
+    assert_no_match(/data-stock-symbol="PYR_CN_NEW"/, response.body, "隐藏次新股后不应包含次新股票")
+    assert_match(/data-stock-symbol="PYR_CN"/, response.body, "listing_date 为空的股票应保留")
+
+    # update_list 同口径过滤，且 sentinel 回显条件供无限滚动使用
+    get "/pyramid/update_list", params: { market: "CN", sector: "公用事业", new_listing: "hide" }, headers: { "Accept" => "text/vnd.turbo-stream.html" }
+    assert_response :success
+    assert_no_match(/data-stock-symbol="PYR_CN_NEW"/, response.body)
+    assert_match(/data-new-listing="hide"/, response.body, "sentinel 应回显次新股筛选条件用于无限滚动")
   end
 
   test "非会员请求 update_industries 被会员墙拦截" do

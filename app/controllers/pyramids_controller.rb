@@ -17,19 +17,22 @@ class PyramidsController < ApplicationController
       @market = params[:market] || 'CN'
       @sector = params[:sector] || ''
       @industry = @sector.present? ? (params[:industry].presence || '') : ''
+      @new_listing = params[:new_listing] == 'hide' ? 'hide' : 'show'
       @page = params[:page] ? params[:page].to_i : 1
     else
       # 非会员固定示例条件，忽略 URL 参数，避免绕过会员墙拿到真实筛选结果
       @market = DEMO_MARKET
       @sector = DEMO_SECTOR
       @industry = ''
+      @new_listing = 'show'
       @page = 1
     end
 
     stocks = Stock.where(market: @market)
     stocks = stocks.where(sector: @sector) if @sector.present? && @sector != 'all'
     stocks = stocks.where(industry: @industry) if @industry.present?
-    
+    stocks = stocks.excluding_new_listings if @new_listing == 'hide'
+
     @total_count = stocks.count
     @total_pages = (@total_count.to_f / PER_PAGE).ceil
     @stocks = if @is_member
@@ -94,12 +97,14 @@ class PyramidsController < ApplicationController
     @market = params[:market] || 'CN'
     @sector = params[:sector] || ''
     @industry = @sector.present? ? (params[:industry].presence || '') : ''
+    @new_listing = params[:new_listing] == 'hide' ? 'hide' : 'show'
     @page = 1
 
     stocks = Stock.where(market: @market)
     stocks = stocks.where(sector: @sector) if @sector.present? && @sector != 'all'
     stocks = stocks.where(industry: @industry) if @industry.present?
-    
+    stocks = stocks.excluding_new_listings if @new_listing == 'hide'
+
     @total_count = stocks.count
     @total_pages = (@total_count.to_f / PER_PAGE).ceil
     @stocks = stocks.order(pyramid_total_score: :desc, id: :desc).offset((@page - 1) * PER_PAGE).limit(PER_PAGE)
@@ -127,13 +132,15 @@ class PyramidsController < ApplicationController
     @market = params[:market] || 'CN'
     @sector = params[:sector] || ''
     @industry = @sector.present? ? (params[:industry].presence || '') : ''
+    @new_listing = params[:new_listing] == 'hide' ? 'hide' : 'show'
     @page = (params[:page] || 2).to_i
     @base_page = 1
 
     stocks = Stock.where(market: @market)
     stocks = stocks.where(sector: @sector) if @sector.present? && @sector != 'all'
     stocks = stocks.where(industry: @industry) if @industry.present?
-    
+    stocks = stocks.excluding_new_listings if @new_listing == 'hide'
+
     @total_count = stocks.count
     @total_pages = (@total_count.to_f / PER_PAGE).ceil
     @stocks = stocks.order(pyramid_total_score: :desc, id: :desc).offset((@page - 1) * PER_PAGE).limit(PER_PAGE)

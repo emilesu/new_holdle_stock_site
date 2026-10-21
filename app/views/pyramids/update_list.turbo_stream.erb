@@ -45,7 +45,8 @@
          data-total-pages="<%= @total_pages %>"
          data-market="<%= @market %>"
          data-sector="<%= @sector || '' %>"
-         data-industry="<%= @industry || '' %>">
+         data-industry="<%= @industry || '' %>"
+         data-new-listing="<%= @new_listing == 'hide' ? 'hide' : 'show' %>">
       <% if @total_pages > 1 %>
         <span class="flex items-center space-x-2"><span>滚动加载更多...</span></span>
       <% else %>
