@@ -1,16 +1,42 @@
 import { Controller } from "@hotwired/stimulus"
 
-// 宣传视频：封面占位 → 点击注入 B站 iframe（懒加载，不占首屏）。
+// 宣传视频：封面占位 → 点击注入播放器（懒加载，不占首屏）。
+// videoUrlValue 为 B站等 embed 地址时注入 iframe；为 .mp4/.webm 直链时注入原生 <video> 并自动播放。
 // videoUrlValue 为空时（视频未发布）播放按钮不渲染，仅显示「制作中」占位。
-// titleValue 为注入 iframe 的可访问性标题，各页面显式传入；默认值兼容 AI 助手教程页旧用法。
+// titleValue 为注入播放器的可访问性标题，各页面显式传入；默认值兼容 AI 助手教程页旧用法。
+const DIRECT_VIDEO_URL_PATTERN = /\.(mp4|webm)(\?|$)/i
+
 export default class extends Controller {
   static targets = ["cover", "player"]
   static values = { videoUrl: String, title: { type: String, default: "HOLDLE AI 投研助手宣传视频" } }
 
   play() {
     if (!this.videoUrlValue) return
-    if (this.playerTarget.children.length > 0) return // 幂等：已注入过 iframe 不再重复追加
+    if (this.playerTarget.children.length > 0) return // 幂等：已注入过播放器不再重复追加
 
+    const player = DIRECT_VIDEO_URL_PATTERN.test(this.videoUrlValue)
+      ? this.buildNativeVideo()
+      : this.buildIframe()
+
+    this.playerTarget.appendChild(player)
+    this.playerTarget.classList.remove("hidden")
+    this.coverTarget.classList.add("hidden")
+  }
+
+  // 原生 <video>：MP4/WebM 直链场景，带控制条并立即播放
+  buildNativeVideo() {
+    const video = document.createElement("video")
+    video.src = this.videoUrlValue
+    video.controls = true
+    video.autoplay = true
+    video.playsInline = true
+    video.className = "absolute inset-0 w-full h-full bg-black"
+    video.setAttribute("aria-label", this.titleValue)
+    return video
+  }
+
+  // B站 embed iframe：第三方播放器场景
+  buildIframe() {
     const iframe = document.createElement("iframe")
     iframe.src = this.videoUrlValue
     iframe.className = "absolute inset-0 w-full h-full"
@@ -19,9 +45,6 @@ export default class extends Controller {
     iframe.setAttribute("frameborder", "0")
     iframe.scrolling = "no"
     iframe.title = this.titleValue
-
-    this.playerTarget.appendChild(iframe)
-    this.playerTarget.classList.remove("hidden")
-    this.coverTarget.classList.add("hidden")
+    return iframe
   }
 }
