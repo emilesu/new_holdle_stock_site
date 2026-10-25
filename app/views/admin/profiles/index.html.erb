@@ -39,6 +39,19 @@
 
 <%# 批量操作表单：勾选 → 批量发布（先确认页）/ 批量撤回（直接执行） %>
 <%= form_with url: bulk_apply_admin_profiles_path, method: :post, id: 'bulk-profiles-form' do %>
+  <%# 一键勾选：按当前排序取前 N 条（N = 批量发布单批上限），省去逐条点选 %>
+  <div class="flex flex-wrap items-center gap-3 mb-2">
+    <button type="button" data-bulk-select="<%= Admin::ProfilesController::BULK_PUBLISH_LIMIT %>"
+            class="text-hl-12 px-2.5 py-1 border border-line-soft rounded text-muted hover:text-link hover:border-link transition cursor-pointer">
+      一键勾选 <%= Admin::ProfilesController::BULK_PUBLISH_LIMIT %> 条
+    </button>
+    <button type="button" data-bulk-clear
+            class="text-hl-12 px-2.5 py-1 border border-line-soft rounded text-muted hover:text-ink transition cursor-pointer">
+      清空勾选
+    </button>
+    <span class="text-hl-12 text-muted-4">按当前排序取前 <%= Admin::ProfilesController::BULK_PUBLISH_LIMIT %> 条，勾选后可继续手动调整</span>
+  </div>
+
   <div class="hl-card overflow-x-auto">
     <table class="w-full text-hl-13">
       <thead>
@@ -93,7 +106,7 @@
   </div>
 
   <div class="flex flex-wrap items-center gap-3 mt-4">
-    <span class="text-hl-13 text-muted">已选 <span id="bulk-selected-count" class="font-mono text-ink">0</span> 条</span>
+    <span class="text-hl-13 text-muted">已选 <span id="bulk-selected-count" class="font-mono text-ink" aria-live="polite">0</span> 条</span>
     <button type="submit" name="bulk_action" value="publish" formaction="<%= bulk_review_admin_profiles_path %>"
             class="px-4 py-2 text-hl-13 font-medium text-white bg-green-600 rounded hover:opacity-90 transition cursor-pointer">
       批量发布（先逐条确认，≤<%= Admin::ProfilesController::BULK_PUBLISH_LIMIT %> 条）
@@ -110,24 +123,47 @@
 </div>
 
 <script>
-  // 批量勾选：全选联动 + 已选计数（Turbo 适配：每次 turbo:load 重新绑定，用 dataset 防重复）
+  // 批量勾选：全选联动 / 一键勾选 N 条 / 清空 + 已选计数（Turbo 适配：每次 turbo:load 重新绑定，用 dataset 防重复）
   document.addEventListener("turbo:load", function() {
     const form = document.getElementById("bulk-profiles-form");
     if (!form || form.dataset.bulkBound === "1") return;
     form.dataset.bulkBound = "1";
 
-    const updateCount = function() {
+    const boxes = function() { return form.querySelectorAll('input[name="ids[]"]'); };
+
+    // 同步已选计数与表头全选框（全选 / 半选 / 未选三态）
+    const syncSelection = function() {
+      const all = boxes();
+      const checked = form.querySelectorAll('input[name="ids[]"]:checked').length;
       const counter = document.getElementById("bulk-selected-count");
-      if (counter) counter.textContent = form.querySelectorAll('input[name="ids[]"]:checked').length;
+      if (counter) counter.textContent = checked;
+
+      const selectAll = form.querySelector("[data-select-all]");
+      if (selectAll) {
+        selectAll.checked = all.length > 0 && checked === all.length;
+        selectAll.indeterminate = checked > 0 && checked < all.length;
+      }
     };
 
+    // 勾选变化：表头全选联动其余勾选框，随后统一同步状态
     form.addEventListener("change", function(e) {
       if (e.target.hasAttribute("data-select-all")) {
-        form.querySelectorAll('input[name="ids[]"]').forEach(function(cb) { cb.checked = e.target.checked; });
-        updateCount();
-      } else if (e.target.name === "ids[]") {
-        updateCount();
+        boxes().forEach(function(cb) { cb.checked = e.target.checked; });
       }
+      if (e.target.hasAttribute("data-select-all") || e.target.name === "ids[]") syncSelection();
     });
+
+    // 一键勾选 / 清空：事件委托，按钮不提交表单
+    form.addEventListener("click", function(e) {
+      const selectBtn = e.target.closest("[data-bulk-select]");
+      const clearBtn = e.target.closest("[data-bulk-clear]");
+      if (!selectBtn && !clearBtn) return;
+
+      const limit = selectBtn ? (parseInt(selectBtn.dataset.bulkSelect, 10) || 0) : 0;
+      boxes().forEach(function(cb, index) { cb.checked = !!selectBtn && index < limit; });
+      syncSelection();
+    });
+
+    syncSelection();
   });
 </script>
