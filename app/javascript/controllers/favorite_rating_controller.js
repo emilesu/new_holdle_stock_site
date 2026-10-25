@@ -4,7 +4,8 @@ import { Controller } from "@hotwired/stimulus"
 // 服务端已按当前星级渲染初始填充状态，本控制器只做增强，不改变提交逻辑。
 export default class extends Controller {
   static targets = ["star"]
-  static values = { rating: Number }
+  // activeClass 由服务端按市场主题色下发（A股绿 / 港股琥珀 / 美股蓝）
+  static values = { rating: Number, activeClass: String }
 
   connect() {
     this.currentRating = this.ratingValue
@@ -40,9 +41,12 @@ export default class extends Controller {
   }
 
   paint(rating) {
+    // 按空白拆分：服务端若下发多个 class 也能逐个 toggle（classList 不接受整串）
+    const activeClass = this.activeClassValue || "text-blue-600"
+    const activeTokens = activeClass.split(/\s+/).filter(Boolean)
     this.starTargets.forEach((star) => {
       const active = Number(star.dataset.rating) <= rating
-      star.classList.toggle("text-amber-500", active)
+      activeTokens.forEach((token) => star.classList.toggle(token, active))
       star.classList.toggle("text-muted-6", !active)
     })
   }

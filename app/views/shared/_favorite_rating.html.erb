@@ -5,12 +5,15 @@
 <% compact = local_assigns.fetch(:variant, :detail) == :compact %>
 <% star_size = compact ? "w-3.5 h-3.5" : "w-5 h-5" %>
 <% star_padding = compact ? "p-1.5" : "p-1" %>
+<%# 实心星跟市场主题色走：A股绿 / 港股琥珀 / 美股蓝，与全站市场徽章、已收藏星标保持一致 %>
+<% active_class = market_star_class(stock.market) %>
 
 <div id="favorite_rating_<%= stock.id %>_<%= compact ? 'row' : 'detail' %>"
      class="<%= compact ? 'relative z-10 flex items-center gap-0.5 shrink-0' : 'mt-4 border border-line rounded-lg px-3 py-2.5' %>"
      role="group" aria-label="收藏星级"
      data-controller="favorite-rating"
-     data-favorite-rating-rating-value="<%= rating %>">
+     data-favorite-rating-rating-value="<%= rating %>"
+     data-favorite-rating-active-class-value="<%= active_class %>">
   <% if compact %>
     <% if user_signed_in? %>
       <%= form_with url: favorite ? user_favorite_path(favorite) : user_favorites_path,
@@ -18,7 +21,7 @@
             class: "flex items-center gap-0.5",
             data: { action: "submit->favorite-rating#submitting" } do %>
         <%= hidden_field_tag :stock_id, stock.id %>
-        <%= render "shared/favorite_stars", rating: rating, size: star_size, padding: star_padding %>
+        <%= render "shared/favorite_stars", rating: rating, size: star_size, padding: star_padding, active_class: active_class %>
       <% end %>
     <% end %>
   <% else %>
@@ -39,13 +42,13 @@
                 class: "flex items-center gap-0.5",
                 data: { action: "submit->favorite-rating#submitting" } do %>
             <%= hidden_field_tag :stock_id, stock.id %>
-            <%= render "shared/favorite_stars", rating: rating, size: star_size, padding: star_padding %>
+            <%= render "shared/favorite_stars", rating: rating, size: star_size, padding: star_padding, active_class: active_class %>
           <% end %>
         <% else %>
           <div class="flex items-center gap-0.5">
             <% 1.upto(5) do |n| %>
               <%= link_to new_user_session_path(return_to: request.fullpath),
-                    class: "inline-flex items-center justify-center p-1 text-muted-6 hover:text-amber-500 transition-colors",
+                    class: "inline-flex items-center justify-center p-1 text-muted-6 hover:opacity-70 transition-opacity",
                     aria: { label: "登录后收藏为 #{n} 星" } do %>
                 <%= favorite_icon_tag(class_name: star_size) %>
               <% end %>

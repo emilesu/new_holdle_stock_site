@@ -65,9 +65,10 @@ export default class extends Controller {
     this.submit()
   }
 
-  submit() {
+  // skipPersist：显式「清除筛选」时传入，避免把刚清空的默认态又写回缓存
+  submit(options = {}) {
     this.clearTimer()
-    this.persist()
+    if (!options.skipPersist) this.persist()
     this.formTarget.requestSubmit()
   }
 
@@ -77,16 +78,10 @@ export default class extends Controller {
     const form = this.formTarget
     const fields = {}
     new FormData(form).forEach((value, key) => { fields[key] = String(value) })
-    // 全默认态（如清除筛选后的提交）不落缓存，避免下次无参进入时触发与首屏相同的冗余恢复提交
-    const hasFilter = ["q", "market", "sector", "score_range"].some((key) => form.elements[key]?.value) ||
-      ["score", "rating"].includes(form.elements["sort"]?.value) ||
-      form.elements["group"]?.value === "market"
+    // 与金字塔页 / 股票筛选页一致：始终保存最新一次选择。
+    // 不能在「全默认态」时清空缓存——只清空关键词就会连带丢掉市场、评分、排序等其它条件
     try {
-      if (hasFilter) {
-        localStorage.setItem(this.constructor.STORAGE_KEY, JSON.stringify({ fields, ts: Date.now() }))
-      } else {
-        localStorage.removeItem(this.constructor.STORAGE_KEY)
-      }
+      localStorage.setItem(this.constructor.STORAGE_KEY, JSON.stringify({ fields, ts: Date.now() }))
     } catch (e) { /* 无痕模式等存储不可用时静默忽略 */ }
   }
 
@@ -101,10 +96,16 @@ export default class extends Controller {
 
     let saved = null
     try { saved = JSON.parse(localStorage.getItem(this.constructor.STORAGE_KEY)) } catch (e) { return }
-    if (!saved || !saved.fields || Date.now() - (saved.ts || 0) > this.constructor.STORAGE_TTL) return
+    if (!saved || !saved.fields) return
+    // 时间戳必须是合法数字：否则 Date.now() - NaN 得到 NaN，比较恒为 false 会绕过过期校验
+    const savedAt = Number(saved.ts)
+    if (!Number.isFinite(savedAt) || Date.now() - savedAt > this.constructor.STORAGE_TTL) return
 
     const form = this.formTarget
+    let changed = false
     Object.entries(saved.fields).forEach(([key, value]) => {
+      // 只恢复白名单字段：缓存可能被篡改，"0" 之类的键会命中数字索引控件
+      if (!this.constructor.FILTER_KEYS.includes(key)) return
       const el = form.elements[key]
       if (!el) return
       // 非会员的评分控件被禁用（disabled 控件不提交，服务端也会丢弃该参数）
@@ -114,11 +115,13 @@ export default class extends Controller {
         // 缓存值可能已失效：板块随取消收藏从下拉消失，或会员降级后评分选项被禁用——恢复不了就跳过
         if (!option || option.disabled) return
       }
+      if (el.value === value) return
       el.value = value
+      changed = true
     })
     this.groupButtonTarget.setAttribute("aria-pressed", String(this.groupInputTarget.value === "market"))
-    // 恢复后走一次正常提交：服务端渲染结果区 + frameRendered 同步地址栏
-    if (this.constructor.FILTER_KEYS.some((key) => form.elements[key]?.value)) {
+    // 仅当确实改变了条件才提交：缓存是全默认态时不做多余请求（与首屏渲染结果一致）
+    if (changed) {
       this.submitNow()
     }
   }
@@ -150,8 +153,9 @@ export default class extends Controller {
     if (form.elements["sort"]) form.elements["sort"].value = "recent"
     this.groupInputTarget.value = ""
     this.groupButtonTarget.setAttribute("aria-pressed", "false")
+    // 显式清除：既不写回缓存，也要把旧缓存删掉，保证下次进入是干净的默认态
     this.clearStored()
-    this.submitNow()
+    this.submit({ skipPersist: true })
   }
 
   // ---------- 加载反馈与地址栏同步 ----------

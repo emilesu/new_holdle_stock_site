@@ -143,6 +143,19 @@ class UserFavoritesControllerTest < ActionDispatch::IntegrationTest
       assert_response :success
       assert_select "#favorite_rating_#{@stock.id}_row button[name='rating']", count: 5
       assert_select "#favorite_rating_#{@stock.id}_row button[name='rating'][value='4'][aria-pressed='true']", count: 1
+      # 实心星用市场主题色（fixture 为美股，取蓝色），空心星保持灰色
+      assert_select "#favorite_rating_#{@stock.id}_row button.text-blue-600", count: 4
+      assert_select "#favorite_rating_#{@stock.id}_row button.text-muted-6", count: 1
+      assert_select "#favorite_rating_#{@stock.id}_row[data-favorite-rating-active-class-value='text-blue-600']", count: 1
+    end
+
+    test "favorite stars should follow each market theme color" do
+      { stocks(:two) => "text-green-600", stocks(:four) => "text-amber-600", @stock => "text-blue-600" }.each do |stock, color|
+        UserFavorite.create!(user: @user, stock: stock, rating: 2)
+        get users_profile_favorites_path
+        assert_select "#favorite_rating_#{stock.id}_row[data-favorite-rating-active-class-value='#{color}']", count: 1
+        assert_select "#favorite_rating_#{stock.id}_row button.#{color}", count: 2
+      end
     end
 
     test "stock page should render rating control" do
