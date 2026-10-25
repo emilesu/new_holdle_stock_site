@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_10_12_180000) do
+ActiveRecord::Schema[7.1].define(version: 2026_10_25_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -628,7 +628,10 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_12_180000) do
     t.bigint "stock_id", null: false, comment: "股票ID"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "rating", default: 3, null: false, comment: "收藏星级 1-5"
+    t.index ["user_id", "rating"], name: "index_user_favorites_on_user_id_and_rating"
     t.index ["user_id", "stock_id"], name: "index_user_favorites_on_user_id_and_stock_id", unique: true
+    t.check_constraint "rating >= 1 AND rating <= 5", name: "user_favorites_rating_range"
   end
 
   create_table "users", force: :cascade do |t|

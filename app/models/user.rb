@@ -38,8 +38,18 @@ class User < ApplicationRecord
     user_favorites.exists?(stock_id: stock.id)
   end
 
-  def favorite!(stock)
-    user_favorites.create!(stock: stock)
+  def favorite!(stock, rating: UserFavorite::DEFAULT_RATING)
+    # 已收藏则更新星级（幂等）：星级点击可能在重复提交 / 并发下落到这里，
+    # 不应像旧逻辑那样抛唯一性校验异常
+    favorite = user_favorites.find_or_initialize_by(stock: stock)
+    favorite.rating = rating
+    favorite.save!
+    favorite
+  rescue ActiveRecord::RecordNotUnique
+    # 并发下两个请求同时 insert：唯一索引兜底后重读并更新星级
+    favorite = user_favorites.find_by!(stock_id: stock.id)
+    favorite.update!(rating: rating)
+    favorite
   end
 
   def unfavorite!(stock)

@@ -1,0 +1,9 @@
+<%# 改星级：详情页替换 detail 变体，收藏页替换 row 变体。
+    Turbo 对不存在的目标静默跳过，因此一个流可同时服务两个页面 %>
+<%= turbo_stream.replace "favorite_rating_#{@stock.id}_detail" do %>
+  <%= render "shared/favorite_rating", stock: @stock, favorite: @user_favorite, variant: :detail %>
+<% end %>
+
+<%= turbo_stream.replace "favorite_rating_#{@stock.id}_row" do %>
+  <%= render "shared/favorite_rating", stock: @stock, favorite: @user_favorite, variant: :compact %>
+<% end %>

@@ -77,6 +77,7 @@
             <label for="favorites-sort" class="text-hl-13 font-medium text-muted-2 shrink-0">排序</label>
             <select id="favorites-sort" name="sort" class="px-2.5 py-2 text-hl-13 border border-line rounded-md focus:border-link bg-white">
               <option value="recent" <%= 'selected' if @sort == 'recent' %>>最近收藏</option>
+              <option value="rating" <%= 'selected' if @sort == 'rating' %>>收藏星级</option>
               <option value="score" <%= 'selected' if @sort == 'score' %> <%= 'disabled' unless @is_member %>>金字塔评分</option>
             </select>
           </div>

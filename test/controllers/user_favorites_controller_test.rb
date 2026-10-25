@@ -15,6 +15,60 @@ class UserFavoritesControllerTest < ActionDispatch::IntegrationTest
       sign_in @user
     end
 
+    test "should create favorite with rating" do
+      post user_favorites_path, params: { stock_id: @stock.id, rating: 5 },
+           headers: { "Accept" => "text/vnd.turbo-stream.html" }
+      assert_response :success
+      assert_equal 5, @user.user_favorites.find_by(stock_id: @stock.id).rating
+    end
+
+    test "should fallback to default rating when rating is invalid" do
+      post user_favorites_path, params: { stock_id: @stock.id, rating: 99 },
+           headers: { "Accept" => "text/vnd.turbo-stream.html" }
+      assert_equal 3, @user.user_favorites.find_by(stock_id: @stock.id).rating
+    end
+
+    test "should update rating via turbo stream" do
+      favorite = UserFavorite.create!(user: @user, stock: @stock, rating: 2)
+      patch user_favorite_path(favorite), params: { stock_id: @stock.id, rating: 5 },
+            headers: { "Accept" => "text/vnd.turbo-stream.html" }
+      assert_response :success
+      assert_equal 5, favorite.reload.rating
+    end
+
+    test "should reject update with invalid rating" do
+      favorite = UserFavorite.create!(user: @user, stock: @stock, rating: 2)
+      patch user_favorite_path(favorite), params: { stock_id: @stock.id, rating: 99 },
+            headers: { "Accept" => "text/vnd.turbo-stream.html" }
+      assert_response 422
+      assert_equal 2, favorite.reload.rating
+    end
+
+    test "duplicate create should update rating instead of raising" do
+      UserFavorite.create!(user: @user, stock: @stock, rating: 2)
+      assert_no_difference "UserFavorite.count" do
+        post user_favorites_path, params: { stock_id: @stock.id, rating: 5 },
+             headers: { "Accept" => "text/vnd.turbo-stream.html" }
+      end
+      assert_equal 5, @user.user_favorites.find_by(stock_id: @stock.id).rating
+    end
+
+    test "should not update another user's favorite" do
+      other = UserFavorite.create!(user: users(:two), stock: @stock, rating: 2)
+      patch user_favorite_path(other), params: { stock_id: @stock.id, rating: 5 },
+            headers: { "Accept" => "text/vnd.turbo-stream.html" }
+      assert_response :not_found
+      assert_equal 2, other.reload.rating
+    end
+
+    test "favorite! should update rating when already favorited" do
+      @user.favorite!(@stock, rating: 2)
+      assert_no_difference "UserFavorite.count" do
+        @user.favorite!(@stock, rating: 5)
+      end
+      assert_equal 5, @user.user_favorites.find_by(stock_id: @stock.id).rating
+    end
+
     test "should create favorite via turbo stream" do
       assert_difference "UserFavorite.count", 1 do
         post user_favorites_path, params: { stock_id: @stock.id }, headers: { "Accept" => "text/vnd.turbo-stream.html" }
@@ -81,6 +135,29 @@ class UserFavoritesControllerTest < ActionDispatch::IntegrationTest
       assert_no_difference "UserFavorite.count" do
         @user.unfavorite!(@stock)
       end
+    end
+
+    test "favorites page should render five rating buttons per row" do
+      UserFavorite.create!(user: @user, stock: @stock, rating: 4)
+      get users_profile_favorites_path
+      assert_response :success
+      assert_select "#favorite_rating_#{@stock.id}_row button[name='rating']", count: 5
+      assert_select "#favorite_rating_#{@stock.id}_row button[name='rating'][value='4'][aria-pressed='true']", count: 1
+    end
+
+    test "stock page should render rating control" do
+      get stock_path(@stock)
+      assert_response :success
+      assert_select "turbo-frame#follow_stock_#{@stock.id} button[name='rating']", count: 5
+    end
+
+    test "favorites page should sort by rating desc" do
+      UserFavorite.create!(user: @user, stock: @stock, rating: 1)
+      UserFavorite.create!(user: @user, stock: @other_stock, rating: 5)
+      get users_profile_favorites_path(sort: "rating")
+      assert_response :success
+      ids = css_select("[data-favorite-row]").map { |row| row["id"] }
+      assert_equal ["favorite_card_#{@other_stock.id}", "favorite_card_#{@stock.id}"], ids
     end
 
     test "should access favorites page" do

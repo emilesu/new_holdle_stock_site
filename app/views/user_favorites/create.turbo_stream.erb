@@ -1,14 +1,13 @@
-<% favorite = current_user.user_favorites.find_by(stock_id: @stock.id) %>
 <%= turbo_stream.replace "follow_stock_#{@stock.id}" do %>
   <%= turbo_frame_tag "follow_stock_#{@stock.id}" do %>
-    <%= button_to "已收藏", user_favorite_path(favorite, stock_id: @stock.id), method: :delete,
-      class: "w-full hl-btn hl-btn-line mt-4" %>
+    <%= render "shared/favorite_rating", stock: @stock, favorite: @user_favorite, variant: :detail %>
   <% end %>
 <% end %>
 
-<%= turbo_stream.replace "follow_stock_quick_#{@stock.id}" do %>
-  <%= turbo_frame_tag "follow_stock_quick_#{@stock.id}" do %>
-    <%= button_to "已收藏", user_favorite_path(favorite, stock_id: @stock.id), method: :delete,
-      class: "w-full py-2 text-left text-sm text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" %>
-  <% end %>
+<%= turbo_stream.remove "favorite_card_#{@stock.id}" %>
+
+<% remaining = current_user.user_favorites.count %>
+<%# 收藏页的「共 N 只」计数需随收藏同步；其他页面没有该元素，Turbo 对缺失目标静默跳过 %>
+<%= turbo_stream.replace "favorites_summary" do %>
+  <span id="favorites_summary" class="text-ink font-medium"><%= remaining %></span>
 <% end %>

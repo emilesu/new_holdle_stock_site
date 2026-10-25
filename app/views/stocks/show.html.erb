@@ -82,16 +82,7 @@
                 <% end %>
               <% end %>
               <%= turbo_frame_tag "follow_stock_#{@stock.id}" do %>
-                <% if user_signed_in? && @user_favorite.present? %>
-                  <%= button_to "已收藏", user_favorite_path(@user_favorite, stock_id: @stock.id), method: :delete,
-                    class: "w-full hl-btn hl-btn-line mt-4" %>
-                <% elsif user_signed_in? %>
-                  <%= button_to "收藏股票", user_favorites_path(stock_id: @stock.id), method: :post,
-                    class: "w-full hl-btn hl-btn-primary mt-4" %>
-                <% else %>
-                  <%= link_to "收藏股票", new_user_session_path(return_to: request.fullpath),
-                    class: "w-full hl-btn hl-btn-primary mt-4 text-center block" %>
-                <% end %>
+                <%= render "shared/favorite_rating", stock: @stock, favorite: @user_favorite, variant: :detail %>
               <% end %>
             </div>
             

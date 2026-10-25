@@ -79,7 +79,7 @@ export default class extends Controller {
     new FormData(form).forEach((value, key) => { fields[key] = String(value) })
     // 全默认态（如清除筛选后的提交）不落缓存，避免下次无参进入时触发与首屏相同的冗余恢复提交
     const hasFilter = ["q", "market", "sector", "score_range"].some((key) => form.elements[key]?.value) ||
-      form.elements["sort"]?.value === "score" ||
+      ["score", "rating"].includes(form.elements["sort"]?.value) ||
       form.elements["group"]?.value === "market"
     try {
       if (hasFilter) {

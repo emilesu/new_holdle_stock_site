@@ -63,3 +63,6 @@ application.register("profile-toc", ProfileTocController)
 
 import FavoritesController from "./favorites_controller"
 application.register("favorites", FavoritesController)
+
+import FavoriteRatingController from "./favorite_rating_controller"
+application.register("favorite-rating", FavoriteRatingController)

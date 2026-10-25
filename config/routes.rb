@@ -19,7 +19,7 @@ Rails.application.routes.draw do
 
   root "home#index"
 
-  resources :user_favorites, only: [:create, :destroy]
+  resources :user_favorites, only: [:create, :update, :destroy]
 
   resources :stocks, only: [:show] do
     member do

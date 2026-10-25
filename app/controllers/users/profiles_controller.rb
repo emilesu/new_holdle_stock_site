@@ -62,7 +62,9 @@ class Users::ProfilesController < ApplicationController
     @sector = @sector_options.include?(params[:sector].to_s) ? params[:sector].to_s : ""
     # 评分区间筛选与评分排序仅会员可用：非会员直接丢弃参数（防伪造请求绕过会员墙）
     @score_range = @is_member ? whitelist(params[:score_range], SCORE_RANGES.keys) : ""
-    @sort = @is_member ? (whitelist(params[:sort], %w[recent score]).presence || "recent") : "recent"
+    # 排序：收藏星级不受会员墙限制；金字塔评分排序仍仅会员
+    allowed_sorts = @is_member ? %w[recent score rating] : %w[recent rating]
+    @sort = whitelist(params[:sort], allowed_sorts).presence || "recent"
     @group = whitelist(params[:group], %w[market])
 
     scope = filtered_favorites_scope
@@ -173,6 +175,7 @@ class Users::ProfilesController < ApplicationController
       orders << Arel.sql("CASE stocks.market WHEN 'CN' THEN 0 WHEN 'HK' THEN 1 WHEN 'US' THEN 2 ELSE 3 END")
     end
     orders << Arel.sql("stocks.pyramid_total_score DESC") if @sort == "score"
+    orders << Arel.sql("user_favorites.rating DESC") if @sort == "rating"
     # id 作稳定 tie-breaker，保证分页不重不漏
     orders << Arel.sql("user_favorites.created_at DESC, user_favorites.id DESC")
     orders

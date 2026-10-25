@@ -1,0 +1,17 @@
+<%# 星级按钮组：父级表单负责提交，本文件只渲染 5 个 submit 按钮
+    - rating 为服务端当前星级（未收藏为 0），初始填充状态不依赖 JS
+    - 每颗星都能独立提交（name=rating value=N），无 JS 也能收藏与改级 %>
+<% rating = local_assigns.fetch(:rating, 0) %>
+<% size = local_assigns.fetch(:size, "w-5 h-5") %>
+<% padding = local_assigns.fetch(:padding, "p-1") %>
+<% 1.upto(5) do |n| %>
+  <button type="submit" name="rating" value="<%= n %>"
+          class="inline-flex items-center justify-center cursor-pointer transition-colors <%= padding %> <%= n <= rating ? 'text-amber-500' : 'text-muted-6' %>"
+          data-favorite-rating-target="star"
+          data-rating="<%= n %>"
+          data-action="mouseenter->favorite-rating#preview mouseleave->favorite-rating#reset focus->favorite-rating#preview blur->favorite-rating#reset"
+          aria-label="设为 <%= n %> 星"
+          aria-pressed="<%= n == rating %>">
+    <%= favorite_icon_tag(class_name: size) %>
+  </button>
+<% end %>

@@ -1,0 +1,65 @@
+<%# 收藏星级组件（详情页 detail / 收藏页 compact 共用）
+    - favorite 为当前 UserFavorite 或 nil
+    - 根节点 id 带 variant 后缀：update.turbo_stream 同时替换两种变体，Turbo 会自动跳过不存在的目标 %>
+<% rating = favorite&.rating.to_i %>
+<% compact = local_assigns.fetch(:variant, :detail) == :compact %>
+<% star_size = compact ? "w-3.5 h-3.5" : "w-5 h-5" %>
+<% star_padding = compact ? "p-1.5" : "p-1" %>
+
+<div id="favorite_rating_<%= stock.id %>_<%= compact ? 'row' : 'detail' %>"
+     class="<%= compact ? 'relative z-10 flex items-center gap-0.5 shrink-0' : 'mt-4 border border-line rounded-lg px-3 py-2.5' %>"
+     role="group" aria-label="收藏星级"
+     data-controller="favorite-rating"
+     data-favorite-rating-rating-value="<%= rating %>">
+  <% if compact %>
+    <% if user_signed_in? %>
+      <%= form_with url: favorite ? user_favorite_path(favorite) : user_favorites_path,
+            method: favorite ? :patch : :post,
+            class: "flex items-center gap-0.5",
+            data: { action: "submit->favorite-rating#submitting" } do %>
+        <%= hidden_field_tag :stock_id, stock.id %>
+        <%= render "shared/favorite_stars", rating: rating, size: star_size, padding: star_padding %>
+      <% end %>
+    <% end %>
+  <% else %>
+    <div class="flex items-center justify-between gap-3">
+      <div class="min-w-0">
+        <% if user_signed_in? && favorite %>
+          <div class="text-hl-12 font-medium text-ink">已收藏 · <%= rating %> 星</div>
+          <div class="text-hl-11 text-muted-4 mt-0.5">点击其他星级可调整重视程度</div>
+        <% else %>
+          <div class="text-hl-12 font-medium text-ink">收藏股票</div>
+          <div class="text-hl-11 text-muted-4 mt-0.5">点击星级收藏，5 星为最高重视</div>
+        <% end %>
+      </div>
+      <div class="shrink-0">
+        <% if user_signed_in? %>
+          <%= form_with url: favorite ? user_favorite_path(favorite) : user_favorites_path,
+                method: favorite ? :patch : :post,
+                class: "flex items-center gap-0.5",
+                data: { action: "submit->favorite-rating#submitting" } do %>
+            <%= hidden_field_tag :stock_id, stock.id %>
+            <%= render "shared/favorite_stars", rating: rating, size: star_size, padding: star_padding %>
+          <% end %>
+        <% else %>
+          <div class="flex items-center gap-0.5">
+            <% 1.upto(5) do |n| %>
+              <%= link_to new_user_session_path(return_to: request.fullpath),
+                    class: "inline-flex items-center justify-center p-1 text-muted-6 hover:text-amber-500 transition-colors",
+                    aria: { label: "登录后收藏为 #{n} 星" } do %>
+                <%= favorite_icon_tag(class_name: star_size) %>
+              <% end %>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+    <% if user_signed_in? && favorite %>
+      <div class="mt-2 pt-2 border-t border-line-soft text-right">
+        <%= button_to "取消收藏", user_favorite_path(favorite, stock_id: stock.id), method: :delete,
+              class: "cursor-pointer text-hl-11 text-muted-3 hover:text-profit transition-colors",
+              form: { data: { turbo_confirm: "确定取消收藏 #{stock.symbol} 吗？" } } %>
+      </div>
+    <% end %>
+  <% end %>
+</div>

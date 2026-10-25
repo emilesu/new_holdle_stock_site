@@ -18,6 +18,8 @@
       <div class="mt-0.5 flex items-center gap-2 text-hl-11 text-muted-3">
         <span class="inline-flex px-1.5 py-0.5 rounded text-hl-11 shrink-0 <%= market_badge_class(stock.market) %>"><%= market_label(stock.market) %></span>
         <span class="truncate"><%= stock.sector.presence || stock.industry.presence || "—" %></span>
+        <%# 行内改星级：组件已带 relative z-10，避免点击落到铺满整行的详情页链接上 %>
+        <%= render "shared/favorite_rating", stock: stock, favorite: favorite, variant: :compact %>
         <span class="text-muted-4 hidden sm:inline shrink-0">收藏于 <%= l(favorite.created_at, format: :short) %></span>
       </div>
     </div>

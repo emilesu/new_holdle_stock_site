@@ -28,6 +28,19 @@ class UserFavoriteTest < ActiveSupport::TestCase
     assert_includes duplicate.errors[:user_id], "已经收藏过该股票"
   end
 
+  test "should default rating to 3" do
+    favorite = UserFavorite.create!(user: @user, stock: @stock)
+    assert_equal 3, favorite.rating
+  end
+
+  test "should reject rating outside 1..5" do
+    [0, 6, -1].each do |rating|
+      favorite = UserFavorite.new(user: @user, stock: @stock, rating: rating)
+      assert_not favorite.valid?
+      assert favorite.errors[:rating].any?
+    end
+  end
+
   test "should allow same user favorite different stocks" do
     stock2 = stocks(:two)
     UserFavorite.create!(user: @user, stock: @stock)
