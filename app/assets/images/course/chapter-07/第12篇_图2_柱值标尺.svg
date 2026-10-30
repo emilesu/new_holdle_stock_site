@@ -1,32 +1,42 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 860 330" font-family="'PingFang SC','Microsoft YaHei','Noto Sans CJK SC',sans-serif">
+  <!-- ===== 图2 重绘版 v4（2026-10-30，导师AI审查后）：0.03 相对量口径 ===== -->
+  <!-- 改动：① 可靠区由绿色改红 #d9382e（A股红涨绿跌，与图1 上涨色一致，避免同篇两图配色语义冲突） -->
+  <!--       ② 补"双线贴轴→不可判"脚注 ③ 说明区间用色只表示判定档位 -->
+  <!-- A股红涨绿跌：红 #d9382e / 绿 #17a05e -->
+
   <!-- 标题 -->
-  <text x="430" y="36" text-anchor="middle" font-size="18" font-weight="700" fill="#1f2329">柱值标尺：红了，够不够高</text>
+  <text x="430" y="30" text-anchor="middle" font-size="18" font-weight="700" fill="#1f2329">柱值标尺：红了，够不够高</text>
 
-  <!-- 两段横条（只画红柱侧的争议区：0 ~ 0.5 存疑 vs ≥ 0.5 可靠） -->
-  <!-- 琥珀段：存疑区 0 &lt; 柱值 &lt; 0.5 -->
-  <rect x="200" y="160" width="180" height="90" fill="#f2c14e"/>
-  <!-- 绿段：可靠区 柱值 ≥ 0.5 -->
-  <rect x="380" y="160" width="420" height="90" fill="#17a05e"/>
+  <!-- 量纲说明 -->
+  <text x="430" y="52" text-anchor="middle" font-size="12.5" fill="#8a8f98">量的是柱子相对慢线（DEA）的比例，不是柱子自己的数</text>
 
-  <!-- 0 起点线 与 0.5 门槛线 -->
-  <line x1="200" y1="160" x2="200" y2="250" stroke="#1f2329" stroke-width="2.5"/>
-  <line x1="380" y1="160" x2="380" y2="250" stroke="#d9382e" stroke-width="2.5"/>
+  <!-- 两段横条（只画红柱侧：0 ~ 0.03 存疑 vs ≥ 0.03 可靠） -->
+  <!-- 琥珀段：存疑区 0 &lt; 柱÷慢线 &lt; 0.03 -->
+  <rect x="200" y="80" width="180" height="90" fill="#f2c14e"/>
+  <!-- 红段：可靠区 柱÷慢线 ≥ 0.03（示意区间，上不封顶） -->
+  <rect x="380" y="80" width="420" height="90" fill="#d9382e"/>
+
+  <!-- 0 起点线 与 0.03 门槛线 -->
+  <line x1="200" y1="80" x2="200" y2="170" stroke="#1f2329" stroke-width="2.5"/>
+  <line x1="380" y1="80" x2="380" y2="170" stroke="#1f2329" stroke-width="2.5"/>
 
   <!-- 刻度标签 -->
-  <text x="200" y="272" text-anchor="middle" font-size="12" font-weight="700" fill="#1f2329">0</text>
-  <text x="380" y="272" text-anchor="middle" font-size="12" font-weight="700" fill="#d9382e">+0.5</text>
+  <text x="200" y="192" text-anchor="middle" font-size="12" font-weight="700" fill="#1f2329">0</text>
+  <text x="380" y="192" text-anchor="middle" font-size="12" font-weight="700" fill="#d9382e">+0.03（3%）</text>
+  <text x="590" y="192" text-anchor="middle" font-size="11.5" fill="#8a8f98">↗ 越大越长，上不封顶</text>
 
   <!-- 琥珀段文字：存疑区 -->
-  <text x="290" y="190" text-anchor="middle" font-size="15" font-weight="700" fill="#6b4a00">0 &lt; 柱值 &lt; 0.5</text>
-  <text x="290" y="216" text-anchor="middle" font-size="13" fill="#6b4a00">红了但不够高</text>
-  <text x="290" y="238" text-anchor="middle" font-size="12.5" fill="#6b4a00">方向存疑 · 降级不参与</text>
+  <text x="290" y="108" text-anchor="middle" font-size="14" font-weight="700" fill="#6b4a00">0 &lt; 柱÷慢线 &lt; 0.03</text>
+  <text x="290" y="134" text-anchor="middle" font-size="13" fill="#6b4a00">红了但不够高</text>
+  <text x="290" y="158" text-anchor="middle" font-size="12.5" fill="#6b4a00">按绿柱算 · 不给开窗</text>
 
-  <!-- 绿段文字：可靠区 -->
-  <text x="590" y="190" text-anchor="middle" font-size="16" font-weight="700" fill="#ffffff">柱值 ≥ 0.5</text>
-  <text x="590" y="216" text-anchor="middle" font-size="13" fill="#ffffff">红得够高 · 方向可靠</text>
-  <text x="590" y="238" text-anchor="middle" font-size="12" fill="#e2f4ec">颜色是市场给的 · 按规则走</text>
+  <!-- 红段文字：可靠区 -->
+  <text x="590" y="108" text-anchor="middle" font-size="15" font-weight="700" fill="#ffffff">柱÷慢线 ≥ 0.03（3%）</text>
+  <text x="590" y="134" text-anchor="middle" font-size="13" fill="#ffffff">相对慢线长出足够一截 · 方向可靠</text>
+  <text x="590" y="158" text-anchor="middle" font-size="12" fill="#ffe6e3">正常判定绿转红 / 矮转高</text>
 
   <!-- 底部说明 -->
-  <text x="430" y="298" text-anchor="middle" font-size="12.5" fill="#5a6b82">0.5 这条线只卡一种情况：柱子红了，但红得不够高</text>
-  <text x="430" y="322" text-anchor="middle" font-size="13" font-weight="700" fill="#1f2329">柱子贴在0轴上，颜色是软件说了算；离0轴够远，颜色才是市场说了算</text>
+  <text x="430" y="228" text-anchor="middle" font-size="11.5" fill="#8a8f98">区间用色只表示判定档位，不代表涨跌；横条为示意，实际上不封顶</text>
+  <text x="430" y="258" text-anchor="middle" font-size="12.5" fill="#5a6b82">这条线只卡一种情况：柱子红了，但相对慢线还没长出3%</text>
+  <text x="430" y="294" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1f2329">柱子贴在0轴上，颜色是软件说了算；离0轴够远，颜色才是市场说了算</text>
 </svg>
