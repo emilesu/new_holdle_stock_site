@@ -31,6 +31,17 @@ module DataSources
         "FIXED_ASSET"      => :property_plant_equipment,
       }.freeze
 
+      # F10 资产负债表科目映射（无杠杆ROE 数据源，RPT_F10_FINANCE_GBALANCE）：
+      # DMSK 报表无这些科目（2026-11-02 实测：万科 SHORT_LOAN=None 且无 LONG_LOAN 等列）；
+      # SHORT_LOAN/LONG_LOAN 复用已有列，与美股/港股抓取器同语义
+      F10_BALANCE_FIELDS = {
+        "TOTAL_PARENT_EQUITY"   => :parent_equity,
+        "SHORT_LOAN"            => :short_term_debt,
+        "LONG_LOAN"             => :long_term_debt,
+        "BOND_PAYABLE"          => :bond_payable,
+        "NONCURRENT_LIAB_1YEAR" => :noncurrent_liab_1year
+      }.freeze
+
       # 现金流量表字段映射：API列名 → 模型字段
       CASHFLOW_FIELDS = {
         "NETCASH_OPERATE"  => :operating_cash_flow,
@@ -68,12 +79,19 @@ module DataSources
         # 只更新已存在的 FinancialIndicator 记录，成败不计入四表判定
         fetch_f10_supplement(stock, secucode, market)
 
+        # F10 资产负债表科目（有息负债/归母净资产）：只更新已存在的 BalanceSheet 记录，
+        # 成败同样不计入四表判定；金融股在通用报表无数据且计算时 flag=3 剔除，跳过省请求
+        fetch_f10_balance(stock, secucode, market) unless DataSources::UnleveredRoeService.financial_stock?(stock)
+
         success_count = results.count { |r| r[:status] == :success }
         fail_count = results.count { |r| r[:status] == :failed }
 
         # 清理不在保留期次内的历史残留记录（历史抓取未记录期次，中报/季报被标成年报）
         periods = fetch_report_periods(secucode)
         cleanup_stale_records(stock, market, periods) if periods.any?
+
+        # 无杠杆ROE：基于已入库科目重算全部期次（纯本地计算，不发请求）
+        DataSources::UnleveredRoeService.call(stock: stock, market: market)
 
         # success: 是否有报表抓取失败；changed: 是否有报表数据新建/更新了记录
         { success: fail_count == 0, changed: success_count > 0 }
@@ -158,6 +176,53 @@ module DataSources
         response = http_get(CN_DATA_URL, params: params)
         items = extract_data_list(response)
         save_indicator_items(stock, items, market, "indicator")
+      end
+
+      # F10 资产负债表科目补充抓取：有息负债四科目 + 归母净资产（无杠杆ROE 数据源）
+      # 按 (stock_id, report_date, market) 匹配已入库的 BalanceSheet 并更新，
+      # 记录不存在则跳过（不新建期次，保留策略由四表主流程控制）；
+      # 与 fetch_f10_supplement 同口径：源端某轮返回 null 不得抹掉已回填值（compact）
+      def fetch_f10_balance(stock, secucode, market)
+        params = {
+          reportName: "RPT_F10_FINANCE_GBALANCE",
+          columns: "SECUCODE,REPORT_DATE,#{F10_BALANCE_FIELDS.keys.join(',')}",
+          filter: %((SECUCODE="#{secucode}")),
+          pageNumber: 1, pageSize: 500,
+          sortTypes: -1, sortColumns: "REPORT_DATE",
+          source: "WEB", client: "WEB"
+        }
+        response = http_get(CN_DATA_URL, params: params)
+        items = extract_data_list(response)
+        unless items.any?
+          log_progress(stock, "f10_balance", :failed, "no data")
+          return { status: :failed }
+        end
+
+        updated = 0
+        items.each do |item|
+          date_str = item["REPORT_DATE"].to_s.split(" ").first
+          next if date_str.empty?
+          report_date = Date.parse(date_str)
+
+          balance = BalanceSheet.find_by(stock_id: stock.id, report_date: report_date, market: market)
+          next unless balance
+
+          data = {}
+          F10_BALANCE_FIELDS.each { |api_field, model_field| data[model_field] = parse_decimal(item[api_field]) }
+          next unless data.any? { |k, v| !v.nil? && balance.send(k) != v }
+
+          balance.update!(data.compact)
+          updated += 1
+        rescue ArgumentError
+          next
+        end
+
+        status = updated > 0 ? :success : :skipped
+        log_progress(stock, "f10_balance", status, "#{updated} updated")
+        { status: status, count: updated }
+      rescue => e
+        log_progress(stock, "f10_balance", :failed, e.message)
+        { status: :failed, error: e.message }
       end
 
       # F10 主要财务数据补充抓取：扣非归母净利润/扣非加权ROE/披露日期/稀释EPS

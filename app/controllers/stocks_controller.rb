@@ -19,7 +19,7 @@ class StocksController < ApplicationController
   before_action :set_stock, only: [:show, :indicator_detail, :monthly_trend]
 
   # 财务指标格式化统一走 format_value，视图单元格与弹窗接口口径一致
-  helper_method :format_value
+  helper_method :format_value, :indicator_cell_reason
 
   def autocomplete
     query = params[:q].to_s.squish
@@ -200,7 +200,7 @@ class StocksController < ApplicationController
   def valid_indicators
     [
       :roe, :roa, :gross_margin, :net_profit_margin, :eps,
-      :deducted_roe_weighted,
+      :deducted_roe_weighted, :unlevered_roe,
       :asset_liab_ratio, :asset_turnover_ratio, :net_income,
       :cash_to_assets_ratio, :receivable_turnover, :avg_collection_days,
       :fixed_asset_turnover, :cash_and_cash_equivalents,
@@ -246,11 +246,23 @@ class StocksController < ApplicationController
   # 趋势图单点：label 为 x 轴显示文案（年报 2025 / 季报 2026中报）
   def build_data_point(label, data, indicator_key)
     value = data&.[](indicator_key.to_sym)
-    {
+    point = {
       label: label,
       value: value,
       formatted: format_value(value, indicator_key)
     }
+    # 带状态标记的指标（如 unlevered_roe）随点透出 flag，供前端标注异常值原因
+    flag = data&.[](:"#{indicator_key}_flag")
+    point[:flag] = flag unless flag.nil?
+    point
+  end
+
+  # 财务表单元格悬浮原因：带状态 flag 的指标（如 unlevered_roe）flag≠0 时
+  # 说明 "—" 的具体语义（金融股剔除/未披露/净资产≤0）；Ruby 中 0 为真值需显式排除
+  def indicator_cell_reason(data, indicator_key)
+    flag = data && data[:"#{indicator_key}_flag"]
+    return nil if flag.nil? || flag.to_i.zero?
+    DataSources::UnleveredRoeService.flag_reason(flag)
   end
 
   def get_indicator_info(indicator_key)
@@ -278,6 +290,18 @@ class StocksController < ApplicationController
           good: '15% ≤ 扣非加权ROE ≤ 20%：主业盈利能力优秀，值得关注',
           normal: '10% ≤ 扣非加权ROE < 15%：主业盈利能力一般，需结合ROE对比评估',
           poor: '扣非加权ROE < 10%：主业盈利能力较弱；若明显低于ROE，需警惕利润依赖一次性损益'
+        }
+      },
+      unlevered_roe: {
+        name: '无杠杆 ROE(Unlevered ROE)',
+        description: '无杠杆ROE衡量假设公司完全不借钱时，全部股东资本（自有净资产+借入的有息负债）的真实回报。它在ROE的分母中加回有息负债、在分子中加回税后利息费用，剥掉杠杆对ROE的垫高效应，使高负债与低负债公司的盈利能力可以直接对比。若某公司ROE明显高于无杠杆ROE，说明其回报主要靠借钱放大而非经营能力，需警惕利率上行或再融资风险。银行、券商、保险等以负债为经营原料的行业不适用本指标（显示为—）。',
+        formula: '无杠杆ROE = (归母净利润TTM + 财务费用TTM × (1 − 实际税率)) ÷ (归母净资产 + 短期借款 + 长期借款 + 应付债券 + 一年内到期的非流动负债) × 100%',
+        unit: '%',
+        interpretation: {
+          excellent: '无杠杆ROE > 15%：不靠借钱就有出色回报，盈利质量扎实',
+          good: '10% ≤ 无杠杆ROE ≤ 15%：资本回报良好，对杠杆依赖有限',
+          normal: '5% ≤ 无杠杆ROE < 10%：自有资本回报一般，需结合ROE判断杠杆贡献',
+          poor: '无杠杆ROE < 5%：真实资本回报偏弱；若ROE明显更高，说明主要靠负债放大'
         }
       },
       roa: {

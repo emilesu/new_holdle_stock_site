@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_10_25_120000) do
+ActiveRecord::Schema[7.1].define(version: 2026_11_02_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -107,6 +107,9 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_25_120000) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "period_type", default: "annual", null: false, comment: "期次类型（annual/q1/h1/q3，累计口径）"
+    t.decimal "parent_equity", precision: 20, scale: 2, comment: "归母净资产（源TOTAL_PARENT_EQUITY）"
+    t.decimal "bond_payable", precision: 20, scale: 2, comment: "应付债券（源BOND_PAYABLE）"
+    t.decimal "noncurrent_liab_1year", precision: 20, scale: 2, comment: "一年内到期的非流动负债（源NONCURRENT_LIAB_1YEAR）"
     t.index ["financial_report_id", "report_date"], name: "idx_balance_sheets_report_date"
     t.index ["financial_report_id"], name: "index_balance_sheets_on_financial_report_id"
     t.index ["stock_id", "period_type", "report_date"], name: "idx_balance_sheets_stock_period_date"
@@ -235,6 +238,8 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_25_120000) do
     t.decimal "deducted_roe_weighted", precision: 20, scale: 2, comment: "扣非加权平均ROE"
     t.date "disclosed_at", comment: "披露日期"
     t.decimal "eps_diluted", precision: 20, scale: 2, comment: "稀释每股收益（源EPSXS）"
+    t.decimal "unlevered_roe", precision: 20, scale: 2, comment: "无杠杆ROE%（口径B：归母净利TTM+税后净财务费用 ÷ 归母净资产+有息负债）"
+    t.integer "unlevered_roe_flag", comment: "无杠杆ROE状态（0正常/1未披露/2净资产≤0/3金融股；NULL=未计算）"
     t.index ["financial_report_id", "report_date"], name: "idx_fin_indicators_report_date"
     t.index ["financial_report_id"], name: "index_financial_indicators_on_financial_report_id"
     t.index ["report_date"], name: "idx_fi_annual_report_date", where: "((period_type)::text = 'annual'::text)"

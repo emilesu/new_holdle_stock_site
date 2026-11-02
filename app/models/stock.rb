@@ -386,6 +386,10 @@ class Stock < ApplicationRecord
       roe: indicator&.roe_avg || calculate_roe(income, balance),
       # 扣非加权ROE：仅A股由东财 F10（ROEKCJQ）回填，港股/美股无此数据
       deducted_roe_weighted: indicator&.deducted_roe_weighted,
+      # 无杠杆ROE：仅A股由 UnleveredRoeService 基于已入库科目计算（口径B），港股/美股 P2/P3 接入；
+      # flag 随值透出，前端对 flag≠0 的 "—" 显示悬浮原因
+      unlevered_roe: indicator&.unlevered_roe,
+      unlevered_roe_flag: indicator&.unlevered_roe_flag,
       roa: calculate_roa(income, balance),
       eps: indicator&.basic_eps,
       cash_flow_ps: indicator&.ncf_from_oa_ps,
