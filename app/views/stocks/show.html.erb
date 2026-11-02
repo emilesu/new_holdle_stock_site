@@ -229,7 +229,8 @@
                   <% end %>
                 </tr>
               </thead>
-              <tbody class="divide-y divide-line-soft">
+              <%# 行分隔线由 application.tailwind.css 的 border-separate 规则绘制（td 边框按设备像素吸附，1px 线不随小数表格原点发虚） %>
+              <tbody>
                 <% table[:rows].each do |row_label, indicator_key| %>
                   <tr class="cursor-pointer indicator-row financial-row" data-indicator="<%= indicator_key %>">
                     <td class="px-6 py-3 text-hl-13 text-muted font-medium whitespace-nowrap sticky left-0 z-20 bg-white" data-hover-zone="annual"><%= row_label %></td>

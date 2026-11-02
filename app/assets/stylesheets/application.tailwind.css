@@ -803,15 +803,25 @@
 .hl-quarter-hover-hk { --hl-quarter-hover: var(--color-amber-100); }
 .hl-quarter-hover-us { --hl-quarter-hover: var(--color-blue-100); }
 
-/* 行分隔线偶发消失修复：根字号 14px 下 py-3=10.5px、13px 文字行高 1.6=20.8px，
-   行高 41.8px 为小数，1px divide 线落在小数坐标被抗锯齿稀释（line-soft 本就近白），
-   仅恰好对齐整像素的线可见，刷新/滚动后取整结果变化即"有的线看不见"。
-   强制整数行度量 10+20+10=40px，使每条分隔线都落在整像素上。
+/* 行分隔线偶发消失修复（两层）：
+   1) 根字号 14px 下 py-3=10.5px、13px 文字行高 1.6=20.8px，行高 41.8px 小数累积
+      使各条线的小数偏移不一（部分恰好落整像素才可见）；强制整数度量消除累积。
+   2) 真正主因：表格原点 y 本身是小数（实测 240.28，由上方图表区高度决定），
+      border-collapse 模型下 1px 线在横向合成滚动容器内不做设备像素吸附，
+      整组线一起落在小数坐标 → 全部发虚。改 border-separate 模型后单元格
+      边框按设备像素取整，1px 线恒清晰；附带修复分隔线在 sticky 指标列下断头。
    选择器含属性+元素（0-1-2），稳定压过 td/th 上的 py-3 工具类（0-1-0） */
+[data-controller="financial-table"] table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
 [data-controller="financial-table"] thead th,
 [data-controller="financial-table"] tbody td {
   padding-block: 10px;
   line-height: 20px;
+}
+[data-controller="financial-table"] tbody > tr + tr > td {
+  border-top: 1px solid var(--color-line-soft);
 }
 
 /* ==================== 让 footer 始终在底部（极简 flex 布局） ==================== */
