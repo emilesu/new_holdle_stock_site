@@ -803,6 +803,17 @@
 .hl-quarter-hover-hk { --hl-quarter-hover: var(--color-amber-100); }
 .hl-quarter-hover-us { --hl-quarter-hover: var(--color-blue-100); }
 
+/* 行分隔线偶发消失修复：根字号 14px 下 py-3=10.5px、13px 文字行高 1.6=20.8px，
+   行高 41.8px 为小数，1px divide 线落在小数坐标被抗锯齿稀释（line-soft 本就近白），
+   仅恰好对齐整像素的线可见，刷新/滚动后取整结果变化即"有的线看不见"。
+   强制整数行度量 10+20+10=40px，使每条分隔线都落在整像素上。
+   选择器含属性+元素（0-1-2），稳定压过 td/th 上的 py-3 工具类（0-1-0） */
+[data-controller="financial-table"] thead th,
+[data-controller="financial-table"] tbody td {
+  padding-block: 10px;
+  line-height: 20px;
+}
+
 /* ==================== 让 footer 始终在底部（极简 flex 布局） ==================== */
 @layer utilities {
   body {
