@@ -14,6 +14,7 @@ module Admin
       @today_registered_users = User.where(created_at: Date.current.all_day).count
       
       # 会员统计
+      @student_count = User.where(role: 'student').count
       @member_count = User.where(role: 'member').count
       @admin_count = User.where(role: 'admin').count + User.where(role: 'super_admin').count
       

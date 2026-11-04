@@ -250,9 +250,24 @@ module ApplicationHelper
     when "super_admin" then "超级管理员"
     when "admin" then "管理员"
     when "member" then "会员"
+    when "student" then "课程学员"
     when "user" then "访客"
     else role.humanize
     end
+  end
+
+  # 内容访问级别标签（三级阶梯：0=公开 1=学员 2=会员，见迁移 20261104120000）
+  def access_level_label(level)
+    case level.to_i
+    when User::TIER_STUDENT then "学员"
+    when User::TIER_MEMBER then "会员"
+    else "公开"
+    end
+  end
+
+  # 内容访问不足时的引导文案：按所需档位区分学员 / 会员
+  def tier_unlock_hint(level)
+    level.to_i == User::TIER_STUDENT ? "该内容为课程学员专属，¥268 开通后可见" : "该内容为会员专属，升级会员后可见"
   end
 
   def user_avatar_tag(user, css_class: "", size: nil)

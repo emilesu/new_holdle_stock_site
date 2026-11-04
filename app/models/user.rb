@@ -3,8 +3,14 @@ class User < ApplicationRecord
          :recoverable, :rememberable, :validatable,
          :omniauthable, omniauth_providers: [:wechat, :wechat_mobile, :google_oauth2]
 
+  # 内容权限阶梯（access_level 与本组常量同义：数值越大要求身份越高）
+  TIER_VISITOR = 0 # 访客
+  TIER_STUDENT = 1 # 课程学员（268）
+  TIER_MEMBER  = 2 # 会员（468）
+
   enum role: {
     user: "user",
+    student: "student",
     member: "member",
     admin: "admin",
     super_admin: "super_admin"
@@ -74,6 +80,19 @@ class User < ApplicationRecord
     role == "user" && !is_member?
   end
 
+  # 课程学员身份（不含会员：会员用 is_member?，两者判断互不影响存量逻辑）
+  def is_student?
+    role == "student"
+  end
+
+  # 内容访问档位：会员（含管理员）=2，学员=1，其余=0。
+  # 内容门控统一用 `user&.content_tier || 0 >= access_level` 比较
+  def content_tier
+    return TIER_MEMBER if is_member?
+    return TIER_STUDENT if is_student?
+    TIER_VISITOR
+  end
+
   def was_previously_member?
     previous_role = saved_changes["role"]&.first
     previous_role.in?(%w[member admin super_admin])
@@ -139,6 +158,8 @@ class User < ApplicationRecord
   def member_status
     if is_admin?
       "永久会员"
+    elsif is_student?
+      "课程学员"
     elsif member_expire_at.present?
       member_expire_at > Time.current ? "会员（#{I18n.l(member_expire_at.to_date)} 到期）" : "会员已过期（#{I18n.l(member_expire_at.to_date)}）"
     else

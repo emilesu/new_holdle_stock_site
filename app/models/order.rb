@@ -52,6 +52,8 @@ class Order < ApplicationRecord
     if plan.is_member_upgrade
       upgrade_user_to_member!
       grant_or_convert_member_key!
+    elsif plan.is_student_upgrade
+      upgrade_user_to_student!
     else
       grant_or_topup_quota_key!(plan)
     end
@@ -90,5 +92,11 @@ class Order < ApplicationRecord
     # 管理员/超管不会被降级（微信回调不经前端拦截，防止 admin 被误降级为 member）
     return if user.is_admin?
     user.update!(role: :member, member_expire_at: 50.years.from_now)
+  end
+
+  # 268 课程学员：仅置角色，不动 AI Key（学员保持 welcome 15 次）；学员→会员走 is_member_upgrade 分支
+  def upgrade_user_to_student!
+    return if user.is_admin? || user.is_member?
+    user.update!(role: :student)
   end
 end

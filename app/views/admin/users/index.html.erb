@@ -16,6 +16,7 @@
           <select name="role" class="px-4 py-2.5 border border-line rounded text-hl-13 focus:outline-none focus:border-ink bg-white">
             <option value="all" <%= 'selected' if params[:role] == 'all' || params[:role].blank? %>>全部角色</option>
             <option value="user" <%= 'selected' if params[:role] == 'user' %>>访客</option>
+            <option value="student" <%= 'selected' if params[:role] == 'student' %>>课程学员</option>
             <option value="member" <%= 'selected' if params[:role] == 'member' %>>会员</option>
             <option value="admin" <%= 'selected' if params[:role] == 'admin' %>>管理员</option>
             <option value="super_admin" <%= 'selected' if params[:role] == 'super_admin' %>>超级管理员</option>
@@ -73,6 +74,7 @@
                   <%= case user.role
                        when 'super_admin' then 'bg-red-50 text-profit'
                        when 'admin' then 'bg-purple-50 text-purple-700'
+                       when 'student' then 'bg-amber-50 text-amber-700'
                        when 'member' then 'bg-blue-50 text-link'
                        else 'bg-bg-mute text-muted-3'
                      end %>">

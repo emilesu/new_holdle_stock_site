@@ -25,7 +25,7 @@
 
     <div>
       <%= f.label :access_level, '访问级别', class: 'block text-sm font-medium text-gray-700 mb-1' %>
-      <%= f.select :access_level, options_for_select([['公开', 0], ['会员', 1]], course.access_level), {}, class: 'px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500' %>
+      <%= f.select :access_level, options_for_select([['公开', 0], ['学员', 1], ['会员', 2]], course.access_level), {}, class: 'px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500' %>
     </div>
 
     <div>

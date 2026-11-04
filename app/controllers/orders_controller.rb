@@ -115,6 +115,8 @@ class OrdersController < ApplicationController
   # 缺省(无 plan 参数) → 主推 member_permanent 468；非法 code 查不到 → 返回 nil（明确报错，不回退高价）
   def find_purchasable_plan(code)
     purchasable = Plan.active.where.not(plan_code: "welcome")
+    # 200 补差档仅课程学员可购：非学员直接查不到（防绕过前端直购低价升会员）
+    purchasable = purchasable.where.not(plan_code: "member_from_student") unless current_user.is_student?
     code.present? ? purchasable.find_by(plan_code: code) : purchasable.find_by(plan_code: "member_permanent")
   end
 

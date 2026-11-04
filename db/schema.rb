@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_11_02_120000) do
+ActiveRecord::Schema[7.1].define(version: 2026_11_04_120100) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -50,7 +50,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_11_02_120000) do
     t.text "summary", comment: "简介/摘要"
     t.text "content", comment: "Markdown 正文内容"
     t.boolean "is_published", default: false, comment: "发布状态(false=草稿, true=发布)"
-    t.integer "access_level", default: 0, comment: "访问级别(0=公开, 1=会员)"
+    t.integer "access_level", default: 0, comment: "访问级别(0=公开, 1=学员, 2=会员)"
     t.integer "sort", default: 0, comment: "排序权重"
     t.datetime "published_at", comment: "发布时间"
     t.datetime "created_at", null: false
@@ -147,7 +147,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_11_02_120000) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.bigint "course_id", null: false
-    t.integer "access_level", comment: "访问级别（null=继承课程，0=公开，1=会员）"
+    t.integer "access_level", comment: "访问级别（null=继承课程，0=公开，1=学员，2=会员）"
     t.index ["course_id"], name: "index_chapters_on_course_id"
   end
 
@@ -155,7 +155,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_11_02_120000) do
     t.string "title", null: false
     t.text "description"
     t.boolean "is_published", default: false
-    t.integer "access_level", default: 0
+    t.integer "access_level", default: 0, comment: "访问级别(0=公开, 1=学员, 2=会员)"
     t.integer "sort", default: 0
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
@@ -316,7 +316,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_11_02_120000) do
     t.boolean "is_published", default: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.integer "access_level", comment: "访问级别（null=继承章节，0=公开，1=会员）"
+    t.integer "access_level", comment: "访问级别（null=继承章节，0=公开，1=学员，2=会员）"
     t.index ["chapter_id"], name: "index_lessons_on_chapter_id"
   end
 
@@ -382,6 +382,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_11_02_120000) do
     t.boolean "active", default: true, comment: "是否在售"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.boolean "is_student_upgrade", default: false, comment: "是否学员单（268 档=true，履约时 role 置 student）"
     t.index ["plan_code"], name: "index_plans_on_plan_code", unique: true
   end
 

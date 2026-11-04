@@ -1,4 +1,4 @@
-# 金字塔评分排行：板块 / 行业筛选与完整榜单为会员专属，非会员仅展示示例（A股公用事业 Top 5，分数与标签打码）
+# 金字塔评分排行：板块 / 行业筛选与完整榜单为课程学员（268）及以上权益，访客仅展示示例（A股公用事业 Top 5，分数与标签打码）
 class PyramidsController < ApplicationController
   PER_PAGE = 20
   # 非会员示例条件：固定 A股「公用事业」板块，仅取 Top 5（真实股票，分数/标签在前端渲染为掩码）
@@ -6,11 +6,11 @@ class PyramidsController < ApplicationController
   DEMO_SECTOR = '公用事业'
   DEMO_LIMIT = 5
 
-  # 非会员不允许执行真实筛选：绕过前端遮罩直接请求筛选 / 分页接口时一律拒绝
-  before_action :require_member_access, only: %i[update_sectors update_industries update_list load_more]
+  # 学员及以上才允许真实筛选：绕过前端遮罩直接请求筛选 / 分页接口时一律拒绝
+  before_action :require_pyramid_access, only: %i[update_sectors update_industries update_list load_more]
 
   def index
-    @is_member = member_access?
+    @is_member = pyramid_access? # 视图沿用该变量名：语义为"有金字塔完整权限"（学员 / 会员 / 管理员）
     @can_select_sector = @is_member
 
     if @is_member
@@ -125,7 +125,7 @@ class PyramidsController < ApplicationController
   end
 
   def permission
-    render json: { can_select_sector: user_signed_in? && current_user.is_member? }
+    render json: { can_select_sector: pyramid_access? }
   end
 
   def load_more
@@ -155,14 +155,14 @@ class PyramidsController < ApplicationController
 
   private
 
-  # 会员（含管理员）才有板块 / 行业筛选与完整榜单权限
-  def member_access?
-    user_signed_in? && current_user.is_member?
+  # 课程学员（268）及以上才有板块 / 行业筛选与完整榜单权限（会员 / 管理员天然包含）
+  def pyramid_access?
+    user_signed_in? && current_user.content_tier >= User::TIER_STUDENT
   end
 
-  # 非会员不允许执行真实筛选：绕过前端遮罩直接调筛选 / 分页接口时返回 403
-  def require_member_access
-    head :forbidden unless member_access?
+  # 学员以下身份不允许执行真实筛选：绕过前端遮罩直接调筛选 / 分页接口时返回 403
+  def require_pyramid_access
+    head :forbidden unless pyramid_access?
   end
 
   # 获取某市场某板块下的行业列表（带缓存）

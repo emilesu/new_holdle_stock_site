@@ -16,17 +16,20 @@ class Lesson < ApplicationRecord
   end
 
   def public?
-    effective_access_level == 0
+    effective_access_level.to_i == User::TIER_VISITOR
+  end
+
+  def student_only?
+    effective_access_level.to_i == User::TIER_STUDENT
   end
 
   def member_only?
-    effective_access_level == 1
+    effective_access_level.to_i == User::TIER_MEMBER
   end
 
   def available_to?(user)
     return false unless published?
-    return true if public?
-    member_only? && user&.is_member?
+    (user&.content_tier || User::TIER_VISITOR) >= effective_access_level.to_i
   end
 
   def markdown_html

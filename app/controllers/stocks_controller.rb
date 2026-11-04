@@ -59,8 +59,8 @@ class StocksController < ApplicationController
     # 右侧同比两列：[去年同期同一期次, 最近一期定期报告]
     @quarter_columns = @detail_financials[:quarters]
 
-    # 会员/管理员才享有金字塔分值排序；访客与非会员保持近五年ROE排序（原有体验）
-    @is_member = user_signed_in? && current_user.is_member?
+    # 课程学员（268）及以上才享有金字塔分值排序；访客保持近五年ROE排序（原有体验）
+    @is_member = user_signed_in? && current_user.content_tier >= User::TIER_STUDENT
 
     cached_comparison_data = Rails.cache.fetch(
       # v2：对比栏 item 新增 pyramid_score 键，升级版本号避免命中旧格式缓存导致会员排序崩溃

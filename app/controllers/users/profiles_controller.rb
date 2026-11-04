@@ -55,7 +55,8 @@ class Users::ProfilesController < ApplicationController
   # 参数全部白名单化，非法值一律回退为「不过滤」，避免任何参数组合导致 500
   def favorites
     authorize @user
-    @is_member = current_user.is_member?
+    # 收藏页金字塔分展示：课程学员（268）及以上可见
+    @is_member = current_user.content_tier >= User::TIER_STUDENT
     @q = normalize_query(params[:q])
     @market = whitelist(params[:market], %w[CN HK US])
     @sector_options = favorite_sectors

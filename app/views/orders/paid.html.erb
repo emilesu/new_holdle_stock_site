@@ -17,6 +17,8 @@
           <p class="text-hl-13 text-muted">
             <% if plan&.is_member_upgrade %>
               <%= plan&.name.presence || "HOLDLE会员" %>已生效，你的 Key 已转为无限次使用
+            <% elsif plan&.is_student_upgrade %>
+              课程学员已生效：金字塔完整解锁 + 学员课程/文章，AI 助手保持 15 次
             <% else %>
               次数已到账，可立即开始提问
             <% end %>
