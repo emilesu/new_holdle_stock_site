@@ -193,7 +193,7 @@ class ProfilesControllerTest < ActionDispatch::IntegrationTest
     # 框架层元数据：金字塔分同源回填 + 重算时间 + 常驻免责
     assert_includes response.body, "800"
     assert_includes response.body, "不构成投资建议"
-    assert_includes response.body, "AI 生成"
+    refute_includes response.body, "AI 生成"
   end
 
   test "superseded 旧期经历史入口仍可读" do

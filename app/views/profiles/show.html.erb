@@ -57,9 +57,6 @@
             <div class="flex flex-wrap items-center gap-2 mb-4 text-hl-12">
               <span class="inline-flex px-2 py-0.5 font-medium bg-bg-mute text-muted-3 border border-line-soft rounded">会员</span>
               <span class="inline-flex px-2 py-0.5 font-medium rounded <%= market_badge_class(@stock.market) %>"><%= market_label(@stock.market) %></span>
-              <% if @content.meta["ai_generated"] == true %>
-                <span class="inline-flex px-2 py-0.5 font-medium bg-bg-mute text-muted-3 border border-line-soft rounded">AI 生成</span>
-              <% end %>
               <span class="text-muted-4 ml-auto"><%= l(@profile.published_at.to_date, format: :long) if @profile.published_at %></span>
             </div>
             <h1 class="text-hl-22 font-semibold text-ink leading-snug"><%= @content.title %></h1>
@@ -164,9 +161,6 @@
           <div class="flex flex-wrap items-center gap-2 mb-4 text-hl-12">
             <span class="inline-flex px-2 py-0.5 font-medium bg-bg-mute text-muted-3 border border-line-soft rounded">会员</span>
             <span class="inline-flex px-2 py-0.5 font-medium rounded <%= market_badge_class(@stock.market) %>"><%= market_label(@stock.market) %></span>
-            <% if @content.meta["ai_generated"] == true %>
-              <span class="inline-flex px-2 py-0.5 font-medium bg-bg-mute text-muted-3 border border-line-soft rounded">AI 生成</span>
-            <% end %>
             <span class="text-muted-4 ml-auto"><%= l(@profile.published_at.to_date, format: :long) if @profile.published_at %></span>
           </div>
           <h1 class="text-hl-22 font-semibold text-ink leading-snug"><%= @display_title %></h1>
