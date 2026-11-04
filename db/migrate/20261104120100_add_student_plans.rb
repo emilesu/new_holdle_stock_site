@@ -6,25 +6,25 @@ class AddStudentPlans < ActiveRecord::Migration[7.1]
   def up
     add_column :plans, :is_student_upgrade, :boolean, default: false, comment: "是否学员单（268 档=true，履约时 role 置 student）"
 
-    Plan.create!(
-      plan_code: "student_course",
-      name: "HOLDLE课程学员",
-      price_cents: 26800,
-      quota: 15, # 仅展示用（学员不改变 Key 次数）；履约走 is_student_upgrade 分支
-      is_member_upgrade: false,
-      is_student_upgrade: true,
-      active: true
-    )
+    # find_or_create_by：plans 为后台手工维护的存量数据（见 DownlistPerTierPlans 注释），
+    # 若生产已被人工预插同码行，create! 会因 uniqueness 校验抛异常中断部署
+    Plan.find_or_create_by!(plan_code: "student_course") do |p|
+      p.name = "HOLDLE课程学员"
+      p.price_cents = 26800
+      p.quota = 15 # 仅展示用（学员不改变 Key 次数）；履约走 is_student_upgrade 分支
+      p.is_member_upgrade = false
+      p.is_student_upgrade = true
+      p.active = true
+    end
 
-    Plan.create!(
-      plan_code: "member_from_student",
-      name: "HOLDLE会员（学员补差价）",
-      price_cents: 20000,
-      quota: nil, # 无限次（is_member_upgrade 履约时同 member_permanent）
-      is_member_upgrade: true,
-      is_student_upgrade: false,
-      active: true
-    )
+    Plan.find_or_create_by!(plan_code: "member_from_student") do |p|
+      p.name = "HOLDLE会员（学员补差价）"
+      p.price_cents = 20000
+      p.quota = nil # 无限次（is_member_upgrade 履约时同 member_permanent）
+      p.is_member_upgrade = true
+      p.is_student_upgrade = false
+      p.active = true
+    end
   end
 
   def down

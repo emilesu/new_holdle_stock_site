@@ -26,8 +26,7 @@ class CoursesController < ApplicationController
       return
     end
     unless @course.available_to?(current_user)
-      hint = @course.student_only? ? '该内容为课程学员专属，¥268 开通后可见' : '该课程仅限会员访问，请升级会员'
-      redirect_to courses_path, alert: hint
+      redirect_to courses_path, alert: helpers.tier_unlock_hint(@course.access_level)
     end
   end
 end

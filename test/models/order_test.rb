@@ -5,6 +5,8 @@ class OrderTest < ActiveSupport::TestCase
     Plan.create!(plan_code: "welcome", name: "新用户体验", price_cents: 0, quota: 15)
     Plan.create!(plan_code: "starter", name: "尝鲜包", price_cents: 500, quota: 20)
     Plan.create!(plan_code: "member_permanent", name: "永久会员", price_cents: 46_800, quota: nil, is_member_upgrade: true)
+    Plan.create!(plan_code: "student_course", name: "HOLDLE课程学员", price_cents: 26_800, quota: 15, is_student_upgrade: true)
+    Plan.create!(plan_code: "member_from_student", name: "HOLDLE会员（学员补差价）", price_cents: 20_000, quota: nil, is_member_upgrade: true)
   end
 
   def build_order(user, plan_code: "starter", quota: 20)
@@ -119,6 +121,60 @@ class OrderTest < ActiveSupport::TestCase
 
     assert admin.reload.admin?, "管理员不应被支付回调降级"
     assert_equal "member_permanent", admin.api_keys.active.first.plan_code
+  end
+
+  # ===== 课程学员档位（v1.78.0）=====
+
+  def build_welcome_key(user, quota: 15)
+    plain = "hl_" + SecureRandom.hex(8)
+    ApiKey.create!(
+      key_hash: Digest::SHA256.hexdigest(plain),
+      key_prefix: plain[0, 11],
+      user: user,
+      plan_code: "welcome",
+      quota_remaining: quota,
+      quota_total: quota
+    )
+  end
+
+  test "购买 268：访客升级为课程学员，AI Key 次数保持不变" do
+    user = users(:one)
+    key = build_welcome_key(user)
+
+    order = build_order(user, plan_code: "student_course", quota: 15)
+    order.mark_as_paid!(transaction_id: "tx-stu-1", notify_data: {})
+
+    assert user.reload.student?, "支付后应升级为课程学员"
+    assert_equal "welcome", key.reload.plan_code, "学员单不应改变 Key 套餐"
+    assert_equal 15, key.quota_remaining, "学员单不应增减 AI 次数"
+  end
+
+  test "学员重复购买 268：履约幂等，角色与 Key 不变" do
+    user = users(:one)
+    user.update!(role: :student)
+    key = build_welcome_key(user)
+
+    order = build_order(user, plan_code: "student_course", quota: 15)
+    order.mark_as_paid!(transaction_id: "tx-stu-2", notify_data: {})
+
+    assert user.reload.student?, "重复支付不应改变角色"
+    assert_equal 1, user.api_keys.active.count
+    assert_equal 15, key.reload.quota_remaining
+  end
+
+  test "学员补差 200 升会员：同一把 Key 转为无限次" do
+    user = users(:one)
+    user.update!(role: :student)
+    key = build_welcome_key(user)
+
+    order = build_order(user, plan_code: "member_from_student", quota: nil)
+    order.mark_as_paid!(transaction_id: "tx-stu-3", notify_data: {})
+
+    assert user.reload.member?, "补差后应升级为会员"
+    assert_equal 1, user.api_keys.active.count, "不应新开 key"
+    assert_equal key.id, user.api_keys.active.first.id, "应为同一把 key"
+    assert_equal "member_permanent", key.reload.plan_code
+    assert_nil key.quota_remaining, "会员 key 应为无限次"
   end
 
   # ===== 支付宝渠道 =====

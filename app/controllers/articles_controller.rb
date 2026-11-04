@@ -25,8 +25,7 @@ class ArticlesController < ApplicationController
       return
     end
     unless @article.available_to?(current_user)
-      hint = @article.student_only? ? '该内容为课程学员专属，¥268 开通后可见' : '该内容仅限会员访问，请升级会员'
-      redirect_to articles_path, alert: hint
+      redirect_to articles_path, alert: helpers.tier_unlock_hint(@article.access_level)
     end
   end
 end

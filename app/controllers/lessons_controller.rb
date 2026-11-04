@@ -28,8 +28,7 @@ class LessonsController < ApplicationController
       return
     end
     unless lesson.available_to?(current_user)
-      hint = lesson.student_only? ? '该内容为课程学员专属，¥268 开通后可见' : '该内容仅限会员访问，请升级会员'
-      redirect_to courses_path, alert: hint
+      redirect_to courses_path, alert: helpers.tier_unlock_hint(lesson.effective_access_level)
     end
   end
 end

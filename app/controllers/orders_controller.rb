@@ -1,6 +1,6 @@
 class OrdersController < ApplicationController
   before_action :authenticate_user!
-  before_action :redirect_if_already_member, only: [:new, :create]
+  before_action :redirect_if_already_purchased, only: [:new, :create]
   helper_method :wechat_in_app_browser?
 
   def new
@@ -128,9 +128,13 @@ class OrdersController < ApplicationController
     request.user_agent.to_s.include?("MicroMessenger") ? "wechat_jsapi" : "wechat_native"
   end
 
-  def redirect_if_already_member
+  # 已购身份防重复付费：会员挡全部套餐；学员挡 268 学员档重复购买
+  # （学员重复购 268 履约是 no-op，白花冤枉钱；补差 200 升会员不受影响）
+  def redirect_if_already_purchased
     if current_user.is_member?
       redirect_to root_path, notice: "你已经是会员了"
+    elsif current_user.is_student? && params[:plan].to_s == "student_course"
+      redirect_to root_path, notice: "你已经是课程学员，无需重复购买；如需升级会员可补差价 200 元"
     end
   end
 
