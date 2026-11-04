@@ -84,11 +84,7 @@
           </div>
 
           <p class="text-hl-16 font-semibold text-ink mb-5">
-            <% if is_student_plan %>
-              学员身份 · AI 15 次
-            <% else %>
-              <%= plan.quota.nil? ? "无限次" : "#{plan.quota} 次" %>
-            <% end %>
+            <%= plan.quota.nil? ? "AI助手·无限次" : "AI助手·#{plan.quota}次" %>
           </p>
 
           <ul class="text-hl-13 text-muted space-y-2 mb-6 flex-1">

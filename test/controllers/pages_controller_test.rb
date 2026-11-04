@@ -41,7 +41,7 @@ class PagesControllerTest < ActionDispatch::IntegrationTest
     get plans_path
     assert_response :success
     assert_match "永久会员", response.body
-    assert_match "解锁进阶实战 · AI投研助手无限次", response.body
+    assert_match "开通会员 · AI投研助手无限次", response.body
     assert_match "当前账号", response.body
   end
 end

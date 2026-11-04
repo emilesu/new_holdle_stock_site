@@ -5,8 +5,8 @@ class OrderTest < ActiveSupport::TestCase
     Plan.create!(plan_code: "welcome", name: "新用户体验", price_cents: 0, quota: 15)
     Plan.create!(plan_code: "starter", name: "尝鲜包", price_cents: 500, quota: 20)
     Plan.create!(plan_code: "member_permanent", name: "永久会员", price_cents: 46_800, quota: nil, is_member_upgrade: true)
-    Plan.create!(plan_code: "student_course", name: "HOLDLE课程学员", price_cents: 26_800, quota: 15, is_student_upgrade: true)
-    Plan.create!(plan_code: "member_from_student", name: "HOLDLE会员（学员补差价）", price_cents: 20_000, quota: nil, is_member_upgrade: true)
+    Plan.create!(plan_code: "student_course", name: "HOLDLE-课程学员", price_cents: 26_800, quota: 15, is_student_upgrade: true)
+    Plan.create!(plan_code: "member_from_student", name: "HOLDLE-会员（学员补差价）", price_cents: 20_000, quota: nil, is_member_upgrade: true)
   end
 
   def build_order(user, plan_code: "starter", quota: 20)

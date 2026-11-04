@@ -8,8 +8,8 @@ class OrdersControllerTest < ActionDispatch::IntegrationTest
     sign_in users(:one)
     Plan.create!(plan_code: "starter", name: "尝鲜包", price_cents: 500, quota: 20)
     Plan.create!(plan_code: "member_permanent", name: "永久会员", price_cents: 46_800, quota: nil, is_member_upgrade: true)
-    Plan.create!(plan_code: "student_course", name: "HOLDLE课程学员", price_cents: 26_800, quota: 15, is_student_upgrade: true)
-    Plan.create!(plan_code: "member_from_student", name: "HOLDLE会员（学员补差价）", price_cents: 20_000, quota: nil, is_member_upgrade: true)
+    Plan.create!(plan_code: "student_course", name: "HOLDLE-课程学员", price_cents: 26_800, quota: 15, is_student_upgrade: true)
+    Plan.create!(plan_code: "member_from_student", name: "HOLDLE-会员（学员补差价）", price_cents: 20_000, quota: nil, is_member_upgrade: true)
   end
 
   # 应用初始化定义的 ALIPAY_CLIENT 是顶层常量（Object::ALIPAY_CLIENT）。个别用例会把
@@ -56,7 +56,7 @@ class OrdersControllerTest < ActionDispatch::IntegrationTest
     users(:one).update!(role: :student)
     get new_order_path(plan: "member_from_student")
     assert_response :success
-    assert_match "HOLDLE会员（学员补差价）", response.body
+    assert_match "HOLDLE-会员（学员补差价）", response.body
   end
 
   test "未登录访问下单页重定向登录" do
