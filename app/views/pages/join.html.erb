@@ -137,7 +137,7 @@
           <% elsif is_member && join_is_student && join_upgrade_plan %>
             <%= link_to "补差价 ¥#{join_upgrade_plan.price_cents / 100} 升级会员", new_order_path(plan: join_upgrade_plan.plan_code), class: "hl-btn hl-btn-primary w-full text-center" %>
           <% else %>
-            <%= link_to is_member ? "解锁进阶实战 · AI投研助手无限次" : "购买", new_order_path(plan: plan.plan_code), class: "hl-btn #{is_member ? 'hl-btn-primary' : 'hl-btn-line'} w-full text-center" %>
+            <%= link_to is_member ? "开通会员 · AI投研助手无限次" : "购买", new_order_path(plan: plan.plan_code), class: "hl-btn #{is_member ? 'hl-btn-primary' : 'hl-btn-line'} w-full text-center" %>
           <% end %>
         </div>
       <% end %>
