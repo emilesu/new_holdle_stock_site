@@ -83,7 +83,7 @@ class Users::OmniauthCallbacksController < Devise::OmniauthCallbacksController
     #     现在只做 unionid/openid 精确匹配；疑似同一人仅记日志，
     #     由 admin「合并用户」工具（PR-5）人工核实处理。
     if union_id.present? && wx_nickname.present?
-      suspects = User.where(weixin_unionid: nil, weixin_app_openid: nil, weixin_web_openid: nil)
+      suspects = User.where(archived_at: nil, weixin_unionid: nil, weixin_app_openid: nil, weixin_web_openid: nil)
                      .where("nickname = ?", wx_nickname)
       if suspects.exists?
         Rails.logger.warn "[WeChat Suspect] 同名无凭据老账号待人工核实 ids=#{suspects.limit(5).pluck(:id).join(',')} nickname=#{wx_nickname} unionid=#{union_id}"
@@ -236,8 +236,8 @@ class Users::OmniauthCallbacksController < Devise::OmniauthCallbacksController
         return
       end
 
-      user.identities.create(provider: "google_oauth2", uid: uid, email: email)
-      Rails.logger.info "[OmniAuth Google] new user created id=#{user.id}"
+      identity = user.identities.create(provider: "google_oauth2", uid: uid, email: email)
+      Rails.logger.info "[OmniAuth Google] new user created id=#{user.id} identity_created=#{identity.persisted?}"
       sign_in user
       redirect_to stored_location_for(:user) || onboarding_path, notice: "Google注册登录成功"
       return
