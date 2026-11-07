@@ -20,6 +20,14 @@ class Users::OmniauthCallbacksController < Devise::OmniauthCallbacksController
       return
     end
 
+    # PR-4 绑定分支：登录态下从 profile 发起的绑定，把微信凭据挂到当前账号而非走登录匹配。
+    # 标记无论是否用上都必须删除，避免残留 session 劫持后续正常登录
+    link_mode = session.delete(:identity_link_provider)
+    if %w[wechat wechat_mobile].include?(link_mode) && user_signed_in?
+      link_wechat_identity(auth, platform)
+      return
+    end
+
     open_id = auth.uid
     union_id = auth.extra.raw_info["unionid"]
     wx_nickname = auth.info.nickname&.truncate(20)
@@ -125,6 +133,53 @@ class Users::OmniauthCallbacksController < Devise::OmniauthCallbacksController
     end
   end
 
+  # PR-4 绑定分支：把 Google 凭据挂到当前登录账号（Users::IdentitiesController#link 发起）
+  def link_google_identity(auth)
+    me = current_user
+    uid = auth.uid.to_s
+    email = auth.info.email
+
+    existing = Identity.find_by(provider: "google_oauth2", uid: uid)
+    owner = email.present? ? User.where.not(id: me.id).find_by(email: email) : nil
+
+    if existing&.user_id == me.id
+      redirect_to users_profile_path, notice: "该 Google 账号已绑定"
+    elsif existing || owner
+      # 凭据或邮箱已归属他人：直接挂过来会顶掉对方的 Google 登录入口，必须人工处理
+      Rails.logger.warn "[Identity Link] google uid=#{uid} email=#{email} 已被占用 existing=#{existing&.user_id} owner=#{owner&.id} by=#{me.id}"
+      redirect_to users_profile_path, alert: "该 Google 账号已归属另一个 HOLDLE 账号，如需处理请联系站长"
+    elsif me.identities.exists?(provider: "google_oauth2")
+      redirect_to users_profile_path, alert: "您已绑定过 Google 账号，如需换绑请先解绑"
+    else
+      me.identities.create!(provider: "google_oauth2", uid: uid, email: email)
+      redirect_to users_profile_path, notice: "Google 账号绑定成功"
+    end
+  end
+
+  # PR-4 绑定分支：把微信凭据挂到当前登录账号
+  def link_wechat_identity(auth, platform)
+    me = current_user
+    open_id = auth.uid
+    union_id = auth.extra.raw_info["unionid"]
+    openid_field = (platform == :app) ? :weixin_app_openid : :weixin_web_openid
+
+    taken = User.where.not(id: me.id).exists?(openid_field => open_id) ||
+            (union_id.present? && User.where.not(id: me.id).exists?(weixin_unionid: union_id))
+    if taken
+      Rails.logger.warn "[Identity Link] wechat openid=#{open_id} unionid=#{union_id} 已被占用 by=#{me.id}"
+      redirect_to users_profile_path, alert: "该微信已绑定另一个 HOLDLE 账号，如需处理请联系站长"
+    elsif me.send(openid_field) == open_id
+      redirect_to users_profile_path, notice: "该微信已绑定"
+    elsif me.weixin_unionid.present? && union_id.present? && me.weixin_unionid != union_id
+      redirect_to users_profile_path, alert: "您已绑定过其他微信，如需换绑请先解绑"
+    else
+      attrs = { openid_field => open_id }
+      attrs[:weixin_unionid] = union_id if union_id.present? && me.weixin_unionid.blank?
+      me.update!(attrs)
+      redirect_to users_profile_path, notice: "微信绑定成功"
+    end
+  end
+
   public
 
   def google_oauth2
@@ -132,6 +187,13 @@ class Users::OmniauthCallbacksController < Devise::OmniauthCallbacksController
     unless auth
       Rails.logger.error "[OmniAuth Google] auth hash is nil"
       redirect_to new_user_session_path, alert: "Google授权失败：未获取到认证信息"
+      return
+    end
+
+    # PR-4 绑定分支（与微信同理：标记必删，防残留 session 劫持正常登录）
+    link_mode = session.delete(:identity_link_provider)
+    if link_mode == "google_oauth2" && user_signed_in?
+      link_google_identity(auth)
       return
     end
 

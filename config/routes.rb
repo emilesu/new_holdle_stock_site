@@ -122,6 +122,10 @@ Rails.application.routes.draw do
     patch "profile", to: "profiles#update"
     patch "profile/password", to: "profiles#update_password", as: :update_profile_password
     get "profile/favorites", to: "profiles#favorites", as: :profile_favorites
+    # PR-4 账号绑定管理：发起第三方授权绑定 / 解绑
+    get "identities/:provider/link", to: "identities#link", as: :link_identity
+    delete "identities/:id", to: "identities#destroy", as: :identity
+    delete "wechat_credentials", to: "identities#unlink_wechat", as: :unlink_wechat
   end
 
   namespace :admin do

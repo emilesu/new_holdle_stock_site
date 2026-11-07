@@ -28,6 +28,31 @@ class User < ApplicationRecord
   has_many :api_key_adjustments, dependent: :destroy # 作为 key 持有人
   has_many :identities, dependent: :destroy # 第三方登录凭据（Google 等，PR-3）
 
+  # 自动生成的占位邮箱后缀（微信建号 / 旧站迁移），此类邮箱收不到真实邮件
+  PLACEHOLDER_EMAIL_SUFFIXES = %w[@wechat-auto.local @holdle.com].freeze
+
+  def real_email?
+    email.present? && PLACEHOLDER_EMAIL_SUFFIXES.none? { |suffix| email.end_with?(suffix) }
+  end
+
+  def wechat_bound?
+    weixin_unionid.present? || weixin_web_openid.present? || weixin_app_openid.present?
+  end
+
+  def google_identity
+    identities.find_by(provider: "google_oauth2")
+  end
+
+  # PR-4 解绑守卫：解绑后必须至少保留一种可登录方式
+  # （微信凭据 / 其他第三方凭据 / 能收重置邮件的真实邮箱）
+  def can_unlink_wechat?
+    identities.exists? || real_email?
+  end
+
+  def can_unlink_identity?(identity)
+    wechat_bound? || real_email? || identities.where.not(id: identity.id).exists?
+  end
+
   def favorite?(stock)
     user_favorites.exists?(stock_id: stock.id)
   end

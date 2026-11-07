@@ -52,6 +52,47 @@
           <span class="text-hl-14 text-ink font-medium"><%= human_role(@user.role) %></span>
         </div>
 
+        <%# 账号绑定（PR-4）：微信 / Google 凭据管理，解绑有守卫保证至少保留一种登录方式 %>
+        <div class="bg-bg-soft rounded p-4 sm:p-5">
+          <span class="text-hl-12 text-muted-4 block mb-3">账号绑定</span>
+          <div class="space-y-3">
+            <div class="flex items-center justify-between gap-3">
+              <span class="flex items-center gap-2 min-w-0">
+                <span class="text-hl-14 text-ink font-medium">微信</span>
+                <% if @user.weixin_unionid.present? || @user.weixin_web_openid.present? || @user.weixin_app_openid.present? %>
+                  <span class="text-hl-12 text-profit">已绑定</span>
+                <% else %>
+                  <span class="text-hl-12 text-muted-4">未绑定</span>
+                <% end %>
+              </span>
+              <% if @user.weixin_unionid.present? || @user.weixin_web_openid.present? || @user.weixin_app_openid.present? %>
+                <%= button_to "解绑", users_unlink_wechat_path, method: :delete, form: { class: "inline" }, data: { confirm: "解绑后将无法用微信登录此账号，确定解绑？" }, class: "hl-btn hl-btn-line px-3 py-1 text-hl-12" %>
+              <% else %>
+                <%= link_to "绑定微信", users_link_identity_path(wechat_browser? ? "wechat_mobile" : "wechat"), class: "hl-btn hl-btn-line px-3 py-1 text-hl-12" %>
+              <% end %>
+            </div>
+
+            <% google_identity = @user.google_identity %>
+            <div class="flex items-center justify-between gap-3">
+              <span class="flex items-center gap-2 min-w-0">
+                <span class="text-hl-14 text-ink font-medium">Google</span>
+                <% if google_identity %>
+                  <span class="text-hl-12 text-profit">已绑定</span>
+                  <span class="text-hl-12 text-muted-4 truncate"><%= google_identity.email %></span>
+                <% else %>
+                  <span class="text-hl-12 text-muted-4">未绑定</span>
+                <% end %>
+              </span>
+              <% if google_identity %>
+                <%= button_to "解绑", users_identity_path(google_identity), method: :delete, form: { class: "inline" }, data: { confirm: "解绑后将无法用 Google 登录此账号，确定解绑？" }, class: "hl-btn hl-btn-line px-3 py-1 text-hl-12" %>
+              <% else %>
+                <%= link_to "绑定 Google", users_link_identity_path("google_oauth2"), class: "hl-btn hl-btn-line px-3 py-1 text-hl-12" %>
+              <% end %>
+            </div>
+          </div>
+          <p class="text-hl-11 text-muted-4 mt-3">绑定后可用任一方式登录同一账号；为保证始终可登录，仅在存在其他登录方式时可解绑。</p>
+        </div>
+
         <%# AI 投研助手 API Key（T7 Phase3：开放给所有用户，完整展示 + 复制 + 安装提示词） %>
         <div class="bg-bg-soft rounded p-4 sm:p-5">
           <div class="flex items-center justify-between mb-3">
