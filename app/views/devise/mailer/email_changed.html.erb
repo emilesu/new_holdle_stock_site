@@ -1,7 +1,5 @@
-<p>Hello <%= @email %>!</p>
+<p>您好：</p>
 
-<% if @resource.try(:unconfirmed_email?) %>
-  <p>We're contacting you to notify you that your email is being changed to <%= @resource.unconfirmed_email %>.</p>
-<% else %>
-  <p>We're contacting you to notify you that your email has been changed to <%= @resource.email %>.</p>
-<% end %>
+<p>您的 HOLD LE 账号登录邮箱已变更为 <%= @resource.email %>（本通知发送至您的原邮箱）。</p>
+
+<p>如果这不是您本人的操作，请立即联系站长 emilesu@qq.com 冻结账号。</p>

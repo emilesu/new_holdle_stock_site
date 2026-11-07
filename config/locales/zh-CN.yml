@@ -40,6 +40,7 @@ zh-CN:
       timeout: "您的会话已过期，请重新登录后继续操作。"
       unauthenticated: "继续操作前请先登录或注册。"
       unconfirmed: "您的邮箱尚未确认，请先确认邮箱。"
+      archived: "该账号已归并至其他账号并停用，请使用原账号登录；如有疑问请联系站长。"
     sessions:
       signed_in: "登录成功。"
       signed_out: "退出登录成功。"

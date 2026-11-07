@@ -1,6 +1,6 @@
 class User < ApplicationRecord
   devise :database_authenticatable, :registerable,
-         :recoverable, :rememberable, :validatable, :confirmable,
+         :recoverable, :rememberable, :validatable, :confirmable, :lockable,
          :omniauthable, omniauth_providers: [:wechat, :wechat_mobile, :google_oauth2]
 
   # 内容权限阶梯（access_level 与本组常量同义：数值越大要求身份越高）
@@ -67,7 +67,18 @@ class User < ApplicationRecord
   end
 
   def inactive_message
-    archived? ? :invalid : super
+    archived? ? :archived : super
+  end
+
+  # PR-8 安全通知：占位邮箱收不到信，跳过发送（否则 raise_delivery_errors 下 SMTP 退信直接 500）
+  def send_email_changed_notification
+    return if email_before_last_save.to_s.end_with?(*PLACEHOLDER_EMAIL_SUFFIXES)
+    super
+  end
+
+  def send_password_change_notification
+    return if email.to_s.end_with?(*PLACEHOLDER_EMAIL_SUFFIXES)
+    super
   end
 
   # PR-7 自助归并资格：新注册 7 天内的第三方壳账号（无付费记录）才可发起

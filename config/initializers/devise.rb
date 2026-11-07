@@ -130,9 +130,12 @@ Devise.setup do |config|
 
   # Send a notification to the original email when the user's email is changed.
   # config.send_email_changed_notification = false
+  # PR-8：开启安全通知（占位邮箱账号在 User 中覆写跳过，防 SMTP 退信炸 500）
+  config.send_email_changed_notification = true
 
   # Send a notification email when the user's password is changed.
   # config.send_password_change_notification = false
+  config.send_password_change_notification = true
 
   # ==> Configuration for :confirmable
   # A period that the user is allowed to access the website even without
@@ -183,8 +186,8 @@ Devise.setup do |config|
   # config.rememberable_options = {}
 
   # ==> Configuration for :validatable
-  # Range for password length.
-  config.password_length = 6..128
+  # PR-8：密码最短长度 6→8（仅影响新设/改密，存量密码不受影响）
+  config.password_length = 8..128
 
   # Email regex used to validate email formats. It simply asserts that
   # one (and only one) @ exists in the given string. This is mainly
@@ -201,6 +204,8 @@ Devise.setup do |config|
   # :failed_attempts = Locks an account after a number of failed attempts to sign in.
   # :none            = No lock strategy. You should handle locking by yourself.
   # config.lock_strategy = :failed_attempts
+  # PR-8：连续失败锁定
+  config.lock_strategy = :failed_attempts
 
   # Defines which key will be used when locking and unlocking an account
   # config.unlock_keys = [:email]
@@ -211,16 +216,24 @@ Devise.setup do |config|
   # :both  = Enables both strategies
   # :none  = No unlock strategy. You should handle unlocking by yourself.
   # config.unlock_strategy = :both
+  # PR-8：到期自动解锁（不发解锁邮件）
+  config.unlock_strategy = :time
 
   # Number of authentication tries before locking an account if lock_strategy
   # is failed attempts.
   # config.maximum_attempts = 20
+  # PR-8：5 次失败锁定
+  config.maximum_attempts = 5
 
   # Time interval to unlock the account if :time is enabled as unlock_strategy.
   # config.unlock_in = 1.hour
+  # PR-8：锁定 15 分钟后自动解锁
+  config.unlock_in = 15.minutes
 
   # Warn on the last attempt before the account is locked.
   # config.last_attempt_warning = true
+  # PR-8：第 4 次失败时提示"还有一次机会"
+  config.last_attempt_warning = true
 
   # ==> Configuration for :recoverable
   #

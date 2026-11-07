@@ -18,8 +18,13 @@ class Users::ClaimsController < ApplicationController
     email = EmailVerificationService.normalize(params[:email])
     old = User.find_by(email: email)
 
-    # 统一失败文案，不区分「账号不存在/密码错误/已归档」，避免账号探测
-    if old.nil? || old.archived? || !old.valid_password?(params[:password].to_s)
+    # 统一失败文案，不区分「账号不存在/密码错误/已归档」，避免账号探测。
+    # 失败与登录口同计 failed_attempts（PR-8）：防轮换 cookie 绕过会话限次爆破老账号密码
+    if old.nil? || old.archived? || old.access_locked? || !old.valid_password?(params[:password].to_s)
+      if old.present? && !old.archived?
+        old.increment!(:failed_attempts)
+        old.lock_access! if old.failed_attempts >= Devise.maximum_attempts
+      end
       redirect_to onboarding_path, alert: "验证失败：邮箱或密码不正确。若忘记原账号信息，请联系站长人工处理" and return
     end
 
