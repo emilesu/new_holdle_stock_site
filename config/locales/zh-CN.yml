@@ -24,6 +24,9 @@ zh-CN:
         confirmation: "与确认值不一致"
         too_short: "长度太短（最少 %{count} 个字符）"
         too_long: "长度太长（最多 %{count} 个字符）"
+        not_found: "未找到"
+        already_sent: "已经发送过，请稍后再试"
+        invalid_token: "无效"
       models:
         user:
           attributes:
@@ -32,6 +35,8 @@ zh-CN:
               taken: "已被其他账号使用"
               invalid: "邮箱格式不正确"
               blank: "请输入邮箱"
+              not_found: "尚未注册，请检查拼写或先创建账号"
+              already_sent: "已发送过确认邮件，请查收邮箱（含垃圾箱），或稍后再试"
             nickname:
               blank: "请输入昵称"
               too_short: "昵称至少 %{count} 个字符"

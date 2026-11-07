@@ -26,4 +26,18 @@ class ConfirmationsI18nTest < ActionDispatch::IntegrationTest
     assert_match(/已被其他账号使用/, response.body)
     assert_no_match(/Translation missing/, response.body)
   end
+
+  test "忘记密码输入未注册邮箱时中文提示" do
+    post user_password_path, params: { user: { email: "nobody_nowhere@test.com" } }
+    assert_response :unprocessable_entity
+    assert_match(/尚未注册/, response.body)
+    assert_no_match(/Translation missing/, response.body)
+  end
+
+  test "重新发送确认邮件输入未注册邮箱时中文提示" do
+    post user_confirmation_path, params: { user: { email: "nobody_nowhere2@test.com" } }
+    assert_response :unprocessable_entity
+    assert_match(/尚未注册/, response.body)
+    assert_no_match(/Translation missing/, response.body)
+  end
 end
