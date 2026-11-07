@@ -32,6 +32,11 @@ class Users::EmailBindingsController < ApplicationController
       redirect_to users_profile_path, alert: "请先获取验证码" and return
     end
 
+    # 先校验表单再消耗一次性验证码，避免密码笔误导致整码作废重取
+    if params[:password].present? && params[:password] != params[:password_confirmation]
+      redirect_to users_profile_path, alert: "两次输入的密码不一致，请重新提交" and return
+    end
+
     EmailVerificationService.verify!(email: email, purpose: "bind_email", code: params[:code])
 
     attrs = { email: email, confirmed_at: Time.current }
@@ -46,6 +51,8 @@ class Users::EmailBindingsController < ApplicationController
   rescue EmailVerificationService::Error => e
     redirect_to users_profile_path, alert: e.message
   rescue ActiveRecord::RecordInvalid => e
-    redirect_to users_profile_path, alert: "设置失败：#{e.message}"
+    # zh-CN 缺字段级校验翻译，禁止把 e.message 透出到界面（会显示英文/Translation missing 原文）
+    Rails.logger.warn "[EmailBinding] 绑定提交失败 user=#{current_user.id}: #{e.message}"
+    redirect_to users_profile_path, alert: "设置失败：请检查邮箱未被其他账号占用、两次密码一致后重试"
   end
 end

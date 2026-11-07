@@ -43,6 +43,20 @@ class Users::EmailBindingsTest < ActionDispatch::IntegrationTest
     assert_equal "wx_demo@wechat-auto.local", @wx.reload.email
   end
 
+  test "两次密码不一致时提前拦截且不消耗验证码" do
+    post users_email_binding_code_path, params: { email: "demo@gmail.com" }
+    code = ActionMailer::Base.deliveries.last.decoded.to_s[/\b(\d{6})\b/, 1]
+    patch users_email_binding_path, params: { code: code, password: "newpass123", password_confirmation: "different" }
+    @wx.reload
+    assert_equal "wx_demo@wechat-auto.local", @wx.email
+    assert_match(/密码不一致/, flash[:alert].to_s)
+    assert_equal 1, EmailVerification.count, "验证码不应被消耗，可直接改正重交"
+
+    # 改正后凭原验证码直接成功
+    patch users_email_binding_path, params: { code: code, password: "newpass123", password_confirmation: "newpass123" }
+    assert_equal "demo@gmail.com", @wx.reload.email
+  end
+
   test "占位邮箱账号改密免当前密码" do
     patch users_update_profile_password_path, params: { user: { password: "abc12345", password_confirmation: "abc12345" } }
     assert @wx.reload.valid_password?("abc12345")
