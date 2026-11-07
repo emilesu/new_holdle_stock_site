@@ -73,9 +73,30 @@ Rails.application.configure do
 
   config.action_mailer.perform_caching = false
 
-  # Ignore bad email addresses and do not raise email delivery errors.
-  # Set this to true and configure the email server for immediate delivery to raise delivery errors.
-  # config.action_mailer.raise_delivery_errors = false
+  # PR-2 邮件通道：重置密码/改邮等 Devise 邮件的链接域名
+  config.action_mailer.default_url_options = { host: "www.holdle.com", protocol: "https" }
+
+  # SMTP 凭据从 .env.production 读取（腾讯云 SES / 阿里云 DirectMail 等均可）。
+  # 465 端口走隐式 SSL，其余端口（25/587）走 STARTTLS。
+  # 未配置 SMTP_ADDRESS 时保持默认 localhost 投递——配合 raise_delivery_errors=true
+  # 会立即报错暴露问题，而不是静默失败让用户永远收不到重置邮件。
+  if ENV["SMTP_ADDRESS"].present?
+    smtp_port = ENV.fetch("SMTP_PORT", "465").to_i
+    config.action_mailer.delivery_method = :smtp
+    config.action_mailer.smtp_settings = {
+      address: ENV.fetch("SMTP_ADDRESS"),
+      port: smtp_port,
+      domain: ENV.fetch("SMTP_DOMAIN", "holdle.com"),
+      user_name: ENV.fetch("SMTP_USER_NAME"),
+      password: ENV.fetch("SMTP_PASSWORD"),
+      authentication: :plain,
+      ssl: smtp_port == 465,
+      enable_starttls_auto: smtp_port != 465,
+      open_timeout: 10,
+      read_timeout: 30
+    }
+  end
+  config.action_mailer.raise_delivery_errors = true
 
   # Enable locale fallbacks for I18n (makes lookups for any locale fall back to
   # the I18n.default_locale when a translation cannot be found).

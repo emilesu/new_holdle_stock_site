@@ -44,6 +44,9 @@ Rails.application.configure do
   # ActionMailer::Base.deliveries array.
   config.action_mailer.delivery_method = :test
 
+  # Devise 邮件（重置密码等）中的链接域名
+  config.action_mailer.default_url_options = { host: "localhost", port: 3000 }
+
   # 后台任务只入队不执行：默认的 :async 适配器会在后台线程真跑任务（如 Stock after_commit 触发的
   # 百度推送），该线程使用独立数据库连接，会污染事务性测试导致 InFailedSqlTransaction。
   config.active_job.queue_adapter = :test
