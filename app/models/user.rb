@@ -26,19 +26,7 @@ class User < ApplicationRecord
   has_many :api_keys, dependent: :destroy
   has_many :usage_logs, dependent: :destroy
   has_many :api_key_adjustments, dependent: :destroy # 作为 key 持有人
-
-  # 谷歌登录账号匹配创建
-  def self.find_for_google_oauth(auth)
-    user = find_by(email: auth.info.email)
-    return user if user
-
-    create!(
-      email: auth.info.email,
-      password: Devise.friendly_token[0, 20],
-      nickname: auth.info.name,
-      role: 'user'
-    )
-  end
+  has_many :identities, dependent: :destroy # 第三方登录凭据（Google 等，PR-3）
 
   def favorite?(stock)
     user_favorites.exists?(stock_id: stock.id)

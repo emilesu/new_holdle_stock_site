@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_11_04_120100) do
+ActiveRecord::Schema[7.1].define(version: 2026_11_07_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -266,6 +266,17 @@ ActiveRecord::Schema[7.1].define(version: 2026_11_04_120100) do
     t.index ["stock_id", "report_date"], name: "idx_financial_reports_stock_date"
     t.index ["stock_id", "status"], name: "idx_financial_reports_stock_status"
     t.index ["stock_id"], name: "index_financial_reports_on_stock_id"
+  end
+
+  create_table "identities", comment: "第三方登录凭据（PR-3：Google 等 OAuth 凭据与账号解耦，按 provider+uid 精确归一）", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.string "provider", null: false
+    t.string "uid", null: false
+    t.string "email", comment: "绑定时的第三方邮箱快照（仅审计参考，匹配以 uid 为准）"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["provider", "uid"], name: "index_identities_on_provider_and_uid", unique: true
+    t.index ["user_id"], name: "index_identities_on_user_id"
   end
 
   create_table "income_statements", force: :cascade do |t|
@@ -692,6 +703,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_11_04_120100) do
   add_foreign_key "financial_indicators", "financial_reports"
   add_foreign_key "financial_indicators", "stocks"
   add_foreign_key "financial_reports", "stocks"
+  add_foreign_key "identities", "users"
   add_foreign_key "income_statements", "financial_reports"
   add_foreign_key "income_statements", "stocks"
   add_foreign_key "lessons", "chapters"

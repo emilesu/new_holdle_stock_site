@@ -135,31 +135,34 @@ class Users::OmniauthCallbacksController < Devise::OmniauthCallbacksController
       return
     end
 
+    uid = auth.uid.to_s
     email = auth.info.email
     g_name = auth.info.name&.truncate(20)
     g_avatar = auth.info.image
 
-    Rails.logger.info "[OmniAuth Google] email=#{email} name=#{g_name}"
+    Rails.logger.info "[OmniAuth Google] uid=#{uid} email=#{email}"
 
-    # 用邮箱匹配老用户（本次迁移有email的用户直接绑定）
-    user = User.find_by(email: email)
+    # 三级解析（PR-3）：
+    # 1. provider+uid 精确匹配——凭据跟着账号走，站点邮箱或 Google 邮箱变化都不再产生重复空壳号
+    user = Identity.find_by(provider: "google_oauth2", uid: uid)&.user
 
-    if user.present?
-      Rails.logger.info "[OmniAuth Google] existing user found id=#{user.id}"
-      # update 可能因 nickname 验证失败而返回 false，不影响 sign_in
-      result = user.update(nickname: g_name, avatar: g_avatar)
-      Rails.logger.info "[OmniAuth Google] user update result=#{result} errors=#{user.errors.full_messages}" unless result
+    # 2. 邮箱兜底匹配：命中老账号则回写凭据（自愈）。
+    #    历史 Google 用户从未存过 uid，靠这一步在首次登录时绑定；此后改邮箱不再丢号
+    if user.nil? && email.present?
+      user = User.find_by(email: email)
+      if user
+        identity = user.identities.create(provider: "google_oauth2", uid: uid, email: email)
+        Rails.logger.info "[OmniAuth Google] identity self-heal user=#{user.id} uid=#{uid} created=#{identity.persisted?}"
+        # 仅补空头像，绝不覆盖用户自设昵称（旧逻辑每次登录都用 Google 昵称冲掉站点昵称）
+        user.update(avatar: g_avatar) if g_avatar.present? && user.avatar.blank?
+      end
+    end
 
-      # sign_in 后验证 session 是否已正确设置
-      sign_in user
-      Rails.logger.info "[OmniAuth Google] sign_in completed, session user_id=#{session['warden.user.user.key']&.first&.first}"
-      redirect_to stored_location_for(:user) || root_path, notice: "Google登录成功"
-    else
-      # 无邮箱匹配则新建账号
-      random_pw = Devise.friendly_token(20)
+    # 3. 无匹配 → 新建账号 + 凭据
+    if user.nil?
       user = User.create(
         email: email,
-        password: random_pw,
+        password: Devise.friendly_token(20),
         nickname: g_name.presence || "Google用户",
         role: "user",
         avatar: g_avatar
@@ -171,11 +174,15 @@ class Users::OmniauthCallbacksController < Devise::OmniauthCallbacksController
         return
       end
 
+      user.identities.create(provider: "google_oauth2", uid: uid, email: email)
       Rails.logger.info "[OmniAuth Google] new user created id=#{user.id}"
       sign_in user
-      Rails.logger.info "[OmniAuth Google] sign_in completed, session user_id=#{session['warden.user.user.key']&.first&.first}"
       redirect_to stored_location_for(:user) || onboarding_path, notice: "Google注册登录成功"
+      return
     end
+
+    sign_in user
+    redirect_to stored_location_for(:user) || root_path, notice: "Google登录成功"
   end
 
   def failure
