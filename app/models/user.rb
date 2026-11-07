@@ -70,6 +70,13 @@ class User < ApplicationRecord
     archived? ? :archived : super
   end
 
+  # PR-8 审查修复：Devise 邮件（确认/重置/安全通知）改经 solid_queue 异步投递。
+  # 同步 deliver_now 叠加 raise_delivery_errors=true 时，SMTP 抖动会直接 500，
+  # 注册场景还会留下"账号已建、邮件未发"的脏状态；异步化后失败由队列重试，不阻塞请求
+  def send_devise_notification(notification, *args)
+    devise_mailer.send(notification, self, *args).deliver_later
+  end
+
   # PR-8 安全通知：占位邮箱收不到信，跳过发送（否则 raise_delivery_errors 下 SMTP 退信直接 500）
   def send_email_changed_notification
     return if email_before_last_save.to_s.end_with?(*PLACEHOLDER_EMAIL_SUFFIXES)

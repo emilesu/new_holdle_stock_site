@@ -19,6 +19,11 @@ class Users::EmailBindingsController < ApplicationController
   rescue EmailVerificationService::Error => e
     session.delete(:binding_email)
     redirect_to users_profile_path, alert: e.message
+  rescue Net::SMTPError, Net::OpenTimeout, Net::ReadTimeout, Errno::ECONNREFUSED, SocketError, OpenSSL::SSL::SSLError => e
+    # 验证码邮件为同步发送（非 Devise 通知链路），SMTP 故障时给出友好提示而非 500
+    session.delete(:binding_email)
+    Rails.logger.error "[EmailBinding] 验证码邮件投递失败: #{e.class}: #{e.message}"
+    redirect_to users_profile_path, alert: "邮件服务暂时不可用，请稍后再试"
   end
 
   def update

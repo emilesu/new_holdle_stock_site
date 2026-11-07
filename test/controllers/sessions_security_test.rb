@@ -3,6 +3,7 @@ require "test_helper"
 # PR-8 安全加固：锁定、密码长度、安全通知、归档文案
 class SessionsSecurityTest < ActionDispatch::IntegrationTest
   include Devise::Test::IntegrationHelpers
+  include ActiveJob::TestHelper
   include ActiveSupport::Testing::TimeHelpers
 
   setup do
@@ -40,9 +41,11 @@ class SessionsSecurityTest < ActionDispatch::IntegrationTest
   test "真实邮箱改密发送通知邮件" do
     sign_in @user
     assert_difference "ActionMailer::Base.deliveries.size", 1 do
-      patch users_update_profile_password_path, params: {
-        user: { current_password: "password123", password: "newpassword1", password_confirmation: "newpassword1" }
-      }
+      perform_enqueued_jobs do # PR-8：Devise 通知邮件经队列投递
+        patch users_update_profile_password_path, params: {
+          user: { current_password: "password123", password: "newpassword1", password_confirmation: "newpassword1" }
+        }
+      end
     end
   end
 

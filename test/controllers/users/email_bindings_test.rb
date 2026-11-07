@@ -3,6 +3,7 @@ require "test_helper"
 # PR-6 绑定真实邮箱 + 占位账号首设密码
 class Users::EmailBindingsTest < ActionDispatch::IntegrationTest
   include Devise::Test::IntegrationHelpers
+  include ActiveJob::TestHelper
 
   setup do
     @wx = User.create!(email: "wx_demo@wechat-auto.local", password: "password123",
@@ -58,9 +59,11 @@ class Users::EmailBindingsTest < ActionDispatch::IntegrationTest
     delete destroy_user_session_path # 注册页要求未登录（Devise require_no_authentication）
     ActionMailer::Base.deliveries.clear
     assert_difference "User.count", 1 do
-      post user_registration_path, params: {
-        user: { email: "fresh@test.com", password: "password123", password_confirmation: "password123", nickname: "新注册" }
-      }
+      perform_enqueued_jobs do # PR-8：Devise 确认邮件经队列投递
+        post user_registration_path, params: {
+          user: { email: "fresh@test.com", password: "password123", password_confirmation: "password123", nickname: "新注册" }
+        }
+      end
     end
     created = User.find_by(email: "fresh@test.com")
     assert_nil created.confirmed_at
