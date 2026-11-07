@@ -1,8 +1,45 @@
 zh-CN:
+  errors:
+    messages:
+      not_saved:
+        one: "有 1 个问题需要处理："
+        other: "有 %{count} 个问题需要处理："
   activerecord:
+    models:
+      user: "账号"
+    attributes:
+      user:
+        email: "邮箱"
+        nickname: "昵称"
+        password: "密码"
+        password_confirmation: "确认密码"
+        current_password: "当前密码"
+        confirmation_token: "确认链接"
     errors:
       messages:
         record_invalid: "记录无效：%{errors}"
+        taken: "已经被使用"
+        invalid: "格式不正确"
+        blank: "不能为空"
+        confirmation: "与确认值不一致"
+        too_short: "长度太短（最少 %{count} 个字符）"
+        too_long: "长度太长（最多 %{count} 个字符）"
+      models:
+        user:
+          attributes:
+            email:
+              already_confirmed: "已经确认过，请直接登录；如未收到确认邮件可重新发送"
+              taken: "已被其他账号使用"
+              invalid: "邮箱格式不正确"
+              blank: "请输入邮箱"
+            nickname:
+              blank: "请输入昵称"
+              too_short: "昵称至少 %{count} 个字符"
+              too_long: "昵称最多 %{count} 个字符"
+            password:
+              too_short: "密码至少 %{count} 位"
+              confirmation: "两次输入的密码不一致"
+              blank: "请输入密码"
   time:
     formats:
       default: "%Y-%m-%d %H:%M:%S"
