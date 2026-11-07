@@ -129,6 +129,8 @@ Rails.application.routes.draw do
     # PR-6 绑定真实邮箱：发验证码 / 验码并提交
     post "email_binding/code", to: "email_bindings#create", as: :email_binding_code
     patch "email_binding", to: "email_bindings#update", as: :email_binding
+    # PR-7 自助归并：用原账号邮箱+密码验证后并入老账号
+    post "claim", to: "claims#create", as: :claim
   end
 
   namespace :admin do

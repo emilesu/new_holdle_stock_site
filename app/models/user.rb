@@ -70,6 +70,11 @@ class User < ApplicationRecord
     archived? ? :invalid : super
   end
 
+  # PR-7 自助归并资格：新注册 7 天内的第三方壳账号（无付费记录）才可发起
+  def claim_eligible?
+    created_at > 7.days.ago && orders.none? && (email_placeholder? || identities.exists?)
+  end
+
   def favorite?(stock)
     user_favorites.exists?(stock_id: stock.id)
   end

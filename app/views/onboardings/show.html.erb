@@ -28,6 +28,28 @@
       </p>
     </div>
 
+    <%# PR-7 老账号自助归并引导：仅新第三方壳账号可见 %>
+    <% if !@preview && current_user.claim_eligible? %>
+      <div class="mb-10 border border-line rounded bg-bg-soft px-5 py-4">
+        <p class="text-hl-13 text-ink font-medium mb-1">之前在 HOLD LE 有过账号（2019–2025 老用户）？</p>
+        <p class="text-hl-12 text-muted-3 mb-3">用原账号的邮箱和密码验证，可一键把会员权益与全部数据合并到老账号，无需重新注册。</p>
+        <%= form_with url: users_claim_path, method: :post, class: "flex flex-wrap items-end gap-3" do %>
+          <div class="flex-1 min-w-[180px]">
+            <label class="block text-hl-12 text-muted-4 mb-1">原账号邮箱</label>
+            <input type="email" name="email" required
+              class="w-full px-3 py-2 border border-line rounded text-hl-13 text-ink bg-white focus:outline-none focus:border-muted-3">
+          </div>
+          <div class="flex-1 min-w-[150px]">
+            <label class="block text-hl-12 text-muted-4 mb-1">原账号密码</label>
+            <input type="password" name="password" required
+              class="w-full px-3 py-2 border border-line rounded text-hl-13 text-ink bg-white focus:outline-none focus:border-muted-3">
+          </div>
+          <button type="submit" class="hl-btn hl-btn-primary px-4 py-2 text-hl-13">验证并合并</button>
+        <% end %>
+        <p class="text-hl-11 text-muted-4 mt-2">忘记原账号信息？请联系站长（emilesu@qq.com）人工处理。</p>
+      </div>
+    <% end %>
+
     <%# 两个引导选择 %>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
