@@ -61,7 +61,7 @@ class Users::IdentitiesControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "仅剩 Google 凭据且占位邮箱时解绑被拦截" do
-    shell = User.create!(email: "wx_blk@wechat-auto.local", password: "password123", nickname: "壳用户甲")
+    shell = User.create!(email: "wx_blk@wechat-auto.local", password: "password123", nickname: "壳用户甲", confirmed_at: Time.current)
     identity = shell.identities.create!(provider: "google_oauth2", uid: "blk_g", email: "x@gmail.com")
     sign_in_user(shell)
 
@@ -81,7 +81,7 @@ class Users::IdentitiesControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "仅剩微信凭据时解绑被拦截" do
-    shell = User.create!(email: "wx_blk2@wechat-auto.local", password: "password123", nickname: "壳用户乙")
+    shell = User.create!(email: "wx_blk2@wechat-auto.local", password: "password123", nickname: "壳用户乙", confirmed_at: Time.current)
     shell.update!(weixin_unionid: "blk_u2", weixin_web_openid: "blk_w2")
     sign_in_user(shell)
 

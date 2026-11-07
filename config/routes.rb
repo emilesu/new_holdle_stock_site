@@ -126,6 +126,9 @@ Rails.application.routes.draw do
     get "identities/:provider/link", to: "identities#link", as: :link_identity
     delete "identities/:id", to: "identities#destroy", as: :identity
     delete "wechat_credentials", to: "identities#unlink_wechat", as: :unlink_wechat
+    # PR-6 绑定真实邮箱：发验证码 / 验码并提交
+    post "email_binding/code", to: "email_bindings#create", as: :email_binding_code
+    patch "email_binding", to: "email_bindings#update", as: :email_binding
   end
 
   namespace :admin do

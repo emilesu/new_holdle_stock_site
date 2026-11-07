@@ -143,7 +143,8 @@ Devise.setup do |config|
   # without confirming their account.
   # Default is 0.days, meaning the user cannot access the website without
   # confirming their account.
-  # config.allow_unconfirmed_access_for = 2.days
+  # PR-6：注册后 24h 内可先用（降低流失），逾期未验证邮箱则登出
+  config.allow_unconfirmed_access_for = 1.day
 
   # A period that the user is allowed to confirm their account before their
   # token becomes invalid. For example, if set to 3.days, the user can confirm
@@ -160,7 +161,9 @@ Devise.setup do |config|
   # Also, when used in conjunction with `send_email_changed_notification`,
   # the notification is sent to the original email when the change is requested,
   # not when the unconfirmed email is confirmed.
-  config.reconfirmable = true
+  # PR-6：关闭双重链接确认——换绑邮箱统一走「新邮箱验证码」即时生效，
+  # 避免与验证码流程并存两套换绑语义（也省去 unconfirmed_email 列）
+  config.reconfirmable = false
 
   # Defines which key will be used when confirming an account
   # config.confirmation_keys = [:email]

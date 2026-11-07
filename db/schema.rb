@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_11_07_130000) do
+ActiveRecord::Schema[7.1].define(version: 2026_11_07_140000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -203,6 +203,19 @@ ActiveRecord::Schema[7.1].define(version: 2026_11_07_130000) do
     t.index ["data_type", "severity"], name: "idx_dq_issues_type_severity"
     t.index ["market", "resolved_at"], name: "idx_dq_issues_market_resolved"
     t.index ["stock_id", "data_type", "issue_type"], name: "idx_dq_issues_open_unique", unique: true, where: "(resolved_at IS NULL)"
+  end
+
+  create_table "email_verifications", comment: "邮箱验证码（PR-6：绑定真实邮箱等场景；只存摘要不存明文）", force: :cascade do |t|
+    t.string "email", null: false
+    t.string "purpose", null: false, comment: "bind_email=绑定/换绑邮箱"
+    t.string "code_digest", null: false
+    t.datetime "expires_at", null: false
+    t.integer "attempt_count", default: 0, null: false
+    t.string "ip"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["created_at"], name: "index_email_verifications_on_created_at"
+    t.index ["email", "purpose"], name: "index_email_verifications_on_email_and_purpose"
   end
 
   create_table "financial_indicators", force: :cascade do |t|
@@ -684,7 +697,11 @@ ActiveRecord::Schema[7.1].define(version: 2026_11_07_130000) do
     t.string "avatar", limit: 255
     t.datetime "onboarded_at", comment: "注册引导完成时间（NULL=未完成，需先过引导页）"
     t.datetime "archived_at", comment: "账号归并归档时间（PR-5）：非空即禁止登录，数据保留仅供审计"
+    t.string "confirmation_token"
+    t.datetime "confirmed_at", comment: "邮箱验证通过时间（PR-6 :confirmable）；NULL=未验证"
+    t.datetime "confirmation_sent_at"
     t.index ["archived_at"], name: "index_users_on_archived_at"
+    t.index ["confirmation_token"], name: "index_users_on_confirmation_token", unique: true
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
     t.index ["weixin_app_openid"], name: "index_users_on_weixin_app_openid", unique: true

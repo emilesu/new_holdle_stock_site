@@ -99,6 +99,7 @@ class Users::OmniauthCallbacksController < Devise::OmniauthCallbacksController
       nickname: wx_nickname.to_s.length >= 2 ? wx_nickname : "微信用户",
       role: "user",
       avatar: wx_avatar,
+      confirmed_at: Time.current, # 第三方登录已验证身份，无需邮箱确认（PR-6）
       openid_field => open_id,
       weixin_unionid: union_id
     }
@@ -227,7 +228,8 @@ class Users::OmniauthCallbacksController < Devise::OmniauthCallbacksController
         password: Devise.friendly_token(20),
         nickname: g_name.presence || "Google用户",
         role: "user",
-        avatar: g_avatar
+        avatar: g_avatar,
+        confirmed_at: Time.current # Google 已验证邮箱所有权，免确认（PR-6）
       )
 
       unless user.persisted?

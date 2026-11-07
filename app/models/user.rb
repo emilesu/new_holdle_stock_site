@@ -1,6 +1,6 @@
 class User < ApplicationRecord
   devise :database_authenticatable, :registerable,
-         :recoverable, :rememberable, :validatable,
+         :recoverable, :rememberable, :validatable, :confirmable,
          :omniauthable, omniauth_providers: [:wechat, :wechat_mobile, :google_oauth2]
 
   # 内容权限阶梯（access_level 与本组常量同义：数值越大要求身份越高）
@@ -28,8 +28,12 @@ class User < ApplicationRecord
   has_many :api_key_adjustments, dependent: :destroy # 作为 key 持有人
   has_many :identities, dependent: :destroy # 第三方登录凭据（Google 等，PR-3）
 
-  # 自动生成的占位邮箱后缀（微信建号 / 旧站迁移），此类邮箱收不到真实邮件
-  PLACEHOLDER_EMAIL_SUFFIXES = %w[@wechat-auto.local @holdle.com].freeze
+  # 自动生成的占位邮箱后缀（微信建号 / 旧站迁移 / 归档），此类邮箱收不到真实邮件
+  PLACEHOLDER_EMAIL_SUFFIXES = %w[@wechat-auto.local @holdle.com @invalid.local].freeze
+
+  def email_placeholder?
+    !real_email?
+  end
 
   def real_email?
     email.present? && PLACEHOLDER_EMAIL_SUFFIXES.none? { |suffix| email.end_with?(suffix) }

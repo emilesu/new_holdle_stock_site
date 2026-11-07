@@ -1,5 +1,9 @@
-<p>Welcome <%= @email %>!</p>
+<p>您好，<%= @email %>：</p>
 
-<p>You can confirm your account email through the link below:</p>
+<p>欢迎注册 HOLD LE（www.holdle.com）。请点击下方按钮验证您的邮箱，完成账号激活：</p>
 
-<p><%= link_to 'Confirm my account', confirmation_url(@resource, confirmation_token: @token) %></p>
+<p><%= link_to "验证我的邮箱", confirmation_url(@resource, confirmation_token: @token) %></p>
+
+<p>验证前 24 小时内您仍可正常浏览与使用；逾期未验证将无法继续登录，需重新验证。</p>
+
+<p>如果这不是您本人的操作，请忽略本邮件。</p>

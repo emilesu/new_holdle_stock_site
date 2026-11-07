@@ -46,7 +46,32 @@
           </div>
         <% end %>
 
-        <%# 修改密码功能已移除（当前主要用微信登陆，暂不需要邮箱和密码功能） %>
+        <%# PR-6：真实邮箱账号可自助改密（需旧密码）；占位邮箱账号在个人中心走「绑定邮箱+首设密码」流程 %>
+        <% unless @user.email_placeholder? %>
+          <%= form_with url: users_update_profile_password_path, method: :patch, class: "mt-6" do %>
+            <div class="bg-bg-soft rounded p-5 space-y-4">
+              <h2 class="text-hl-16 font-semibold text-ink">修改密码</h2>
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                  <label class="block text-hl-13 font-medium text-muted mb-1.5">当前密码</label>
+                  <input type="password" name="user[current_password]" autocomplete="current-password"
+                    class="w-full px-4 py-2.5 border border-line rounded text-hl-14 text-ink bg-white focus:outline-none focus:border-muted-3">
+                </div>
+                <div>
+                  <label class="block text-hl-13 font-medium text-muted mb-1.5">新密码</label>
+                  <input type="password" name="user[password]" autocomplete="new-password" placeholder="至少 6 位"
+                    class="w-full px-4 py-2.5 border border-line rounded text-hl-14 text-ink bg-white focus:outline-none focus:border-muted-3">
+                </div>
+                <div>
+                  <label class="block text-hl-13 font-medium text-muted mb-1.5">确认新密码</label>
+                  <input type="password" name="user[password_confirmation]" autocomplete="new-password"
+                    class="w-full px-4 py-2.5 border border-line rounded text-hl-14 text-ink bg-white focus:outline-none focus:border-muted-3">
+                </div>
+              </div>
+              <button type="submit" class="hl-btn hl-btn-line">修改密码</button>
+            </div>
+          <% end %>
+        <% end %>
       </div>
 
     </div>

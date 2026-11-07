@@ -32,6 +32,7 @@ module Admin
     def create
       @user = User.new(user_params)
       @user.password = SecureRandom.hex(8)
+      @user.confirmed_at = Time.current # 管理员代建账号免邮箱确认（PR-6）
       @user.onboarded_at = Time.current # 管理员代建账号视为已完成引导，不强制跳引导页
 
       if @user.save

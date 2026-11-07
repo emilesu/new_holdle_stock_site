@@ -26,7 +26,15 @@ class Users::ProfilesController < ApplicationController
 
   def update_password
     authorize @user, :update_password?
-    if @user.update_with_password(password_params)
+    # PR-6：占位邮箱账号（微信建号/旧站迁移）无从知晓随机初始密码，免 current_password——
+    # 能进入本页即已通过登录态（第三方凭据或密码）验证所有权
+    ok = if @user.email_placeholder?
+           @user.update(password: password_params[:password],
+                        password_confirmation: password_params[:password_confirmation])
+         else
+           @user.update_with_password(password_params)
+         end
+    if ok
       bypass_sign_in(@user)
       redirect_to users_profile_path, notice: "密码修改成功"
     else
