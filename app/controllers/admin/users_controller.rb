@@ -1,7 +1,8 @@
 module Admin
   class UsersController < BaseController
     before_action :set_user, only: [:show, :edit, :update, :destroy,
-                                    :adjust_api_key_quota, :disable_api_key, :enable_api_key, :regenerate_api_key]
+                                    :adjust_api_key_quota, :disable_api_key, :enable_api_key, :regenerate_api_key,
+                                    :merge_form, :merge]
 
     def index
       @users = User.includes(:api_keys).order(created_at: :desc)
@@ -119,6 +120,34 @@ module Admin
       else
         redirect_to edit_admin_user_path(@user), alert: '重新生成失败，请重试'
       end
+    end
+
+    # ===== PR-5 账号归并：把 @user（源）并入目标账号，源归档不物理删除 =====
+
+    def merge_form
+    end
+
+    def merge
+      # to_i 兜底：非数字输入转 0 查无此人，避免 PG 整型列 cast 异常 500
+      target_id = params[:target_user_id].to_s.strip
+      target = if target_id.present?
+                 User.find_by(id: target_id.to_i)
+               else
+                 User.find_by(email: params[:target_email].to_s.strip)
+               end
+
+      if target.nil?
+        flash.now[:alert] = "未找到目标账号（请核对用户 ID 或邮箱）"
+        render :merge_form and return
+      end
+
+      stats = UserMergeService.new(source: @user, target: target, admin: current_user,
+                                   note: params[:note].to_s.strip.presence).call
+      redirect_to admin_user_path(target),
+                  notice: "归并完成：##{stats[:source_id]} → ##{target.id}，迁移 收藏#{stats[:favorites_moved]} 消息#{stats[:messages]} 订单#{stats[:orders]} key#{stats[:api_keys_moved]}"
+    rescue UserMergeService::Error => e
+      flash.now[:alert] = "归并失败：#{e.message}"
+      render :merge_form
     end
 
     def destroy

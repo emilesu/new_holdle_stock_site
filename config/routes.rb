@@ -161,6 +161,8 @@ Rails.application.routes.draw do
         post :disable_api_key       # 停用 key
         post :enable_api_key        # 启用 key
         post :regenerate_api_key    # 重新生成 key
+        get :merge_form             # PR-5 账号归并表单
+        post :merge                 # PR-5 执行归并
       end
     end
 

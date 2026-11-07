@@ -53,6 +53,19 @@ class User < ApplicationRecord
     wechat_bound? || real_email? || identities.where.not(id: identity.id).exists?
   end
 
+  # PR-5 归并归档：归档账号禁止登录（数据保留仅供审计）
+  def archived?
+    archived_at.present?
+  end
+
+  def active_for_authentication?
+    super && !archived?
+  end
+
+  def inactive_message
+    archived? ? :invalid : super
+  end
+
   def favorite?(stock)
     user_favorites.exists?(stock_id: stock.id)
   end

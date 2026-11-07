@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_11_07_120000) do
+ActiveRecord::Schema[7.1].define(version: 2026_11_07_130000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -329,6 +329,19 @@ ActiveRecord::Schema[7.1].define(version: 2026_11_07_120000) do
     t.datetime "updated_at", null: false
     t.integer "access_level", comment: "访问级别（null=继承章节，0=公开，1=学员，2=会员）"
     t.index ["chapter_id"], name: "index_lessons_on_chapter_id"
+  end
+
+  create_table "merge_logs", comment: "账号归并审计日志（PR-5 后台 / PR-7 用户自助共用）", force: :cascade do |t|
+    t.integer "source_user_id", null: false
+    t.integer "target_user_id", null: false
+    t.integer "admin_user_id"
+    t.string "channel", default: "admin", null: false, comment: "admin=后台人工 / claim=用户自助归并"
+    t.text "payload", comment: "JSON：源账号快照与迁移计数"
+    t.text "note"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["source_user_id"], name: "index_merge_logs_on_source_user_id"
+    t.index ["target_user_id"], name: "index_merge_logs_on_target_user_id"
   end
 
   create_table "message_boards", force: :cascade do |t|
@@ -670,6 +683,8 @@ ActiveRecord::Schema[7.1].define(version: 2026_11_07_120000) do
     t.string "weixin_app_openid"
     t.string "avatar", limit: 255
     t.datetime "onboarded_at", comment: "注册引导完成时间（NULL=未完成，需先过引导页）"
+    t.datetime "archived_at", comment: "账号归并归档时间（PR-5）：非空即禁止登录，数据保留仅供审计"
+    t.index ["archived_at"], name: "index_users_on_archived_at"
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
     t.index ["weixin_app_openid"], name: "index_users_on_weixin_app_openid", unique: true
