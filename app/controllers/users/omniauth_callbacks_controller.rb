@@ -69,32 +69,16 @@ class Users::OmniauthCallbacksController < Devise::OmniauthCallbacksController
       return
     end
 
-    # 2.5 启发式合并：unionid 未匹配到旧账号时，按昵称尝试匹配
-    #      放宽条件：不再要求 web_openid，覆盖邮箱注册的旧账号
-    if union_id.present?
-      old_accounts = User.where(weixin_unionid: nil)
-                         .where(weixin_app_openid: nil)
-                         .where("nickname = ? OR nickname LIKE ? ESCAPE '\\'",
-                                wx_nickname, "#{wx_nickname}\\_%")
-      if old_accounts.count == 1
-        old_account = old_accounts.first
-        Rails.logger.info "[WeChat Merge] heuristic match by nickname: user #{old_account.id} (nickname=#{wx_nickname})"
-        merge_wechat_into_account(old_account, platform, open_id, union_id, wx_nickname, wx_avatar)
-        return
-      elsif old_accounts.count > 1
-        # 尝试用归一化头像 URL 做 tiebreaker
-        norm_wx_avatar = normalize_wechat_avatar(wx_avatar)
-        if norm_wx_avatar.present?
-          avatar_match = old_accounts.select { |u| normalize_wechat_avatar(u.avatar) == norm_wx_avatar }
-          if avatar_match.size == 1
-            old_account = avatar_match.first
-            Rails.logger.info "[WeChat Merge] avatar tiebreaker: user #{old_account.id} (nickname=#{wx_nickname})"
-            merge_wechat_into_account(old_account, platform, open_id, union_id, wx_nickname, wx_avatar)
-            return
-          end
-        end
-        Rails.logger.warn "[WeChat Merge] #{old_accounts.count} matches for nickname '#{wx_nickname}', heuristic skipped" +
-                          (norm_wx_avatar.present? ? " (avatar tiebreaker: #{avatar_match&.size || 0} matches)" : " (no avatar)")
+    # 2.5 启发式合并已于 2026-11 退役（PR-1 止血）：
+    #     旧站迁移遗留的「按昵称/头像猜同一人」自动合并曾可能误并他人账号，
+    #     且会员转移路径会 destroy! 旧账号、级联删除订单/收藏/消息。
+    #     现在只做 unionid/openid 精确匹配；疑似同一人仅记日志，
+    #     由 admin「合并用户」工具（PR-5）人工核实处理。
+    if union_id.present? && wx_nickname.present?
+      suspects = User.where(weixin_unionid: nil, weixin_app_openid: nil, weixin_web_openid: nil)
+                     .where("nickname = ?", wx_nickname)
+      if suspects.exists?
+        Rails.logger.warn "[WeChat Suspect] 同名无凭据老账号待人工核实 ids=#{suspects.limit(5).pluck(:id).join(',')} nickname=#{wx_nickname} unionid=#{union_id}"
       end
     end
 
@@ -122,61 +106,8 @@ class Users::OmniauthCallbacksController < Devise::OmniauthCallbacksController
     end
 
     sign_in user
+    Rails.logger.info "[WeChat New] 新建微信账号 id=#{user.id} platform=#{platform} unionid=#{union_id}"
     redirect_after_wechat_auth("微信注册并登录成功", new_user: true)
-  end
-
-  # 合并微信凭据到旧账号，若旧账号为会员则转移至新微信账号
-  def merge_wechat_into_account(old_account, platform, open_id, union_id, wx_nickname, wx_avatar)
-    openid_field = (platform == :app) ? :weixin_app_openid : :weixin_web_openid
-
-    if old_account.is_member? || old_account.is_admin?
-      # === 会员/管理员转移：创建新微信账号，继承会员资格和注册时间 ===
-      temp_email = "wx_#{open_id}@wechat-auto.local"
-      random_pw = Devise.friendly_token(20)
-      create_attrs = {
-        email: temp_email,
-        password: random_pw,
-        nickname: wx_nickname.to_s.length >= 2 ? wx_nickname : "微信用户",
-        role: old_account.role,
-        member_expire_at: old_account.member_expire_at,
-        created_at: old_account.created_at,
-        avatar: wx_avatar,
-        openid_field => open_id,
-        weixin_unionid: union_id
-      }
-      create_attrs[:weixin_app_openid] = nil if platform == :web
-      create_attrs[:weixin_web_openid] = nil if platform == :app
-
-      user = User.create(create_attrs)
-      unless user.persisted?
-        Rails.logger.error "[WeChat Merge] member transfer failed for old user #{old_account.id}: #{user.errors.full_messages}"
-        # 回退：合并到旧账号
-        old_account.update(
-          weixin_unionid: union_id,
-          openid_field => open_id,
-          nickname: wx_nickname,
-          avatar: wx_avatar
-        )
-        sign_in old_account
-        redirect_after_wechat_auth("微信登录成功，已合并账号（会员转移失败）")
-        return
-      end
-
-      old_account.destroy!
-      Rails.logger.info "[WeChat Merge] member transfer: new user #{user.id} inherits role=#{user.role} from old user #{old_account.id}"
-      sign_in user
-      redirect_after_wechat_auth("微信登录成功，会员资格已转移")
-    else
-      # === 非会员：合并凭据到旧账号 ===
-      old_account.update(
-        weixin_unionid: union_id,
-        openid_field => open_id,
-        nickname: wx_nickname,
-        avatar: wx_avatar
-      )
-      sign_in old_account
-      redirect_after_wechat_auth("微信登录成功，已合并账号")
-    end
   end
 
   def redirect_after_wechat_auth(notice, new_user: false)
@@ -192,12 +123,6 @@ class Users::OmniauthCallbacksController < Devise::OmniauthCallbacksController
       # 回到登录前所在页面（无来源页则回首页）
       redirect_to stored_location_for(:user) || root_path, notice: notice
     end
-  end
-
-  # 归一化微信头像 URL：统一 https、去除尾部尺寸参数（如 /132、/0、/64）
-  def normalize_wechat_avatar(url)
-    return nil if url.blank?
-    url.sub(/\Ahttp:/i, "https:").sub(%r{/\d+\z}, "")
   end
 
   public

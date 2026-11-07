@@ -116,6 +116,32 @@ class OAuthReturnToTest < ActionDispatch::IntegrationTest
     assert_redirected_to root_path
   end
 
+  # PR-1 止血守卫：昵称/头像启发式合并已退役。
+  # 同名无凭据老账号（含会员/管理员）绝不能再被自动合并或凭据转移，只能新建账号 + 日志预警。
+  test "微信登录同名无凭据老账号不合并而是新建" do
+    legacy = users(:two) # admin 身份：旧逻辑会走 destroy! 会员转移路径
+    legacy.update!(nickname: "同名回归老账号", weixin_unionid: nil, weixin_web_openid: nil, weixin_app_openid: nil)
+
+    get new_user_session_path
+    OmniAuth.config.mock_auth[:wechat] = wechat_auth(
+      union_id: "pr1_union_no_match",
+      openid: "pr1_openid_no_match",
+      nickname: "同名回归老账号"
+    )
+
+    assert_difference "User.count", 1 do
+      get user_wechat_omniauth_callback_path
+    end
+    assert_redirected_to onboarding_path
+
+    assert_not_nil User.find_by(weixin_unionid: "pr1_union_no_match"), "新凭据应挂在新建账号上"
+    legacy.reload
+    assert_equal "admin", legacy.role
+    assert_nil legacy.weixin_unionid
+    assert_nil legacy.weixin_web_openid
+    assert_nil legacy.weixin_app_openid
+  end
+
   test "Google 老用户授权后回到来源页" do
     get new_user_session_path(return_to: about_path)
     OmniAuth.config.mock_auth[:google_oauth2] = OmniAuth::AuthHash.new(
