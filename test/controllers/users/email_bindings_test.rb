@@ -20,7 +20,7 @@ class Users::EmailBindingsTest < ActionDispatch::IntegrationTest
       end
     end
 
-    code = ActionMailer::Base.deliveries.last.decoded.to_s[/\b(\d{6})\b/, 1]
+    code = ActionMailer::Base.deliveries.last.text_part.body.decoded[/\b(\d{6})\b/, 1]
     assert code, "邮件正文应包含 6 位验证码"
 
     patch users_email_binding_path, params: { code: code, password: "newpass123", password_confirmation: "newpass123" }
@@ -45,7 +45,7 @@ class Users::EmailBindingsTest < ActionDispatch::IntegrationTest
 
   test "两次密码不一致时提前拦截且不消耗验证码" do
     post users_email_binding_code_path, params: { email: "demo@gmail.com" }
-    code = ActionMailer::Base.deliveries.last.decoded.to_s[/\b(\d{6})\b/, 1]
+    code = ActionMailer::Base.deliveries.last.text_part.body.decoded[/\b(\d{6})\b/, 1]
     patch users_email_binding_path, params: { code: code, password: "newpass123", password_confirmation: "different" }
     @wx.reload
     assert_equal "wx_demo@wechat-auto.local", @wx.email
