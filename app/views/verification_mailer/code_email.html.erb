@@ -1,9 +1,25 @@
-<p>您好：</p>
+<% content_for :preheader, "正在绑定此邮箱到 HOLD LE 账号。" %>
 
-<p>您正在为 HOLD LE（www.holdle.com）绑定此邮箱。验证码：</p>
+<div style="font-size:18px; font-weight:600; line-height:1.5; margin:0 0 12px;">验证您的邮箱</div>
 
-<p style="font-size:28px;letter-spacing:6px;font-weight:bold;"><%= @code %></p>
+<p style="margin:0 0 8px;">您好：</p>
 
-<p><%= @ttl_minutes %> 分钟内有效，仅可使用一次。请勿将验证码泄露给任何人——HOLD LE 工作人员绝不会向您索要验证码。</p>
+<p style="margin:0 0 16px;">您正在将此邮箱绑定到 HOLD LE 账号。验证码：</p>
 
-<p>如果这不是您本人的操作，请忽略本邮件。</p>
+<table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 16px;">
+  <tr>
+    <td style="background-color:#FAFAFA; border:1px solid #E4E4E7; border-radius:8px; padding:16px 28px;">
+      <span style="font-family:'SF Mono',Consolas,monospace; font-size:28px; font-weight:600; letter-spacing:8px; color:#18181B;"><%= @code %></span>
+    </td>
+  </tr>
+</table>
+
+<p style="margin:0 0 8px; font-size:13px; line-height:1.7; color:#52525B;">
+  验证码 <strong style="color:#18181B;"><%= @ttl_minutes %> 分钟内有效</strong>，仅可使用一次。
+</p>
+
+<p style="margin:0; font-size:13px; line-height:1.7; color:#52525B;">
+  <strong style="color:#18181B;">任何人（包括 HOLD LE 工作人员）都不会向您索要验证码</strong>，请勿转发本邮件或截图给他人。
+</p>
+
+<p style="margin:12px 0 0; font-size:13px; line-height:1.7; color:#A1A1AA;">如果这不是您本人的操作，请忽略本邮件，您的账号不会有任何变化。</p>

@@ -29,6 +29,8 @@ Devise.setup do |config|
 
   # Configure the class responsible to send e-mails.
   # config.mailer = 'Devise::Mailer'
+  # 邮件排版：让 Devise::Mailer 继承 ApplicationMailer，统一套用 layouts/mailer 品牌模板
+  config.parent_mailer = 'ApplicationMailer'
 
   # Configure the parent class responsible to send e-mails.
   # config.parent_mailer = 'ActionMailer::Base'

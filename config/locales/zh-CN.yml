@@ -100,5 +100,13 @@ zh-CN:
       send_paranoid_instructions: "如果您的邮箱存在于我们的数据库中，您将很快收到重置密码的链接邮件。"
       not_found: "您输入的邮箱或密码有误。"
     mailer:
+      confirmation_instructions:
+        subject: "【HOLD LE】请验证您的邮箱"
       reset_password_instructions:
-        subject: "重置密码操作说明"
+        subject: "【HOLD LE】重置密码"
+      password_change:
+        subject: "【HOLD LE】密码已被修改"
+      email_changed:
+        subject: "【HOLD LE】登录邮箱已变更"
+      unlock_instructions:
+        subject: "【HOLD LE】账号解锁说明"

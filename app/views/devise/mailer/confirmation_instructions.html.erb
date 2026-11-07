@@ -1,9 +1,15 @@
-<p>您好，<%= @email %>：</p>
+<% content_for :preheader, "完成邮箱验证，开启您的 HOLD LE 之旅。" %>
 
-<p>欢迎注册 HOLD LE（www.holdle.com）。请点击下方按钮验证您的邮箱，完成账号激活：</p>
+<div style="font-size:18px; font-weight:600; line-height:1.5; margin:0 0 12px;">欢迎加入 HOLD LE</div>
 
-<p><%= link_to "验证我的邮箱", confirmation_url(@resource, confirmation_token: @token) %></p>
+<p style="margin:0 0 8px;">您好，<%= @email %>：</p>
 
-<p>验证前 24 小时内您仍可正常浏览与使用；逾期未验证将无法继续登录，需重新验证。</p>
+<p style="margin:0 0 8px;">感谢注册。点击下方按钮验证邮箱，即可解锁留言、股票收藏与 AI 投研助手等全部功能。</p>
 
-<p>如果这不是您本人的操作，请忽略本邮件。</p>
+<%= render "shared/mailer_button", url: confirmation_url(@resource, confirmation_token: @token), text: "验证我的邮箱" %>
+
+<p style="margin:16px 0 8px; font-size:13px; line-height:1.7; color:#52525B;">
+  请在 <strong style="color:#18181B;">24 小时内</strong>完成验证。验证前您仍可正常浏览和使用；逾期未验证将暂时无法登录，届时重新发送一封确认邮件即可恢复。
+</p>
+
+<p style="margin:0; font-size:13px; line-height:1.7; color:#A1A1AA;">如果这不是您本人的操作，请忽略本邮件，无需任何处理。</p>
