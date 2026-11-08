@@ -27,6 +27,8 @@
       <meta name="turbo-cache-control" content="no-cache">
     <% end %>
     
+    <%= render "shared/analytics" %>
+
     <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js"></script>
     <%= javascript_include_tag "application", "data-turbo-track": "reload" %>
