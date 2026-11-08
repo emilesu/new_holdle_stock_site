@@ -3,12 +3,15 @@
   - Microsoft Clarity：海外补充 + 热力图/会话录屏，URL 变化自动捕获（Turbo pushState 兼容）
   - ID 申请：百度统计 tongji.baidu.com；Clarity clarity.microsoft.com
   - 只埋前台 layout，admin 后台不统计
+  - 已知残余（业界通病，接受）：浏览器 bfcache 前进/后退恢复不触发 turbo:load，该次访问漏报；
+    Clarity 靠 pushState 自动捕获，从前台 Turbo 跳入 /admin 的 URL 无法用同样方式过滤
 -%>
 <% baidu_id = ENV["BAIDU_ANALYTICS_SITE_ID"].presence %>
 <% clarity_id = ENV["CLARITY_PROJECT_ID"].presence %>
 
 <% if baidu_id %>
   <script>
+    // 官方片段保留 var：_hmt 必须挂到 window（let/const 不产生全局绑定，hm.js 会找不到数据队列）
     var _hmt = _hmt || [];
     (function() {
       var hm = document.createElement("script");
@@ -32,13 +35,18 @@
 <% if baidu_id %>
   <script>
     // Turbo 页面切换不会重新加载 hm.js，首屏之外的访问须手动补报 _trackPageview，
-    // 否则百度统计只记到整页刷新，站内跳转全部丢失
+    // 否则百度统计只记到整页刷新，站内跳转全部丢失。
+    // 两个防护：1) /admin 路径不报（前台点"后台管理"是 Turbo 跳转，监听器仍存活会泄漏后台流量）；
+    //           2) 比较口径用 pathname+search 而非完整 href，hash 锚点跳转不算新页面访问
     (function() {
-      var lastUrl = location.href; // 首次整页加载 hm.js 已自动上报，跳过
+      let lastPath = location.pathname + location.search; // 首次整页加载 hm.js 已自动上报，跳过
       document.addEventListener('turbo:load', function() {
-        if (location.href === lastUrl) return;
-        lastUrl = location.href;
-        _hmt.push(['_trackPageview', location.pathname + location.search]);
+        const path = location.pathname + location.search;
+        const isAdmin = path.startsWith('/admin');
+        if (path !== lastPath && !isAdmin) {
+          _hmt.push(['_trackPageview', path]);
+        }
+        lastPath = path; // 后台路径也要更新，保证"前台→后台→回前台"时能正确补报
       });
     })();
   </script>
