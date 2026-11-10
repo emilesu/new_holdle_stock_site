@@ -16,7 +16,7 @@
           <h2 class="text-hl-22 font-bold text-ink mb-2">支付成功，已自动开通</h2>
           <p class="text-hl-13 text-muted">
             <% if plan&.is_member_upgrade %>
-              <%= plan&.name.presence || "HOLDLE会员" %>已生效，你的 Key 已转为无限次使用
+              <%= plan&.name.presence || "HOLDLE会员" %>已生效，你的 Key 已转为长期使用
             <% elsif plan&.is_student_upgrade %>
               课程学员已生效：金字塔完整解锁 + 学员课程/文章，AI 助手保持 15 次
             <% else %>
@@ -41,7 +41,7 @@
             <span class="text-ink font-medium">
               <% if @api_key %>
                 <% if @api_key.unlimited? %>
-                  无限次
+                  长期使用
                 <% else %>
                   剩余 <%= @api_key.quota_remaining %> 次
                 <% end %>

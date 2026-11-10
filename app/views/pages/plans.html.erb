@@ -1,5 +1,5 @@
 <% set_page_title "选择 AI 投研助手·加入HOLDLE会员" %>
-<% set_page_description "新用户免费 15 次体验；268 元课程学员解锁金字塔 + 学员课程；468 元会员进阶实战 + AI 无限次。" %>
+<% set_page_description "新用户免费 15 次体验；268 元课程学员解锁金字塔 + 学员课程；468 元会员进阶实战 + AI 长期使用。" %>
 
 <%# 三档在售套餐；member_from_student 为学员补差专用，不在网格展示（会员卡 CTA 处按身份替换） %>
 <% plans = Plan.active.where.not(plan_code: "member_from_student").order(:price_cents) %>
@@ -15,7 +15,7 @@
     </h1>
     <p class="text-hl-14 text-muted max-w-2xl mx-auto leading-relaxed mb-8">
       新用户 <span class="text-ink font-medium">15 次免费体验</span>，先试再买；<br />
-      268 元课程学员 = 金字塔全解锁 + 学员课程；468 元会员 = 进阶实战 + AI 无限次（学员补差价仅 200）。
+      268 元课程学员 = 金字塔全解锁 + 学员课程；468 元会员 = 进阶实战 + AI 长期使用（学员补差价仅 200）。
     </p>
 
     <% if current_user && current_user.api_keys.active.any? %>
@@ -24,7 +24,7 @@
         <div class="hl-callout">
           当前账号：<span class="text-ink font-medium"><%= key.plan_name %></span> ·
           <% if key.quota_remaining.nil? %>
-            <span class="text-profit font-medium">无限次</span>
+            <span class="text-profit font-medium">长期使用</span>
           <% else %>
             剩余 <span class="text-ink font-medium"><%= key.quota_remaining %></span> 次（免费体验）
           <% end %>
@@ -43,11 +43,11 @@
         "金字塔排名 <span class='text-ink font-medium'>全解锁</span>（板块 / 行业筛选 + 完整榜单）",
         "个股详情页金字塔分 + 行业金字塔对比",
         "学员档交易课 + 学员档文章（持续更新）",
-        "AI 助手 15 次（与免费体验同档，非无限次）",
+        "AI 助手 15 次（与免费体验同档，不含长期使用）",
         "后续升会员仅需<span class='text-ink font-medium'>补差价 ¥200</span>"
       ],
       "member_permanent" => [
-        "AI 助手<span class='text-ink font-medium'>无限次</span>使用",
+        "AI 助手<span class='text-ink font-medium'>长期</span>使用",
         "AI 助手完整能力",
         "AI 助手配套优化「股票回测专用数据脚本」(省token神器)",
         "进阶实战课程 + 易错避坑解析（会员专享·干货必学）",
@@ -84,7 +84,7 @@
           </div>
 
           <p class="text-hl-16 font-semibold text-ink mb-5">
-            <%= plan.quota.nil? ? "AI助手·无限次" : "AI助手·#{plan.quota}次" %>
+            <%= plan.quota.nil? ? "AI助手·长期使用" : "AI助手·#{plan.quota}次" %>
           </p>
 
           <ul class="text-hl-13 text-muted space-y-2 mb-6 flex-1">
@@ -100,7 +100,7 @@
           <% elsif @is_student_view && @upgrade_plan %>
             <%= link_to "补差价 ¥#{@upgrade_plan.price_cents / 100} 升级会员", new_order_path(plan: @upgrade_plan.plan_code), class: "hl-btn hl-btn-primary w-full text-center" %>
           <% else %>
-            <%= link_to "开通会员 · AI投研助手无限次", new_order_path(plan: plan.plan_code), class: "hl-btn hl-btn-primary w-full text-center" %>
+            <%= link_to "开通会员 · AI投研助手长期使用", new_order_path(plan: plan.plan_code), class: "hl-btn hl-btn-primary w-full text-center" %>
           <% end %>
         </div>
       <% end %>
@@ -112,7 +112,7 @@
       </div>
     <% end %>
     <p class="text-hl-12 text-muted-4 text-center leading-relaxed">
-      购买后由系统自动发放专属 Key（注册用户已自动拥有）；升级会员将同一把 Key 转为无限次。<br />
+      购买后由系统自动发放专属 Key（注册用户已自动拥有）；升级会员将同一把 Key 转为长期使用。<br />
       虚拟服务一经购买不支持退款；支付成功即自动开通，无需人工确认。
     </p>
   </div>
@@ -122,7 +122,7 @@
 <section class="border-b border-line bg-bg-soft">
   <div class="container-narrow py-12 text-center">
     <p class="text-hl-14 text-muted leading-loose">
-      历史付费会员：已送 <span class="text-profit font-semibold">永久 AI 权益（无限次）</span>，登录查看你的 Key，无需重复购买。
+      历史付费会员：已送 <span class="text-profit font-semibold">永久 AI 权益（长期使用）</span>，登录查看你的 Key，无需重复购买。
     </p>
   </div>
 </section>
@@ -140,7 +140,7 @@
           <span>免费体验和会员有什么区别？</span>
           <span class="hl-faq-icon">+</span>
         </summary>
-        <div class="hl-faq-content">免费体验 15 次，适合先试用；268 元课程学员 = 金字塔全解锁 + 学员课程/文章（AI 仍 15 次）；468 元 HOLDLE 会员一次付费 = AI 助手无限次 + 进阶实战全解锁 + 会员交流群，适合长期学习者。</div>
+        <div class="hl-faq-content">免费体验 15 次，适合先试用；268 元课程学员 = 金字塔全解锁 + 学员课程/文章（AI 仍 15 次）；468 元 HOLDLE 会员一次付费 = AI 助手长期使用 + 进阶实战全解锁 + 会员交流群，适合长期学习者。</div>
       </details>
 
       <details class="hl-faq-item">
@@ -158,7 +158,7 @@
           <span>升级会员，会不会重复发放 Key？</span>
           <span class="hl-faq-icon">+</span>
         </summary>
-        <div class="hl-faq-content">不会。每个账号只有一把 Key；升级会员把同一把 Key 转为无限次。</div>
+        <div class="hl-faq-content">不会。每个账号只有一把 Key；升级会员把同一把 Key 转为长期使用。</div>
       </details>
 
       <details class="hl-faq-item">

@@ -49,13 +49,13 @@
   <div class="container-hl py-16">
     <div class="label-en">WHY AI ASSISTANT</div>
     <h2 class="text-hl-22 font-semibold text-ink mb-2">学投资最难的不是「看懂」，是「用起来」</h2>
-    <p class="text-hl-13 text-muted-3 mb-7">课程免费了，但你还需要有实战经验、要人陪你练——把方法用在自己的投资决策上。</p>
+    <p class="text-hl-13 text-muted-3 mb-7">第 1–6 章基础课程免费开放，但你还需要有实战经验、要人陪你练——把方法用在自己的投资决策上。</p>
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-7">
       <div class="hl-card hl-card-hover p-7">
         <div class="text-hl-11 text-muted-5 tracking-wide-2 mb-3">01 / UNDERSTAND</div>
         <h3 class="text-hl-16 font-semibold mb-2">课程里没懂的？问AI助手</h3>
-        <p class="text-hl-13 text-muted-3 leading-normal mb-5 min-h-11">AI 投研助手 无限次使用 + 完整能力</p>
+        <p class="text-hl-13 text-muted-3 leading-normal mb-5 min-h-11">会员可长期使用 HOLDLE AI 投研助手，辅助学习方法、分析企业与复盘问题。</p>
         <ul class="mb-5">
           <li class="py-1 text-hl-13 text-muted relative pl-3.5 list-dot-link">带你一步步理解方法论</li>
           <li class="py-1 text-hl-13 text-muted relative pl-3.5 list-dot-link">深度分析每一只股票当前状态和交易时机</li>
@@ -64,7 +64,7 @@
       </div>
       <div class="hl-card hl-card-hover p-7">
         <div class="text-hl-11 text-muted-5 tracking-wide-2 mb-3">02 / UNLOCK</div>
-        <h3 class="text-hl-16 font-semibold mb-2">解锁 HOLDLE 全部内容</h3>
+        <h3 class="text-hl-16 font-semibold mb-2">解锁学员与会员权益</h3>
         <p class="text-hl-13 text-muted-3 leading-normal mb-5 min-h-11">进阶课程 + 工具 + 投研数据脚本</p>
         <ul class="mb-5">
           <li class="py-1 text-hl-13 text-muted relative pl-3.5 list-dot-link">进阶实战课程 + 易错避坑解析（会员专享·干货必学）</li>
@@ -77,7 +77,7 @@
         <h3 class="text-hl-16 font-semibold mb-2">「大苏」陪你一起成长</h3>
         <p class="text-hl-13 text-muted-3 leading-normal mb-5 min-h-11">陪你在投资交易的道路上，走得稳健些</p>
         <ul class="mb-5">
-          <li class="py-1 text-hl-13 text-muted relative pl-3.5 list-dot-link">添加「大苏」微信，随时微我（白天都在线）</li>
+          <li class="py-1 text-hl-13 text-muted relative pl-3.5 list-dot-link">会员可通过网站留言申请添加大苏微信，获得一对一支持</li>
           <li class="py-1 text-hl-13 text-muted relative pl-3.5 list-dot-link">加入HOLDLE技术交流群，与会员互动</li>
           <li class="py-1 text-hl-13 text-muted relative pl-3.5 list-dot-link">有最新的工具、策略、研究第一时间给你分享</li>
         </ul>
@@ -94,8 +94,8 @@
 <section class="border-b border-line bg-white">
   <div class="container-hl py-16">
     <div class="label-en text-center">PRICING</div>
-    <h2 class="text-hl-22 font-bold text-ink mb-2 text-center">从免费体验到会员</h2>
-    <p class="text-hl-13 text-muted mb-8 text-center">先从免费体验开始，再到进阶实战 + AI助力。一次付费，长期使用</p>
+    <h2 class="text-hl-22 font-bold text-ink mb-2 text-center">选择适合自己的学习方式</h2>
+    <p class="text-hl-13 text-muted mb-8 text-center">先从免费课程和 AI 体验开始，也可以按需要解锁进阶内容与工具。</p>
 
     <%# 定价区动态渲染 Plan.active（v1.40.1 由硬编码改为与 /plans 同源，避免双数据源漂移）；卖点文案按 plan_code 维护 %>
     <%# member_from_student 为学员补差专用档，不进网格；学员身份用户的会员卡 CTA 替换为补差入口 %>
@@ -105,39 +105,46 @@
     <% if join_plans.any? %>
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-5xl mx-auto">
       <% pricing_features = {
-        "welcome" => ["先安装试一下，把方法尝个鲜。", "满意再升级。"],
-        "student_course" => [ "金字塔排名 <span class='text-ink font-medium'>全解锁</span>（板块 / 行业筛选 + 完整榜单）", "个股详情页金字塔分 + 行业金字塔对比", "学员档交易课 + 学员档文章（持续更新）", "AI 助手 15 次（与免费体验同档，非无限次）", "后续升会员仅需<span class='text-ink font-medium'>补差价 ¥200</span>，268 全额抵扣" ],
-        "member_permanent" => [ "AI 投研助手（完整能力）无限次使用", "AI 助手配套优化「股票回测专用数据脚本」(省token神器)", "进阶实战课程 + 易错避坑解析（会员专享·干货必学）", "金字塔排名 全解锁（快速筛选值得参与的股票）", "股票筛选功能 全解锁（投研利器·快速定位匹配符合条件的股票）", "企业质量档案（投研放大镜，这家公司是不是真的靠谱）", "KMR图表（月K·MACD·ROE三图聚合，状态A一目了然）", "加入HOLDLE技术交流群，与会员互动", "未来更多内容……"]
+        "welcome" => ["第 1–6 章基础课程", "AI 助手 15 次体验"],
+        "student_course" => ["包含第 7 章进阶课程", "金字塔完整榜单", "AI 助手：与访客共用 15 次总额度"],
+        "member_permanent" => ["包含学员档全部权益", "AI 助手长期使用", "股票筛选功能", "AI 助手配套数据脚本 Skill", "KMR图表功能（月K·MACD·ROE三图聚合）", "HOLDLE 技术交流群", "大苏一对一支持：通过网站留言申请添加微信", "已是学员？补 ¥200 升级会员"]
       } %>
+      <%# 卡片标题与「适合…」定位语按 plan_code 维护（DB 的 name 为对外全称，这里用简称）；会员档无定位语 %>
+      <% join_tier_titles = { "welcome" => "访客", "student_course" => "学员", "member_permanent" => "会员" } %>
+      <% join_positioning = { "welcome" => "适合先了解 HOLDLE 方法与 AI 助手", "student_course" => "适合希望学习进阶内容、使用金字塔工具的人" } %>
       <% join_plans.order(:price_cents).each do |plan| %>
-        <% unlimited = plan.quota.nil? %>
         <% is_member = plan.is_member_upgrade %>
         <% is_student_plan = plan.is_student_upgrade %>
         <div class="hl-card p-7 flex flex-col <%= is_member ? 'border-2 border-ink' : '' %>">
           <div class="flex items-center justify-between mb-1">
-            <h3 class="text-hl-15 font-semibold text-ink"><%= plan.name %></h3>
+            <h3 class="text-hl-15 font-semibold text-ink"><%= join_tier_titles[plan.plan_code] || plan.name %></h3>
             <% if is_member %>
               <span class="inline-block border border-profit text-profit px-2 py-0.5 text-hl-11 font-medium">推荐</span>
             <% elsif is_student_plan %>
               <span class="inline-block border border-amber-400 text-amber-600 px-2 py-0.5 text-hl-11 font-medium">新</span>
             <% end %>
           </div>
-          <p class="text-hl-12 text-muted-3 mb-4"><%= plan.plan_code == "welcome" ? "注册即送，无门槛" : "一次付费，长期使用" %></p>
-          <p class="text-hl-22 font-bold text-ink mb-1"><%= plan.price_cents.zero? ? "免费" : "¥#{format('%g', plan.price_yuan)}" %></p>
-          <p class="text-hl-22 font-bold text-ink mb-4"><%= unlimited ? "AI助手·无限次" : "AI助手·#{plan.quota}次" %></p>
-          <ul class="text-hl-13 text-muted space-y-2 mb-5 flex-1">
+          <p class="text-hl-22 font-bold text-ink mb-4"><%= plan.price_cents.zero? ? "免费" : "¥#{format('%g', plan.price_yuan)}" %><% if is_member %> <span class="text-hl-13 font-medium text-muted-2">｜一次付费，长期使用</span><% end %></p>
+          <ul class="text-hl-13 text-muted space-y-2 mb-4 flex-1">
             <% (pricing_features[plan.plan_code] || []).each do |feature| %>
               <li class="relative pl-3.5 list-dot-link"><%= feature.html_safe %></li>
             <% end %>
           </ul>
+          <% if join_positioning[plan.plan_code] %>
+            <p class="text-hl-12 text-muted-3 mb-4"><%= join_positioning[plan.plan_code] %></p>
+          <% end %>
           <% if plan.plan_code == "welcome" %>
-            <%= link_to "免费领取", new_user_registration_path(return_to: request.fullpath), class: "hl-btn hl-btn-line w-full text-center" %>
+            <% if user_signed_in? %>
+              <%= link_to "开始学习", courses_path, class: "hl-btn hl-btn-line w-full text-center" %>
+            <% else %>
+              <%= link_to "领取 AI 体验", new_user_registration_path(return_to: request.fullpath), class: "hl-btn hl-btn-line w-full text-center" %>
+            <% end %>
           <% elsif is_student_plan %>
-            <%= link_to "开通课程学员", new_order_path(plan: plan.plan_code), class: "hl-btn hl-btn-line w-full text-center" %>
+            <%= link_to "开通学员", new_order_path(plan: plan.plan_code), class: "hl-btn hl-btn-line w-full text-center" %>
           <% elsif is_member && join_is_student && join_upgrade_plan %>
             <%= link_to "补差价 ¥#{join_upgrade_plan.price_cents / 100} 升级会员", new_order_path(plan: join_upgrade_plan.plan_code), class: "hl-btn hl-btn-primary w-full text-center" %>
           <% else %>
-            <%= link_to is_member ? "开通会员 · AI投研助手无限次" : "购买", new_order_path(plan: plan.plan_code), class: "hl-btn #{is_member ? 'hl-btn-primary' : 'hl-btn-line'} w-full text-center" %>
+            <%= link_to is_member ? "开通会员" : "购买", new_order_path(plan: plan.plan_code), class: "hl-btn #{is_member ? 'hl-btn-primary' : 'hl-btn-line'} w-full text-center" %>
           <% end %>
         </div>
       <% end %>
@@ -147,22 +154,7 @@
     <% end %>
 
     <p class="text-hl-12 text-muted-4 text-center mt-6">
-      ※ 虚拟服务一经购买不支持退款（购买前请确认需求）；15 次免费体验，满意再升级会员（无限次）。
-    </p>
-  </div>
-</section>
-
-<%# ========== 老会员权益 ========== %>
-<section class="border-b border-line">
-  <div class="container-narrow py-16 text-center">
-    <div class="label-en">WE REMEMBER</div>
-    <h2 class="text-hl-22 font-bold text-ink mb-4">老会员，我们没忘</h2>
-    <p class="text-hl-14 text-muted leading-loose">
-      历史付费会员：继续享有<span class="text-profit font-semibold">同等会员权益 ＋ AI投研（无限次）</span>，登录查看你的 Key。<br />
-      感谢多年支持，希望这套方法继续陪你走得稳。
-    </p>
-    <p class="mt-6">
-      <%= link_to "登录查看我的 Key", users_profile_path, class: "hl-btn hl-btn-line" %>
+      ※ 虚拟服务一经购买不支持退款（购买前请确认需求）；15 次免费体验，满意再升级会员（长期使用）。
     </p>
   </div>
 </section>
@@ -205,7 +197,7 @@
           按提问次数计算：<br><br>
           新注册免费送 15 次体验；<br>
           课程学员（268元）= 金字塔全解锁 + 学员课程/文章，AI 保持 15 次；<br>
-          HOLDLE 会员（468元）一次付费、长期使用 = 进阶实战解锁 + AI 无限次使用（含金字塔排名、回测数据脚本、技术交流群等）。<br><br>
+          HOLDLE 会员（468元）一次付费、长期使用 = 进阶实战解锁 + AI 长期使用（含金字塔排名、回测数据脚本、技术交流群等）。<br><br>
           虚拟服务一经购买不支持退款。
         </div>
       </details>
@@ -217,7 +209,7 @@
           <span class="hl-faq-icon">+</span>
         </summary>
         <div class="hl-faq-content">
-          次数用完可加入 HOLDLE 会员（一次付费、长期不限次）；Key 泄露可在个人中心自助重新生成，旧 Key 立即失效。每个账号默认 1 个 Key，请勿分享。
+          次数用完可加入 HOLDLE 会员（一次付费、长期使用）；Key 泄露可在个人中心自助重新生成，旧 Key 立即失效。每个账号默认 1 个 Key，请勿分享。
         </div>
       </details>
 

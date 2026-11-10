@@ -157,7 +157,7 @@
                     <div class="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-hl-12 text-muted-3">
                       <span class="<%= key.status == "active" ? "text-profit" : "text-muted-4" %>"><%= key.status == "active" ? "使用中" : (key.status == "disabled" ? "已停用" : "已吊销") %></span>
                       <span><%= key.plan_name %></span>
-                      <span>剩余 <%= key.unlimited? ? "无限次" : "#{key.quota_remaining} 次" %></span>
+                      <span><%= key.unlimited? ? "长期使用" : "剩余 #{key.quota_remaining} 次" %></span>
                     </div>
                   </div>
 

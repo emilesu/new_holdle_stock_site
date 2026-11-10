@@ -117,7 +117,6 @@
                 <span class="hl-btn bg-bg-mute text-muted-4 border-line cursor-not-allowed hover:border-line shrink-0">已解锁</span>
               <% else %>
                 <p class="text-hl-13 text-muted">板块 / 行业筛选、完整榜单为课程学员 / 会员专属功能</p>
-                <%= link_to "¥268 开通课程学员", join_path, class: "hl-btn hl-btn-primary shrink-0" %>
               <% end %>
             </div>
           </div>
@@ -193,8 +192,8 @@
             <% unless @is_member %>
               <%# 非会员遮罩：筛选区只读，引导加入会员 %>
               <div class="absolute inset-0 flex flex-col sm:flex-row items-center justify-center gap-2 px-4 bg-white/70">
-                <p class="text-hl-13 text-muted text-center">市场 / 板块 / 行业筛选为课程学员 / 会员专属功能</p>
-                <%= link_to '¥268 开通课程学员', join_path, class: 'hl-btn hl-btn-primary shrink-0 text-hl-12' %>
+                <p class="text-hl-13 text-muted text-center">学员和会员均可查看金字塔完整榜单，并使用市场、板块和行业筛选。</p>
+                <%= link_to '了解会员权益', join_path, class: 'hl-btn hl-btn-primary shrink-0 text-hl-12' %>
               </div>
             <% end %>
           </div>
@@ -262,8 +261,8 @@
           <% else %>
             <%# 非会员示例卡底部引导（示例不提供分页加载） %>
             <div class="px-6 py-4 border-t border-line bg-bg-mute flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-              <p class="text-hl-13 text-muted">完整榜单（全部市场 / 板块 / 行业）与金字塔分数为课程学员 / 会员专属</p>
-              <%= link_to '¥268 开通课程学员', join_path, class: 'hl-btn hl-btn-primary shrink-0' %>
+              <p class="text-hl-13 text-muted">已是学员？补 ¥200 可升级为会员，获得会员档全部权益。</p>
+              <%= link_to '¥268 开通学员', join_path, class: 'hl-btn hl-btn-primary shrink-0' %>
             </div>
           <% end %>
         </div>
