@@ -1,7 +1,7 @@
 Rails.application.routes.draw do
 
   # Devise OAuth回调路由
-  devise_for :users, controllers: { sessions: 'sessions', registrations: 'users/registrations', omniauth_callbacks: 'users/omniauth_callbacks' }
+  devise_for :users, controllers: { sessions: 'sessions', registrations: 'users/registrations', omniauth_callbacks: 'users/omniauth_callbacks', passwords: 'users/password_resets' }
 
   # OAuth失败跳转路由
   get '/users/oauth_failure', to: 'sessions#oauth_failure', as: :oauth_failure
@@ -120,7 +120,6 @@ Rails.application.routes.draw do
     post "profile/regenerate_api_key", to: "profiles#regenerate_api_key", as: :regenerate_api_key
     get "profile/edit", to: "profiles#edit", as: :edit_profile
     patch "profile", to: "profiles#update"
-    patch "profile/password", to: "profiles#update_password", as: :update_profile_password
     get "profile/favorites", to: "profiles#favorites", as: :profile_favorites
     # PR-4 账号绑定管理：发起第三方授权绑定 / 解绑
     get "identities/:provider/link", to: "identities#link", as: :link_identity
@@ -129,6 +128,9 @@ Rails.application.routes.draw do
     # PR-6 绑定真实邮箱：发验证码 / 验码并提交
     post "email_binding/code", to: "email_bindings#create", as: :email_binding_code
     patch "email_binding", to: "email_bindings#update", as: :email_binding
+    # 登录态设置/修改登录密码（绑定邮箱验证码方式，免当前密码）
+    post "password_setting/code", to: "password_settings#create", as: :password_setting_code
+    patch "password_setting", to: "password_settings#update", as: :password_setting
     # PR-7 自助归并：用原账号邮箱+密码验证后并入老账号
     post "claim", to: "claims#create", as: :claim
   end

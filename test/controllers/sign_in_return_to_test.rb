@@ -50,7 +50,8 @@ class SignInReturnToTest < ActionDispatch::IntegrationTest
   end
 
   test "新用户带 return_to 注册后回原页面，引导只延后一次" do
-    get new_user_registration_path(return_to: about_path)
+    # 目标页用 courses：about 页改版期间临时下线重定向首页，follow_redirect! 拿不到 200
+    get new_user_registration_path(return_to: courses_path)
     assert_response :success
 
     post user_registration_path, params: {
@@ -61,7 +62,7 @@ class SignInReturnToTest < ActionDispatch::IntegrationTest
         nickname: "回源用户"
       }
     }
-    assert_redirected_to about_path
+    assert_redirected_to courses_path
 
     follow_redirect! # 消耗一次性放行标记
     assert_response :success

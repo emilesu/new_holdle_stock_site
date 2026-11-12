@@ -14,8 +14,8 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
 
   test "index hero links point to ai-assistant and courses" do
     get root_url
-    assert_select "a[href='/ai-assistant']", text: "使用AI助手"
-    assert_select "a[href='/courses']", text: "开始学习"
+    assert_select "a[href='/ai-assistant']", text: "了解 AI 助手"
+    assert_select "a[href='/courses']", text: "从免费课程开始"
   end
 
   test "index renders all sections" do

@@ -24,27 +24,6 @@ class Users::ProfilesController < ApplicationController
     render :edit
   end
 
-  def update_password
-    authorize @user, :update_password?
-    # PR-6：占位邮箱账号（微信建号/旧站迁移）无从知晓随机初始密码，免 current_password——
-    # 能进入本页即已通过登录态（第三方凭据或密码）验证所有权
-    ok = if @user.email_placeholder?
-           @user.update(password: password_params[:password],
-                        password_confirmation: password_params[:password_confirmation])
-         else
-           @user.update_with_password(password_params)
-         end
-    if ok
-      bypass_sign_in(@user)
-      redirect_to users_profile_path, notice: "密码修改成功"
-    else
-      render :edit
-    end
-  rescue StandardError => e
-    flash[:alert] = "密码修改失败：#{e.message}"
-    render :edit
-  end
-
   # 收藏页每页条数（与金字塔页 PER_PAGE 同风格，前端哨兵由服务端下发避免漂移）
   PER_PAGE = 20
   # 关键词长度上限：超长视为无效查询，直接不过滤（不报错，保证输入即搜永不阻塞）
@@ -107,10 +86,6 @@ class Users::ProfilesController < ApplicationController
 
   def user_params
     params.require(:user).permit(:nickname, :bio)
-  end
-
-  def password_params
-    params.require(:user).permit(:current_password, :password, :password_confirmation)
   end
 
   # 关键词归一化：去首尾与内部多余空白；超长直接丢弃（当作未搜索）

@@ -20,29 +20,36 @@ class EmailVerificationService
     # 顺带清理一天前的残留记录，防表无界增长（走 created_at 索引）
     EmailVerification.where(created_at: ...1.day.ago).delete_all
 
-    code = format("%06d", SecureRandom.random_number(1_000_000))
+    # 首位非零：带前导零的码（如 028116）会被用户复制/手输吃掉 0 变成 5 位，
+    # 导致永远校验失败且提示难感知（2026-11-12 生产工单根因）
+    code = SecureRandom.random_number(100_000..999_999).to_s
     record = EmailVerification.create!(
       email: email, purpose: purpose,
       code_digest: Devise::Encryptor.digest(User, code),
       expires_at: CODE_TTL.from_now, ip: ip
     )
-    VerificationMailer.code_email(email: email, code: code).deliver_now
+    VerificationMailer.code_email(email: email, code: code, purpose: purpose).deliver_now
     record
   end
 
-  # 校验通过返回 true；失败抛 Error（尝试超限/过期/错误）
+  # 校验通过返回 true；失败抛 Error（尝试超限/过期/错误）。
+  # 匹配该邮箱该用途下「所有」未过期记录：用户连点两次获取会收到两封邮件，
+  # 只认最新一条会让读第一封填码的用户必失败
   def self.verify!(email:, purpose:, code:)
     email = normalize(email)
-    record = EmailVerification.where(email: email, purpose: purpose).active.order(id: :desc).first
-    raise Error, "验证码已过期，请重新获取" if record.nil?
-    raise Error, "错误次数过多，请重新获取验证码" if record.attempt_count >= MAX_ATTEMPTS
+    records = EmailVerification.where(email: email, purpose: purpose).order(id: :desc).select(&:active?)
+    raise Error, "验证码已过期，请重新获取" if records.empty?
 
-    unless Devise::Encryptor.compare(User, record.code_digest, code.to_s)
-      record.update_column(:attempt_count, record.attempt_count + 1)
+    latest = records.first
+    raise Error, "错误次数过多，请重新获取验证码" if latest.attempt_count >= MAX_ATTEMPTS
+
+    matched = records.find { |r| Devise::Encryptor.compare(User, r.code_digest, code.to_s) }
+    unless matched
+      latest.update_column(:attempt_count, latest.attempt_count + 1)
       raise Error, "验证码不正确"
     end
 
-    record.destroy!
+    matched.destroy!
     true
   end
 

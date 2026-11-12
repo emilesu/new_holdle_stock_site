@@ -4,7 +4,11 @@ export default class extends Controller {
   static values = { delay: { type: Number, default: 5000 } }
 
   connect() {
-    this.timeout = setTimeout(() => this.dismiss(), this.delayValue)
+    // delay 为 0 表示不自动消失：错误类提示（alert）必须留在页面上直到用户处理，
+    // 否则长页面里一闪而过，用户体感就是「点了没反应」
+    if (this.delayValue > 0) {
+      this.timeout = setTimeout(() => this.dismiss(), this.delayValue)
+    }
   }
 
   disconnect() {

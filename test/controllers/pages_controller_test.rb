@@ -8,7 +8,9 @@ class PagesControllerTest < ActionDispatch::IntegrationTest
     get join_path
     assert_response :success
     assert_match "免费送 15 次体验", response.body
-    assert_match "永久会员", response.body
+    # 定价卡标题按 plan_code 简称渲染（会员），全称 name 不外显；断言动态价格与 CTA 证明套餐已进网格
+    assert_match "¥468", response.body
+    assert_match "开通会员", response.body
     assert_select "a[href='/ai-assistant']", text: "AI使用教程"
   end
 
@@ -41,7 +43,7 @@ class PagesControllerTest < ActionDispatch::IntegrationTest
     get plans_path
     assert_response :success
     assert_match "永久会员", response.body
-    assert_match "开通会员 · AI投研助手无限次", response.body
+    assert_match "开通会员 · AI投研助手长期使用", response.body
     assert_match "当前账号", response.body
   end
 end

@@ -37,6 +37,18 @@ class Users::EmailBindingsTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "60 秒内误点二次获取被限流后，第一封邮件的验证码仍可用" do
+    post users_email_binding_code_path, params: { email: "demo@gmail.com" }
+    code = ActionMailer::Base.deliveries.last.text_part.body.decoded[/\b(\d{6})\b/, 1]
+
+    # 误点第二次获取 → 限流报错，但不得清掉 session 里的待绑邮箱
+    post users_email_binding_code_path, params: { email: "demo@gmail.com" }
+    assert_match(/过于频繁/, flash[:binding_error].to_s)
+
+    patch users_email_binding_path, params: { code: code, password: "newpass123", password_confirmation: "newpass123" }
+    assert_equal "demo@gmail.com", @wx.reload.email
+  end
+
   test "错误验证码不改变邮箱" do
     post users_email_binding_code_path, params: { email: "demo@gmail.com" }
     patch users_email_binding_path, params: { code: "000000", password: "newpass123", password_confirmation: "newpass123" }
@@ -49,7 +61,7 @@ class Users::EmailBindingsTest < ActionDispatch::IntegrationTest
     patch users_email_binding_path, params: { code: code, password: "newpass123", password_confirmation: "different" }
     @wx.reload
     assert_equal "wx_demo@wechat-auto.local", @wx.email
-    assert_match(/密码不一致/, flash[:alert].to_s)
+    assert_match(/密码不一致/, flash[:binding_error].to_s)
     assert_equal 1, EmailVerification.count, "验证码不应被消耗，可直接改正重交"
 
     # 改正后凭原验证码直接成功
@@ -57,16 +69,19 @@ class Users::EmailBindingsTest < ActionDispatch::IntegrationTest
     assert_equal "demo@gmail.com", @wx.reload.email
   end
 
-  test "占位邮箱账号改密免当前密码" do
-    patch users_update_profile_password_path, params: { user: { password: "abc12345", password_confirmation: "abc12345" } }
-    assert @wx.reload.valid_password?("abc12345")
-  end
+  test "未填登录密码时拦截且验证码不消耗（绑定必须首设密码）" do
+    post users_email_binding_code_path, params: { email: "demo@gmail.com" }
+    code = ActionMailer::Base.deliveries.last.text_part.body.decoded[/\b(\d{6})\b/, 1]
+    patch users_email_binding_path, params: { code: code }
+    @wx.reload
+    assert_equal "wx_demo@wechat-auto.local", @wx.email
+    assert_match(/登录密码/, flash[:binding_error].to_s)
+    assert_equal 1, EmailVerification.count
 
-  test "真实邮箱账号改密仍需当前密码" do
-    real = users(:one)
-    sign_in real
-    patch users_update_profile_password_path, params: { user: { current_password: "wrong", password: "abc12345", password_confirmation: "abc12345" } }
-    assert_not real.reload.valid_password?("abc12345")
+    # 补填密码后凭原验证码直接成功
+    patch users_email_binding_path, params: { code: code, password: "newpass123", password_confirmation: "newpass123" }
+    assert_equal "demo@gmail.com", @wx.reload.email
+    assert @wx.reload.valid_password?("newpass123")
   end
 
   test "邮箱注册触发确认邮件且宽限期内可登录" do

@@ -52,7 +52,7 @@
           <span class="text-hl-14 text-ink font-medium"><%= human_role(@user.role) %></span>
         </div>
 
-        <%# 账号绑定（PR-4）：微信 / Google 凭据管理，解绑有守卫保证至少保留一种登录方式 %>
+        <%# 账号绑定（PR-4）：微信 / Google / 邮箱 凭据管理，解绑有守卫保证至少保留一种登录方式 %>
         <div class="bg-bg-soft rounded p-4 sm:p-5">
           <span class="text-hl-12 text-muted-4 block mb-3">账号绑定</span>
           <div class="space-y-3">
@@ -89,15 +89,34 @@
                 <%= link_to "绑定 Google", users_link_identity_path("google_oauth2"), class: "hl-btn hl-btn-line px-3 py-1 text-hl-12" %>
               <% end %>
             </div>
+
+            <%# 邮箱行：占位邮箱=未绑定；绑定可选，但手机浏览器登录（无法用微信内置授权）的用户需要邮箱+密码 %>
+            <div class="flex items-center justify-between gap-3">
+              <span class="flex items-center gap-2 min-w-0">
+                <span class="text-hl-14 text-ink font-medium">邮箱</span>
+                <% if @user.real_email? %>
+                  <span class="text-hl-12 text-profit">已绑定</span>
+                  <span class="text-hl-12 text-muted-4 truncate"><%= @user.email %></span>
+                <% else %>
+                  <span class="text-hl-12 text-muted-4">未绑定</span>
+                <% end %>
+              </span>
+              <% if @user.email_placeholder? && current_user == @user %>
+                <%= link_to "绑定邮箱", "#email-binding-card", class: "hl-btn hl-btn-line px-3 py-1 text-hl-12" %>
+              <% end %>
+            </div>
           </div>
-          <p class="text-hl-11 text-muted-4 mt-3">绑定后可用任一方式登录同一账号；为保证始终可登录，仅在存在其他登录方式时可解绑。</p>
+          <p class="text-hl-11 text-muted-4 mt-3">绑定后可用任一方式登录同一账号；为保证始终可登录，仅在存在其他登录方式时可解绑。不绑定邮箱也可继续用微信/Google 登录，但无法接收站点通知、无法在其他浏览器设备上登录。</p>
         </div>
 
-        <%# PR-6：占位邮箱账号引导绑定真实邮箱（验证码即时生效，可同步首设密码） %>
+        <%# PR-6：占位邮箱账号绑定真实邮箱（验证码即时生效，必须同步首设登录密码） %>
         <% if current_user.email_placeholder? %>
-          <div class="bg-bg-soft rounded p-4 sm:p-5 border border-line-soft">
+          <div id="email-binding-card" class="bg-bg-soft rounded p-4 sm:p-5 border border-line-soft">
             <span class="text-hl-12 text-muted-4 block mb-1">绑定真实邮箱</span>
-            <p class="text-hl-12 text-muted-3 mb-4">当前账号邮箱为系统占位地址（<%= current_user.email %>），收不到通知也无法找回密码。绑定后可用邮箱+密码登录。</p>
+            <p class="text-hl-12 text-muted-3 mb-4">当前账号邮箱为系统占位地址（<%= current_user.email %>），收不到通知也无法找回密码。绑定并设置密码后，可用邮箱+密码在任何浏览器登录；微信登录不受影响、无需密码，也可以暂不绑定。</p>
+            <% if flash[:binding_error] %>
+              <div class="mb-3 bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded text-hl-12"><%= flash[:binding_error] %></div>
+            <% end %>
 
             <%= form_with url: users_email_binding_code_path, method: :post, class: "flex flex-wrap items-end gap-3 mb-4" do %>
               <div class="flex-1 min-w-[200px]">
@@ -116,13 +135,13 @@
                     class="w-full px-4 py-2 border border-line rounded text-hl-13 text-ink bg-white focus:outline-none focus:border-muted-3">
                 </div>
                 <div>
-                  <label class="block text-hl-12 text-muted-4 mb-1">设置密码（可选）</label>
-                  <input type="password" name="password" autocomplete="new-password" placeholder="至少 8 位"
+                  <label class="block text-hl-12 text-muted-4 mb-1">设置登录密码</label>
+                  <input type="password" name="password" required autocomplete="new-password" placeholder="至少 8 位"
                     class="w-full px-4 py-2 border border-line rounded text-hl-13 text-ink bg-white focus:outline-none focus:border-muted-3">
                 </div>
                 <div>
-                  <label class="block text-hl-12 text-muted-4 mb-1">确认密码</label>
-                  <input type="password" name="password_confirmation" autocomplete="new-password"
+                  <label class="block text-hl-12 text-muted-4 mb-1">确认登录密码</label>
+                  <input type="password" name="password_confirmation" required autocomplete="new-password"
                     class="w-full px-4 py-2 border border-line rounded text-hl-13 text-ink bg-white focus:outline-none focus:border-muted-3">
                 </div>
               </div>
@@ -130,6 +149,44 @@
             <% end %>
           </div>
         <% end %>
+
+        <%# 登录密码：统一「绑定邮箱验证码」方式设置/修改（免当前密码），覆盖 Google/微信建号从未自设密码的死角 %>
+        <div class="bg-bg-soft rounded p-4 sm:p-5">
+          <span class="text-hl-12 text-muted-4 block mb-1">登录密码</span>
+          <% if current_user.email_placeholder? %>
+            <p class="text-hl-12 text-muted-3">绑定真实邮箱后即可设置登录密码。微信/Google 登录不受影响、无需密码。</p>
+          <% else %>
+            <p class="text-hl-12 text-muted-3 mb-4">用于邮箱+密码登录与忘记密码找回。验证码将发送至 <%= current_user.email %>，修改无需当前密码。</p>
+            <% if flash[:password_error] %>
+              <div class="mb-3 bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded text-hl-12"><%= flash[:password_error] %></div>
+            <% end %>
+
+            <%= form_with url: users_password_setting_code_path, method: :post, class: "mb-4" do %>
+              <button type="submit" class="hl-btn hl-btn-line px-4 py-2 text-hl-13">获取邮箱验证码</button>
+            <% end %>
+
+            <%= form_with url: users_password_setting_path, method: :patch, class: "space-y-3" do %>
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <label class="block text-hl-12 text-muted-4 mb-1">邮箱验证码</label>
+                  <input type="text" name="code" required inputmode="numeric" maxlength="6" placeholder="6 位数字"
+                    class="w-full px-4 py-2 border border-line rounded text-hl-13 text-ink bg-white focus:outline-none focus:border-muted-3">
+                </div>
+                <div>
+                  <label class="block text-hl-12 text-muted-4 mb-1">新密码</label>
+                  <input type="password" name="password" required autocomplete="new-password" placeholder="至少 8 位"
+                    class="w-full px-4 py-2 border border-line rounded text-hl-13 text-ink bg-white focus:outline-none focus:border-muted-3">
+                </div>
+                <div>
+                  <label class="block text-hl-12 text-muted-4 mb-1">确认新密码</label>
+                  <input type="password" name="password_confirmation" required autocomplete="new-password"
+                    class="w-full px-4 py-2 border border-line rounded text-hl-13 text-ink bg-white focus:outline-none focus:border-muted-3">
+                </div>
+              </div>
+              <button type="submit" class="hl-btn hl-btn-primary px-4 py-2 text-hl-13">保存新密码</button>
+            <% end %>
+          <% end %>
+        </div>
 
         <%# AI 投研助手 API Key（T7 Phase3：开放给所有用户，完整展示 + 复制 + 安装提示词） %>
         <div class="bg-bg-soft rounded p-4 sm:p-5">

@@ -11,10 +11,6 @@ class UserPolicy < ApplicationPolicy
     user == record || user&.is_admin?
   end
 
-  def update_password?
-    user == record
-  end
-
   def favorites?
     user == record
   end

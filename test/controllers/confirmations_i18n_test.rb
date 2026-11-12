@@ -28,9 +28,11 @@ class ConfirmationsI18nTest < ActionDispatch::IntegrationTest
   end
 
   test "忘记密码输入未注册邮箱时中文提示" do
-    post user_password_path, params: { user: { email: "nobody_nowhere@test.com" } }
-    assert_response :unprocessable_entity
-    assert_match(/尚未注册/, response.body)
+    # 验证码化改造后：明示未注册并引导微信/Google 用户（替代 Devise not_found 翻译）
+    post user_password_path, params: { email: "nobody_nowhere@test.com" }
+    assert_response :unprocessable_content
+    assert_match(/该邮箱未注册/, response.body)
+    assert_match(/个人中心绑定/, response.body)
     assert_no_match(/Translation missing/, response.body)
   end
 

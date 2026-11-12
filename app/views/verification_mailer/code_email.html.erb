@@ -1,10 +1,10 @@
-<% content_for :preheader, "正在绑定此邮箱到 HOLD LE 账号。" %>
+<% content_for :preheader, "#{@intro}。" %>
 
 <div style="font-size:18px; font-weight:600; line-height:1.5; margin:0 0 12px;">验证您的邮箱</div>
 
 <p style="margin:0 0 8px;">您好：</p>
 
-<p style="margin:0 0 16px;">您正在将此邮箱绑定到 HOLD LE 账号。验证码：</p>
+<p style="margin:0 0 16px;"><%= @intro %>。验证码：</p>
 
 <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 16px;">
   <tr>

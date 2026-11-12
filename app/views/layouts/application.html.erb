@@ -59,7 +59,7 @@
           </div>
         <% end %>
         <% if alert %>
-          <div data-controller="flash" class="mb-2 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded flex items-center justify-between text-hl-13">
+          <div data-controller="flash" data-flash-delay-value="0" class="mb-2 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded flex items-center justify-between text-hl-13">
             <span><%= alert %></span>
             <button data-action="flash#dismiss" class="ml-4 text-red-400 hover:text-red-700 transition-colors">&times;</button>
           </div>

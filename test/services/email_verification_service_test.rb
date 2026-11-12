@@ -34,6 +34,25 @@ class EmailVerificationServiceTest < ActiveSupport::TestCase
     assert_equal 0, EmailVerification.count
   end
 
+  test "生成的验证码首位非零（防复制/手输丢 0 变 5 位，2026-11-12 生产工单根因）" do
+    20.times do |i|
+      EmailVerificationService.issue(email: "nz#{i}@t.com", purpose: "bind_email")
+      body = ActionMailer::Base.deliveries.last.text_part.body.decoded
+      code = body[/\b(\d{6})\b/, 1]
+      assert code, "邮件正文应包含 6 位验证码"
+      assert_match(/\A[1-9]\d{5}\z/, code)
+    end
+  end
+
+  test "多条有效记录时任一未过期码均可通过（连点两次获取收到两封邮件）" do
+    create_record("111111")
+    create_record("222222")
+    assert EmailVerificationService.verify!(email: "v@t.com", purpose: "bind_email", code: "111111")
+    assert_equal 1, EmailVerification.count, "命中的旧码销毁，新码保留仍可用"
+    assert EmailVerificationService.verify!(email: "v@t.com", purpose: "bind_email", code: "222222")
+    assert_equal 0, EmailVerification.count
+  end
+
   test "错误码计次，5 次后正确码也作废" do
     create_record("123456")
     5.times do

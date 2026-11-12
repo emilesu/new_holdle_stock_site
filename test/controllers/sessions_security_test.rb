@@ -38,24 +38,27 @@ class SessionsSecurityTest < ActionDispatch::IntegrationTest
     end
   end
 
-  test "真实邮箱改密发送通知邮件" do
+  test "真实邮箱验证码改密发送通知邮件" do
     sign_in @user
     assert_difference "ActionMailer::Base.deliveries.size", 1 do
+      post users_password_setting_code_path
+    end
+    code = ActionMailer::Base.deliveries.last.text_part.body.decoded[/\b(\d{6})\b/, 1]
+    assert_difference "ActionMailer::Base.deliveries.size", 1 do
       perform_enqueued_jobs do # PR-8：Devise 通知邮件经队列投递
-        patch users_update_profile_password_path, params: {
-          user: { current_password: "password123", password: "newpassword1", password_confirmation: "newpassword1" }
-        }
+        patch users_password_setting_path, params: { code: code, password: "newpassword1", password_confirmation: "newpassword1" }
       end
     end
+    assert @user.reload.valid_password?("newpassword1")
   end
 
-  test "占位邮箱改密不发通知（防 SMTP 退信 500）" do
+  test "占位邮箱账号不能直接请求改密验证码（防 SMTP 退信 500）" do
     shell = User.create!(email: "wx_n@wechat-auto.local", password: "password123", nickname: "壳用户", confirmed_at: Time.current)
     sign_in shell
     assert_no_difference "ActionMailer::Base.deliveries.size" do
-      patch users_update_profile_password_path, params: { user: { password: "newpassword1", password_confirmation: "newpassword1" } }
+      post users_password_setting_code_path
     end
-    assert shell.reload.valid_password?("newpassword1")
+    assert_match(/绑定/, flash[:password_error].to_s)
   end
 
   test "claim 失败累计老账号 failed_attempts" do
