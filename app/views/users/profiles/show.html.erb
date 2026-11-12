@@ -68,7 +68,7 @@
               <% if @user.weixin_unionid.present? || @user.weixin_web_openid.present? || @user.weixin_app_openid.present? %>
                 <%= button_to "解绑", users_unlink_wechat_path, method: :delete, form: { class: "inline" }, data: { confirm: "解绑后将无法用微信登录此账号，确定解绑？" }, class: "hl-btn hl-btn-line px-3 py-1 text-hl-12" %>
               <% else %>
-                <%= link_to "绑定微信", users_link_identity_path(wechat_browser? ? "wechat_mobile" : "wechat"), class: "hl-btn hl-btn-line px-3 py-1 text-hl-12" %>
+                <%= link_to "绑定微信", users_link_identity_path(wechat_browser? ? "wechat_mobile" : "wechat"), data: { turbo: false }, class: "hl-btn hl-btn-line px-3 py-1 text-hl-12" %>
               <% end %>
             </div>
 
@@ -86,7 +86,7 @@
               <% if google_identity %>
                 <%= button_to "解绑", users_identity_path(google_identity), method: :delete, form: { class: "inline" }, data: { confirm: "解绑后将无法用 Google 登录此账号，确定解绑？" }, class: "hl-btn hl-btn-line px-3 py-1 text-hl-12" %>
               <% else %>
-                <%= link_to "绑定 Google", users_link_identity_path("google_oauth2"), class: "hl-btn hl-btn-line px-3 py-1 text-hl-12" %>
+                <%= link_to "绑定 Google", users_link_identity_path("google_oauth2"), data: { turbo: false }, class: "hl-btn hl-btn-line px-3 py-1 text-hl-12" %>
               <% end %>
             </div>
 

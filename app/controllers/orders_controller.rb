@@ -28,7 +28,7 @@ class OrdersController < ApplicationController
       unless openid
         session[:after_wechat_auth] = "new_order"
         auth_url = user_wechat_mobile_omniauth_authorize_path
-        render html: auto_auth_form(auth_url), layout: false
+        render html: auto_auth_form(auth_url, label: "正在跳转微信授权..."), layout: false
         return
       end
     end
@@ -233,19 +233,4 @@ class OrdersController < ApplicationController
     ua.include?("micromessenger") && !ua.include?("alipayclient")
   end
 
-  def auto_auth_form(auth_url)
-    <<~HTML.html_safe
-      <!DOCTYPE html>
-      <html>
-      <head><meta charset="utf-8"><title>授权中...</title></head>
-      <body>
-        <p style="text-align:center;margin-top:40px;font-size:16px;color:#555;">正在跳转微信授权...</p>
-        <form id="auth-form" action="#{auth_url}" method="post">
-          <input type="hidden" name="authenticity_token" value="#{form_authenticity_token}">
-        </form>
-        <script>document.getElementById('auth-form').submit();</script>
-      </body>
-      </html>
-    HTML
-  end
 end

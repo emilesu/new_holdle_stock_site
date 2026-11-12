@@ -13,10 +13,21 @@ class Users::IdentitiesControllerTest < ActionDispatch::IntegrationTest
     OmniAuth.config.mock_auth[:wechat] = nil
   end
 
-  test "发起绑定 Google 跳转授权路径" do
+  # OmniAuth 2 授权入口仅接受 POST（allowed_request_methods 默认 [:post]），
+  # 旧实现 302 重定向是 GET、生产必 404——必须渲染自动提交的 POST 表单页发起授权
+  test "发起绑定渲染指向授权路径的 POST 表单" do
     sign_in_user(@user)
     get users_link_identity_path("google_oauth2")
-    assert_redirected_to user_google_oauth2_omniauth_authorize_path
+    assert_response :success
+    assert_select "form[action=?][method=?]", user_google_oauth2_omniauth_authorize_path, "post"
+    assert_select "form input[name='authenticity_token']"
+  end
+
+  test "授权入口 GET 被拒 POST 可达（路由回归守卫）" do
+    get user_google_oauth2_omniauth_authorize_path
+    assert_response :not_found # No route matches [GET]——生产即用户看到的 404 页
+    post user_google_oauth2_omniauth_authorize_path, params: { authenticity_token: "x" }
+    assert_response :redirect
   end
 
   test "绑定回调把凭据挂到当前用户而非邮箱匹配账号" do

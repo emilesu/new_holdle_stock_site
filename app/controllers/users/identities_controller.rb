@@ -3,7 +3,8 @@ class Users::IdentitiesController < ApplicationController
 
   LINKABLE_PROVIDERS = %w[google_oauth2 wechat wechat_mobile].freeze
 
-  # 发起绑定：置 session 标记后跳转第三方授权，回调在 OmniauthCallbacksController 的绑定分支处理
+  # 发起绑定：置 session 标记后以自动提交 POST 表单跳转第三方授权
+  # （OmniAuth 2 授权入口仅接受 POST，302 重定向 GET 会 404），回调在 OmniauthCallbacksController 的绑定分支处理
   def link
     provider = params[:provider].to_s
     unless LINKABLE_PROVIDERS.include?(provider)
@@ -11,7 +12,7 @@ class Users::IdentitiesController < ApplicationController
       return
     end
     session[:identity_link_provider] = provider
-    redirect_to omniauth_authorize_path_for(provider), allow_other_host: true
+    render html: auto_auth_form(omniauth_authorize_path_for(provider)), layout: false
   end
 
   def destroy

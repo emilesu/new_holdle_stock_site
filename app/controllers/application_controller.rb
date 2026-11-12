@@ -31,6 +31,25 @@ class ApplicationController < ActionController::Base
 
     private
 
+    # OmniAuth 2.x 授权入口默认仅接受 POST（CVE-2015-9284 收紧），服务端 302 重定向是 GET，
+    # 直跳 authorize_path 必然 RoutingError 404。统一用「自动提交的 POST 表单页」发起授权，
+    # 下单 JSAPI 静默授权与个人中心第三方绑定共用（原 OrdersController 私有实现上移）。
+    def auto_auth_form(auth_url, label: "正在跳转授权页面...")
+      <<~HTML.html_safe
+        <!DOCTYPE html>
+        <html>
+        <head><meta charset="utf-8"><title>授权中...</title></head>
+        <body>
+          <p style="text-align:center;margin-top:40px;font-size:16px;color:#555;">#{label}</p>
+          <form id="auth-form" action="#{auth_url}" method="post">
+            <input type="hidden" name="authenticity_token" value="#{form_authenticity_token}">
+          </form>
+          <script>document.getElementById('auth-form').submit();</script>
+        </body>
+        </html>
+      HTML
+    end
+
     # 当前用户在本批股票中的已收藏 id 集合（单次查询，供结果列表显示「已收藏」小图标）
     # 筛选结果页与金字塔排行页共用
     def favorite_stock_ids(stocks)
