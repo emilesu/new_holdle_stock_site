@@ -7,7 +7,7 @@ namespace :stocks do
     cn_hk = Stock.where(market: %w[CN HK]).where.not(name: [nil, ""])
     puts "CN/HK 股票 #{cn_hk.count} 条..."
     cn_hk.find_each.with_index do |stock, i|
-      initials = Pinyin.t(stock.name).split.map(&:first).join.upcase
+      initials = PinyinInitials.call(stock.name)
       stock.update_column(:pinyin_initials, initials) if stock.pinyin_initials != initials
       puts "  CN/HK [#{i + 1}] #{stock.symbol} -> #{initials}" if (i % 200).zero?
     end
@@ -17,7 +17,7 @@ namespace :stocks do
     puts "US 股票（有中文名） #{us.count} 条..."
     us.find_each.with_index do |stock, i|
       chinese_part = stock.name.split('|').first.strip
-      initials = Pinyin.t(chinese_part).split.map(&:first).join.upcase
+      initials = PinyinInitials.call(chinese_part)
       stock.update_column(:pinyin_initials, initials) if stock.pinyin_initials != initials
       puts "  US [#{i + 1}] #{stock.symbol} #{chinese_part} -> #{initials}" if (i % 200).zero?
     end
