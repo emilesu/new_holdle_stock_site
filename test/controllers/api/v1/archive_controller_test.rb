@@ -10,19 +10,21 @@ class Api::V1::ArchiveControllerTest < ActionDispatch::IntegrationTest
   # 构造 A 股 + 一期年报（四子表齐），返回 [stock, indicator]
   # calc_at 传入即视为「已重算」，ranking 榜单只收 last_pyramid_calc_at 非空的标的
   def create_cn_stock_with_annual(symbol:, name:, score:, sector: "医药生物", industry: "医疗服务",
-                                  year: 2025, revenue: nil, parent: nil, calc_at: nil, **indicator_attrs)
-    stock = Stock.create!(symbol: symbol, name: name, market: "CN", sector: sector, industry: industry,
-                          exchange: "SHSE", status: "active", pyramid_total_score: score,
-                          last_pyramid_calc_at: calc_at)
+                                  year: 2025, revenue: nil, parent: nil, calc_at: nil, market: "CN",
+                                  **indicator_attrs)
+    stock = Stock.create!(symbol: symbol, name: name, market: market, sector: sector, industry: industry,
+                          exchange: market == "US" ? "NASDAQ" : "SHSE", status: "active",
+                          pyramid_total_score: score, last_pyramid_calc_at: calc_at)
     report_date = Date.new(year, 12, 31)
-    fr = FinancialReport.create!(stock: stock, report_date: report_date, report_type: "CN_ANNUAL",
-                                 market: "CN", period_type: "annual", currency: "CNY")
+    fr = FinancialReport.create!(stock: stock, report_date: report_date, report_type: "#{market}_ANNUAL",
+                                 market: market, period_type: "annual",
+                                 currency: market == "US" ? "USD" : "CNY")
     if revenue || parent
-      IncomeStatement.create!(financial_report: fr, stock: stock, report_date: report_date, market: "CN",
+      IncomeStatement.create!(financial_report: fr, stock: stock, report_date: report_date, market: market,
                               period_type: "annual", total_revenue: revenue,
                               net_income_to_shareholders: parent)
     end
-    FinancialIndicator.create!(financial_report: fr, stock: stock, report_date: report_date, market: "CN",
+    FinancialIndicator.create!(financial_report: fr, stock: stock, report_date: report_date, market: market,
                                period_type: "annual", **indicator_attrs)
     [stock, fr]
   end
@@ -121,6 +123,71 @@ class Api::V1::ArchiveControllerTest < ActionDispatch::IntegrationTest
     assert_in_delta 28.56, entry["roe_weighted"].to_f, 0.001
   end
 
+  test "financials 返回无杠杆ROE、flag 与历史序列" do
+    create_cn_stock_with_annual(symbol: "SH600519", name: "贵州茅台", score: 900,
+                                unlevered_roe: 18.76, unlevered_roe_flag: 0)
+
+    get "/api/v1/archive/financials?code=SH600519", headers: @auth
+    assert_response 200
+    fields = response.parsed_body["data"]["fields"]
+    assert_in_delta 18.76, fields["unlevered_roe"]["value"].to_f, 0.001
+    assert_equal 0, fields["unlevered_roe"]["flag"]
+    assert_nil fields["unlevered_roe"]["flag_reason"]
+
+    entry = response.parsed_body["data"]["history"].first
+    assert_in_delta 18.76, entry["unlevered_roe"].to_f, 0.001
+    assert_equal 0, entry["unlevered_roe_flag"]
+  end
+
+  test "financials flag6 不返回极端值并给出原因" do
+    create_cn_stock_with_annual(symbol: "SH600002", name: "极端值测试", score: 100,
+                                unlevered_roe: 12_345.0, unlevered_roe_flag: 6)
+
+    get "/api/v1/archive/financials?code=SH600002", headers: @auth
+    assert_response 200
+    ur = response.parsed_body["data"]["fields"]["unlevered_roe"]
+    assert_nil ur["value"]
+    assert_equal 6, ur["flag"]
+    assert_equal "数值极端（分母过小），不展示", ur["flag_reason"]
+
+    entry = response.parsed_body["data"]["history"].first
+    assert_nil entry["unlevered_roe"]
+    assert_equal 6, entry["unlevered_roe_flag"]
+  end
+
+  test "financials 无杠杆ROE未计算时标注待回填" do
+    create_cn_stock_with_annual(symbol: "SH600003", name: "未计算", score: 100)
+
+    get "/api/v1/archive/financials?code=SH600003", headers: @auth
+    assert_response 200
+    ur = response.parsed_body["data"]["fields"]["unlevered_roe"]
+    assert_nil ur["value"]
+    assert_nil ur["flag"]
+    assert_nil ur["flag_reason"]
+    assert_equal "源未提供/待回填", ur["caliber"]
+    assert_nil ur["source"]
+  end
+
+  test "financials 支持美股原始代码且大小写不敏感" do
+    stock = Stock.find_by!(symbol: "AAPL", market: "US")
+    report_date = Date.new(2025, 12, 31)
+    fr = FinancialReport.create!(stock: stock, report_date: report_date, report_type: "US_ANNUAL",
+                                 market: "US", period_type: "annual", currency: "USD")
+    IncomeStatement.create!(financial_report: fr, stock: stock, report_date: report_date, market: "US",
+                            period_type: "annual", total_revenue: 400_000_000_000,
+                            net_income_to_shareholders: 100_000_000_000)
+    FinancialIndicator.create!(financial_report: fr, stock: stock, report_date: report_date, market: "US",
+                               period_type: "annual", unlevered_roe: 68.77, unlevered_roe_flag: 4)
+
+    get "/api/v1/archive/financials?code=aapl", headers: @auth
+    assert_response 200
+    data = response.parsed_body["data"]
+    assert_equal "AAPL", data["code"]
+    assert_in_delta 68.77, data["fields"]["unlevered_roe"]["value"].to_f, 0.001
+    assert_equal 4, data["fields"]["unlevered_roe"]["flag"]
+    assert_equal "利息费用未披露，未加回利息（结果可能偏低）", data["fields"]["unlevered_roe"]["flag_reason"]
+  end
+
   test "扣非未回填时返回 null 且标注待回填" do
     create_cn_stock_with_annual(symbol: "SH600000", name: "浦发银行", score: 500,
                                 revenue: 100.0, parent: 50.0)
@@ -146,12 +213,37 @@ class Api::V1::ArchiveControllerTest < ActionDispatch::IntegrationTest
     assert_response 401
   end
 
-  test "ranking 本期仅支持 cn，其他市场 400" do
+  test "ranking 支持 cn/us，其他市场 400" do
     get "/api/v1/archive/ranking?market=hk", headers: @auth
     assert_response 400
 
     get "/api/v1/archive/ranking?market=CN", headers: @auth
     assert_response 200
+
+    get "/api/v1/archive/ranking?market=us", headers: @auth
+    assert_response 200
+  end
+
+  test "ranking market=us 只返回美股并按分数排序" do
+    calc = Time.zone.parse("2026-10-03 09:00:00")
+    Stock.find_by!(symbol: "AAPL", market: "US").update!(
+      pyramid_total_score: 900, last_pyramid_calc_at: calc, sector: "信息技术", industry: "消费电子"
+    )
+    Stock.find_by!(symbol: "MSFT", market: "US").update!(
+      pyramid_total_score: 800, last_pyramid_calc_at: calc, sector: "信息技术", industry: "软件"
+    )
+    create_cn_stock_with_annual(symbol: "SH600519", name: "贵州茅台", score: 950, calc_at: calc)
+
+    get "/api/v1/archive/ranking?market=us", headers: @auth
+    assert_response 200
+    data = response.parsed_body["data"]
+
+    assert_equal 2, data["total"]
+    assert_equal %w[AAPL MSFT], data["items"].map { |i| i["code"] }
+    assert_equal %w[US US], data["items"].map { |i| i["market"] }
+    assert_nil data["items"].first["board"]
+    assert_equal "信息技术", data["items"].first["sw_l1"]
+    assert_equal "消费电子", data["items"].first["sw_l2"]
   end
 
   test "ranking 排除未计算标的并按 score DESC、id DESC 稳定排序" do

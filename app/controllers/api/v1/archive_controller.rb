@@ -42,12 +42,12 @@ module Api
       # 接口3：金字塔榜单（契约见 23_Trae榜单接口需求_20261013.md）
       # 口径与站内 /pyramid 页逐位一致：pyramid_total_score DESC, id DESC（id 为主键，天然稳定 tie-break，分页不重不漏）
       # 排除未计算标的：pyramid_total_score 为 default 0 NOT NULL，「已计算」的唯一标记是 last_pyramid_calc_at 非空
-      # 本期仅 market=cn（A股，含北交所）；港美股未纳入
+      # 本期支持 market=cn（A股，含北交所）与 market=us（美股）；港股未纳入
       def ranking
         # 参数一律先 to_s 再转换：数组型畸形参数（?limit[]=1）to_s 后走默认值/400 路径，避免 NoMethodError→500
-        market = params[:market].to_s.presence || "cn"
-        unless market.casecmp?("cn")
-          return render json: { success: false, error: "本期仅支持 market=cn（A股，含北交所）" }, status: 400
+        market = params[:market].to_s.downcase.presence || "cn"
+        unless %w[cn us].include?(market)
+          return render json: { success: false, error: "本期仅支持 market=cn/us（港股未纳入）" }, status: 400
         end
 
         raw_limit = (params[:limit].to_s.presence || RANKING_DEFAULT_LIMIT).to_i
@@ -56,7 +56,7 @@ module Api
         limit = [raw_limit, RANKING_MAX_LIMIT].min
         offset = [params[:offset].to_s.to_i, 0].max
 
-        scope = Stock.where(market: "CN").where.not(last_pyramid_calc_at: nil)
+        scope = Stock.where(market: market.upcase).where.not(last_pyramid_calc_at: nil)
         min_score = params[:min_score].to_s.presence
         scope = scope.where("pyramid_total_score >= ?", min_score.to_i) if min_score
 
@@ -114,7 +114,7 @@ module Api
         elsif (m = raw.match(/\A(SH|SZ|BJ)(\d{6})\z/i))
           stock = Stock.find_by(symbol: "#{m[1].upcase}#{m[2]}")
         end
-        stock || Stock.find_by(symbol: raw)
+        stock || Stock.find_by(symbol: raw) || Stock.find_by(symbol: raw.upcase)
       end
 
       # 输出统一后缀式：SZ000001 → 000001.SZ；港/美等原样返回
@@ -246,6 +246,7 @@ module Api
             deducted_net_profit: field(deducted, "扣非归母净利润", "eastmoney_f10"),
             non_recurring_net: field(subtract(parent, deducted), "归母净利−扣非归母净利", "derived"),
             roe_weighted: field(indicator.roe_avg, "加权平均ROE·归母(WEIGHTAVG_ROE)", "eastmoney"),
+            unlevered_roe: unlevered_roe_field(indicator),
             deducted_roe_weighted: field(indicator.deducted_roe_weighted, "扣非加权平均ROE", "eastmoney_f10"),
             cash_and_equivalents: field(cash_val, "货币资金", "eastmoney"),
             total_assets: field(total_assets, "合并总资产", "eastmoney"),
@@ -292,11 +293,42 @@ module Api
           {
             period: stock.period_label("annual", ind.report_date),
             roe_weighted: ind.roe_avg,
+            unlevered_roe: api_unlevered_roe_value(ind),
+            unlevered_roe_flag: ind.unlevered_roe_flag,
             gross_margin: ind.gross_margin,
             parent_net_margin: ind.net_sales_rate,
             asset_liab_ratio: ind.asset_liab_ratio
           }
         end
+      end
+
+      # 无杠杆ROE：value/flag/flag_reason 一并返回；flag6 极端值与站内一致不返回值
+      def unlevered_roe_field(indicator)
+        flag = indicator.unlevered_roe_flag
+        # 未计算（flag 为 nil）按既有 field 约定标注待回填，不冒充已派生值
+        if flag.nil?
+          return {
+            value: nil,
+            flag: nil,
+            flag_reason: nil,
+            caliber: PENDING_CALIBER,
+            source: nil
+          }
+        end
+
+        {
+          value: api_unlevered_roe_value(indicator),
+          flag: flag,
+          flag_reason: DataSources::UnleveredRoeService.flag_reason(flag),
+          caliber: "无杠杆ROE·归母净利润+有息负债（口径B）",
+          source: "derived"
+        }
+      end
+
+      def api_unlevered_roe_value(indicator)
+        value = indicator.unlevered_roe
+        value = nil if indicator.unlevered_roe_flag.to_i == 6
+        value
       end
     end
   end
