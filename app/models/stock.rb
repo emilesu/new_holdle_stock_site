@@ -159,6 +159,8 @@ class Stock < ApplicationRecord
                    end
                  end
 
+    return nil if avg_equity.zero?
+
     (income_statement.net_income_to_shareholders.to_f / avg_equity) * 100
   end
 

@@ -112,6 +112,10 @@ class UnleveredRoeServiceTest < ActiveSupport::TestCase
     assert S.financial_stock?(Stock.new(sector: "Financial Services", industry: "Banks—Diversified"), market: "US")
     assert S.financial_stock?(Stock.new(sector: "Healthcare", industry: "Healthcare Plans"), market: "US")
     assert S.financial_stock?(Stock.new(sector: "Real Estate", industry: "Mortgage REIT"), market: "US")
+
+    # 加密矿企虽被 Yahoo 归入「资本市场」，但属经营型公司，不按金融股剔除
+    assert_not S.financial_stock?(Stock.new(symbol: "HUT", sector: "金融服务", industry: "资本市场"), market: "US")
+    assert S.financial_stock?(Stock.new(symbol: "GS", sector: "金融服务", industry: "资本市场"), market: "US")
   end
 
   # 美股「利息支出」为负数毛额：净利息 = |支出| − |收入|；A股财务费用已净额，不归一化
@@ -161,7 +165,7 @@ class UnleveredRoeServiceTest < ActiveSupport::TestCase
       )
     }
 
-    r = S.send(:compute_period, indicator, incomes, balances, false, "US", false)
+    r = S.send(:compute_period, indicator, incomes, balances, false, "US", false, false)
 
     assert_equal S::FLAG_INTEREST_MISSING, r[:flag]
     # 0 加回：60000 ÷ (217243 + 83897) × 100 = 19.92
@@ -223,7 +227,7 @@ class UnleveredRoeServiceTest < ActiveSupport::TestCase
       )
     }
 
-    r = S.send(:compute_period, indicator, incomes, balances, false, "US", false)
+    r = S.send(:compute_period, indicator, incomes, balances, false, "US", false, false)
 
     assert_equal S::FLAG_DEBT_INCOMPLETE, r[:flag]
     assert_nil r[:value]
@@ -259,7 +263,42 @@ class UnleveredRoeServiceTest < ActiveSupport::TestCase
       )
     }
 
-    r = S.send(:compute_period, indicator, incomes, balances, false, "US", false)
+    r = S.send(:compute_period, indicator, incomes, balances, false, "US", false, false)
+
+    assert_equal S::FLAG_DEBT_INCOMPLETE, r[:flag]
+    assert_nil r[:value]
+  end
+
+  # 信用服务放贷机构：debt=0、利息支出缺失、TL>5B，即使 TL/权益<2× 也隐藏（AFRM 1.88×）
+  def test_us_credit_service_debt_gap_is_hidden
+    afrm = BalanceSheet.new(total_liabilities: 10_310_000_000, parent_equity: 5_480_000_000)
+    assert S.send(:credit_service_debt_gap?, "US", true, afrm, BigDecimal(0), true)
+    assert_not S.send(:credit_service_debt_gap?, "US", true, afrm, BigDecimal("100"), true)
+    assert_not S.send(:credit_service_debt_gap?, "US", false, afrm, BigDecimal(0), true)
+    assert_not S.send(:credit_service_debt_gap?, "US", true, afrm, BigDecimal(0), false)
+
+    small = BalanceSheet.new(total_liabilities: 4_000_000_000, parent_equity: 2_000_000_000)
+    assert_not S.send(:credit_service_debt_gap?, "US", true, small, BigDecimal(0), true)
+  end
+
+  def test_us_credit_service_debt_gap_flows_through_compute_period
+    report_date = Date.new(2026, 6, 30)
+    indicator = FinancialIndicator.new(report_date: report_date, period_type: "annual")
+    incomes = {
+      report_date => IncomeStatement.new(
+        report_date: report_date, period_type: "annual",
+        net_income_to_shareholders: 1_900_000_000, interest_expense: nil,
+        income_tax: 100_000_000, income_before_tax: 2_000_000_000
+      )
+    }
+    balances = {
+      report_date => BalanceSheet.new(
+        report_date: report_date, period_type: "annual",
+        parent_equity: 5_480_000_000, total_liabilities: 10_310_000_000
+      )
+    }
+
+    r = S.send(:compute_period, indicator, incomes, balances, false, "US", false, true)
 
     assert_equal S::FLAG_DEBT_INCOMPLETE, r[:flag]
     assert_nil r[:value]
@@ -282,7 +321,7 @@ class UnleveredRoeServiceTest < ActiveSupport::TestCase
       )
     }
 
-    r = S.send(:compute_period, indicator, incomes, balances, false, "US", true)
+    r = S.send(:compute_period, indicator, incomes, balances, false, "US", true, false)
 
     assert_equal S::FLAG_DEBT_INCOMPLETE, r[:flag]
     assert_nil r[:value]

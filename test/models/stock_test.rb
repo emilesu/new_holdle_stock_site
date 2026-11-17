@@ -56,6 +56,32 @@ class StockTest < ActiveSupport::TestCase
     assert_in_delta 20.0, @stock.calculate_roe(income, balance), 0.01
   end
 
+  # 平均权益恰好为 0 时不能除零得到 Infinity，应返回 nil
+  test "calculate_roe: 平均权益为0时返回nil" do
+    current_report = FinancialReport.create!(
+      stock: @stock, report_date: Date.new(2025, 12, 31), market: "CN",
+      report_type: "annual", currency: "CNY"
+    )
+    prev_report = FinancialReport.create!(
+      stock: @stock, report_date: Date.new(2024, 12, 31), market: "CN",
+      report_type: "annual", currency: "CNY"
+    )
+    balance = BalanceSheet.create!(
+      financial_report: current_report, stock: @stock, report_date: Date.new(2025, 12, 31),
+      market: "CN", total_equity: 100, parent_equity: 100
+    )
+    BalanceSheet.create!(
+      financial_report: prev_report, stock: @stock, report_date: Date.new(2024, 12, 31),
+      market: "CN", total_equity: -100, parent_equity: -100
+    )
+    income = IncomeStatement.create!(
+      financial_report: current_report, stock: @stock, report_date: Date.new(2025, 12, 31),
+      market: "CN", net_income_to_shareholders: 20
+    )
+
+    assert_nil @stock.calculate_roe(income, balance)
+  end
+
   test "pyramid_tags: 5年连续盈利无标签" do
     (2021..2025).each { |y| create_year(@stock, y, roe: 20.0, net_income: 50_0000_0000) }
     assert_equal [], @stock.reload.pyramid_tags

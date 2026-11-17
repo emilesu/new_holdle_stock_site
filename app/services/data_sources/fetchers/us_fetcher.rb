@@ -148,6 +148,15 @@ module DataSources
 
         # 无杠杆ROE：基于已入库科目重算全部期次（纯本地计算，不发请求）
         unlevered = DataSources::UnleveredRoeService.call(stock: stock, market: market)
+        if unlevered[:error].present?
+          Rails.logger.error "[UsFetcher] #{stock.symbol} 无杠杆ROE重算失败: #{unlevered[:error]}"
+          begin
+            DataQualityIssue.record!(stock, "financial", "unlevered_roe_calc_error", severity: "warning",
+                                     detail: { market: market, error: unlevered[:error] })
+          rescue => e
+            Rails.logger.error "[UsFetcher] #{stock.symbol} 无杠杆ROE异常落账失败: #{e.message}"
+          end
+        end
         # 指标变化不会触发 EastMoneyFinanceService 的 touch_if_changed，需自行失效详情页缓存
         stock.touch if unlevered[:updated].to_i.positive?
 
@@ -163,13 +172,15 @@ module DataSources
         unless secucode
           # 代码解析失败也要用库内已有报表重算，避免指标永远停在 nil
           calc = recompute_unlevered(stock)
-          return { status: :failed, reason: "SECUCODE 解析失败", updated: calc[:updated] }
+          reason = [ "SECUCODE 解析失败", calc[:error] ].compact.join("; ")
+          return { status: :failed, reason: reason, updated: calc[:updated] }
         end
 
         periods = fetch_report_periods(secucode)
         if periods.empty?
           calc = recompute_unlevered(stock)
-          return { status: :failed, reason: "未获取到报告期次", updated: calc[:updated] }
+          reason = [ "未获取到报告期次", calc[:error] ].compact.join("; ")
+          return { status: :failed, reason: reason, updated: calc[:updated] }
         end
 
         results = []

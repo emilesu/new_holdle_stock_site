@@ -51,6 +51,9 @@ module DataSources
                              Banks|Insurance|Healthcare\sPlans|Capital\sMarkets|Asset\sManagement|
                              Financial\sConglomerates|Mortgage\sFinance|Mortgage\sREIT|Shell\sCompanies/x
 
+    # 加密矿企/加密资产运营公司：Yahoo 归入「资本市场」，但属经营型公司，不按金融股剔除
+    US_CRYPTO_OPERATORS = %w[HUT CLSK MARA RIOT BITF CIFR IREN WULF CORZ BTBT].freeze
+
     def self.flag_reason(flag)
       FLAG_REASONS[flag]
     end
@@ -65,10 +68,11 @@ module DataSources
         balances = BalanceSheet.where(stock_id: stock.id, market: market).index_by(&:report_date)
         financial = financial_stock?(stock, market: market)
         reit = market == "US" && stock.industry.to_s.match?(/REIT/i)
+        credit_service = market == "US" && stock.industry.to_s.match?(/信用服务|Credit\sServices/)
 
         updated = 0
         indicators.each do |indicator|
-          result = compute_period(indicator, incomes, balances, financial, market, reit)
+          result = compute_period(indicator, incomes, balances, financial, market, reit, credit_service)
           next if indicator.unlevered_roe == result[:value] && indicator.unlevered_roe_flag == result[:flag]
 
           indicator.update!(unlevered_roe: result[:value], unlevered_roe_flag: result[:flag])
@@ -88,6 +92,8 @@ module DataSources
       #   信用服务（V/MA 等支付网络）与金融数据/交易所保留
       def financial_stock?(stock, market: stock.market)
         if market == "US"
+          return false if US_CRYPTO_OPERATORS.include?(stock.symbol.to_s)
+
           stock.industry.to_s.match?(US_FINANCIAL_INDUSTRY)
         else
           stock.sector.to_s == "银行" || stock.industry.to_s.match?(/银行|证券|保险/)
@@ -122,7 +128,7 @@ module DataSources
       private
 
       # 单期次：TTM 装配 + 科目取数 → 纯函数
-      def compute_period(indicator, incomes, balances, financial, market, reit)
+      def compute_period(indicator, incomes, balances, financial, market, reit, credit_service)
         balance = balances[indicator.report_date]
         ttm = ttm_items(indicator, incomes, market)
         interest_debt = debt_total(balance)
@@ -131,7 +137,8 @@ module DataSources
         # 用原始净利息判断是否“真低负债”：明确利息为 0 才不标记
         debt_incomplete = reit_debt_incomplete?(reit, balance, ttm[:ttm_fin_exp]) ||
                           generic_debt_incomplete?(market, balance, interest_debt, expense_missing, ttm[:ttm_fin_exp]) ||
-                          implied_rate_gap?(market, balance, interest_debt, ttm[:ttm_fin_exp])
+                          implied_rate_gap?(market, balance, interest_debt, ttm[:ttm_fin_exp]) ||
+                          credit_service_debt_gap?(market, credit_service, balance, interest_debt, expense_missing)
         # 利息支出未披露且有有息负债：按约定 0 加回，不因利息收入存在而扣减
         # （否则会变成“只扣利息收入、不加回利息支出”，与口径约定相反）
         ttm[:ttm_fin_exp] = BigDecimal(0) if interest_missing
@@ -295,6 +302,18 @@ module DataSources
         return false unless balance.total_liabilities.to_f > US_DEBT_GAP_MIN_LIABILITIES_FOR_RATE
 
         expense > debt * US_DEBT_GAP_MAX_IMPLIED_RATE
+      end
+
+      # 信用服务放贷机构：债务为 0、利息支出缺失且总负债 > 5B，
+      # 即使 TL/权益 < 2×（如 AFRM 1.88×）也判定债务数据不完整。
+      # V/MA/PYPL 有债务科目，不受影响。
+      def credit_service_debt_gap?(market, credit_service, balance, interest_debt, expense_missing)
+        return false unless market == "US" && credit_service
+        return false if balance.nil?
+        return false if interest_debt.to_f.positive?
+        return false unless expense_missing
+
+        balance.total_liabilities.to_f > US_DEBT_GAP_MIN_LIABILITIES
       end
 
       def blank_ttm

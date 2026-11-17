@@ -171,6 +171,22 @@ class UsFetcherYahooFallbackTest < ActiveSupport::TestCase
     assert_equal "SECUCODE 解析失败", result[:reason]
   end
 
+  # SECUCODE 失败且重算也异常时，计算错误不能被固定 reason 覆盖
+  test "backfill SECUCODE 失败且重算异常时保留计算错误" do
+    fetcher = Fetcher.new
+    fetcher.define_singleton_method(:resolve_secucode) { |_symbol| nil }
+    error_calc = lambda do |stock:, market:|
+      { updated: 0, error: "boom" }
+    end
+
+    result = DataSources::UnleveredRoeService.stub(:call, error_calc) do
+      fetcher.backfill_unlevered_roe(@stock)
+    end
+
+    assert_equal :failed, result[:status]
+    assert_equal "SECUCODE 解析失败; boom", result[:reason]
+  end
+
   # 无杠杆ROE 计算异常不能被报表抓取成功掩盖
   test "backfill 计算异常时返回 failed 并带 reason" do
     fetcher = Fetcher.new
