@@ -227,7 +227,7 @@ class StocksController < ApplicationController
       end
     end
 
-    info = get_indicator_info(indicator_key)
+    info = get_indicator_info(indicator_key, stock)
 
     {
       stock_symbol: stock.symbol,
@@ -265,8 +265,9 @@ class StocksController < ApplicationController
     DataSources::UnleveredRoeService.flag_reason(flag)
   end
 
-  def get_indicator_info(indicator_key)
+  def get_indicator_info(indicator_key, stock = nil)
     key = indicator_key.to_sym
+    us = (stock || @stock)&.market == 'US'
     {
       roe: {
         name: 'ROE(净资产收益率)',
@@ -294,8 +295,8 @@ class StocksController < ApplicationController
       },
       unlevered_roe: {
         name: '无杠杆 ROE(Unlevered ROE)',
-        description: '无杠杆ROE衡量假设公司完全不借钱时，全部股东资本（自有净资产+借入的有息负债）的真实回报。它在ROE的分母中加回有息负债、在分子中加回税后利息费用，剥掉杠杆对ROE的垫高效应，使高负债与低负债公司的盈利能力可以直接对比。若某公司ROE明显高于无杠杆ROE，说明其回报主要靠借钱放大而非经营能力，需警惕利率上行或再融资风险。银行、券商、保险等以负债为经营原料的行业不适用本指标（显示为—）。',
-        formula: '无杠杆ROE = (归母净利润TTM + 财务费用TTM × (1 − 实际税率)) ÷ (归母净资产 + 短期借款 + 长期借款 + 应付债券 + 一年内到期的非流动负债) × 100%',
+        description: '无杠杆ROE衡量假设公司完全不借钱时，全部股东资本（自有净资产+借入的有息负债）的真实回报。它在ROE的分母中加回有息负债、在分子中加回税后利息费用，剥掉杠杆对ROE的垫高效应，使高负债与低负债公司的盈利能力可以直接对比。若某公司ROE明显高于无杠杆ROE，说明其回报主要靠借钱放大而非经营能力，需警惕利率上行或再融资风险。银行、券商、保险等以负债为经营原料的行业不适用本指标（显示为—）。' + (us ? ' 美股口径：利息加回为净利息费用（利息支出−利息收入）；|无杠杆ROE|>100% 视为极端值，不展示。' : ''),
+        formula: us ? '无杠杆ROE = (归母净利润TTM + (利息支出TTM − 利息收入TTM) × (1 − 实际税率)) ÷ (归母净资产 + 有息负债) × 100%' : '无杠杆ROE = (归母净利润TTM + 财务费用TTM × (1 − 实际税率)) ÷ (归母净资产 + 短期借款 + 长期借款 + 应付债券 + 一年内到期的非流动负债) × 100%',
         unit: '%',
         interpretation: {
           excellent: '无杠杆ROE > 15%：不靠借钱就有出色回报，盈利质量扎实',

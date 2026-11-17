@@ -169,14 +169,16 @@ class StockTest < ActiveSupport::TestCase
   # ==== 期次（period_type）相关：年报列与右侧季报同比两列 ====
 
   # 构造指定期次的财务数据（指标表 + 利润表）
-  def create_period(stock, period_type:, report_date:, roe:, net_income:, market: "CN")
+  def create_period(stock, period_type:, report_date:, roe:, net_income:, market: "CN",
+                    unlevered_roe: nil, unlevered_flag: nil)
     report = FinancialReport.create!(
       stock: stock, report_date: report_date, market: market,
       report_type: "annual", currency: "CNY", period_type: period_type
     )
     FinancialIndicator.create!(
       financial_report: report, stock: stock, report_date: report_date,
-      market: market, period_type: period_type, roe_avg: roe
+      market: market, period_type: period_type, roe_avg: roe,
+      unlevered_roe: unlevered_roe, unlevered_roe_flag: unlevered_flag
     )
     IncomeStatement.create!(
       financial_report: report, stock: stock, report_date: report_date,
@@ -212,6 +214,16 @@ class StockTest < ActiveSupport::TestCase
     assert_equal Date.new(2025, 12, 31), data[:report_date]
     assert_equal 900, data[:net_income].to_i
     assert_equal BigDecimal("20.0"), data[:roe]
+  end
+
+  test "get_financial_data_by_year: flag6 极端值不展示" do
+    create_period(@stock, period_type: "annual", report_date: Date.new(2025, 12, 31), roe: 20.0, net_income: 900,
+                  unlevered_roe: 12_345.0, unlevered_flag: 6)
+
+    data = @stock.reload.get_financial_data_by_year("2025")
+
+    assert_nil data[:unlevered_roe]
+    assert_equal 6, data[:unlevered_roe_flag]
   end
 
   test "get_financial_data_by_year: 仅存在季报时返回空指标（不误当年报）" do
