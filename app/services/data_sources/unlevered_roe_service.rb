@@ -14,6 +14,7 @@ module DataSources
     FLAG_FINANCIAL = 3          # 金融股（银行/券商/保险等）不适用，口径冻结直接剔除
     FLAG_INTEREST_MISSING = 4   # 美股有有息负债但利息费用未披露，按0加回（结果可能偏低）
     FLAG_DEBT_INCOMPLETE = 5    # REIT 有息负债数据不完整（东财未拆分），分母失真，直接隐藏
+    FLAG_EXTREME = 6            # 美股 |无杠杆ROE|>100，分母过小，数值无展示意义
 
     # 复核报警阈值：显著高于期末口径 TTM ROE 参考值，或绝对值超出常识区间
     ALARM_ABOVE_ROE_PP = 10.0
@@ -42,7 +43,8 @@ module DataSources
       FLAG_NEGATIVE_EQUITY => "归母净资产≤0，指标不适用",
       FLAG_FINANCIAL => "金融股（银行/券商/保险/资管等）不适用本指标",
       FLAG_INTEREST_MISSING => "利息费用未披露，未加回利息（结果可能偏低）",
-      FLAG_DEBT_INCOMPLETE => "有息负债数据不完整（数据源未拆分）"
+      FLAG_DEBT_INCOMPLETE => "有息负债数据不完整（数据源未拆分）",
+      FLAG_EXTREME => "数值极端（分母过小），不展示"
     }.freeze
 
     # 美股金融股行业关键词（中文映射 + 英文兜底）：以负债为经营原料的机构剔除；
@@ -77,7 +79,7 @@ module DataSources
 
           indicator.update!(unlevered_roe: result[:value], unlevered_roe_flag: result[:flag])
           updated += 1
-          alarm(stock, indicator, result) if [ FLAG_NORMAL, FLAG_INTEREST_MISSING ].include?(result[:flag])
+          alarm(stock, indicator, result) if [ FLAG_NORMAL, FLAG_INTEREST_MISSING, FLAG_EXTREME ].include?(result[:flag])
         end
         Rails.logger.info "[UnleveredRoeService] #{stock.symbol} #{market} 重算 #{indicators.size} 期，更新 #{updated} 条"
         { updated: updated }
@@ -143,7 +145,7 @@ module DataSources
         # （否则会变成“只扣利息收入、不加回利息支出”，与口径约定相反）
         ttm[:ttm_fin_exp] = BigDecimal(0) if interest_missing
 
-        compute(
+        result = compute(
           **ttm,
           parent_equity: balance&.parent_equity,
           interest_debt: interest_debt,
@@ -151,6 +153,11 @@ module DataSources
           interest_missing: interest_missing,
           debt_incomplete: debt_incomplete
         )
+        # 美股分母过小导致 -931104.99% 这类无意义数值：保留报警，但标记为极端值
+        if market == "US" && result[:value] && result[:value].abs > ALARM_ABS_LIMIT
+          result = result.merge(flag: FLAG_EXTREME)
+        end
+        result
       end
 
       # TTM 拼接（累计口径）：
@@ -297,7 +304,9 @@ module DataSources
         debt = interest_debt.to_f
         return false unless debt.positive?
 
-        expense = fin_exp.to_f.abs
+        # 只对“净利息支出”生效；净利息收入（fin_exp<0）不是债务缺口信号，
+        # 否则 PLTR/CRWD/SHOP 等有利息收入、低债务的公司会被误判为 flag5。
+        expense = fin_exp.to_f
         return false unless expense.positive?
         return false unless balance.total_liabilities.to_f > US_DEBT_GAP_MIN_LIABILITIES_FOR_RATE
 

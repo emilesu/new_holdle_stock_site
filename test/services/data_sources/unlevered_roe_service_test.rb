@@ -246,6 +246,38 @@ class UnleveredRoeServiceTest < ActiveSupport::TestCase
     assert_not S.send(:implied_rate_gap?, "US", small, BigDecimal("10000000"), BigDecimal("100000000"))
   end
 
+  # 净利息收入不应触发隐含利率债务缺口（PLTR/CRWD/SHOP 类低债务科技公司）
+  def test_us_implied_rate_gap_ignores_net_interest_income
+    pltr = BalanceSheet.new(total_liabilities: 1_410_000_000, parent_equity: 7_390_000_000,
+                            long_term_debt: 180_000_000)
+    assert_not S.send(:implied_rate_gap?, "US", pltr, BigDecimal("180000000"), BigDecimal("-230000000"))
+    assert S.send(:implied_rate_gap?, "US", pltr, BigDecimal("180000000"), BigDecimal("230000000"))
+  end
+
+  # 美股分母过小导致 |值|>100 时标记 flag6，保留值用于台账但不展示
+  def test_us_extreme_value_gets_flag6
+    report_date = Date.new(2025, 12, 31)
+    indicator = FinancialIndicator.new(report_date: report_date, period_type: "annual")
+    incomes = {
+      report_date => IncomeStatement.new(
+        report_date: report_date, period_type: "annual",
+        net_income_to_shareholders: 1_000_000_000, interest_expense: nil,
+        income_tax: 0, income_before_tax: 1_000_000_000
+      )
+    }
+    balances = {
+      report_date => BalanceSheet.new(
+        report_date: report_date, period_type: "annual",
+        parent_equity: 1_000_000, total_liabilities: 10_000_000
+      )
+    }
+
+    r = S.send(:compute_period, indicator, incomes, balances, false, "US", false, false)
+
+    assert_equal S::FLAG_EXTREME, r[:flag]
+    assert r[:value].abs > S::ALARM_ABS_LIMIT
+  end
+
   def test_us_generic_debt_gap_flows_through_compute_period
     report_date = Date.new(2025, 12, 31)
     indicator = FinancialIndicator.new(report_date: report_date, period_type: "annual")
