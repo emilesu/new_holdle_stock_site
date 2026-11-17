@@ -47,7 +47,7 @@ function clamp(value, min, max) {
 }
 
 export default class extends Controller {
-  static targets = ["rangeBtn", "adjBtn", "chart", "overlay", "macdNote", "status", "charts"]
+  static targets = ["rangeBtn", "adjBtn", "scaleBtn", "chart", "overlay", "macdNote", "status", "charts"]
   // currency：价格数值单位后缀（港币/美元）。A股不下发该值（默认空串），tooltip 保持原样
   static values = { url: String, currency: String }
 
@@ -56,6 +56,8 @@ export default class extends Controller {
     // activeRange 只表示「当前窗口落在哪个预设档位」，用于按钮高亮，不再参与请求参数
     this.activeRange = "8y"
     this.adj = "qfq"
+    // 月K格坐标：linear（默认，符合普通用户心智）/ log（长历史、大跨度时等比例展示涨跌幅）
+    this.scaleType = "linear"
     this.requestId = 0
     this.disposed = false
     this.chart = null
@@ -129,6 +131,29 @@ export default class extends Controller {
     this.load()
   }
 
+  // 坐标切换：只影响月K格（MACD / ROE 含负值，不能使用对数轴），数据已全量在手，无需重新请求
+  switchScale(event) {
+    const value = event.currentTarget.dataset.scale
+    if (value === this.scaleType) return
+
+    this.scaleType = value
+    this.syncButtons()
+    this.redraw()
+  }
+
+  // 仅重画：切换坐标沿用当前可视窗口，不能像复权那样走 load() 重新请求
+  redraw() {
+    if (!this.chart) return
+
+    const grids = this.gridsFromLayout()
+    if (!grids) return
+
+    // notMerge 会把 dataZoom 重置为「全部」，故先取窗口、重画后原地恢复
+    const zoomWindow = this.currentWindow()
+    this.chart.setOption(this.buildOption(this.monthLabels(), grids), { notMerge: true })
+    this.applyWindow(zoomWindow || "8y")
+  }
+
   async load() {
     const requestId = ++this.requestId
     // 已有图表时保留旧图，避免切换区间/复权时卡片闪现空白
@@ -173,7 +198,12 @@ export default class extends Controller {
     }
 
     // 返回 promise：由 load() await，异常才能被它的 try/catch 兜住
-    return this.renderChart(bars.map((bar) => String(bar.t || "").slice(0, 7)))
+    return this.renderChart(this.monthLabels())
+  }
+
+  // 月份轴标签（"2016-10"），渲染与坐标切换共用同一口径
+  monthLabels() {
+    return this.barData.map((bar) => String(bar.t || "").slice(0, 7))
   }
 
   // 单实例渲染：三 grid + 5 个 series 一次 setOption
@@ -426,7 +456,7 @@ export default class extends Controller {
       // ROE 轴默认 0–100%，仅当可见窗口内出现 >100 或 <0 的值时按窗口动态外扩（回调收到的是过滤后的可见区间）；
       // 外扩值取整到 10 的倍数，避免轴顶出现「175.46%」这类非整数边界标签（代码审查 v1.61 工作区发现）
       yAxis: [
-        this.buildYAxis(0, true),
+        this.buildKlineYAxis(),
         this.buildYAxis(1, false),
         this.buildYAxis(
           2,
@@ -646,6 +676,40 @@ export default class extends Controller {
     return axis
   }
 
+  // 月K格价格轴：线性（默认）/ 对数。
+  // 对数轴不能只写 type: 'log' —— ECharts 会把范围扩到 logBase 的整数次幂
+  //（实测 AAPL 0.05~345 会变成 0.01~1000，蜡烛只占中间一段），必须用 min/max 回调
+  // 钉住当前可视窗口的数据范围（±3% 留白）。对数轴的刻度天然只有 10 的幂 + 两端点，
+  // 近8年窗口常见 2~3 条，属预期表现；十字星仍显示精确价。
+  buildKlineYAxis() {
+    const isLog = this.scaleType === "log"
+    const axis = this.buildYAxis(0, !isLog)
+    if (!isLog) return axis
+
+    return {
+      ...axis,
+      type: "log",
+      // 对数轴不接受 <=0；前复权理论上有极小概率出现非正价，此时返回 null 交回自动取范围
+      min: (value) => (value.min > 0 ? value.min * 0.97 : null),
+      max: (value) => (value.max > 0 ? value.max * 1.03 : null),
+      // 不格式化时对数轴会直接显示 213.5602 这类原始值
+      axisLabel: {
+        ...axis.axisLabel,
+        formatter: (value) => this.formatLogTick(value)
+      }
+    }
+  }
+
+  // 对数刻度格式化：大数取整带千分位，小数按量级保留 2~3 位
+  formatLogTick(value) {
+    if (!Number.isFinite(value)) return ""
+
+    const abs = Math.abs(value)
+    if (abs >= 100) return Math.round(value).toLocaleString("en-US")
+    if (abs >= 1) return String(Number(value.toFixed(2)))
+    return String(Number(value.toFixed(3)))
+  }
+
   // 把按月 roeData 归并成「年报周期」：[[起始月下标, 结束月下标, ROE值], ...]
   // 同一 report_date 连续出现 = 同一份年报持续生效，结束月下标顺延到该段最后一月；
   // report_date 一变（或从无数据首次出现）即开启新周期。周期天然约 12 个月，缺年报时会拉长为覆盖多年
@@ -768,6 +832,7 @@ export default class extends Controller {
   syncButtons() {
     this.rangeBtnTargets.forEach((btn) => this.applyActive(btn, btn.dataset.range === this.activeRange))
     this.adjBtnTargets.forEach((btn) => this.applyActive(btn, btn.dataset.adj === this.adj))
+    this.scaleBtnTargets.forEach((btn) => this.applyActive(btn, btn.dataset.scale === this.scaleType))
   }
 
   applyActive(btn, active) {

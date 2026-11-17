@@ -157,7 +157,7 @@
              data-monthly-trend-currency-value="<%= @stock.market == 'CN' ? nil : financial_unit %>">
           <div class="px-6 py-4 border-b border-line flex items-center justify-between flex-wrap gap-2">
             <h2 class="text-hl-16 font-semibold text-ink">月K · MACD · 年ROE <span class="text-hl-12 text-muted-4 ml-2">Monthly Trend<%= " · #{financial_unit}" unless @stock.market == 'CN' %></span></h2>
-            <div class="flex items-center gap-2">
+            <div class="flex flex-wrap items-center justify-end gap-2">
               <%# 区间：近 8 年（默认）/ 全部历史 %>
               <div class="flex rounded border border-line overflow-hidden">
                 <button type="button" data-monthly-trend-target="rangeBtn" data-range="8y" aria-pressed="true"
@@ -171,6 +171,13 @@
                         data-action="monthly-trend#switchAdj" class="px-3 py-1 text-hl-12 text-ink cursor-pointer">前复权</button>
                 <button type="button" data-monthly-trend-target="adjBtn" data-adj="hfq" aria-pressed="false"
                         data-action="monthly-trend#switchAdj" class="px-3 py-1 text-hl-12 text-muted-4 border-l border-line cursor-pointer">后复权</button>
+              </div>
+              <%# 坐标：线性（默认）/ 对数。对数只作用于月K格，MACD / ROE 含负值不能使用 %>
+              <div class="flex rounded border border-line overflow-hidden">
+                <button type="button" data-monthly-trend-target="scaleBtn" data-scale="linear" aria-pressed="true"
+                        data-action="monthly-trend#switchScale" class="px-3 py-1 text-hl-12 text-ink cursor-pointer">线性</button>
+                <button type="button" data-monthly-trend-target="scaleBtn" data-scale="log" aria-pressed="false"
+                        data-action="monthly-trend#switchScale" class="px-3 py-1 text-hl-12 text-muted-4 border-l border-line cursor-pointer">对数</button>
               </div>
             </div>
           </div>
