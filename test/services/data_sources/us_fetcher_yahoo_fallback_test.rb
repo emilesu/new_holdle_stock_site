@@ -130,6 +130,67 @@ class UsFetcherYahooFallbackTest < ActiveSupport::TestCase
     assert_not yahoo_called
   end
 
+  # 期次接口失败时仍要用库内既有报表重算无杠杆ROE
+  test "东财失败回退 Yahoo 后也重算无杠杆ROE" do
+    FinancialReport.create!(stock: @stock, report_date: Date.new(2025, 12, 31),
+                            report_type: "US_ANNUAL", market: "US", period_type: "annual")
+    yahoo = { "2025-12" => { basic_eps: BigDecimal("1.1") } }
+    @fetcher.define_singleton_method(:resolve_secucode) { |_symbol| nil }
+
+    called = false
+    recorder = lambda do |stock:, market:|
+      called = true
+      { updated: 0 }
+    end
+
+    Yahoo.stub(:fetch_annual, yahoo) do
+      DataSources::UnleveredRoeService.stub(:call, recorder) do
+        @fetcher.fetch_all(@stock)
+      end
+    end
+
+    assert called, "fallback 补指标后应调用 UnleveredRoeService 重算"
+  end
+
+  # SECUCODE 解析失败时也要用库内已有报表重算，不能把指标永远留在 nil
+  test "backfill SECUCODE 失败时仍用库内报表重算" do
+    fetcher = Fetcher.new
+    fetcher.define_singleton_method(:resolve_secucode) { |_symbol| nil }
+    called = false
+    recorder = lambda do |stock:, market:|
+      called = true
+      { updated: 0 }
+    end
+
+    result = DataSources::UnleveredRoeService.stub(:call, recorder) do
+      fetcher.backfill_unlevered_roe(@stock)
+    end
+
+    assert called, "SECUCODE 失败也应重算"
+    assert_equal :failed, result[:status]
+    assert_equal "SECUCODE 解析失败", result[:reason]
+  end
+
+  # 无杠杆ROE 计算异常不能被报表抓取成功掩盖
+  test "backfill 计算异常时返回 failed 并带 reason" do
+    fetcher = Fetcher.new
+    periods = @periods
+    fetcher.define_singleton_method(:resolve_secucode) { |_symbol| "SOFI.O" }
+    fetcher.define_singleton_method(:fetch_report_periods) { |_secucode| periods }
+    fetcher.define_singleton_method(:fetch_and_save_report) { |*_args, **_kwargs| { status: :success } }
+
+    error_calc = lambda do |stock:, market:|
+      { updated: 0, error: "boom" }
+    end
+
+    result = DataSources::UnleveredRoeService.stub(:call, error_calc) do
+      fetcher.backfill_unlevered_roe(@stock)
+    end
+
+    assert_equal :failed, result[:status]
+    assert_equal "boom", result[:reason]
+  end
+
   private
 
   def stub_eastmoney_empty

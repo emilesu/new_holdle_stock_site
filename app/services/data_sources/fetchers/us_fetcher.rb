@@ -33,7 +33,11 @@ module DataSources
         "摊薄每股收益-普通股"    => :diluted_eps,
         "基本加权平均股数-普通股" => :weighted_avg_shares,
         "摊薄加权平均股数-普通股" => :diluted_avg_shares,
+        # 东财美股「利息支出」为负数（贷方列示），计算净利息时取绝对值；
+        # 「利息收入」用于还原净利息费用，与 A 股 FINANCE_EXPENSE 净额口径对齐
         "利息支出"              => :interest_expense,
+        "利息收入"              => :interest_income,
+        "利息收入合计"           => :interest_income, # 金融股口径，金融股会被 flag 3 剔除
       }.freeze
 
       # 资产负债表科目映射
@@ -41,7 +45,8 @@ module DataSources
         "总资产"                     => :total_assets,
         "总负债"                     => :total_liabilities,
         "股东权益合计"               => :total_equity,
-        "归属于母公司股东权益"       => :total_equity,
+        # 归母净资产单列：无杠杆ROE 的分子是归母净利，分母必须同口径用归母净资产
+        "归属于母公司股东权益"       => :parent_equity,
         "流动资产合计"               => :current_assets,
         "流动负债合计"               => :current_liabilities,
         "现金及现金等价物"           => :cash_and_cash_equivalents,
@@ -49,9 +54,6 @@ module DataSources
         "存货"                       => :inventory,
         "物业、厂房及设备"           => :property_plant_equipment,
         "固定资产"                   => :property_plant_equipment,  # 别名
-        "长期负债"                   => :long_term_debt,
-        "长期债务"                   => :long_term_debt,            # 别名
-        "短期债务"                   => :short_term_debt,
         "留存收益"                   => :retained_earnings,
         "无形资产"                   => :intangible_assets,
         "商誉"                       => :goodwill,
@@ -69,6 +71,17 @@ module DataSources
         "库存股"                     => :treasury_stock,
         "股本溢价"                   => :additional_paid_in_capital,
         "少数股东权益"               => :non_controlling_interest,
+      }.freeze
+
+      # 有息负债多科目汇总（无杠杆ROE 分母）：
+      # 美股债务分散在短期债务/长期负债/本期到期部分/资本租赁/应付票据等多个科目，
+      # 同一 model 字段不能直接映射（会互相覆盖），必须按科目清单求和。
+      # 口径说明：Notes payable 在美股通常为有息债务（如 ORCL 长期 122B、AAPL 商业票据），
+      # 与 A 股「应付票据为经营性质」不同；资本租赁债务按 US GAAP 债务化计入。
+      BALANCE_SUM_MAPPING = {
+        short_term_debt: [ "短期债务", "应付票据(流动)", "资本租赁债务(流动)" ],
+        long_term_debt: [ "长期负债", "长期债务", "应付票据(非流动)", "资本租赁债务(非流动)" ],
+        noncurrent_liab_1year: [ "长期负债(本期部分)", "长期债务(本期部分)" ]
       }.freeze
 
       # 现金流量表科目映射
@@ -119,7 +132,8 @@ module DataSources
         results << fetch_and_save_report(stock, secucode, market, "RPT_USF10_FN_INCOME",
                                          IncomeStatement, INCOME_MAPPING, periods, "利润表")
         results << fetch_and_save_report(stock, secucode, market, "RPT_USF10_FN_BALANCE",
-                                         BalanceSheet, BALANCE_MAPPING, periods, "资产负债表")
+                                         BalanceSheet, BALANCE_MAPPING, periods, "资产负债表",
+                                         sum_mapping: BALANCE_SUM_MAPPING)
         results << fetch_and_save_report(stock, secucode, market, "RPT_USSK_FN_CASHFLOW",
                                          CashFlow, CASHFLOW_MAPPING, periods, "现金流量表")
         results << fetch_and_save_indicator(stock, secucode, market, periods)
@@ -132,8 +146,49 @@ module DataSources
         # 清理不在保留期次内的历史残留记录（历史抓取未记录期次，中报/季报被标成年报）
         cleanup_stale_records(stock, market, periods)
 
+        # 无杠杆ROE：基于已入库科目重算全部期次（纯本地计算，不发请求）
+        unlevered = DataSources::UnleveredRoeService.call(stock: stock, market: market)
+        # 指标变化不会触发 EastMoneyFinanceService 的 touch_if_changed，需自行失效详情页缓存
+        stock.touch if unlevered[:updated].to_i.positive?
+
         # success: 是否有报表抓取失败；changed: 是否有报表数据新建/更新了记录
         { success: fail_count == 0, changed: success_count > 0 }
+      end
+
+      # 无杠杆ROE 专用回填：只重抓利润表/资产负债表以补齐新科目
+      # （不抓现金流/指标、不清任期次），更新已存在期次后立即重算。
+      # 供 rake unlevered_roe:backfill_us 分批调用，避免全量四表重爬。
+      def backfill_unlevered_roe(stock)
+        secucode = resolve_secucode(stock.symbol)
+        unless secucode
+          # 代码解析失败也要用库内已有报表重算，避免指标永远停在 nil
+          calc = recompute_unlevered(stock)
+          return { status: :failed, reason: "SECUCODE 解析失败", updated: calc[:updated] }
+        end
+
+        periods = fetch_report_periods(secucode)
+        if periods.empty?
+          calc = recompute_unlevered(stock)
+          return { status: :failed, reason: "未获取到报告期次", updated: calc[:updated] }
+        end
+
+        results = []
+        results << fetch_and_save_report(stock, secucode, stock.market, "RPT_USF10_FN_INCOME",
+                                         IncomeStatement, INCOME_MAPPING, periods, "利润表")
+        results << fetch_and_save_report(stock, secucode, stock.market, "RPT_USF10_FN_BALANCE",
+                                         BalanceSheet, BALANCE_MAPPING, periods, "资产负债表",
+                                         sum_mapping: BALANCE_SUM_MAPPING)
+        calc = recompute_unlevered(stock)
+        # 计算异常不能被“报表抓取成功”掩盖，否则任务显示 success/updated=0
+        if calc[:error].present?
+          return { status: :failed, updated: calc[:updated].to_i, reason: calc[:error] }
+        end
+
+        status = results.all? { |r| r[:status] != :failed } ? :success : :failed
+        { status: status, updated: calc[:updated] }
+      rescue => e
+        Rails.logger.error "[UsFetcher] #{stock.symbol} 无杠杆ROE回填失败: #{e.message}"
+        { status: :failed, reason: e.message }
       end
 
       private
@@ -244,12 +299,29 @@ module DataSources
         periods.each_with_object({}) { |p, h| h[p[:report_date].to_s] = p[:period_type] }
       end
 
+      # 用库内已入库报表重算无杠杆ROE；成功更新时失效详情页缓存
+      def recompute_unlevered(stock)
+        calc = DataSources::UnleveredRoeService.call(stock: stock, market: stock.market)
+        stock.touch if calc[:updated].to_i.positive?
+        calc
+      end
+
+      # 多科目汇总：同一字段由多个 ITEM_NAME 相加（美股债务科目）。
+      # 组件全空不写（避免把 NULL 当 0 覆盖已有值）；有任一值则求和写入。
+      def apply_sum_mapping(financial_data, field_values, sum_mapping)
+        sum_mapping.each do |model_field, item_names|
+          values = item_names.filter_map { |name| parse_decimal(field_values[name]&.dig(:amount)) }
+          financial_data[model_field] = values.sum if values.any?
+        end
+      end
+
       # 通用三大报表获取与保存
       # 注意：API可能返回同一报表日期同一科目的多条记录（不同合并层面），
       # 通过 dedup 逻辑优先选择年报(FY)合并数据
       # 注意：东财API不支持REPORT_DATE IN (...)过滤，需在代码层面过滤
       def fetch_and_save_report(stock, secucode, market, report_name,
-                                model_class, field_mapping, periods, statement_name)
+                                model_class, field_mapping, periods, statement_name,
+                                sum_mapping: nil)
         params = {
           reportName: report_name,
           columns: "SECUCODE,REPORT_DATE,REPORT,REPORT_TYPE,STD_ITEM_CODE,AMOUNT,ITEM_NAME",
@@ -298,6 +370,11 @@ module DataSources
           us_period_type(item["REPORT"], item["REPORT_TYPE"]) == period_type
         end
 
+        # 允许的科目名 = 直接映射 + 多科目汇总组件；汇总组件不在 field_mapping 里，
+        # 若只按 field_mapping 过滤会在聚合前就被丢掉（美股债务科目全部丢失）
+        allowed_item_names = field_mapping.keys
+        allowed_item_names += sum_mapping.values.flatten if sum_mapping
+
         # 按(日期, ITEM_NAME)聚合，自动去重：
         #   同一日期同一ITEM_NAME有多个值时，优先选 REPORT 含"FY"的，
         #   若都含/都不含FY则选绝对值较大的（合并数据 > 分部数据）
@@ -307,7 +384,7 @@ module DataSources
           next unless date.present?
 
           item_name = item["ITEM_NAME"]
-          next unless item_name.present? && field_mapping.key?(item_name)
+          next unless item_name.present? && allowed_item_names.include?(item_name)
 
           report = item["REPORT"] || ""
           amount = item["AMOUNT"]
@@ -346,6 +423,7 @@ module DataSources
             value = parse_decimal(field_values[cn_name]&.dig(:amount))
             financial_data[model_field] = value if value
           end
+          apply_sum_mapping(financial_data, field_values, sum_mapping) if sum_mapping
 
           # 处理净值字段：若股东权益合计缺失则用 总资产 - 总负债 推算
           if model_class == BalanceSheet && financial_data[:total_equity].nil?
@@ -543,6 +621,10 @@ module DataSources
 
         result = save_yahoo_indicator(stock, "US", db_periods)
         return false unless result[:status] == :success
+
+        # 期次接口失败时仍用库内既有报表重算无杠杆ROE，避免这类标的指标永不刷新
+        unlevered = DataSources::UnleveredRoeService.call(stock: stock, market: "US")
+        stock.touch if unlevered[:updated].to_i.positive?
 
         { success: false, changed: true }
       end

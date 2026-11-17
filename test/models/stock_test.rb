@@ -16,6 +16,7 @@ class StockTest < ActiveSupport::TestCase
   def teardown
     FinancialIndicator.where(stock_id: @stock.id).delete_all
     IncomeStatement.where(stock_id: @stock.id).delete_all
+    BalanceSheet.where(stock_id: @stock.id).delete_all
     FinancialReport.where(stock_id: @stock.id).delete_all
     @stock.destroy!
   end
@@ -26,6 +27,33 @@ class StockTest < ActiveSupport::TestCase
     report = FinancialReport.create!(stock: stock, report_date: report_date, market: "CN", report_type: "annual", currency: "CNY")
     FinancialIndicator.create!(financial_report: report, stock: stock, report_date: report_date, market: "CN", roe_avg: roe)
     IncomeStatement.create!(financial_report: report, stock: stock, report_date: report_date, market: "CN", net_income_to_shareholders: net_income)
+  end
+
+  # 本期有归母、上年无归母时，平均权益退化为本期归母单点，不能混用股东权益合计
+  test "calculate_roe: 上年无归母净资产时不混用合计" do
+    current_report = FinancialReport.create!(
+      stock: @stock, report_date: Date.new(2025, 12, 31), market: "CN",
+      report_type: "annual", currency: "CNY"
+    )
+    prev_report = FinancialReport.create!(
+      stock: @stock, report_date: Date.new(2024, 12, 31), market: "CN",
+      report_type: "annual", currency: "CNY"
+    )
+    balance = BalanceSheet.create!(
+      financial_report: current_report, stock: @stock, report_date: Date.new(2025, 12, 31),
+      market: "CN", total_equity: 120, parent_equity: 100
+    )
+    BalanceSheet.create!(
+      financial_report: prev_report, stock: @stock, report_date: Date.new(2024, 12, 31),
+      market: "CN", total_equity: 80, parent_equity: nil
+    )
+    income = IncomeStatement.create!(
+      financial_report: current_report, stock: @stock, report_date: Date.new(2025, 12, 31),
+      market: "CN", net_income_to_shareholders: 20
+    )
+
+    # 20 ÷ 100 × 100 = 20.0；若混用（100+80)/2=90 会得到 22.22
+    assert_in_delta 20.0, @stock.calculate_roe(income, balance), 0.01
   end
 
   test "pyramid_tags: 5年连续盈利无标签" do

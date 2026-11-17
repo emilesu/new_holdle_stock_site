@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_11_07_150000) do
+ActiveRecord::Schema[7.1].define(version: 2026_11_17_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -324,6 +324,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_11_07_150000) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "period_type", default: "annual", null: false, comment: "期次类型（annual/q1/h1/q3，累计口径）"
+    t.decimal "interest_income", precision: 20, scale: 2, comment: "利息收入（美股口径，用于计算净利息费用）"
     t.index ["financial_report_id", "report_date"], name: "idx_income_stmts_report_date"
     t.index ["financial_report_id"], name: "index_income_statements_on_financial_report_id"
     t.index ["report_date"], name: "idx_is_annual_report_date", where: "((period_type)::text = 'annual'::text)"

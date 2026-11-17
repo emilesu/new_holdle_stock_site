@@ -162,6 +162,36 @@ module DataSources
 
         assert_equal BaseFetcher::MAX_PERIOD_PAGES, calls, "翻页次数应被上限截断"
       end
+
+      test "UsFetcher: 美股有息负债按多科目汇总，不互相覆盖" do
+        fetcher = UsFetcher.new
+        financial_data = {}
+        field_values = {
+          "短期债务" => { amount: 100 },
+          "应付票据(流动)" => { amount: 20 },
+          "资本租赁债务(流动)" => { amount: 5 },
+          "长期负债" => { amount: 300 },
+          "长期债务" => { amount: 40 },
+          "应付票据(非流动)" => { amount: 60 },
+          "资本租赁债务(非流动)" => { amount: 10 },
+          "长期负债(本期部分)" => { amount: 30 }
+        }
+
+        fetcher.send(:apply_sum_mapping, financial_data, field_values, UsFetcher::BALANCE_SUM_MAPPING)
+
+        assert_equal BigDecimal("125"), financial_data[:short_term_debt]
+        assert_equal BigDecimal("410"), financial_data[:long_term_debt]
+        assert_equal BigDecimal("30"), financial_data[:noncurrent_liab_1year]
+      end
+
+      test "UsFetcher: 债务组件全空时不写入 0，避免覆盖已有值" do
+        fetcher = UsFetcher.new
+        financial_data = {}
+
+        fetcher.send(:apply_sum_mapping, financial_data, {}, UsFetcher::BALANCE_SUM_MAPPING)
+
+        assert_empty financial_data
+      end
     end
   end
 end

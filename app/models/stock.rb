@@ -127,12 +127,17 @@ class Stock < ApplicationRecord
     (income_statement.net_income_to_shareholders.to_f / balance_sheet.total_assets.to_f) * 100
   end
 
-  # ROE(净资产收益率)：归母净利润 / 平均股东权益 * 100
-  # 使用平均股东权益（期初+期末/2）计算，更符合行业标准
+  # ROE(净资产收益率)：归母净利润 / 平均归母净资产 * 100
+  # 平均权益口径必须两年一致：本期有归母、上年无归母时退化为本期归母单点，
+  # 不能把归母与股东权益合计混在一起平均（老数据/增量回填期间会出现）。
   def calculate_roe(income_statement, balance_sheet)
     return nil unless income_statement && balance_sheet
     return nil unless income_statement.net_income_to_shareholders.present?
-    return nil unless balance_sheet.total_equity.present? && balance_sheet.total_equity != 0
+
+    current_parent = parent_equity_value(balance_sheet)
+    current_total = balance_sheet.total_equity
+    current_equity = current_parent || current_total
+    return nil unless current_equity.present? && current_equity != 0
 
     current_year = balance_sheet.report_date.year
     # 优先使用预加载集合，避免不必要的 DB 查询；按 report_date 排序取最新一条
@@ -142,13 +147,27 @@ class Stock < ApplicationRecord
       .sort_by(&:report_date)
       .last
 
-    if prev_balance && prev_balance.total_equity.present? && prev_balance.total_equity != 0
-      avg_equity = (balance_sheet.total_equity.to_f + prev_balance.total_equity.to_f) / 2
-    else
-      avg_equity = balance_sheet.total_equity.to_f
-    end
+    avg_equity = if current_parent
+                   prev_parent = parent_equity_value(prev_balance)
+                   prev_parent ? (current_parent.to_f + prev_parent.to_f) / 2 : current_parent.to_f
+                 else
+                   prev_total = prev_balance&.total_equity
+                   if prev_total.present? && prev_total != 0
+                     (current_total.to_f + prev_total.to_f) / 2
+                   else
+                     current_total.to_f
+                   end
+                 end
 
     (income_statement.net_income_to_shareholders.to_f / avg_equity) * 100
+  end
+
+  # 可用的归母净资产：nil/0 视为不可用，回退到股东权益合计
+  def parent_equity_value(balance_sheet)
+    return nil if balance_sheet.nil?
+
+    value = balance_sheet.parent_equity
+    value if value.present? && value != 0
   end
 
   def calculate_asset_turnover_ratio(income_statement, balance_sheet)
