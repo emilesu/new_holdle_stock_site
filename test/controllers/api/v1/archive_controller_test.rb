@@ -139,6 +139,35 @@ class Api::V1::ArchiveControllerTest < ActionDispatch::IntegrationTest
     assert_equal 0, entry["unlevered_roe_flag"]
   end
 
+  test "financials 返回无杠杆ROE计算组件" do
+    _stock, fr = create_cn_stock_with_annual(symbol: "SH600004", name: "组件测试", score: 100,
+                                             revenue: 10_000_000_000, parent: 2_000_000_000,
+                                             unlevered_roe: 12.5, unlevered_roe_flag: 0)
+    IncomeStatement.find_by(financial_report: fr).update!(
+      interest_expense: -500_000_000, interest_income: 100_000_000,
+      income_tax: 1_000_000_000, income_before_tax: 5_000_000_000
+    )
+    BalanceSheet.create!(
+      financial_report: fr, stock: fr.stock, report_date: fr.report_date, market: "CN",
+      period_type: "annual", parent_equity: 80_000_000_000, total_equity: 85_000_000_000,
+      total_liabilities: 20_000_000_000, short_term_debt: 1_000_000_000,
+      long_term_debt: 2_000_000_000, bond_payable: 500_000_000,
+      noncurrent_liab_1year: 300_000_000
+    )
+
+    get "/api/v1/archive/financials?code=SH600004", headers: @auth
+    assert_response 200
+    components = response.parsed_body["data"]["fields"]["unlevered_roe"]["components"]
+
+    assert_in_delta 2_000_000_000, components["parent_net_profit"]["value"].to_f, 0.01
+    assert_in_delta(-500_000_000, components["interest_expense"]["value"].to_f, 0.01)
+    assert_in_delta 100_000_000, components["interest_income"]["value"].to_f, 0.01
+    # A股口径：直接使用财务费用原值（-500M），忽略利息收入；税率 20% → -400M
+    assert_in_delta(-400_000_000, components["after_tax_interest"]["value"].to_f, 0.01)
+    assert_in_delta 80_000_000_000, components["parent_equity"]["value"].to_f, 0.01
+    assert_in_delta 3_800_000_000, components["interest_bearing_debt"]["value"].to_f, 0.01
+  end
+
   test "financials flag6 不返回极端值并给出原因" do
     create_cn_stock_with_annual(symbol: "SH600002", name: "极端值测试", score: 100,
                                 unlevered_roe: 12_345.0, unlevered_roe_flag: 6)
@@ -178,6 +207,12 @@ class Api::V1::ArchiveControllerTest < ActionDispatch::IntegrationTest
                             net_income_to_shareholders: 100_000_000_000)
     FinancialIndicator.create!(financial_report: fr, stock: stock, report_date: report_date, market: "US",
                                period_type: "annual", unlevered_roe: 68.77, unlevered_roe_flag: 4)
+    BalanceSheet.create!(
+      financial_report: fr, stock: stock, report_date: report_date, market: "US",
+      period_type: "annual", parent_equity: 112_093_000_000, total_equity: 112_093_000_000,
+      total_liabilities: 292_455_000_000, short_term_debt: 11_903_000_000,
+      long_term_debt: 68_208_000_000
+    )
 
     get "/api/v1/archive/financials?code=aapl", headers: @auth
     assert_response 200
@@ -186,6 +221,12 @@ class Api::V1::ArchiveControllerTest < ActionDispatch::IntegrationTest
     assert_in_delta 68.77, data["fields"]["unlevered_roe"]["value"].to_f, 0.001
     assert_equal 4, data["fields"]["unlevered_roe"]["flag"]
     assert_equal "利息费用未披露，未加回利息（结果可能偏低）", data["fields"]["unlevered_roe"]["flag_reason"]
+
+    components = data["fields"]["unlevered_roe"]["components"]
+    # 美股 flag4：利息支出缺失且有息负债>0，按 0 加回
+    assert_equal 0.0, components["after_tax_interest"]["value"].to_f
+    assert_in_delta 80_111_000_000, components["interest_bearing_debt"]["value"].to_f, 0.01
+    assert_in_delta 112_093_000_000, components["parent_equity"]["value"].to_f, 0.01
   end
 
   test "扣非未回填时返回 null 且标注待回填" do

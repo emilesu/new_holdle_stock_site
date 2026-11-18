@@ -246,7 +246,7 @@ module Api
             deducted_net_profit: field(deducted, "扣非归母净利润", "eastmoney_f10"),
             non_recurring_net: field(subtract(parent, deducted), "归母净利−扣非归母净利", "derived"),
             roe_weighted: field(indicator.roe_avg, "加权平均ROE·归母(WEIGHTAVG_ROE)", "eastmoney"),
-            unlevered_roe: unlevered_roe_field(indicator),
+            unlevered_roe: unlevered_roe_field(indicator, income: income, balance: balance, market: stock.market),
             deducted_roe_weighted: field(indicator.deducted_roe_weighted, "扣非加权平均ROE", "eastmoney_f10"),
             cash_and_equivalents: field(cash_val, "货币资金", "eastmoney"),
             total_assets: field(total_assets, "合并总资产", "eastmoney"),
@@ -302,9 +302,10 @@ module Api
         end
       end
 
-      # 无杠杆ROE：value/flag/flag_reason 一并返回；flag6 极端值与站内一致不返回值
-      def unlevered_roe_field(indicator)
+      # 无杠杆ROE：value/flag/flag_reason + 计算组件；flag6 极端值与站内一致不返回值
+      def unlevered_roe_field(indicator, income:, balance:, market:)
         flag = indicator.unlevered_roe_flag
+        components = unlevered_roe_components(income, balance, market: market)
         # 未计算（flag 为 nil）按既有 field 约定标注待回填，不冒充已派生值
         if flag.nil?
           return {
@@ -312,7 +313,8 @@ module Api
             flag: nil,
             flag_reason: nil,
             caliber: PENDING_CALIBER,
-            source: nil
+            source: nil,
+            components: components
           }
         end
 
@@ -321,8 +323,59 @@ module Api
           flag: flag,
           flag_reason: DataSources::UnleveredRoeService.flag_reason(flag),
           caliber: "无杠杆ROE·归母净利润+有息负债（口径B）",
-          source: "derived"
+          source: "derived",
+          components: components
         }
+      end
+
+      def unlevered_roe_components(income, balance, market:)
+        debt_values = [
+          balance&.short_term_debt,
+          balance&.long_term_debt,
+          balance&.bond_payable,
+          balance&.noncurrent_liab_1year
+        ].compact
+        debt_total = debt_values.empty? ? nil : debt_values.sum
+
+        {
+          parent_net_profit: field(income&.net_income_to_shareholders, "归属于上市公司股东的净利润", "eastmoney"),
+          interest_expense: field(income&.interest_expense, "利息费用", "eastmoney"),
+          interest_income: field(income&.interest_income, "利息收入", "eastmoney"),
+          after_tax_interest: field(after_tax_interest_amount(income, market: market, debt_total: debt_total),
+                                   "税后利息加回", "derived"),
+          parent_equity: field(balance&.parent_equity, "归母净资产", "eastmoney"),
+          short_term_debt: field(balance&.short_term_debt, "短期债务", "eastmoney"),
+          long_term_debt: field(balance&.long_term_debt, "长期债务", "eastmoney"),
+          bond_payable: field(balance&.bond_payable, "应付债券", "eastmoney"),
+          noncurrent_liab_1year: field(balance&.noncurrent_liab_1year, "一年内到期的非流动负债", "eastmoney"),
+          interest_bearing_debt: field(debt_total, "有息负债合计", "derived")
+        }
+      end
+
+      # 与服务口径一致：A股直接用财务费用（负值保留）；美股用 abs(支出)-abs(收入)；
+      # 美股有利息负债但利息支出缺失时，服务 flag4 按 0 加回，这里也返回 0
+      def after_tax_interest_amount(income, market:, debt_total:)
+        return nil unless income
+
+        expense = income.interest_expense
+        interest_income = income.interest_income
+        if market == "US"
+          return 0.0 if expense.nil? && debt_total.to_f.positive?
+          return 0.0 if expense.nil? && interest_income.nil?
+
+          gross = expense.to_f.abs - interest_income.to_f.abs
+        else
+          gross = expense.to_f
+        end
+
+        tax = income.income_tax
+        pretax = income.income_before_tax
+        rate = if pretax && pretax.to_f.positive? && tax && tax.to_f >= 0 && tax.to_f <= pretax.to_f
+                 tax.to_f / pretax.to_f
+               else
+                 0.0
+               end
+        (gross * (1 - rate)).round(2)
       end
 
       def api_unlevered_roe_value(indicator)
