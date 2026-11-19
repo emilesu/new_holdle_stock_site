@@ -26,6 +26,9 @@ export default class extends Controller {
     if (this.loading || !this.hasMoreValue) return
 
     this.loading = true
+    if (this.hasSentinelTarget) this.sentinelTarget.textContent = "加载更多…"
+
+    let loaded = false
     try {
       const url = new URL(this.urlValue, window.location.origin)
       url.searchParams.set("page", this.nextPageValue)
@@ -37,6 +40,7 @@ export default class extends Controller {
       this.listTarget.insertAdjacentHTML("beforeend", data.html)
       this.hasMoreValue = data.has_more
       if (data.next_page) this.nextPageValue = data.next_page
+      loaded = true
 
       if (!this.hasMoreValue) {
         this.observer.disconnect()
@@ -44,12 +48,14 @@ export default class extends Controller {
       }
     } catch (error) {
       console.error("对比栏加载失败", error)
+      // 失败后停止自动重试，避免接口异常时形成无限请求；用户滚出再滚回可重新触发
+      if (this.hasSentinelTarget) this.sentinelTarget.textContent = "加载失败，请滚动重试"
     } finally {
       this.loading = false
     }
 
-    // 追加后哨兵仍在可视范围内（首屏不足一屏）时继续加载
-    if (this.hasMoreValue && this.sentinelVisible()) this.loadNext()
+    // 仅在本次请求成功后继续：追加后哨兵仍在可视范围内（首屏不足一屏）时继续加载
+    if (loaded && this.hasMoreValue && this.sentinelVisible()) this.loadNext()
   }
 
   sentinelVisible() {
