@@ -199,6 +199,15 @@ module ApplicationHelper
     end
   end
 
+  # 金字塔警示标签的紧凑文字颜色（对比栏窄栏使用，按严重程度区分）
+  def pyramid_tag_text_class(tag)
+    case tag
+    when "亏损年份" then "text-red-500"
+    when "数据<5年" then "text-amber-600"
+    else "text-muted-3"
+    end
+  end
+
   # 财务表右侧季报同比两列的市场主题样式
   # head：表头底色（100 档，与徽章一致）；cell：单元格底色（50 档，大面积浅底保证数字可读）；
   # hover：该市场列 hover 加深时用的 CSS 变量类（配合 application.tailwind.css 的 .financial-row 分区高亮）

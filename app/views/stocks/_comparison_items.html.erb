@@ -1,17 +1,18 @@
 <% items.each_with_index do |item, index| %>
   <% stock = item[:stock] %>
   <% radar_data = @comparison_radar_data[stock.symbol] %>
+  <% tags = @comparison_tags[stock.id] || [] %>
   <a href="<%= stock_path(stock) %>"
      class="block py-3 transition-colors comparison-item <%= item[:is_current_stock] ? 'bg-blue-50' : 'hover:bg-bg-mute' %>"
      data-symbol="<%= stock.symbol %>"
      data-radar='<%= raw radar_data.to_json if radar_data %>'>
-    <div class="flex items-center justify-between">
-      <div class="flex items-center space-x-2 min-w-0">
-        <span class="w-5 h-5 rounded-full flex items-center justify-center text-hl-11 font-medium shrink-0
+    <div class="flex items-start justify-between gap-2">
+      <div class="flex items-start space-x-2 min-w-0 flex-1">
+        <span class="mt-0.5 w-5 h-5 rounded-full flex items-center justify-center text-hl-11 font-medium shrink-0
           <%= item[:is_current_stock] ? 'bg-blue-500 text-white' : 'bg-bg-mute text-muted-2' %>">
           <%= start_index + index + 1 %>
         </span>
-        <div class="flex flex-col min-w-0">
+        <div class="flex flex-col min-w-0 flex-1">
           <div class="flex items-center space-x-1 min-w-0">
             <span class="text-hl-13 font-medium text-ink truncate"><%= stock.display_name_for_comparison %></span>
             <%# 已收藏标记：实心星，颜色跟随该股市场主题色（A股绿/港股琥珀/美股蓝），与筛选/金字塔页同款 %>
@@ -21,15 +22,19 @@
                 <%= favorite_icon_tag %>
               </span>
             <% end %>
-            <% (@comparison_tags[stock.id] || []).each do |tag| %>
-              <span class="shrink-0 align-middle inline-block px-2 py-0.5 rounded-full text-hl-11 border <%= @market_badge_bg %>"
-                    title="<%= Stock.pyramid_tag_hint(tag) %>"><%= tag %></span>
-            <% end %>
           </div>
           <span class="text-hl-11 text-muted-4"><%= stock.symbol %></span>
+          <%# 警示标签：窄栏下不再用胶囊徽章，改为小号彩色文字并允许换行，避免挤压公司名与分数 %>
+          <% if tags.any? %>
+            <div class="mt-0.5 flex flex-wrap gap-x-1.5 gap-y-0.5 text-[10px] leading-4">
+              <% tags.each do |tag| %>
+                <span class="<%= pyramid_tag_text_class(tag) %>" title="<%= Stock.pyramid_tag_hint(tag) %>"><%= tag %></span>
+              <% end %>
+            </div>
+          <% end %>
         </div>
       </div>
-      <span class="text-hl-11 font-medium shrink-0 ml-2 <%= @market_text_color %>">
+      <span class="pt-0.5 text-hl-11 font-medium shrink-0 <%= @market_text_color %>">
         <%= @is_member ? (item[:pyramid_score] || '-') : (item[:roe_average] ? ('%.2f' % item[:roe_average]) + '%' : '-') %>
       </span>
     </div>
