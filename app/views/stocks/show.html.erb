@@ -266,14 +266,15 @@
 
       <!-- 右列：20% -->
       <div class="lg:col-span-1 min-w-0">
-        <div class="sticky top-24 bg-white hl-card flex flex-col max-h-[calc(100vh-7.5rem)]">
+        <%# 桌面端：从导航栏下沿（h-15 = 52.5px + 1px 下边框）铺到视口底部，滚动页面时保持悬浮；移动端保留原有卡片限高与内部滚动 %>
+        <div class="bg-white hl-card flex flex-col max-h-[calc(100vh-7.5rem)] lg:sticky lg:top-[53.5px] lg:max-h-none lg:h-[calc(100vh_-_53.5px)]">
           <div class="px-4 py-4 border-b border-line bg-bg-mute shrink-0">
             <span class="text-link font-semibold"><%= @stock.sector.presence || '-' %></span>
             <span class="text-muted-3 items-center justify-right text-hl-11">
               <%= @is_member ? ' - 行业金字塔对比' : ' - 近五年ROE对比' %>
             </span>
           </div>
-          <div class="p-4 flex-1 min-h-0 hover-scroll">
+          <div class="p-4 flex-1 min-h-0 comparison-scroll">
             
             <div class="border-t border-line-soft">
               <% if @industry_comparison_data.present? %>

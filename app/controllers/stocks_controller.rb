@@ -2,7 +2,6 @@ class StocksController < ApplicationController
   HUNDRED_MILLION = 100_000_000
   MAX_QUERY_LENGTH = 100
   AUTOCOMPLETE_LIMIT = 10
-  INDUSTRY_COMPARISON_LIMIT = 30
   CACHE_EXPIRES_IN = 6.hours
   INDUSTRY_CACHE_EXPIRES_IN = 12.hours
 
@@ -86,7 +85,7 @@ class StocksController < ApplicationController
       end.compact
     end
 
-    # 排序/截断在缓存外按用户身份进行，避免缓存随身份失效：
+    # 排序在缓存外按用户身份进行，避免缓存随身份失效：
     # 会员按该行业金字塔总分排序，访客/非会员按近五年ROE排序
     comparison_sorted = if @is_member
       # to_i 兜底：即使命中旧格式缓存（pyramid_score 为 nil）也不会抛 NoMethodError
@@ -95,7 +94,8 @@ class StocksController < ApplicationController
       cached_comparison_data.sort_by { |item| -item[:roe_average] }
     end
 
-    @industry_comparison_data = comparison_sorted.first(INDUSTRY_COMPARISON_LIMIT).map do |item|
+    # 不截断：全部同行股票交由对比栏内部滚动展示
+    @industry_comparison_data = comparison_sorted.map do |item|
       item.merge(is_current_stock: item[:stock].id == @stock.id)
     end
 
