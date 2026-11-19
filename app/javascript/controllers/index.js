@@ -66,3 +66,6 @@ application.register("favorites", FavoritesController)
 
 import FavoriteRatingController from "./favorite_rating_controller"
 application.register("favorite-rating", FavoriteRatingController)
+
+import ComparisonListController from "./comparison_list_controller"
+application.register("comparison-list", ComparisonListController)

@@ -274,49 +274,20 @@
               <%= @is_member ? ' - 行业金字塔对比' : ' - 近五年ROE对比' %>
             </span>
           </div>
-          <div class="p-4 flex-1 min-h-0 comparison-scroll">
+          <div class="p-4 flex-1 min-h-0 comparison-scroll"
+               data-controller="comparison-list"
+               data-comparison-list-url-value="<%= industry_comparison_stock_path(@stock) %>"
+               data-comparison-list-next-page-value="2"
+               data-comparison-list-has-more-value="<%= @comparison_has_more %>">
             
             <div class="border-t border-line-soft">
               <% if @industry_comparison_data.present? %>
-                <div class="divide-y divide-line-soft">
-                  <% @industry_comparison_data.each_with_index do |item, index| %>
-                    <% stock = item[:stock] %>
-                    <% radar_data = @comparison_radar_data[stock.symbol] %>
-                    <a href="<%= stock_path(stock) %>"
-                       class="block py-3 transition-colors comparison-item <%= item[:is_current_stock] ? 'bg-blue-50' : 'hover:bg-bg-mute' %>"
-                       data-symbol="<%= stock.symbol %>"
-                       data-radar='<%= raw radar_data.to_json if radar_data %>'>
-                      <div class="flex items-center justify-between">
-                        <div class="flex items-center space-x-2 min-w-0">
-                          <span class="w-5 h-5 rounded-full flex items-center justify-center text-hl-11 font-medium shrink-0
-                            <%= item[:is_current_stock] ? 'bg-blue-500 text-white' : 'bg-bg-mute text-muted-2' %>">
-                            <%= index + 1 %>
-                          </span>
-                          <div class="flex flex-col min-w-0">
-                            <div class="flex items-center space-x-1 min-w-0">
-                              <span class="text-hl-13 font-medium text-ink truncate"><%= stock.display_name_for_comparison %></span>
-                              <%# 已收藏标记：实心星，颜色跟随该股市场主题色（A股绿/港股琥珀/美股蓝），与筛选/金字塔页同款 %>
-                              <% if @favorite_stock_ids.include?(stock.id) %>
-                                <span class="shrink-0 align-middle inline-flex cursor-help <%= market_star_class(stock.market) %>" title="已收藏"
-                                      aria-label="已收藏" role="img">
-                                  <%= favorite_icon_tag %>
-                                </span>
-                              <% end %>
-                              <% (@comparison_tags[stock.id] || []).each do |tag| %>
-                                <span class="shrink-0 align-middle inline-block px-2 py-0.5 rounded-full text-hl-11 border <%= @market_badge_bg %>"
-                                      title="<%= Stock.pyramid_tag_hint(tag) %>"><%= tag %></span>
-                              <% end %>
-                            </div>
-                            <span class="text-hl-11 text-muted-4"><%= stock.symbol %></span>
-                          </div>
-                        </div>
-                        <span class="text-hl-11 font-medium shrink-0 ml-2 <%= @market_text_color %>">
-                          <%= @is_member ? item[:pyramid_score] : ('%.2f' % item[:roe_average]) + '%' %>
-                        </span>
-                      </div>
-                    </a>
-                  <% end %>
+                <div class="divide-y divide-line-soft" data-comparison-list-target="list">
+                  <%= render "stocks/comparison_items", items: @industry_comparison_data, start_index: 0 %>
                 </div>
+                <% if @comparison_has_more %>
+                  <div class="py-3 text-center text-hl-11 text-muted-4" data-comparison-list-target="sentinel">加载更多…</div>
+                <% end %>
               <% else %>
                 <div class="text-center py-8">
                   <div class="text-muted-4 mb-2">📊</div>
@@ -455,10 +426,15 @@ document.addEventListener('turbo:load', function() {
     }
   }
 
-  document.querySelectorAll('.comparison-item').forEach(function(item) {
-    item.addEventListener('mouseenter', function() {
+  // 事件委托：滚动加载动态插入的对比项也能触发雷达联动
+  var comparisonScroll = document.querySelector('.comparison-scroll');
+  if (comparisonScroll) {
+    comparisonScroll.addEventListener('mouseover', function(event) {
+      var item = event.target.closest('.comparison-item');
+      if (!item || item.contains(event.relatedTarget)) return;
+
       if (hoverTimeout) clearTimeout(hoverTimeout);
-      var radarRaw = this.dataset.radar;
+      var radarRaw = item.dataset.radar;
       if (!radarRaw) return;
       try {
         var compareData = JSON.parse(radarRaw);
@@ -468,12 +444,15 @@ document.addEventListener('turbo:load', function() {
       }
     });
 
-    item.addEventListener('mouseleave', function() {
+    comparisonScroll.addEventListener('mouseout', function(event) {
+      var item = event.target.closest('.comparison-item');
+      if (!item || item.contains(event.relatedTarget)) return;
+
       hoverTimeout = setTimeout(function() {
         initRadarChart(null);
       }, 100);
     });
-  });
+  }
 });
 </script>
 

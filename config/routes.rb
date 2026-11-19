@@ -26,6 +26,7 @@ Rails.application.routes.draw do
       get :radar_comparison
       get :indicator_detail
       get :monthly_trend
+      get :industry_comparison
     end
     collection do
       get :autocomplete

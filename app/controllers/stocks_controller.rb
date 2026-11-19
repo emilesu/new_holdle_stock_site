@@ -2,6 +2,8 @@ class StocksController < ApplicationController
   HUNDRED_MILLION = 100_000_000
   MAX_QUERY_LENGTH = 100
   AUTOCOMPLETE_LIMIT = 10
+  # 对比栏滚动分批加载：每批条数，避免一次性渲染数百只同行股票
+  COMPARISON_PAGE_SIZE = 30
   CACHE_EXPIRES_IN = 6.hours
   INDUSTRY_CACHE_EXPIRES_IN = 12.hours
 
@@ -15,7 +17,7 @@ class StocksController < ApplicationController
   MACD_SIGNAL = 9
   MACD_ROUND = 6
 
-  before_action :set_stock, only: [:show, :indicator_detail, :monthly_trend]
+  before_action :set_stock, only: [:show, :indicator_detail, :monthly_trend, :industry_comparison]
 
   # 财务指标格式化统一走 format_value，视图单元格与弹窗接口口径一致
   helper_method :format_value, :indicator_cell_reason
@@ -59,84 +61,45 @@ class StocksController < ApplicationController
     @quarter_columns = @detail_financials[:quarters]
 
     # 课程学员（268）及以上才享有金字塔分值排序；访客保持近五年ROE排序（原有体验）
-    @is_member = user_signed_in? && current_user.content_tier >= User::TIER_STUDENT
+    @is_member = member_comparison_view?
 
-    cached_comparison_data = Rails.cache.fetch(
-      # v2：对比栏 item 新增 pyramid_score 键，升级版本号避免命中旧格式缓存导致会员排序崩溃
-      [:industry_comparison, "v2", @stock.sector, @stock.market, Date.current].join('/'),
-      expires_in: INDUSTRY_CACHE_EXPIRES_IN
-    ) do
-      sector_stocks = Stock.where(sector: @stock.sector, market: @stock.market)
-        .where.not(radar_dim_scores: nil)
-        .where('pyramid_total_score > 560')
-        # listing_date 用于 pyramid_tags 次新股判断，必须包含在 select 中
-        .select(:id, :symbol, :name, :market, :exchange, :radar_dim_scores, :pyramid_total_score, :listing_date)
-        .to_a
+    # 对比栏分批加载：首页只渲染第一批，其余由滚动触发 industry_comparison 接口
+    comparison_sorted = sorted_industry_comparison_data
+    @industry_comparison_data = comparison_sorted.first(COMPARISON_PAGE_SIZE)
+    @comparison_has_more = comparison_sorted.size > @industry_comparison_data.size
 
-      sector_stocks.map do |stock|
-        roe_score = stock.radar_dim_scores&.dig('roe')
-        next nil unless roe_score && roe_score > 0
-
-        {
-          stock: stock,
-          roe_average: roe_score,
-          pyramid_score: stock.pyramid_total_score
-        }
-      end.compact
-    end
-
-    # 排序在缓存外按用户身份进行，避免缓存随身份失效：
-    # 会员按该行业金字塔总分排序，访客/非会员按近五年ROE排序
-    comparison_sorted = if @is_member
-      # to_i 兜底：即使命中旧格式缓存（pyramid_score 为 nil）也不会抛 NoMethodError
-      cached_comparison_data.sort_by { |item| [-item[:pyramid_score].to_i, -item[:stock].id] }
-    else
-      cached_comparison_data.sort_by { |item| -item[:roe_average] }
-    end
-
-    # 不截断：全部同行股票交由对比栏内部滚动展示
-    @industry_comparison_data = comparison_sorted.map do |item|
-      item.merge(is_current_stock: item[:stock].id == @stock.id)
-    end
-
-    # 当前股票不在排序结果时追加显示（会员/非会员均保持）
-    unless @industry_comparison_data.any? { |item| item[:is_current_stock] }
-      current_roe = @stock.radar_dim_scores&.dig('roe')
-      if current_roe && current_roe > 0
-        @industry_comparison_data << {
-          stock: @stock,
-          roe_average: current_roe,
-          pyramid_score: @stock.pyramid_total_score,
-          is_current_stock: true
-        }
-      end
-    end
-
-    # 对比列表警示标签（次新股/亏损年份/数据<5年），所有用户可见，预加载财务数据避免 N+1
-    comparison_stocks = @industry_comparison_data.map { |item| item[:stock] }
-    Stock.preload_pyramid_financials(comparison_stocks)
-    @comparison_tags = Stock.pyramid_tags_for(comparison_stocks)
-    # 对比栏已收藏集合（单次查询，与筛选/金字塔页共用），命中的股票名后渲染市场主题色星标
-    @favorite_stock_ids = favorite_stock_ids(comparison_stocks)
+    prepare_comparison_view_data(@industry_comparison_data)
 
     @radar_data = build_radar_data(@stock)
-    @comparison_radar_data = build_comparison_radar_data
 
     @user_favorite = current_user&.user_favorites&.find_by(stock_id: @stock.id)
-
-    # 市场主题色（统一走 application_helper）
-    @market_text_color = case @stock.market
-                         when 'CN' then 'text-green-600'
-                         when 'HK' then 'text-amber-600'
-                         else 'text-blue-600'
-                         end
-    @market_badge_bg = helpers.market_badge_class(@stock.market)
 
     # 金字塔警示标签（数据<5年 / 亏损年份 / 次新股），与金字塔列表口径一致
     @pyramid_tags = @stock.pyramid_tags
 
     # 企业质量档案入口：仅当该股存在可读（已发布/被取代未撤回）档案时展示，对全体用户可见
     @archive_profile = @stock.quality_profiles.readable.max_by(&:period_sort_key)
+  end
+
+  # 对比栏滚动分批加载：返回下一批对比项 HTML
+  def industry_comparison
+    @is_member = member_comparison_view?
+    comparison_sorted = sorted_industry_comparison_data
+
+    page = params[:page].to_i
+    page = 1 if page < 1
+    offset = (page - 1) * COMPARISON_PAGE_SIZE
+    items = comparison_sorted.slice(offset, COMPARISON_PAGE_SIZE) || []
+    has_more = offset + items.size < comparison_sorted.size
+
+    prepare_comparison_view_data(items)
+    html = if items.any?
+      render_to_string(partial: "stocks/comparison_items", locals: { items: items, start_index: offset })
+    else
+      ""
+    end
+
+    render json: { html: html, has_more: has_more, next_page: has_more ? page + 1 : nil }
   end
 
   def indicator_detail
@@ -524,6 +487,10 @@ class StocksController < ApplicationController
     end
   end
 
+  def member_comparison_view?
+    user_signed_in? && current_user.content_tier >= User::TIER_STUDENT
+  end
+
   def build_radar_data(stock)
     values = stock.radar_dim_scores.presence || {}
     {
@@ -533,10 +500,78 @@ class StocksController < ApplicationController
     }
   end
 
-  def build_comparison_radar_data
-    return {} unless @industry_comparison_data
+  # 对比栏候选（缓存）：同市场、同板块、已有雷达数据；不按金字塔分/ROE 阈值过滤
+  def industry_comparison_candidates
+    Rails.cache.fetch(
+      # v3：取消金字塔分与 ROE 门槛，全部有雷达数据的同行股票参与对比
+      [:industry_comparison, "v3", @stock.sector, @stock.market, Date.current].join('/'),
+      expires_in: INDUSTRY_CACHE_EXPIRES_IN
+    ) do
+      sector_stocks = Stock.where(sector: @stock.sector, market: @stock.market)
+        .where.not(radar_dim_scores: nil)
+        # listing_date 用于 pyramid_tags 次新股判断，必须包含在 select 中
+        .select(:id, :symbol, :name, :market, :exchange, :radar_dim_scores, :pyramid_total_score, :listing_date)
+        .to_a
 
-    @industry_comparison_data.each_with_object({}) do |item, hash|
+      sector_stocks.map do |stock|
+        {
+          stock: stock,
+          roe_average: stock.radar_dim_scores&.dig('roe'),
+          pyramid_score: stock.pyramid_total_score
+        }
+      end
+    end
+  end
+
+  # 按当前用户身份排序并标记当前股票；无对应分值的排最后
+  def sorted_industry_comparison_data
+    candidates = industry_comparison_candidates
+
+    sorted = if @is_member
+      candidates.sort_by { |item| [item[:pyramid_score].nil? ? 1 : 0, -item[:pyramid_score].to_i, -item[:stock].id] }
+    else
+      candidates.sort_by do |item|
+        roe = item[:roe_average]
+        [roe.nil? ? 1 : 0, -roe.to_f, -item[:stock].id]
+      end
+    end
+
+    sorted = sorted.map { |item| item.merge(is_current_stock: item[:stock].id == @stock.id) }
+
+    # 当前股票不在候选（如缺少雷达数据）且自身有雷达数据时追加到末尾
+    unless sorted.any? { |item| item[:is_current_stock] }
+      if @stock.radar_dim_scores.present?
+        sorted << {
+          stock: @stock,
+          roe_average: @stock.radar_dim_scores&.dig('roe'),
+          pyramid_score: @stock.pyramid_total_score,
+          is_current_stock: true
+        }
+      end
+    end
+
+    sorted
+  end
+
+  # 当前批次渲染所需标签、收藏、雷达与市场主题色（首页与分页接口共用）
+  def prepare_comparison_view_data(items)
+    stocks = items.map { |item| item[:stock] }
+    Stock.preload_pyramid_financials(stocks)
+    @comparison_tags = Stock.pyramid_tags_for(stocks)
+    @favorite_stock_ids = favorite_stock_ids(stocks)
+    @comparison_radar_data = build_comparison_radar_data(items)
+    @market_badge_bg = helpers.market_badge_class(@stock.market)
+    @market_text_color = case @stock.market
+                         when 'CN' then 'text-green-600'
+                         when 'HK' then 'text-amber-600'
+                         else 'text-blue-600'
+                         end
+  end
+
+  def build_comparison_radar_data(items)
+    return {} if items.blank?
+
+    items.each_with_object({}) do |item, hash|
       stock = item[:stock]
       values = stock.radar_dim_scores.presence || {}
       hash[stock.symbol] = {

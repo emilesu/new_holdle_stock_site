@@ -139,6 +139,63 @@ class StocksShowTest < ActionDispatch::IntegrationTest
     stock&.destroy!
   end
 
+  # 对比栏只要求有雷达数据：金字塔分低、ROE 为 0 的同行股票也要展示
+  test "对比栏不再按金字塔分与ROE阈值过滤同行股票" do
+    sector = "测试行业"
+    low = Stock.create!(symbol: "CMP_LOW", name: "低分同行股", market: "CN", exchange: "SH",
+                        sector: sector, status: "active",
+                        radar_dim_scores: { "roe" => 0 }, pyramid_total_score: 100)
+    base = Stock.create!(symbol: "CMP_BASE3", name: "低分基准股", market: "CN", exchange: "SH",
+                         sector: sector, status: "active",
+                         radar_dim_scores: { "roe" => 5 }, pyramid_total_score: 200)
+
+    get stock_path(base)
+    assert_response :success
+    assert_match(/低分同行股/, response.body, "金字塔分低于 560 且 ROE 为 0 的同行股票应展示")
+    assert_match(/低分基准股/, response.body, "当前股票应展示")
+  ensure
+    low&.destroy! && base&.destroy!
+  end
+
+  test "对比栏分页接口返回当前批次并结束分页" do
+    setup_comparison_stocks
+
+    get industry_comparison_stock_path(@base, page: 1)
+    assert_response :success
+
+    payload = JSON.parse(response.body)
+    assert_includes payload["html"], "高ROE股"
+    assert_includes payload["html"], "高金字塔股"
+    assert_equal false, payload["has_more"]
+    assert_nil payload["next_page"]
+  ensure
+    @roe_high&.destroy! && @py_high&.destroy! && @base&.destroy!
+  end
+
+  test "对比栏超过一批时标记还有更多并由分页接口补齐" do
+    sector = "分页行业"
+    stocks = 31.times.map do |i|
+      Stock.create!(symbol: "PG_#{i}", name: "分页股#{i}", market: "US", exchange: "NASDAQ",
+                    sector: sector, status: "active",
+                    radar_dim_scores: { "roe" => 100 - i }, pyramid_total_score: 1000 - i)
+    end
+    base = stocks.first
+
+    get stock_path(base)
+    assert_response :success
+    assert_match(/data-comparison-list-has-more-value="true"/, response.body)
+
+    get industry_comparison_stock_path(base, page: 2)
+    assert_response :success
+
+    payload = JSON.parse(response.body)
+    assert_includes payload["html"], "分页股30"
+    assert_equal false, payload["has_more"]
+    assert_nil payload["next_page"]
+  ensure
+    stocks&.each(&:destroy!)
+  end
+
   test "详情页无档案时不显示入口" do
     stock = Stock.create!(symbol: "DET_NOAR", name: "无档案测试", market: "CN", exchange: "SH",
                           sector: "消费", status: "active")
