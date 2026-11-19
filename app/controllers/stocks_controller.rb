@@ -94,7 +94,8 @@ class StocksController < ApplicationController
 
     prepare_comparison_view_data(items)
     html = if items.any?
-      render_to_string(partial: "stocks/comparison_items", locals: { items: items, start_index: offset })
+      # 接口以 JSON 响应，但 partial 是 HTML，必须显式指定 formats
+      render_to_string(partial: "stocks/comparison_items", formats: [:html], locals: { items: items, start_index: offset })
     else
       ""
     end

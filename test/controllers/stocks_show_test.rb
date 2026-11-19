@@ -160,7 +160,7 @@ class StocksShowTest < ActionDispatch::IntegrationTest
   test "对比栏分页接口返回当前批次并结束分页" do
     setup_comparison_stocks
 
-    get industry_comparison_stock_path(@base, page: 1)
+    get industry_comparison_stock_path(@base, page: 1), headers: { "Accept" => "application/json" }
     assert_response :success
 
     payload = JSON.parse(response.body)
@@ -185,7 +185,7 @@ class StocksShowTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_match(/data-comparison-list-has-more-value="true"/, response.body)
 
-    get industry_comparison_stock_path(base, page: 2)
+    get industry_comparison_stock_path(base, page: 2), headers: { "Accept" => "application/json" }
     assert_response :success
 
     payload = JSON.parse(response.body)
