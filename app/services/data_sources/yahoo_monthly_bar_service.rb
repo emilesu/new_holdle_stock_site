@@ -16,8 +16,12 @@ module DataSources
   #   必须用 period1/period2 显式窗口。
   #
   # trade_date 归一（2026-10-01 试点实测修正）：Yahoo 月K时间戳 = 数据月「1 日 00:00 交易所当地时间」
-  #   （港股显示为上月末 16:00 utc；美股显示为月初 04:00 utc），必须用 meta.gmtoffset 换算回
-  #   当地时间再取日历月末；直接用 UTC 日期会把整条月线前移一个月（4月数据错标3月）。
+  #   （港股为当地 1 日 00:00 = 上月末 16:00 utc；美股夏令时 04:00 utc / 冬令时 05:00 utc），
+  #   必须换算回交易所当地时间再取日历月末。
+  # ⚠️ 不能只用 meta.gmtoffset（2026-11 生产事故根因）：该字段是「本次请求时刻」的偏移，
+  #   美东夏令时 -4、冬令时 -5。11 月（冬令时）拉取时用 -5h 去换算夏季月份，会把
+  #   07-01 00:00 EDT（04:00 utc）算成 06-30 23:00 utc → 整条月K前移一个月、按月覆盖写入错位行。
+  #   故优先用 meta.exchangeTimezoneName 做逐时间戳（DST 自适应）换算，缺失时才回退 gmtoffset。
   #   当月进行中会被拆成「月初缓存根 + 最新盘中根」两根同月 → 按月合并（否则 upsert 同键两行报错）；
   #   增量模式下「当月 + 上月」行整行覆盖（对齐新浪「当月行逐日推进重写」语义，月末后自愈为完整数据）。
   #
@@ -183,6 +187,7 @@ module DataSources
         return [] if result.nil?
 
         gmtoffset = result.dig("meta", "gmtoffset").to_i
+        timezone_name = result.dig("meta", "exchangeTimezoneName")
         timestamps = Array(result["timestamp"])
         quote = Array(result.dig("indicators", "quote"))[0] || {}
         adjcloses = Array(result.dig("indicators", "adjclose"))[0]&.fetch("adjclose") || []
@@ -192,8 +197,8 @@ module DataSources
         rows = timestamps.each_with_index.filter_map do |ts, i|
           next if ts.nil?
 
-          # 与月K同源：时间戳按 meta.gmtoffset 换算回交易所当地时间再取日期
-          date = Time.at(ts.to_i + gmtoffset).utc.to_date
+          # 与月K同源：时间戳按数据所在日期的交易所当地时间换算（见 local_date 的 DST 说明）
+          date = local_date(ts, timezone_name, gmtoffset)
           close = to_decimal(closes[i])
           next if close.nil?
 
@@ -305,6 +310,7 @@ module DataSources
         return [] if result.nil?
 
         gmtoffset = result.dig("meta", "gmtoffset").to_i
+        timezone_name = result.dig("meta", "exchangeTimezoneName")
         timestamps = Array(result["timestamp"])
         quote = Array(result.dig("indicators", "quote"))[0] || {}
         adjcloses = Array(result.dig("indicators", "adjclose"))[0]&.fetch("adjclose") || []
@@ -313,7 +319,7 @@ module DataSources
         bars = timestamps.each_with_index.filter_map do |ts, i|
           next if ts.nil?
 
-          date = Time.at(ts.to_i + gmtoffset).utc.to_date
+          date = local_date(ts, timezone_name, gmtoffset)
           close = to_decimal(closes[i])
           next if close.nil?
 
@@ -391,6 +397,18 @@ module DataSources
         return nil if result.blank?
 
         result[0]
+      end
+
+      # 时间戳 → 交易所当地日历日。
+      # meta.gmtoffset 是「请求时刻」的 UTC 偏移（美东夏令时 -4 / 冬令时 -5），套到历史月份上会
+      # 差 1 小时：月K时间戳是数据月 1 日 00:00 当地时间，冬令时请求换算夏季月份会落到上月末
+      # 23:00，取 end_of_month 后整条月线错位一个月（2026-11 生产事故）。
+      # 故优先按 meta.exchangeTimezoneName 逐时间戳换算（DST 自适应），缺失时才回退 gmtoffset。
+      def local_date(timestamp, timezone_name, gmtoffset)
+        zone = timezone_name.present? ? Time.find_zone(timezone_name) : nil
+        return Time.at(timestamp.to_i).in_time_zone(zone).to_date if zone
+
+        Time.at(timestamp.to_i + gmtoffset.to_i).utc.to_date
       end
 
       def first_and_latest_factor(month_bars)

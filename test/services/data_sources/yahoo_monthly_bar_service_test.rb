@@ -3,9 +3,10 @@ require "test_helper"
 # Yahoo 港股/美股月K抓取服务：符号转换、因子推导、月末归一、事件月修正、增量策略
 # fixture 语义与 Sina 版对齐：3 个月K（开10 高11 低9 收10），3 月除权一次（qf 2 → 1）
 #
-# 时间戳约定（2026-10-01 试点实测修正）：Yahoo 月K ts = 数据月「1 日 00:00 交易所当地时间」，
-# fixture 的 days 即当地日历日，ts = utc(days) - gmtoffset，使「naive UTC 日期」与「当地时间日期」
-# 分属不同月份，回归验证必须按 meta.gmtoffset 换算（否则整条月线前移一个月）。
+# 时间戳约定（2026-10-01 试点实测修正）：Yahoo 月K ts = 数据月「1 日 00:00 交易所当地时间」。
+# 归一优先使用 meta.exchangeTimezoneName 做逐时间戳换算（DST 自适应），缺失时才回退 gmtoffset；
+# gmtoffset 是请求时刻的偏移（美东夏令时 -4 / 冬令时 -5），不可套用于另一季度的历史月份
+#（2026-11 生产错位事故根因，见「冬令时请求」回归用例）。
 class YahooMonthlyBarServiceTest < ActiveSupport::TestCase
   Service = DataSources::YahooMonthlyBarService
 
@@ -77,6 +78,22 @@ class YahooMonthlyBarServiceTest < ActiveSupport::TestCase
     )
     us_bars = Service.fetch_month_bars("AAPL")
     assert_equal Date.new(2024, 3, 31), us_bars.first[:trade_date]
+  end
+
+  test "月末归一：冬令时请求（gmtoffset=-5h）时，夏季月K不得被推到上月末" do
+    # 2026-11 生产事故回归：7 月月K时间戳 = 07-01 00:00 EDT = 07-01 04:00 UTC。
+    # 若沿用请求时刻的冬令时偏移 -5h，会得到 06-30 23:00 → 错标 6 月末，整条月线前移一个月。
+    Service.http_client = build_client(
+      "interval=1mo" => month_body(
+        days: %w[2024-07-01],
+        gmtoffset: -18_000,
+        timestamps: [ Time.utc(2024, 7, 1, 4).to_i ],
+        exchange_timezone_name: "America/New_York"
+      )
+    )
+
+    bars = Service.fetch_month_bars("AAPL")
+    assert_equal Date.new(2024, 7, 31), bars.first[:trade_date]
   end
 
   # ====================================================
@@ -397,13 +414,16 @@ class YahooMonthlyBarServiceTest < ActiveSupport::TestCase
   # qf = close ÷ adjclose，默认 [2, 2, 1]（3 月除权一次）。
   # days 为「数据月 1 日」等当地日历日，ts = utc(day) - gmtoffset（还原真实接口的当地时间约定）
   def month_body(days: %w[2024-01-01 2024-02-01 2024-03-01], closes: nil, adjcloses: [5.0, 5.0, 10.0],
-                 gmtoffset: HK_GMT_OFFSET)
+                 gmtoffset: HK_GMT_OFFSET, timestamps: nil, exchange_timezone_name: nil)
     closes ||= Array.new(days.size, 10.0)
+    timestamps ||= days.map { |d| Time.utc(*d.split("-").map(&:to_i)).to_i - gmtoffset }
+    meta = { "gmtoffset" => gmtoffset }
+    meta["exchangeTimezoneName"] = exchange_timezone_name if exchange_timezone_name
     {
       "chart" => {
         "result" => [{
-          "meta" => { "gmtoffset" => gmtoffset },
-          "timestamp" => days.map { |d| Time.utc(*d.split("-").map(&:to_i)).to_i - gmtoffset },
+          "meta" => meta,
+          "timestamp" => timestamps,
           "indicators" => {
             "quote" => [{
               "open" => closes,
