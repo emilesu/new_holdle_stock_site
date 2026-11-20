@@ -137,13 +137,16 @@ module DataSources
             )
           end
         else
-          stock.stock_monthly_bars.upsert_all(
-            bars,
-            unique_by: %i[stock_id trade_date],
-            update_only: FULL_UPDATE_COLUMNS,
-            record_timestamps: false
-          )
-          deleted = cleanup_stale_dates(stock, bars)
+          # 写入与清理必须同一事务：cleanup 失败时不能留下「已写入但任务报失败」的部分状态
+          stock.transaction do
+            stock.stock_monthly_bars.upsert_all(
+              bars,
+              unique_by: %i[stock_id trade_date],
+              update_only: FULL_UPDATE_COLUMNS,
+              record_timestamps: false
+            )
+            deleted = cleanup_stale_dates(stock, bars)
+          end
         end
         after = stock.stock_monthly_bars.count
         # 全量重建会先删除错位旧行，inserted 需把删除数加回，否则会统计成负数
@@ -191,6 +194,7 @@ module DataSources
 
         gmtoffset = result.dig("meta", "gmtoffset").to_i
         timezone_name = result.dig("meta", "exchangeTimezoneName")
+        zone = resolve_time_zone(timezone_name)
         timestamps = Array(result["timestamp"])
         quote = Array(result.dig("indicators", "quote"))[0] || {}
         adjcloses = Array(result.dig("indicators", "adjclose"))[0]&.fetch("adjclose") || []
@@ -201,7 +205,7 @@ module DataSources
           next if ts.nil?
 
           # 与月K同源：时间戳按数据所在日期的交易所当地时间换算（见 local_date 的 DST 说明）
-          date = local_date(ts, timezone_name, gmtoffset)
+          date = local_date(ts, zone, gmtoffset)
           close = to_decimal(closes[i])
           next if close.nil?
 
@@ -314,6 +318,7 @@ module DataSources
 
         gmtoffset = result.dig("meta", "gmtoffset").to_i
         timezone_name = result.dig("meta", "exchangeTimezoneName")
+        zone = resolve_time_zone(timezone_name)
         timestamps = Array(result["timestamp"])
         quote = Array(result.dig("indicators", "quote"))[0] || {}
         adjcloses = Array(result.dig("indicators", "adjclose"))[0]&.fetch("adjclose") || []
@@ -322,7 +327,7 @@ module DataSources
         bars = timestamps.each_with_index.filter_map do |ts, i|
           next if ts.nil?
 
-          date = local_date(ts, timezone_name, gmtoffset)
+          date = local_date(ts, zone, gmtoffset)
           close = to_decimal(closes[i])
           next if close.nil?
 
@@ -402,13 +407,26 @@ module DataSources
         result[0]
       end
 
+      # exchangeTimezoneName → ActiveSupport::TimeZone。
+      # 缺失或无法识别时回退 gmtoffset（旧算法），但必须显式告警：
+      # 该回退在跨夏令时的月份会错位一个月，不能让它静默复发（2026-11 事故教训）。
+      # 每次响应只解析/告警一次，避免逐条月K刷日志。
+      def resolve_time_zone(timezone_name)
+        return nil if timezone_name.blank?
+
+        zone = Time.find_zone(timezone_name)
+        return zone if zone
+
+        Rails.logger.warn "[YahooMonthlyBar] exchangeTimezoneName=#{timezone_name.inspect} 无法识别，回退 gmtoffset 换算"
+        nil
+      end
+
       # 时间戳 → 交易所当地日历日。
       # meta.gmtoffset 是「请求时刻」的 UTC 偏移（美东夏令时 -4 / 冬令时 -5），套到历史月份上会
       # 差 1 小时：月K时间戳是数据月 1 日 00:00 当地时间，冬令时请求换算夏季月份会落到上月末
       # 23:00，取 end_of_month 后整条月线错位一个月（2026-11 生产事故）。
       # 故优先按 meta.exchangeTimezoneName 逐时间戳换算（DST 自适应），缺失时才回退 gmtoffset。
-      def local_date(timestamp, timezone_name, gmtoffset)
-        zone = timezone_name.present? ? Time.find_zone(timezone_name) : nil
+      def local_date(timestamp, zone, gmtoffset)
         return Time.at(timestamp.to_i).in_time_zone(zone).to_date if zone
 
         Time.at(timestamp.to_i + gmtoffset.to_i).utc.to_date
@@ -536,21 +554,20 @@ module DataSources
       end
 
       # 全量重建时清理错位多余行（2026-11 夏令时错位事故收尾）：
-      #   1) 首月前一个月内的行 —— 错位 bug 会把最早一根月K写成「上市前一个月」；
-      #   2) 源覆盖范围内、但本次抓取不存在的日期 —— 历史停牌缺口处被错位写入的行。
-      # 只清理到最后一个源月份为止，源尾部不删（避免源端暂时缺当月时误删刚写入的行）；
-      # 更早历史（早于首月前一个月）也不动，防止源端偶发截断导致整段历史被清空。
+      #   只删除「源首月前一个月」的行 —— 错位 bug 会把最早一根月K写成上市前一个月，
+      #   且每次运行都从源重新推导日期（不会级联），这是唯一可确认的错位产物。
+      # 不按「源范围内缺失日期」删除中间行：parse_bars / build_bars 会跳过 close 为 nil 的月份，
+      # 若 Yahoo 对某完成月返回 null close，该月不在 bars 中，按缺失删除会误删库内合法历史行。
+      # 源尾部与更早历史同样不动，防止源端暂时缺当月或偶发截断导致数据被清空。
       # 仅 :full 模式调用：增量模式只重写前复权列，不得删除任何历史行。
       def cleanup_stale_dates(stock, bars)
-        new_dates = bars.map { |bar| bar[:trade_date] }
-        range_start = new_dates.min.beginning_of_month - 1.month
-        range_end = new_dates.max.end_of_month
+        first_month = bars.map { |bar| bar[:trade_date] }.min.beginning_of_month
+        previous_month = (first_month - 1.month)..(first_month - 1.day)
 
         deleted = stock.stock_monthly_bars
-          .where(trade_date: range_start..range_end)
-          .where.not(trade_date: new_dates)
+          .where(trade_date: previous_month)
           .delete_all
-        Rails.logger.info "[YahooMonthlyBar] #{stock.symbol} 清理错位旧行 #{deleted} 条" if deleted.positive?
+        Rails.logger.info "[YahooMonthlyBar] #{stock.symbol} 清理上市前错位旧行 #{deleted} 条" if deleted.positive?
         deleted
       end
 

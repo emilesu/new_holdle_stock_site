@@ -164,16 +164,34 @@ class YahooMonthlyBarServiceTest < ActiveSupport::TestCase
   # ====================================================
   # 错位多余行清理（2026-11 夏令时错位事故：最早一根月K被写成上市前一个月）
   # ====================================================
-  test "全量重建：清理首月前一个月及源内缺口的错位多余行" do
+  test "全量重建：只清理上市前一个月的错位行，不按缺失日期误删中间行" do
     stub_http
-    # 上市前一个月多出的行（错位 bug 产物）+ 源覆盖范围内但本次不存在的日期
+    # 上市前一个月多出的行（错位 bug 产物）→ 清理
     @stock.stock_monthly_bars.create!(market: "HK", trade_date: Date.new(2023, 12, 31), open: 1, close: 1)
-    @stock.stock_monthly_bars.create!(market: "HK", trade_date: Date.new(2024, 2, 15), open: 1, close: 1)
+    # 源内缺失月份（如 Yahoo 返回 null close）的库内行 → 必须保留
+    kept = @stock.stock_monthly_bars.create!(market: "HK", trade_date: Date.new(2024, 2, 15), open: 1, close: 1)
 
     result = Service.refresh(@stock, mode: :full)
 
-    assert_equal [JAN, FEB, MAR], @stock.stock_monthly_bars.order(:trade_date).pluck(:trade_date)
-    assert_equal 3, result[:inserted], "删除的旧行不应让新增统计变成负数或缺额"
+    remaining = @stock.stock_monthly_bars.order(:trade_date).pluck(:trade_date)
+    assert_equal [JAN, Date.new(2024, 2, 15), FEB, MAR], remaining
+    assert StockMonthlyBar.exists?(kept.id), "不得按缺失日期删除中间行"
+    assert_equal 3, result[:inserted], "删除的错位行不应让新增统计变成负数或缺额"
+  end
+
+  test "全量重建：源某月 close 为 null（该月被跳过）时，库内该月历史行不被清理" do
+    stub_http
+    Service.refresh(@stock, mode: :full)
+    feb = @stock.stock_monthly_bars.find_by(trade_date: FEB)
+
+    # 第二轮全量：Yahoo 2 月 close 返回 null，该月从 bars 中消失
+    stub_http(month: month_body(days: %w[2024-01-01 2024-02-01 2024-03-01],
+                                closes: [10.0, nil, 10.0],
+                                adjcloses: [5.0, nil, 10.0]))
+    Service.refresh(@stock, mode: :full)
+
+    assert StockMonthlyBar.exists?(feb.id), "源端 null close 不得导致历史行被误删"
+    assert_equal 3, @stock.stock_monthly_bars.count
   end
 
   test "增量模式：不清理任何历史行，错位遗留行交由全量重建处理" do
@@ -454,8 +472,8 @@ class YahooMonthlyBarServiceTest < ActiveSupport::TestCase
           "indicators" => {
             "quote" => [{
               "open" => closes,
-              "high" => closes.map { |c| c + 1.0 },
-              "low" => closes.map { |c| c - 1.0 },
+              "high" => closes.map { |c| c && c + 1.0 },
+              "low" => closes.map { |c| c && c - 1.0 },
               "close" => closes,
               "volume" => closes.each_with_index.map { |_, i| (i + 1) * 1000 }
             }],
