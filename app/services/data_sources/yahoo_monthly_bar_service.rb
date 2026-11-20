@@ -26,7 +26,7 @@ module DataSources
   #   增量模式下「当月 + 上月」行整行覆盖（对齐新浪「当月行逐日推进重写」语义，月末后自愈为完整数据）。
   #
   # 重算策略（与 A 股 D9/D14 对齐）：
-  #   :full        —— 全量重算并覆盖所有列（首次建库）
+  #   :full        —— 全量重算并覆盖所有列（首次建库），并清理错位多余行
   #   :incremental —— 已有历史行只更新前复权列，后复权列保持不动；事件月修正仅针对待修行
   class YahooMonthlyBarService
     CHART_BASE_URL = "https://query1.finance.yahoo.com/v8/finance/chart".freeze
@@ -103,6 +103,7 @@ module DataSources
         verify_constant_ratio(stock, bars)
 
         before = stock.stock_monthly_bars.count
+        deleted = 0
         if mode == :incremental
           # 当月进行中行随逐日合并推进、上月行刚走完拿到完整根，原始 OHLCV/量都在变化 → 整行覆盖自愈；
           # 更早历史行只重写前复权列，后复权「只增不改」（hfq 以上市首日归一，重算值本就相同，
@@ -142,9 +143,11 @@ module DataSources
             update_only: FULL_UPDATE_COLUMNS,
             record_timestamps: false
           )
+          deleted = cleanup_stale_dates(stock, bars)
         end
         after = stock.stock_monthly_bars.count
-        inserted = after - before
+        # 全量重建会先删除错位旧行，inserted 需把删除数加回，否则会统计成负数
+        inserted = [after - before + deleted, 0].max
 
         { total: bars.size, inserted: inserted, updated: bars.size - inserted, bars: bars.size }
       rescue SymbolNotFound => e
@@ -530,6 +533,25 @@ module DataSources
         bar[:hfq_close] = (last[:close] * qf_first / last[:qf]).round(PRICE_SCALE)
         bar[:hfq_high] = hfq_high && hfq_high.round(PRICE_SCALE)
         bar[:hfq_low] = hfq_low && hfq_low.round(PRICE_SCALE)
+      end
+
+      # 全量重建时清理错位多余行（2026-11 夏令时错位事故收尾）：
+      #   1) 首月前一个月内的行 —— 错位 bug 会把最早一根月K写成「上市前一个月」；
+      #   2) 源覆盖范围内、但本次抓取不存在的日期 —— 历史停牌缺口处被错位写入的行。
+      # 只清理到最后一个源月份为止，源尾部不删（避免源端暂时缺当月时误删刚写入的行）；
+      # 更早历史（早于首月前一个月）也不动，防止源端偶发截断导致整段历史被清空。
+      # 仅 :full 模式调用：增量模式只重写前复权列，不得删除任何历史行。
+      def cleanup_stale_dates(stock, bars)
+        new_dates = bars.map { |bar| bar[:trade_date] }
+        range_start = new_dates.min.beginning_of_month - 1.month
+        range_end = new_dates.max.end_of_month
+
+        deleted = stock.stock_monthly_bars
+          .where(trade_date: range_start..range_end)
+          .where.not(trade_date: new_dates)
+          .delete_all
+        Rails.logger.info "[YahooMonthlyBar] #{stock.symbol} 清理错位旧行 #{deleted} 条" if deleted.positive?
+        deleted
       end
 
       # 自检：同一行必须满足 后复权收盘价 ÷ 前复权收盘价 ≡ 常数（= qf_first ÷ qf_latest）

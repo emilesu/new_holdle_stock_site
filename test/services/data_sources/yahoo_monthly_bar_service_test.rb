@@ -162,6 +162,33 @@ class YahooMonthlyBarServiceTest < ActiveSupport::TestCase
   end
 
   # ====================================================
+  # 错位多余行清理（2026-11 夏令时错位事故：最早一根月K被写成上市前一个月）
+  # ====================================================
+  test "全量重建：清理首月前一个月及源内缺口的错位多余行" do
+    stub_http
+    # 上市前一个月多出的行（错位 bug 产物）+ 源覆盖范围内但本次不存在的日期
+    @stock.stock_monthly_bars.create!(market: "HK", trade_date: Date.new(2023, 12, 31), open: 1, close: 1)
+    @stock.stock_monthly_bars.create!(market: "HK", trade_date: Date.new(2024, 2, 15), open: 1, close: 1)
+
+    result = Service.refresh(@stock, mode: :full)
+
+    assert_equal [JAN, FEB, MAR], @stock.stock_monthly_bars.order(:trade_date).pluck(:trade_date)
+    assert_equal 3, result[:inserted], "删除的旧行不应让新增统计变成负数或缺额"
+  end
+
+  test "增量模式：不清理任何历史行，错位遗留行交由全量重建处理" do
+    stub_http
+    Service.refresh(@stock, mode: :full)
+    stale = @stock.stock_monthly_bars.create!(
+      market: "HK", trade_date: Date.new(2023, 12, 31), open: 1, close: 1
+    )
+
+    Service.refresh(@stock, mode: :incremental)
+
+    assert StockMonthlyBar.exists?(stale.id), "增量只重写前复权列，不得删除历史行"
+  end
+
+  # ====================================================
   # 除权事件月修正（镜像 A 股 correct_event_months）
   # ====================================================
   test "因子舍入噪声（相对差 ~1e-7）不得误判为事件月（试点每月误触日线回归）" do
