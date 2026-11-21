@@ -129,9 +129,10 @@ class StocksController < ApplicationController
       return
     end
     
-    # v3：季报恢复单线扁平格式（点附带 period_type 供前端逐点着色），升级 key 使分组格式缓存失效
+    # v4：固定资产周转率改为标准口径（营业收入/固定资产）并新增周转天数，
+    # 该指标数值/unit/解读文案均变化，升级 key 使旧口径缓存失效
     data = Rails.cache.fetch(
-      [@stock, :indicator_detail, :v3, indicator_key, scope, @stock.updated_at.to_i],
+      [@stock, :indicator_detail, :v4, indicator_key, scope, @stock.updated_at.to_i],
       expires_in: 6.hours
     ) do
       fetch_indicator_detail(@stock, indicator_key, scope)
@@ -167,7 +168,7 @@ class StocksController < ApplicationController
       :deducted_roe_weighted, :unlevered_roe,
       :asset_liab_ratio, :asset_turnover_ratio, :net_income,
       :cash_to_assets_ratio, :receivable_turnover, :avg_collection_days,
-      :fixed_asset_turnover, :cash_and_cash_equivalents,
+      :fixed_asset_turnover, :fixed_asset_turnover_days, :cash_and_cash_equivalents,
       :operating_cash_flow, :investing_cash_flow, :financing_cash_flow,
       :net_cash_change
     ]
@@ -439,14 +440,26 @@ class StocksController < ApplicationController
       },
       fixed_asset_turnover: {
         name: '固定资产周转率(次)',
-        description: '固定资产周转率反映了固定资产占营业收入的比重，衡量公司固定资产的利用效率。该比率越低，说明固定资产运营效率越高。',
-        formula: '固定资产周转率 = 固定资产 / 营业收入',
-        unit: '',
+        description: '固定资产周转率是营业收入与固定资产的比率，反映了每1元固定资产能支撑多少营业收入。周转率越高，说明固定资产利用效率越高；对应的周转天数（365 / 周转率）越短，说明固定资产创造营收所需时间越短。注意：不同行业资本密集度差异很大，该指标更适合与同行业或公司自身历史水平比较。',
+        formula: '固定资产周转率 = 营业收入 / 固定资产',
+        unit: '次',
         interpretation: {
-          excellent: '固定资产周转率 < 30%：固定资产运营效率很高',
-          good: '30% ≤ 固定资产周转率 ≤ 60%：运营效率良好',
-          normal: '60% < 固定资产周转率 ≤ 100%：运营效率一般',
-          poor: '固定资产周转率 > 100%：固定资产负担较重'
+          excellent: '固定资产周转率 > 2次：固定资产利用效率很高',
+          good: '1次 ≤ 固定资产周转率 ≤ 2次：运营效率良好',
+          normal: '0.5次 ≤ 固定资产周转率 < 1次：运营效率一般',
+          poor: '固定资产周转率 < 0.5次：重资产负担较重，利用效率偏低'
+        }
+      },
+      fixed_asset_turnover_days: {
+        name: '固定资产周转天数',
+        description: '固定资产周转天数反映了固定资产完成一轮对应营业收入所需的平均天数。天数越短，说明固定资产创造营收的速度越快、利用效率越高；不同行业资本密集度差异很大，该指标更适合与同行业或公司自身历史水平比较。',
+        formula: '固定资产周转天数 = 365 / 固定资产周转率',
+        unit: '天',
+        interpretation: {
+          excellent: '固定资产周转天数 < 183天：固定资产利用效率很高',
+          good: '183天 ≤ 固定资产周转天数 ≤ 365天：运营效率良好',
+          normal: '365天 < 固定资产周转天数 ≤ 730天：运营效率一般',
+          poor: '固定资产周转天数 > 730天：重资产负担较重，利用效率偏低'
         }
       },
       cash_and_cash_equivalents: {
@@ -473,11 +486,9 @@ class StocksController < ApplicationController
       "%.2f" % value
     when :net_income, :operating_cash_flow, :investing_cash_flow, :financing_cash_flow, :net_cash_change, :cash_and_cash_equivalents
       "%.2f" % (value / HUNDRED_MILLION)
-    when :receivable_turnover
+    when :receivable_turnover, :fixed_asset_turnover
       "%.2f" % value
-    when :fixed_asset_turnover
-      "%.4f" % value
-    when :avg_collection_days
+    when :avg_collection_days, :fixed_asset_turnover_days
       "%.0f 天" % value
     when :asset_turnover_ratio
       "%.2f%%" % (value * 100)

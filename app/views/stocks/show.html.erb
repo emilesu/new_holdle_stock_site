@@ -130,6 +130,7 @@
                 ['应收账款周转率(次)', :receivable_turnover],
                 ['平均收现日数', :avg_collection_days],
                 ['固定资产周转率(次)', :fixed_asset_turnover],
+                ['固定资产周转天数', :fixed_asset_turnover_days],
                 ['总资产周转率', :asset_turnover_ratio]
               ]
             },
@@ -550,8 +551,8 @@ document.addEventListener('turbo:load', function() {
 
   function getCachedData(indicatorKey, scope) {
     try {
-      // v3 缓存 key：季报点附带 period_type，升级 key 避免命中旧格式缓存
-      const cacheKey = `indicator_${STOCK_PARAM}_${indicatorKey}_${scope}_v3`;
+      // v4 缓存 key：固定资产周转率口径修正并新增周转天数，升级 key 避免命中旧口径缓存
+      const cacheKey = `indicator_${STOCK_PARAM}_${indicatorKey}_${scope}_v4`;
       const cached = localStorage.getItem(cacheKey);
       if (cached) {
         const data = JSON.parse(cached);
@@ -567,8 +568,8 @@ document.addEventListener('turbo:load', function() {
 
   function cacheData(indicatorKey, scope, payload) {
     try {
-      // v3 缓存 key：季报点附带 period_type，升级 key 避免命中旧格式缓存
-      const cacheKey = `indicator_${STOCK_PARAM}_${indicatorKey}_${scope}_v3`;
+      // v4 缓存 key：固定资产周转率口径修正并新增周转天数，升级 key 避免命中旧口径缓存
+      const cacheKey = `indicator_${STOCK_PARAM}_${indicatorKey}_${scope}_v4`;
       localStorage.setItem(cacheKey, JSON.stringify({
         timestamp: Date.now(),
         payload: payload

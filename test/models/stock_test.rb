@@ -82,6 +82,45 @@ class StockTest < ActiveSupport::TestCase
     assert_nil @stock.calculate_roe(income, balance)
   end
 
+  # 固定资产周转率必须为标准口径：营业收入 / 固定资产（历史上分子分母曾写反，此处为回归测试）
+  test "calculate_fixed_asset_turnover: 口径为营业收入/固定资产" do
+    report = FinancialReport.create!(
+      stock: @stock, report_date: Date.new(2025, 12, 31), market: "CN",
+      report_type: "annual", currency: "CNY"
+    )
+    balance = BalanceSheet.create!(
+      financial_report: report, stock: @stock, report_date: Date.new(2025, 12, 31),
+      market: "CN", property_plant_equipment: 250
+    )
+    income = IncomeStatement.create!(
+      financial_report: report, stock: @stock, report_date: Date.new(2025, 12, 31),
+      market: "CN", total_revenue: 1000
+    )
+
+    assert_in_delta 4.0, @stock.calculate_fixed_asset_turnover(income, balance), 0.001
+    # 周转天数 = 365 / 周转率 = 365 / 4 = 91.25
+    assert_in_delta 91.25, @stock.calculate_fixed_asset_turnover_days(income, balance), 0.01
+  end
+
+  # 固定资产为 0 时不能除零，周转率与周转天数均应返回 nil
+  test "calculate_fixed_asset_turnover: 固定资产为0时返回nil" do
+    report = FinancialReport.create!(
+      stock: @stock, report_date: Date.new(2025, 12, 31), market: "CN",
+      report_type: "annual", currency: "CNY"
+    )
+    balance = BalanceSheet.create!(
+      financial_report: report, stock: @stock, report_date: Date.new(2025, 12, 31),
+      market: "CN", property_plant_equipment: 0
+    )
+    income = IncomeStatement.create!(
+      financial_report: report, stock: @stock, report_date: Date.new(2025, 12, 31),
+      market: "CN", total_revenue: 1000
+    )
+
+    assert_nil @stock.calculate_fixed_asset_turnover(income, balance)
+    assert_nil @stock.calculate_fixed_asset_turnover_days(income, balance)
+  end
+
   test "pyramid_tags: 5年连续盈利无标签" do
     (2021..2025).each { |y| create_year(@stock, y, roe: 20.0, net_income: 50_0000_0000) }
     assert_equal [], @stock.reload.pyramid_tags

@@ -205,13 +205,21 @@ class Stock < ApplicationRecord
     365.0 / turnover
   end
 
-  # 固定资产周转率(次)：固定资产 / 营业收入
+  # 固定资产周转率(次)：营业收入 / 固定资产，越高越好
   def calculate_fixed_asset_turnover(income_statement, balance_sheet)
     return nil unless income_statement && balance_sheet
-    return nil unless income_statement.total_revenue.present? && income_statement.total_revenue != 0
-    return nil unless balance_sheet.property_plant_equipment.present?
+    return nil unless income_statement.total_revenue.present?
+    return nil unless balance_sheet.property_plant_equipment.present? && balance_sheet.property_plant_equipment != 0
 
-    balance_sheet.property_plant_equipment.to_f / income_statement.total_revenue.to_f
+    income_statement.total_revenue.to_f / balance_sheet.property_plant_equipment.to_f
+  end
+
+  # 固定资产周转天数：365 / 固定资产周转率，越小说明固定资产创造营收用时越短
+  def calculate_fixed_asset_turnover_days(income_statement, balance_sheet)
+    turnover = calculate_fixed_asset_turnover(income_statement, balance_sheet)
+    return nil unless turnover.present? && turnover != 0
+
+    365.0 / turnover
   end
 
   # 年报口径财务数据（仅 annual）：金字塔评分、雷达图、近五年ROE 均依赖本方法
@@ -402,6 +410,7 @@ class Stock < ApplicationRecord
       receivable_turnover: calculate_receivable_turnover(income, balance),
       avg_collection_days: calculate_avg_collection_days(income, balance),
       fixed_asset_turnover: calculate_fixed_asset_turnover(income, balance),
+      fixed_asset_turnover_days: calculate_fixed_asset_turnover_days(income, balance),
       # 现金流量表
       cash_and_cash_equivalents: balance&.cash_and_cash_equivalents,
       operating_cash_flow: cash&.operating_cash_flow,
