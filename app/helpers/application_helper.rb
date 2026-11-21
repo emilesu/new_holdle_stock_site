@@ -199,6 +199,16 @@ module ApplicationHelper
     end
   end
 
+  # 市场主题色滑动开关开启态底色（与 market_star_class 同一色系，600 档）
+  # 用于详情页对比栏次新股开关，全站开关统一
+  def market_switch_bg_class(market)
+    case market
+    when "CN" then "peer-checked:bg-green-600"
+    when "HK" then "peer-checked:bg-amber-600"
+    else "peer-checked:bg-blue-600"
+    end
+  end
+
   # 金字塔警示标签的紧凑文字颜色（对比栏窄栏使用，按严重程度区分）
   def pyramid_tag_text_class(tag)
     case tag
