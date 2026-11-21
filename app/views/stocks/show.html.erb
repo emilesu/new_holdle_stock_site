@@ -278,16 +278,17 @@
             <span class="text-muted-3 items-center justify-right text-hl-11">
               <%= @is_member ? ' - 行业金字塔对比' : ' - 近五年ROE对比' %>
             </span>
-            <%# 次新股过滤开关：与金字塔页同款「显示/隐藏」口径，选择缓存在 localStorage（comparison_new_listing_v1） %>
-            <div class="mt-3 flex items-center gap-2">
-              <label for="comparison-new-listing" class="text-hl-11 font-medium text-muted-2 shrink-0">次新股</label>
-              <select id="comparison-new-listing"
-                      class="flex-1 min-w-0 px-2 py-1 text-hl-11 border border-line rounded bg-white focus:border-link"
-                      data-comparison-list-target="toggle"
-                      data-action="change->comparison-list#toggleChange">
-                <option value="show" <%= 'selected' if @new_listing != 'hide' %>>显示</option>
-                <option value="hide" <%= 'selected' if @new_listing == 'hide' %>>隐藏</option>
-              </select>
+            <%# 次新股过滤开关：iOS 设置风格滑动开关，开=显示、关=隐藏；选择缓存在 localStorage（comparison_new_listing_v1） %>
+            <div class="mt-3 flex items-center justify-between gap-2">
+              <label for="comparison-new-listing" title="显示/隐藏上市不足3年的次新股"
+                     class="text-hl-11 font-medium text-muted-2 shrink-0 cursor-pointer select-none">次新股</label>
+              <input type="checkbox" id="comparison-new-listing" role="switch" aria-label="显示次新股"
+                     class="peer sr-only"
+                     <%= 'checked' if @new_listing != 'hide' %>
+                     data-comparison-list-target="toggle"
+                     data-action="change->comparison-list#toggleChange">
+              <label for="comparison-new-listing" aria-hidden="true"
+                     class="relative w-11 h-6 shrink-0 rounded-full cursor-pointer select-none bg-gray-200 transition-colors duration-200 peer-checked:bg-[#34C759] peer-focus-visible:ring-2 peer-focus-visible:ring-[#34C759]/40 after:content-[''] after:absolute after:top-[3px] after:left-[3px] after:w-[18px] after:h-[18px] after:rounded-full after:bg-white after:shadow-sm after:transition-transform after:duration-200 peer-checked:after:translate-x-5"></label>
             </div>
           </div>
           <div class="p-4 flex-1 min-h-0 comparison-scroll" data-comparison-list-target="scroll">

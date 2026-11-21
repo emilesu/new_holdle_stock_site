@@ -16,8 +16,9 @@ export default class extends Controller {
     // 防止旧口径的分页/重载响应污染切换后的新列表
     this.epoch = 0
     // appliedListing：当前列表实际渲染所用的过滤口径；
-    // 分页请求始终按它取数，切换失败时下拉回退到它，保证列表与请求口径一致
-    this.appliedListing = this.toggleTarget.value === "hide" ? "hide" : "show"
+    // 分页请求始终按它取数，切换失败时开关回退到它，保证列表与请求口径一致
+    // 开关语义：checked（开）= show，unchecked（关）= hide
+    this.appliedListing = this.toggleTarget.checked ? "show" : "hide"
     // 先恢复缓存（内部会置 loading 阻断分页），再建立哨兵监听
     this.restoreSelection()
     this.observeSentinel()
@@ -30,7 +31,7 @@ export default class extends Controller {
   // ---------- 次新股过滤开关 ----------
 
   toggleChange() {
-    const value = this.toggleTarget.value === "hide" ? "hide" : "show"
+    const value = this.toggleTarget.checked ? "show" : "hide"
     if (value === this.appliedListing) return
     this.saveSelection(value)
     this.reloadFirstPage(value)
@@ -53,9 +54,9 @@ export default class extends Controller {
       return
     }
     if (!saved || Date.now() - (saved.ts || 0) > STORAGE_TTL) return
-    if (saved.new_listing !== "hide" || this.toggleTarget.value === "hide") return
+    if (saved.new_listing !== "hide" || !this.toggleTarget.checked) return
 
-    this.toggleTarget.value = "hide"
+    this.toggleTarget.checked = false
     this.reloadFirstPage("hide")
   }
 
@@ -87,8 +88,8 @@ export default class extends Controller {
     if (ok) {
       this.appliedListing = listing
     } else {
-      // 失败：列表仍是旧口径，下拉回退，避免分页请求与列表内容口径不一致
-      this.toggleTarget.value = this.appliedListing
+      // 失败：列表仍是旧口径，开关回退，避免分页请求与列表内容口径不一致
+      this.toggleTarget.checked = this.appliedListing === "show"
     }
 
     this.observeSentinel()
