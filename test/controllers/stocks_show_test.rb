@@ -196,6 +196,65 @@ class StocksShowTest < ActionDispatch::IntegrationTest
     stocks&.each(&:destroy!)
   end
 
+  # 构造次新股过滤场景：基准股 + 老同行 + 上市不足3年的次新同行（sector 唯一，避免服务端候选缓存串场景）
+  def setup_new_listing_comparison
+    sector = "次新过滤行业"
+    @nl_base = Stock.create!(symbol: "NL_BASE", name: "次新基准股", market: "CN", exchange: "SH",
+                             sector: sector, status: "active",
+                             radar_dim_scores: { "roe" => 20 }, pyramid_total_score: 700)
+    @nl_old = Stock.create!(symbol: "NL_OLD", name: "次新老同行", market: "CN", exchange: "SH",
+                            sector: sector, status: "active", listing_date: Date.new(2015, 1, 1),
+                            radar_dim_scores: { "roe" => 10 }, pyramid_total_score: 600)
+    @nl_recent = Stock.create!(symbol: "NL_NEW", name: "次新同行股", market: "CN", exchange: "SH",
+                               sector: sector, status: "active", listing_date: Date.current - 1.year,
+                               radar_dim_scores: { "roe" => 30 }, pyramid_total_score: 800)
+  end
+
+  test "对比栏默认展示次新股且头部渲染过滤开关" do
+    setup_new_listing_comparison
+
+    get stock_path(@nl_base)
+    assert_response :success
+    assert_match(/comparison-new-listing/, response.body, "对比栏头部应渲染次新股开关")
+    assert_includes response.body, "次新同行股", "默认应展示次新同行"
+  ensure
+    @nl_base&.destroy! && @nl_old&.destroy! && @nl_recent&.destroy!
+  end
+
+  test "对比栏 new_listing=hide 时首页与分页接口均剔除次新同行" do
+    setup_new_listing_comparison
+
+    get stock_path(@nl_base, new_listing: "hide")
+    assert_response :success
+    refute_includes response.body, "次新同行股", "hide 时首页不应包含次新同行"
+    assert_includes response.body, "次新老同行", "hide 时老同行应保留"
+
+    get industry_comparison_stock_path(@nl_base, page: 1, new_listing: "hide"),
+        headers: { "Accept" => "application/json" }
+    assert_response :success
+    payload = JSON.parse(response.body)
+    refute_includes payload["html"], "次新同行股", "hide 时分页接口不应返回次新同行"
+    assert_includes payload["html"], "次新老同行"
+  ensure
+    @nl_base&.destroy! && @nl_old&.destroy! && @nl_recent&.destroy!
+  end
+
+  test "当前股票为次新股时 hide 过滤仍保留自身" do
+    setup_new_listing_comparison
+    recent_base = Stock.create!(symbol: "NL_SELF", name: "次新自身股", market: "CN", exchange: "SH",
+                                sector: @nl_recent.sector, status: "active",
+                                listing_date: Date.current - 6.months,
+                                radar_dim_scores: { "roe" => 15 }, pyramid_total_score: 650)
+
+    get stock_path(recent_base, new_listing: "hide")
+    assert_response :success
+    assert_includes response.body, "次新自身股", "当前次新股自身应豁免过滤保留在对比列表"
+    refute_includes response.body, "次新同行股", "其他次新同行仍应被过滤"
+  ensure
+    recent_base&.destroy!
+    @nl_base&.destroy! && @nl_old&.destroy! && @nl_recent&.destroy!
+  end
+
   test "详情页无档案时不显示入口" do
     stock = Stock.create!(symbol: "DET_NOAR", name: "无档案测试", market: "CN", exchange: "SH",
                           sector: "消费", status: "active")

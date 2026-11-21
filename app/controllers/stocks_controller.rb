@@ -63,6 +63,9 @@ class StocksController < ApplicationController
     # 课程学员（268）及以上才享有金字塔分值排序；访客保持近五年ROE排序（原有体验）
     @is_member = member_comparison_view?
 
+    # 次新股过滤开关：仅识别 hide，其余一律 show（与金字塔页参数约定一致）
+    @new_listing = params[:new_listing] == 'hide' ? 'hide' : 'show'
+
     # 对比栏分批加载：首页只渲染第一批，其余由滚动触发 industry_comparison 接口
     comparison_sorted = sorted_industry_comparison_data
     @industry_comparison_data = comparison_sorted.first(COMPARISON_PAGE_SIZE)
@@ -538,6 +541,12 @@ class StocksController < ApplicationController
   # 按当前用户身份排序并标记当前股票；无对应分值的排最后
   def sorted_industry_comparison_data
     candidates = industry_comparison_candidates
+
+    # 次新股过滤（new_listing=hide）：剔除同行候选中的次新股；
+    # 当前股票豁免——被过滤后由下方追加逻辑放回列表末尾，保证用户始终能看到正在查看的股票
+    if params[:new_listing] == 'hide'
+      candidates = candidates.reject { |item| item[:stock].new_listing? }
+    end
 
     sorted = if @is_member
       candidates.sort_by { |item| [item[:pyramid_score].nil? ? 1 : 0, -item[:pyramid_score].to_i, -item[:stock].id] }

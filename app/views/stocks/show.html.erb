@@ -268,34 +268,45 @@
       <!-- 右列：20% -->
       <div class="lg:col-span-1 min-w-0">
         <%# 桌面端：从导航栏下沿（h-15 = 52.5px + 1px 下边框）铺到视口底部，滚动页面时保持悬浮；移动端保留原有卡片限高与内部滚动 %>
-        <div class="bg-white hl-card flex flex-col max-h-[calc(100vh-7.5rem)] lg:sticky lg:top-[53.5px] lg:max-h-none lg:h-[calc(100vh_-_53.5px)]">
+        <div class="bg-white hl-card flex flex-col max-h-[calc(100vh-7.5rem)] lg:sticky lg:top-[53.5px] lg:max-h-none lg:h-[calc(100vh_-_53.5px)]"
+             data-controller="comparison-list"
+             data-comparison-list-url-value="<%= industry_comparison_stock_path(@stock) %>"
+             data-comparison-list-next-page-value="2"
+             data-comparison-list-has-more-value="<%= @comparison_has_more %>">
           <div class="px-4 py-4 border-b border-line bg-bg-mute shrink-0">
             <span class="text-link font-semibold"><%= @stock.sector.presence || '-' %></span>
             <span class="text-muted-3 items-center justify-right text-hl-11">
               <%= @is_member ? ' - 行业金字塔对比' : ' - 近五年ROE对比' %>
             </span>
+            <%# 次新股过滤开关：与金字塔页同款「显示/隐藏」口径，选择缓存在 localStorage（comparison_new_listing_v1） %>
+            <div class="mt-3 flex items-center gap-2">
+              <label for="comparison-new-listing" class="text-hl-11 font-medium text-muted-2 shrink-0">次新股</label>
+              <select id="comparison-new-listing"
+                      class="flex-1 min-w-0 px-2 py-1 text-hl-11 border border-line rounded bg-white focus:border-link"
+                      data-comparison-list-target="toggle"
+                      data-action="change->comparison-list#toggleChange">
+                <option value="show" <%= 'selected' if @new_listing != 'hide' %>>显示</option>
+                <option value="hide" <%= 'selected' if @new_listing == 'hide' %>>隐藏</option>
+              </select>
+            </div>
           </div>
-          <div class="p-4 flex-1 min-h-0 comparison-scroll"
-               data-controller="comparison-list"
-               data-comparison-list-url-value="<%= industry_comparison_stock_path(@stock) %>"
-               data-comparison-list-next-page-value="2"
-               data-comparison-list-has-more-value="<%= @comparison_has_more %>">
+          <div class="p-4 flex-1 min-h-0 comparison-scroll" data-comparison-list-target="scroll">
             
             <div class="border-t border-line-soft">
-              <% if @industry_comparison_data.present? %>
-                <div class="divide-y divide-line-soft" data-comparison-list-target="list">
+              <%# list/sentinel 常渲染：切换次新股过滤后 JS 需整体替换列表内容（含空态），target 必须始终存在 %>
+              <div class="divide-y divide-line-soft" data-comparison-list-target="list">
+                <% if @industry_comparison_data.present? %>
                   <%= render "stocks/comparison_items", items: @industry_comparison_data, start_index: 0 %>
-                </div>
-                <% if @comparison_has_more %>
-                  <div class="py-3 text-center text-hl-11 text-muted-4" data-comparison-list-target="sentinel">加载更多…</div>
+                <% else %>
+                  <div class="text-center py-8">
+                    <div class="text-muted-4 mb-2">📊</div>
+                    <p class="text-hl-13 text-muted-3">暂无同行业股票数据</p>
+                    <p class="text-hl-11 text-muted-4 mt-1">需要至少3年财务数据才能参与对比</p>
+                  </div>
                 <% end %>
-              <% else %>
-                <div class="text-center py-8">
-                  <div class="text-muted-4 mb-2">📊</div>
-                  <p class="text-hl-13 text-muted-3">暂无同行业股票数据</p>
-                  <p class="text-hl-11 text-muted-4 mt-1">需要至少3年财务数据才能参与对比</p>
-                </div>
-              <% end %>
+              </div>
+              <%# 哨兵用 hidden 控制显隐（JS 管理），切换过滤恢复分页时无需重建节点 %>
+              <div class="py-3 text-center text-hl-11 text-muted-4 <%= 'hidden' unless @comparison_has_more %>" data-comparison-list-target="sentinel">加载更多…</div>
             </div>
           </div>
         </div>
