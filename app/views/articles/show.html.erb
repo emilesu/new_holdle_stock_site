@@ -2,7 +2,7 @@
 <% set_page_description truncate(strip_tags(@article.summary.presence || @article.title), length: 120) %>
 <% set_og_type "article" %>
 <% add_json_ld(article_json_ld(@article)) if @article.public? %>
-<div class="py-16">
+<div class="py-8 md:py-16">
   <div class="container-narrow-flush">
 
     <%# 面包屑导航 %>

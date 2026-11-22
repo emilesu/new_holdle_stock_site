@@ -23,7 +23,7 @@
   prose-li:text-hl-14
   prose-hr:border-line-soft" %>
 <%# 正文分支手机端四边贴屏（无上下灰边）；引导页保留常规留白 %>
-<div class="<%= @content.nil? ? 'py-10 md:py-16' : 'md:py-8' %>">
+<div class="py-8 <%= @content.nil? ? 'md:py-16' : 'md:py-8' %>">
   <% if @content.nil? %>
     <%# 引导页：无档案 / 已撤回 / 尚未发布（免费可见） %>
     <div class="container-narrow-flush">

@@ -1,7 +1,7 @@
 <% set_page_title "我的收藏" %>
 <% set_page_description "查看您收藏的股票和关注的金融市场数据。" %>
-<%# 手机端卡片四边贴屏（与企业质量档案正文一致）：md 以下无上下灰边、容器无左右留白 %>
-<div class="md:py-16 bg-bg-soft min-h-screen" data-controller="favorites"
+<%# 手机端容器无左右留白、顶部留白与全站统一为 32px（py-8），桌面端保留标准留白 %>
+<div class="py-8 md:py-16 bg-bg-soft min-h-screen" data-controller="favorites"
      data-action="turbo:before-fetch-request->favorites#loading turbo:fetch-request-error->favorites#frameLoaded">
   <div class="container-narrow-flush">
 
