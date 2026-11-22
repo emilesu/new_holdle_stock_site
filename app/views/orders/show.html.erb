@@ -1,7 +1,7 @@
 <% set_page_title "支付中" %>
 
 <section class="bg-bg-soft min-h-screen">
-  <div class="container-hl py-12">
+  <div class="container-hl-flush py-12">
     <div class="max-w-lg mx-auto text-center">
       <% if @order.payment_method == "wechat_jsapi" %>
         <%# 微信内 JSAPI 支付 %>
@@ -124,7 +124,7 @@
           <p class="text-hl-12 text-muted-4 mt-2">二维码有效期 30 分钟，过期后需重新下单</p>
         </div>
 
-        <p class="text-hl-12 text-muted-4">支付成功后将自动跳转</p>
+        <p class="px-4 md:px-0 text-hl-12 text-muted-4">支付成功后将自动跳转</p>
       <% end %>
     </div>
   </div>
