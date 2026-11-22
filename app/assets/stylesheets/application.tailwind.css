@@ -214,6 +214,11 @@
       border-width: 0;
       border-radius: 0;
     }
+    /* 支付方式选择 label：选中态靠 border-ink 高亮，贴边容器下必须保留边框与圆角 */
+    .container-narrow-flush .hl-card[data-payment-label] {
+      border-width: 1px;
+      border-radius: 6px;
+    }
     /* 企业质量档案：宽容器下正文/元数据卡片同样贴边 */
     .profile-archive .hl-card {
       border-width: 0;
