@@ -22,6 +22,14 @@ export default class extends Controller {
     clearTimeout(this.timeout)
     this.element.style.transition = "opacity 0.3s ease-out"
     this.element.style.opacity = "0"
-    this.removeTimer = setTimeout(() => this.element.remove(), 300)
+    this.removeTimer = setTimeout(() => {
+      const host = this.element.parentElement
+      this.element.remove()
+      // 只移除布局中显式标记 data-flash-host 的专用 wrapper（仅装提示框）：
+      // 提示全部移除后若留着，其 pt-4 内边距会在导航栏与正文之间留下空隙
+      if (host && host.hasAttribute("data-flash-host") && host.children.length === 0) {
+        host.remove()
+      }
+    }, 300)
   }
 }

@@ -51,7 +51,7 @@
 
     <%# 全站 flash 提示：前台此前没有渲染位置，notice/alert 写了却看不见 %>
     <% if notice || alert %>
-      <div class="container-hl pt-4">
+      <div class="container-hl pt-4" data-flash-host>
         <% if notice %>
           <div data-controller="flash" class="mb-2 bg-bg-mute border border-line text-muted px-4 py-3 rounded flex items-center justify-between text-hl-13">
             <span><%= notice %></span>
