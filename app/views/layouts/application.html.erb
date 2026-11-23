@@ -112,6 +112,7 @@
 
           function searchStocks(query) {
             if (query.length < 1) {
+              state.currentResults = [];
               hideSuggestions();
               return;
             }
@@ -200,7 +201,13 @@
                 window.location.href = items[state.selectedIndex].dataset.url;
               }
             } else if (e.key === 'Escape') {
-              hideSuggestions();
+              // 两段式 Esc：先收起建议下拉，再次 Esc 退出搜索框焦点
+              if (!suggestionsBox.classList.contains('hidden')) {
+                hideSuggestions();
+              } else {
+                state.currentResults = [];
+                searchInput.blur();
+              }
             }
           });
 
@@ -223,6 +230,34 @@
             if (container && !container.contains(e.target)) {
               hideSuggestions();
             }
+          });
+        }
+
+        // 桌面端「直接敲键即搜索」：焦点不在输入框时，按字母/数字自动聚焦导航栏搜索框
+        // Turbo 每次跳转都会重新执行本脚本，用 window 标记防止 document 级监听重复绑定
+        if (!window.__hlTypeToSearchBound) {
+          window.__hlTypeToSearchBound = true;
+          document.addEventListener('keydown', function(e) {
+            // 排除组合键、输入法组合输入中的按键
+            if (e.metaKey || e.ctrlKey || e.altKey || e.isComposing) return;
+            // 仅字母、数字触发
+            if (!/^[a-zA-Z0-9]$/.test(e.key)) return;
+            // 仅桌面端（有精确指针设备）生效，移动端不启用
+            if (!window.matchMedia('(pointer: fine)').matches) return;
+            // 有可见的全屏遮罩/弹窗（如股票详情页指标弹窗）时不抢焦点
+            const overlayVisible = Array.prototype.some.call(
+              document.querySelectorAll('.fixed.inset-0'),
+              function(el) { return el.getClientRects().length > 0; }
+            );
+            if (overlayVisible) return;
+            // 焦点已在可编辑元素（输入框、文本域、下拉框、可编辑区域）内时不干预
+            const active = document.activeElement;
+            if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' ||
+                active.tagName === 'SELECT' || active.isContentEditable)) return;
+            const input = document.getElementById('stock-search-input');
+            if (!input) return;
+            // 聚焦后本次按键的默认行为会自动把字符输入到搜索框，无需手动赋值
+            input.focus();
           });
         }
 
