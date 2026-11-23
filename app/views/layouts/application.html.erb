@@ -135,9 +135,8 @@
           }
 
           function renderSuggestions(results) {
-            state.selectedIndex = -1;
-
             if (results.length === 0) {
+              state.selectedIndex = -1;
               suggestionsList.innerHTML = '';
               suggestionsBox.classList.remove('hidden');
               noResults.classList.remove('hidden');
@@ -164,6 +163,9 @@
                 '</div>' +
               '</div>';
             }).join('');
+
+            // 默认选中第一条，回车即可直接跳转
+            reshowSuggestions();
           }
 
           function updateSelection() {
@@ -177,6 +179,13 @@
             });
           }
 
+          // 重新显示下拉并默认选中第一条，保证"列表可见必有选中"
+          function reshowSuggestions() {
+            suggestionsBox.classList.remove('hidden');
+            state.selectedIndex = 0;
+            updateSelection();
+          }
+
           searchInput.addEventListener('input', function() {
             clearTimeout(state.debounceTimer);
             state.debounceTimer = setTimeout(function() {
@@ -187,13 +196,20 @@
           searchInput.addEventListener('keydown', function(e) {
             var items = document.querySelectorAll('.suggestion-item');
 
-            if (e.key === 'ArrowDown') {
+            if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
               e.preventDefault();
-              state.selectedIndex = Math.min(state.selectedIndex + 1, items.length - 1);
-              updateSelection();
-            } else if (e.key === 'ArrowUp') {
-              e.preventDefault();
-              state.selectedIndex = Math.max(state.selectedIndex - 1, -1);
+              // 下拉处于隐藏状态时：仍有有效结果则先恢复显示并选中第一条，避免盲选盲跳；否则忽略
+              if (suggestionsBox.classList.contains('hidden')) {
+                if (state.currentResults.length > 0) {
+                  reshowSuggestions();
+                }
+                return;
+              }
+              if (e.key === 'ArrowDown') {
+                state.selectedIndex = Math.min(state.selectedIndex + 1, items.length - 1);
+              } else {
+                state.selectedIndex = Math.max(state.selectedIndex - 1, 0);
+              }
               updateSelection();
             } else if (e.key === 'Enter') {
               e.preventDefault();
@@ -213,7 +229,7 @@
 
           searchInput.addEventListener('focus', function() {
             if (state.currentResults.length > 0) {
-              suggestionsBox.classList.remove('hidden');
+              reshowSuggestions();
             }
           });
 
