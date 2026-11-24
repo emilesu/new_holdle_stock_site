@@ -7,7 +7,7 @@ module WindowWatch
     SUBTAGS = WindowWatchSnapshotStock::SUBTAGS
     MONTH_FORMAT = /\A\d{4}-(0[1-9]|1[0-2])\z/
     REQUIRED_STOCK_FIELDS = %w[symbol code name tier exchange hist prev_hist dif dea ratio sa_run].freeze
-    REQUIRED_STATS_KEYS = %w[main_group_run3 main_group_run5 finance_count st_count bj_count].freeze
+    REQUIRED_STATS_KEYS = %w[main_group_run3 main_group_run5 finance_count st_count bj_count in_position_count].freeze
 
     def self.call(payload:, source_ip: nil)
       new(payload, source_ip).call

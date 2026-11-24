@@ -72,6 +72,14 @@ class Api::V1::WindowWatch::SnapshotsControllerTest < ActionDispatch::Integratio
     assert_match "st_count", response.parsed_body["errors"].join
   end
 
+  test "缺 in_position_count（v0.3.3 起恒在键）422" do
+    payload = ww_payload
+    payload["stats"].delete("in_position_count")
+    post_snapshot(payload)
+    assert_response 422
+    assert_match "in_position_count", response.parsed_body["errors"].join
+  end
+
   test "symbol 重复 422" do
     payload = ww_payload
     payload["tiers"]["T1"] << payload["tiers"]["T1"].first.dup

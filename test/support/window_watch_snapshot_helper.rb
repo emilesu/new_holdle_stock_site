@@ -66,7 +66,8 @@ module WindowWatchSnapshotHelper
                    "main_group_run5" => rows.count { |r| r[:run5_asof] == true },
                    "finance_count" => rows.count { |r| r[:finance] == true },
                    "st_count" => rows.count { |r| r[:st] == true },
-                   "bj_count" => 0 },
+                   "bj_count" => 0,
+                   "in_position_count" => 0 },
       "disclaimer" => WW_DISCLAIMER
     }.tap do |p|
       rows.each { |r| p["tiers"][r[:tier].to_s] << r.transform_keys(&:to_s) }
