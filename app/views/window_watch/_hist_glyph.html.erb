@@ -12,7 +12,8 @@
   r_cur = rect.(12, h_cur, cur)
   kind = cur > 0 ? "红柱" : cur < 0 ? "绿柱" : "贴0轴"
   trend = cur.abs < prev.abs ? "趋近0轴" : cur.abs > prev.abs ? "远离0轴" : "持平"
-  arrow = cur.abs < prev.abs ? "↘" : cur.abs > prev.abs ? "↗" : "→"
+  # 箭头=柱值的移动方向（柱顶端往哪走）：绿柱趋近0轴(-0.65→-0.35)为上移 ↗，红柱趋近为下移 ↘
+  arrow = cur > prev ? "↗" : cur < prev ? "↘" : "→"
 %>
 <span class="inline-flex items-center gap-1.5 align-middle" title="<%= "#{kind} · #{trend}" %>">
   <svg width="20" height="30" viewBox="0 0 20 30" aria-hidden="true" class="shrink-0">
