@@ -1,6 +1,10 @@
 # 月K开窗观察（需求单 01 v0.3）：只读 DSH 月批快照，页面零判定计算、零绝对数值渲染
 # 访问控制（§一）：会员可见完整列表；非会员/未登录 = 定位说明 + 四档计数 teaser（不查行表，V12）
 class WindowWatchController < ApplicationController
+  # 暗发布开关（2026-11-24 站长定）：true=仅管理员可访问（导航入口同步隐藏，其余用户重定向首页不留痕迹）
+  # 调试完成后置 false，即恢复需求单 §一 的正式访问控制：会员完整视图 + 非会员 teaser
+  DARK_RELEASE = true
+
   # 全量视图排序白名单（R3/A6：禁止参数直接透传 SQL）
   SORT_ORDERS = {
     "ratio_asc" => "ratio ASC", "ratio_desc" => "ratio DESC",
@@ -10,6 +14,9 @@ class WindowWatchController < ApplicationController
   PAGE_PER = 100
 
   def index
+    if DARK_RELEASE && !(user_signed_in? && current_user.is_admin?)
+      redirect_to root_path and return
+    end
     @snapshot = WindowWatchSnapshot.latest
     @is_member = user_signed_in? && current_user.content_tier >= User::TIER_MEMBER
     return unless @snapshot && @is_member

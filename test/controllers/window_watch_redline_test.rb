@@ -20,21 +20,15 @@ class WindowWatchRedlineTest < ActionDispatch::IntegrationTest
     {
       "会员主组视图" => window_watch_path,
       "会员全量视图" => window_watch_path(view: "all"),
-      "全量空档态" => window_watch_path(view: "all", tier: "T2_P1", industry: "电池"),
-      "非会员teaser" => nil # 单独登出渲染
+      "全量空档态" => window_watch_path(view: "all", tier: "T2_P1", industry: "电池")
     }
   end
 
-  test "V6：四种渲染态红线词 0 命中" do
-    bodies = rendered_states.keys.index_with do |name|
-      if name == "非会员teaser"
-        sign_out users(:two)
-        get window_watch_path
-      else
-        get rendered_states[name]
-      end
+  test "V6：三种渲染态红线词 0 命中" do
+    bodies = rendered_states.each_with_object({}) do |(name, path), acc|
+      get path
       assert_response :success
-      response.body
+      acc[name] = response.body
     end
     bodies.each_value do |body|
       FORBIDDEN_WORDS.each { |w| refute_includes body, w, "红线词命中：#{w}" }
@@ -67,9 +61,10 @@ class WindowWatchRedlineTest < ActionDispatch::IntegrationTest
     refute_includes response.body, "状态A形成中"
   end
 
-  test "V12：非会员 HTML 源码级无任何个股名称/代码" do
+  test "V12：非管理员访问被重定向，响应不含任何个股名称/代码（暗发布期）" do
     sign_out users(:two)
     get window_watch_path
+    assert_redirected_to root_path
     WindowWatchSnapshotHelper::WW_STOCKS.each do |r|
       refute_includes response.body, r[:name]
       refute_includes response.body, r[:symbol]

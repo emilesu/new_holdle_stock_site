@@ -11,27 +11,28 @@ class WindowWatchControllerTest < ActionDispatch::IntegrationTest
     WindowWatch::SnapshotIngest.call(payload: ww_payload, source_ip: "127.0.0.1")
   end
 
-  # ---- §一 访问控制 ----
+  # ---- §一 访问控制（暗发布期：DARK_RELEASE=true，非管理员一律重定向首页）----
 
-  test "未登录：teaser 可见聚合计数，不含任何个股（V12）" do
+  test "暗发布：未登录访问重定向首页，不暴露功能存在" do
     get window_watch_path
-    assert_response :success
-    assert_select "h1", text: "月K开窗观察"
-    assert_includes response.body, "①开窗观察"
-    WindowWatchSnapshotHelper::WW_STOCKS.each do |r|
-      refute_includes response.body, r[:name]
-    end
-    assert_includes response.body, "了解会员"
+    assert_redirected_to root_path
   end
 
-  test "普通登录用户（非会员）：同未登录 teaser" do
+  test "暗发布：普通会员与普通用户均重定向，仅管理员可见" do
+    member = User.create!(email: "ww-member@test.local", password: "WwMember2026!", nickname: "开窗会员账号",
+                          role: "member", member_expire_at: 1.year.from_now,
+                          confirmed_at: Time.current, onboarded_at: Time.current)
+    sign_in member
+    get window_watch_path
+    assert_redirected_to root_path
+
     sign_in users(:one)
     get window_watch_path
-    refute_includes response.body, "中国核电"
+    assert_redirected_to root_path
   end
 
-  test "会员：完整页面含主组行与全量入口" do
-    sign_in users(:two) # admin fixture，content_tier=TIER_MEMBER
+  test "管理员：完整页面含主组行与全量入口" do
+    sign_in users(:two) # admin fixture
     get window_watch_path
     assert_includes response.body, "中国核电"
     assert_includes response.body, "贵州茅台"
@@ -93,6 +94,7 @@ class WindowWatchControllerTest < ActionDispatch::IntegrationTest
 
   test "冷启动：库内无快照时固定文案，无个股区块" do
     WindowWatchSnapshot.destroy_all
+    sign_in users(:two)
     get window_watch_path
     assert_includes response.body, "数据正在准备，首个快照尚未生成"
     refute_includes response.body, "中国核电"
@@ -119,7 +121,8 @@ class WindowWatchControllerTest < ActionDispatch::IntegrationTest
   # ---- R7/V5 免责逐字 ----
 
   test "免责声明与快照字段逐字一致" do
-    get window_watch_path # 非会员也常驻
+    sign_in users(:two)
+    get window_watch_path
     assert_includes response.body, WindowWatchSnapshotHelper::WW_DISCLAIMER
   end
 end
