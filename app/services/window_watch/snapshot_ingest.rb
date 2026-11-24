@@ -24,11 +24,9 @@ module WindowWatch
       return reject! if @errors.any?
 
       snapshot = persist!(rows)
-      WindowWatchIngestLog.create!(snapshot_month: snapshot.month, snapshot_version: snapshot.snapshot_version,
-                                   counts: snapshot.stats, source_ip: @source_ip, result: "ok")
       [snapshot, []]
     rescue ActiveRecord::ActiveRecordError => e
-      # 校验通过但落库异常：事务已回滚，同样整包拒绝并留审计
+      # 校验通过但落库异常（含 ok 审计日志失败）：事务整体回滚，同样整包拒绝并留审计
       @errors << "落库异常：#{e.class}: #{e.message}"
       reject!
     end
@@ -89,6 +87,7 @@ module WindowWatch
           absent = REQUIRED_STOCK_FIELDS.reject { |f| row.key?(f) && !row[f].nil? }
           @errors << "#{symbol} 必填字段缺失：#{absent.join('/')}" if absent.any?
           @errors << "#{symbol} tier 非法：#{row['tier']}" if row["tier"].present? && !TIERS.include?(row["tier"])
+          @errors << "#{symbol} tier=#{row['tier']} 与所在档数组键 #{tier} 不一致" if row["tier"].present? && TIERS.include?(row["tier"]) && row["tier"] != tier
           @errors << "#{symbol} subtag 非法：#{row['subtag']}" if row["subtag"].present? && !SUBTAGS.include?(row["subtag"])
           ex = row["exchange"].to_s.upcase
           @errors << "#{symbol} exchange 非法（tiers 内仅 SH/SZ）：#{row['exchange']}" unless ex.in?(%w[SH SZ])
@@ -194,6 +193,9 @@ module WindowWatch
         # 同月重推 = 整包覆盖：先清行再批量插入（事务内 all-or-nothing，V9）
         snapshot.stocks.delete_all
         WindowWatchSnapshotStock.insert_all!(rows.map { |r| row_attributes(r, snapshot.id, now) })
+        # ok 审计日志同事务写入：日志失败=整包回滚，杜绝「已落库却报 422」的语义分裂
+        WindowWatchIngestLog.create!(snapshot_month: snapshot.month, snapshot_version: snapshot.snapshot_version,
+                                     counts: snapshot.stats, source_ip: @source_ip, result: "ok")
         snapshot
       end
     end

@@ -112,6 +112,8 @@ class WindowWatchControllerTest < ActionDispatch::IntegrationTest
     sign_in users(:two)
     get window_watch_path
     assert_includes response.body, "注意：本次数据更新滞后（数据截至 2026-11-20），判定可能未包含最近交易日行情。"
+    # §五.2 升级为警示条=替换常态横幅，不得双显示（评审修复4）
+    refute_includes response.body, "每月更新一次，月中不刷新"
   end
 
   # ---- R7/V5 免责逐字 ----

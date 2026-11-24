@@ -106,6 +106,14 @@ class Api::V1::WindowWatch::SnapshotsControllerTest < ActionDispatch::Integratio
     assert_match "universe", response.parsed_body["errors"].join
   end
 
+  test "行内 tier 字段与所在档数组键不一致 422（评审修复1）" do
+    payload = ww_payload
+    payload["tiers"]["T1"][0]["tier"] = "T3"
+    post_snapshot(payload)
+    assert_response 422
+    assert_match "与所在档数组键", response.parsed_body["errors"].join
+  end
+
   test "subtag 非法值 422" do
     payload = ww_payload
     payload["tiers"]["T1"][0]["subtag"] = "whatever"
