@@ -1,0 +1,16 @@
+<%# ①开窗观察（§三③）：排序=开窗月新→旧（§3.2） %>
+<section class="hl-card">
+  <div class="px-5 py-4 border-b border-line">
+    <h2 class="text-hl-16 font-semibold text-ink">① 开窗观察
+      <span class="text-hl-13 text-muted-3 font-normal ml-1"><%= rows.size %> 只</span>
+    </h2>
+    <p class="text-hl-12 text-muted mt-1.5"><%= WindowWatchHelper::TIER_SUBTITLES["T1"] %></p>
+  </div>
+  <% if rows.empty? %>
+    <p class="px-5 py-6 text-hl-13 text-muted-3">本月开窗观察暂无股票</p>
+  <% else %>
+    <div class="divide-y divide-line">
+      <% rows.each do |row| %><%= render "stock_row", row: row %><% end %>
+    </div>
+  <% end %>
+</section>

@@ -45,6 +45,9 @@ Rails.application.routes.draw do
   get "screener", to: "screeners#index", as: :screener
   get "screener/filters", to: "screeners#filters", as: :screener_filters
 
+  # 月K开窗观察（会员可见，数据为 DSH 月批快照，见 01/02 文档 v0.3）
+  get "window-watch", to: "window_watch#index", as: :window_watch
+
   resources :courses, only: [:index, :show]
   resources :lessons, only: [:show]
   resources :articles, only: [:index, :show]
@@ -108,6 +111,9 @@ Rails.application.routes.draw do
       get "archive/profiles", to: "archive_profiles#index"
       post "archive/profiles", to: "archive_profiles#create"
       post "archive/profiles/:id/withdraw", to: "archive_profiles#withdraw"
+
+      # 开窗页面月批快照 ingest（Bearer HOLDLE_WINDOW_TOKEN 鉴权，契约 02 v0.3 §四）
+      post "window_watch/snapshots", to: "window_watch/snapshots#create"
     end
   end
 

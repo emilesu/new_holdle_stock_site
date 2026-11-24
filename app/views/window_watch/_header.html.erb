@@ -1,0 +1,27 @@
+<header class="space-y-3">
+  <div>
+    <h1 class="text-hl-22 font-semibold text-ink">月K开窗观察</h1>
+    <p class="text-hl-13 text-muted mt-1">按 HOLDLE 方法论的月K状态描述 · 每月更新</p>
+  </div>
+
+  <%# §五.2 is_stale 警示条：置于页头计数条之前 %>
+  <% if @snapshot.is_stale? %>
+    <div class="rounded-md border border-amber-300 bg-amber-50 px-4 py-2.5 text-hl-13 text-amber-800">
+      注意：本次数据更新滞后（数据截至 <%= @snapshot.trade_date %>），判定可能未包含最近交易日行情。
+    </div>
+  <% end %>
+
+  <%# R4：最新判定月缺失（如月初快照尚未推送）→ 提示并照常渲染上一月 %>
+  <% if @snapshot.month < ww_expected_month %>
+    <div class="rounded-md border border-line bg-white px-4 py-2.5 text-hl-13 text-muted">
+      本月数据尚未更新，最近一次更新：<%= @snapshot.month %> 月K收盘
+    </div>
+  <% end %>
+
+  <%# §五.1 常态横幅 %>
+  <p class="text-hl-13 text-muted-2">
+    判定月：<%= @snapshot.month %> 月K收盘｜数据截至 <%= @snapshot.trade_date %>｜每月更新一次，月中不刷新
+  </p>
+
+  <%= render "count_bar" %>
+</header>

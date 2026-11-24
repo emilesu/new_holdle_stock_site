@@ -196,6 +196,33 @@
     border-color: var(--color-line);
   }
 
+  /* 徽章/术语悬浮解释（开窗页 §六.6：徽章必须带 tooltip 不得裸标；移动端由折叠区兜底） */
+  .hl-tip { position: relative; }
+  .hl-tip::after {
+    content: attr(data-tip);
+    position: absolute;
+    left: 50%;
+    bottom: calc(100% + 6px);
+    transform: translateX(-50%);
+    width: max-content;
+    max-width: 240px;
+    background: var(--color-ink);
+    color: #ffffff;
+    font-size: var(--text-hl-12);
+    font-weight: 400;
+    line-height: 1.5;
+    padding: 6px 8px;
+    border-radius: 6px;
+    text-align: left;
+    white-space: normal;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s ease;
+    z-index: 30;
+  }
+  .hl-tip:hover::after,
+  .hl-tip:focus-visible::after { opacity: 1; }
+
   /* 卡片（白底 + 细边框 + 圆角） */
   .hl-card {
     background: #ffffff;

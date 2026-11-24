@@ -1,0 +1,9 @@
+<%# 四档计数条（§三①）：数字 = 快照 stats.tier_counts（验收 V1），非会员可见（聚合数字不含个股） %>
+<% tc = @snapshot.stats["tier_counts"] || {} %>
+<div class="hl-card px-4 py-3 flex flex-wrap items-center gap-x-6 gap-y-2 text-hl-13">
+  <span class="text-ink font-medium">①开窗观察 <span class="text-hl-15 font-semibold"><%= tc["T1"] %></span></span>
+  <span class="text-muted">②形成中 <span class="text-hl-15 font-semibold text-ink"><%= tc["T2_P2"].to_i + tc["T2_P1"].to_i %></span>
+    <span class="text-muted-3">（红柱收敛 <%= tc["T2_P2"] %> / 绿柱收敛 <%= tc["T2_P1"] %>）</span>
+  </span>
+  <span class="text-muted">③状态A·暂不开窗 <span class="text-hl-15 font-semibold text-ink"><%= tc["T3"] %></span></span>
+</div>

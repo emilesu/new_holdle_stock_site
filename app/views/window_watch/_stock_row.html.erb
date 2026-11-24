@@ -1,0 +1,45 @@
+<%# 逐股卡片行（§3.1/§3.2）：通用字段 + 档专属字段；数值纪律——不渲染 hist/dif/dea/ratio 绝对值 %>
+<div class="px-5 py-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 hover:bg-bg-soft">
+  <div class="min-w-[150px]">
+    <%= link_to row.name, stock_path(row.code.upcase), class: "text-hl-14 font-medium text-ink hover:text-link" %>
+    <span class="text-hl-12 text-muted-3 ml-1.5 font-mono"><%= row.symbol %></span>
+  </div>
+
+  <span class="text-hl-12 text-muted-2 min-w-[72px]"><%= row.industry.presence || "—" %></span>
+
+  <% if row.finance %>
+    <%= ww_badge "金融", "金融四行业（银行/保险/证券/多元金融）" %>
+  <% end %>
+  <% if row.st %>
+    <%= ww_badge "ST", "ST/*ST 股票（仅标注，不剔除）" %>
+  <% end %>
+  <% if row.run3_asof %>
+    <%= ww_quality_badge %>
+  <% end %>
+  <% if row.subtag == "sticky_micro" %>
+    <%= ww_badge "已贴轴微柱", "本月柱值已贴近 0 轴，柱值绝对量极小，形态可信度低" %>
+  <% end %>
+  <% if row.subtag == "continuation" %>
+    <%= ww_badge "续命候选", "前一窗口于 1-2 个月内关闭，本次若回升将按方法论视为原窗口延续的新开窗事件" %>
+  <% end %>
+
+  <div class="ml-auto flex flex-wrap items-center gap-x-4 gap-y-1">
+    <% if row.roe %>
+      <span class="text-hl-12 text-muted-2">ROE <%= number_with_precision(row.roe, precision: 0) %>%<%= "（#{row.roe_band}）" if row.roe_band.present? %></span>
+    <% end %>
+
+    <%= render "hist_glyph", row: row %>
+
+    <% case row.tier %>
+    <% when "T1" %>
+      <span class="text-hl-12 text-muted-2 whitespace-nowrap"><%= row.open_month %> 开窗 · 已存活 <%= row.months_since_open %> 个月</span>
+    <% when "T2_P2", "T2_P1" %>
+      <span class="text-hl-12 text-muted-3 whitespace-nowrap"><%= row.tier == "T2_P1" ? "状态A中断前连续" : "状态A连续" %> <%= row.sa_run %> 个月</span>
+    <% when "T3" %>
+      <span class="text-hl-12 text-muted-3 whitespace-nowrap">状态A连续 <%= row.sa_run %> 个月</span>
+      <% if (note = WindowWatchHelper::T3_SUBTAG_NOTES[row.subtag]) %>
+        <span class="text-hl-12 text-muted-4"><%= note %></span>
+      <% end %>
+    <% end %>
+  </div>
+</div>

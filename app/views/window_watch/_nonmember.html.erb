@@ -1,0 +1,18 @@
+<%# §一 访问控制：非会员/未登录 = 定位说明 + 四档计数（聚合数字，无任何个股）+ 会员引导（V12） %>
+<div class="max-w-2xl mx-auto pt-6 space-y-5">
+  <header class="text-center space-y-2">
+    <h1 class="text-hl-22 font-semibold text-ink">月K开窗观察</h1>
+    <p class="text-hl-13 text-muted">按 HOLDLE 方法论的月K状态描述 · 每月更新</p>
+  </header>
+
+  <%= render "count_bar" %>
+
+  <section class="hl-card px-6 py-5 space-y-2.5 text-hl-13 text-muted leading-relaxed">
+    <p>这是一页对全 A 股「月K状态」的客观描述：哪些股票当前处于开窗观察、哪些处于开窗事件的准备形态。每月一个快照，不是行情页，不构成任何推荐。</p>
+    <p>个股名单为会员内容。开通会员后，可查看「主组视图」（质量达标子集）与「全部股票」全量技术形态列表。</p>
+    <div class="pt-2 flex items-center justify-center gap-3">
+      <%= link_to "了解会员", join_path, class: "hl-btn hl-btn-primary text-hl-13" %>
+      <%= link_to "登录", new_user_session_path(return_to: window_watch_path), class: "hl-btn text-hl-13" %>
+    </div>
+  </section>
+</div>

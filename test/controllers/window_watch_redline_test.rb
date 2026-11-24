@@ -1,0 +1,79 @@
+require "test_helper"
+require_relative "../support/window_watch_snapshot_helper"
+
+# R8/V6/V7/V11/V12 自动化红线扫描（需求单 §六/§七，纪要决议6）：
+# 四种渲染态全页 HTML（含 alt/meta/tooltip）扫描——红线词 0 命中、绝对数值 0 渲染、固定文案逐字在位
+class WindowWatchRedlineTest < ActionDispatch::IntegrationTest
+  include Devise::Test::IntegrationHelpers
+  include WindowWatchSnapshotHelper
+
+  # §六.1 词表 + §六.3 禁用术语（含 alt/meta/tooltip 全文扫描）
+  FORBIDDEN_WORDS = %w[即将 预测 建议买入 建议卖出 可以关注 值得买入 目标价 止损价 高转矮].freeze
+
+  setup do
+    ww_create_stocks!
+    WindowWatch::SnapshotIngest.call(payload: ww_payload, source_ip: "127.0.0.1")
+    sign_in users(:two)
+  end
+
+  def rendered_states
+    {
+      "会员主组视图" => window_watch_path,
+      "会员全量视图" => window_watch_path(view: "all"),
+      "全量空档态" => window_watch_path(view: "all", tier: "T2_P1", industry: "电池"),
+      "非会员teaser" => nil # 单独登出渲染
+    }
+  end
+
+  test "V6：四种渲染态红线词 0 命中" do
+    bodies = rendered_states.keys.index_with do |name|
+      if name == "非会员teaser"
+        sign_out users(:two)
+        get window_watch_path
+      else
+        get rendered_states[name]
+      end
+      assert_response :success
+      response.body
+    end
+    bodies.each_value do |body|
+      FORBIDDEN_WORDS.each { |w| refute_includes body, w, "红线词命中：#{w}" }
+    end
+  end
+
+  test "V11：MACD 系绝对数值（hist/prev_hist/dif/dea/ratio）不出现在页面正文（含两位小数形态）" do
+    [window_watch_path, window_watch_path(view: "all")].each do |path|
+      get path
+      # 扫描范围限 <main> 页面正文（导航/页脚 SVG 图标路径含大量小数，属版式 chrome 非数据渲染）
+      body = response.body[/<main\b.*?<\/main>/m].to_s
+      refute_empty body
+      WindowWatchSnapshotHelper::WW_STOCKS.each do |r|
+        %w[hist prev_hist dif dea ratio].each do |field|
+          raw = r[field.to_sym].to_s
+          rounded = format("%.2f", r[field.to_sym].to_f)
+          refute_includes body, raw, "#{field}=#{raw} 出现在 HTML"
+          refute_includes body, rounded, "#{field} 两位小数形态 #{rounded} 出现在 HTML"
+        end
+      end
+    end
+  end
+
+  test "V7：四档副标题固定文案与 §六.2 逐字一致（主组视图）" do
+    get window_watch_path
+    WindowWatchHelper::TIER_SUBTITLES.each_value do |text|
+      assert_includes response.body, text
+    end
+    # §六.2 特别红线：绿柱收敛不得写成「状态A形成中」
+    refute_includes response.body, "状态A形成中"
+  end
+
+  test "V12：非会员 HTML 源码级无任何个股名称/代码" do
+    sign_out users(:two)
+    get window_watch_path
+    WindowWatchSnapshotHelper::WW_STOCKS.each do |r|
+      refute_includes response.body, r[:name]
+      refute_includes response.body, r[:symbol]
+      refute_includes response.body, r[:code].upcase
+    end
+  end
+end

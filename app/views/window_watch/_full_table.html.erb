@@ -1,0 +1,86 @@
+<%# 全部股票视图（§3.3）：表格 + 服务端分页（A2）；行业筛选（R2）；排序白名单（R3/A6） %>
+<section class="hl-card">
+  <%# 全量视图顶部固定提示行（§3.3 逐字） %>
+  <div class="px-5 py-2.5 border-b border-line bg-bg-mute text-hl-12 text-muted">
+    默认视图只显示质量达标股票；本视图为全量技术形态列表，未含企业质量筛选
+  </div>
+
+  <div class="px-5 py-3 border-b border-line flex flex-wrap items-center gap-x-4 gap-y-2">
+    <div class="flex flex-wrap items-center gap-1.5 text-hl-12">
+      <span class="text-muted-3 mr-1">档</span>
+      <% ([nil] + WindowWatchSnapshotStock::TIERS).each do |t| %>
+        <%= link_to (t.nil? ? "全部" : WindowWatchHelper::TIER_SHORT_NAMES[t]),
+              window_watch_path(view: "all", tier: t, industry: @industry, sort: @sort),
+              class: "px-2.5 py-1 rounded-md border #{t == @tier ? 'border-ink text-ink bg-white font-medium' : 'border-line text-muted hover:text-ink'}" %>
+      <% end %>
+    </div>
+
+    <%= form_with url: window_watch_path, method: :get, class: "flex flex-wrap items-center gap-3" do %>
+      <%= hidden_field_tag :view, "all" %>
+      <%= hidden_field_tag :tier, @tier %>
+      <label class="flex items-center gap-1.5 text-hl-12 text-muted-3">行业
+        <select name="industry" class="px-2 py-1.5 text-hl-13 border border-line rounded-md bg-white focus:border-link">
+          <option value="">全部</option>
+          <% @industries.each do |ind| %>
+            <option value="<%= ind %>" <%= "selected" if @industry == ind %>><%= ind %></option>
+          <% end %>
+        </select>
+      </label>
+      <label class="flex items-center gap-1.5 text-hl-12 text-muted-3">排序
+        <select name="sort" class="px-2 py-1.5 text-hl-13 border border-line rounded-md bg-white focus:border-link">
+          <option value="ratio_asc" <%= "selected" if @sort == "ratio_asc" %>>贴0轴优先（比值升序）</option>
+          <option value="ratio_desc" <%= "selected" if @sort == "ratio_desc" %>>比值降序</option>
+          <option value="open_month_desc" <%= "selected" if @sort == "open_month_desc" %>>开窗月新→旧</option>
+          <option value="sa_run_desc" <%= "selected" if @sort == "sa_run_desc" %>>状态A连续月多→少</option>
+        </select>
+      </label>
+      <button type="submit" class="px-3 py-1.5 text-hl-12 rounded-md border border-line text-muted hover:text-ink hover:border-ink">应用</button>
+    <% end %>
+  </div>
+
+  <% if @stocks.total_count.zero? %>
+    <p class="px-5 py-8 text-hl-13 text-muted-3"><%= @tier ? "本月#{WindowWatchHelper::TIER_NAMES[@tier]}暂无股票" : "本视图暂无股票" %></p>
+  <% else %>
+    <div class="overflow-x-auto">
+      <table class="w-full min-w-[760px] text-hl-13">
+        <thead>
+          <tr class="text-left text-hl-12 text-muted-3 border-b border-line">
+            <th class="px-5 py-2.5 font-medium">名称/代码</th>
+            <th class="px-3 py-2.5 font-medium">行业</th>
+            <th class="px-3 py-2.5 font-medium">档</th>
+            <th class="px-3 py-2.5 font-medium">柱形（定性）</th>
+            <th class="px-3 py-2.5 font-medium">状态A</th>
+            <th class="px-3 py-2.5 font-medium">备注</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-line">
+          <% @stocks.each do |row| %>
+            <tr class="hover:bg-bg-soft">
+              <td class="px-5 py-2.5 align-middle">
+                <%= link_to row.name, stock_path(row.code.upcase), class: "font-medium text-ink hover:text-link" %>
+                <span class="text-hl-11 text-muted-3 ml-1 font-mono"><%= row.symbol %></span>
+                <div class="mt-0.5 flex flex-wrap gap-1">
+                  <% if row.finance %><%= ww_badge "金融", "金融四行业（银行/保险/证券/多元金融）" %><% end %>
+                  <% if row.st %><%= ww_badge "ST", "ST/*ST 股票（仅标注，不剔除）" %><% end %>
+                  <% if row.run3_asof %><%= ww_quality_badge %><% end %>
+                </div>
+              </td>
+              <td class="px-3 py-2.5 text-muted-2"><%= row.industry.presence || "—" %></td>
+              <td class="px-3 py-2.5 text-muted-2 whitespace-nowrap"><%= WindowWatchHelper::TIER_SHORT_NAMES[row.tier] %></td>
+              <td class="px-3 py-2.5"><%= render "hist_glyph", row: row %></td>
+              <td class="px-3 py-2.5 text-muted-2 whitespace-nowrap"><%= row.sa_run %> 个月</td>
+              <td class="px-3 py-2.5 text-hl-12 text-muted-3">
+                <% if row.tier == "T1" %><%= row.open_month %> 开窗 · 存活 <%= row.months_since_open %> 个月
+                <% elsif row.subtag == "sticky_micro" %><%= ww_badge "已贴轴微柱", "本月柱值已贴近 0 轴，柱值绝对量极小，形态可信度低" %>
+                <% elsif row.subtag == "continuation" %><%= ww_badge "续命候选", "前一窗口于 1-2 个月内关闭，本次若回升将按方法论视为原窗口延续的新开窗事件" %>
+                <% elsif (note = WindowWatchHelper::T3_SUBTAG_NOTES[row.subtag]) %><%= note %>
+                <% else %>—<% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+    <div class="px-5 py-3 border-t border-line"><%= paginate @stocks %></div>
+  <% end %>
+</section>

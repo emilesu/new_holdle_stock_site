@@ -1,0 +1,35 @@
+<%# ②形成中（§三④）：红柱收敛 + 绿柱收敛 两子组，各自 ratio 升序（最贴轴优先） %>
+<div class="space-y-5">
+  <section class="hl-card">
+    <div class="px-5 py-4 border-b border-line">
+      <h2 class="text-hl-16 font-semibold text-ink">② 形成中 · 红柱收敛
+        <span class="text-hl-13 text-muted-3 font-normal ml-1"><%= p2.size %> 只</span>
+      </h2>
+      <p class="text-hl-12 text-muted mt-1.5"><%= WindowWatchHelper::TIER_SUBTITLES["T2_P2"] %></p>
+    </div>
+    <% if p2.empty? %>
+      <p class="px-5 py-6 text-hl-13 text-muted-3">本月红柱收敛暂无股票</p>
+    <% else %>
+      <div class="divide-y divide-line">
+        <% p2.each do |row| %><%= render "stock_row", row: row %><% end %>
+      </div>
+    <% end %>
+  </section>
+
+  <section class="hl-card">
+    <div class="px-5 py-4 border-b border-line">
+      <h2 class="text-hl-16 font-semibold text-ink">② 形成中 · 绿柱收敛
+        <span class="text-hl-13 text-muted-3 font-normal ml-1"><%= p1.size %> 只</span>
+      </h2>
+      <%# §六.2 固定副标题（不得写成「状态A形成中」） %>
+      <p class="text-hl-12 text-muted mt-1.5"><%= WindowWatchHelper::TIER_SUBTITLES["T2_P1"] %></p>
+    </div>
+    <% if p1.empty? %>
+      <p class="px-5 py-6 text-hl-13 text-muted-3">本月绿柱收敛暂无股票</p>
+    <% else %>
+      <div class="divide-y divide-line">
+        <% p1.each do |row| %><%= render "stock_row", row: row %><% end %>
+      </div>
+    <% end %>
+  </section>
+</div>

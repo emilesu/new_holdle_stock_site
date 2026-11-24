@@ -1,0 +1,20 @@
+<%# R5 术语说明折叠区（与 tooltip 双轨）：白话解释，不含预测/荐股措辞 %>
+<section class="hl-card">
+  <details>
+    <summary class="px-5 py-3.5 cursor-pointer select-none list-none flex items-center gap-2 [&::-webkit-details-marker]:hidden">
+      <span class="text-hl-14 font-medium text-ink">本页术语说明</span>
+      <svg class="w-3.5 h-3.5 text-muted-4 transition-transform open:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+    </summary>
+    <dl class="px-5 pb-4 space-y-2.5 border-t border-line pt-3 text-hl-13 leading-relaxed">
+      <div><dt class="inline font-medium text-ink">判定月：</dt><dd class="inline text-muted">最后一个已收完的月K月份；本月未收完不做判定。</dd></div>
+      <div><dt class="inline font-medium text-ink">状态A：</dt><dd class="inline text-muted">dif≥0 且 dea≥0 且 柱&gt;0——双线在 0 轴上方且红柱成立（白话：月K处于多头动能状态）。</dd></div>
+      <div><dt class="inline font-medium text-ink">开窗：</dt><dd class="inline text-muted">月K出现可信且不高位的红柱时，按方法论规则开启的观察窗口；窗口存活期间可切日K继续观察入场条件。</dd></div>
+      <div><dt class="inline font-medium text-ink">红柱 / 绿柱：</dt><dd class="inline text-muted">MACD 柱为正为红柱、为负为绿柱，与行情红涨绿跌同色语义。</dd></div>
+      <div><dt class="inline font-medium text-ink">趋近 / 远离 0 轴：</dt><dd class="inline text-muted">本月柱的绝对量较上月变小为趋近（收敛），变大为远离（发散）。箭头只表此形态方向。</dd></div>
+      <div><dt class="inline font-medium text-ink">贴0轴：</dt><dd class="inline text-muted">柱值绝对量相对 DEA 极小（|柱|/|DEA| &lt; 0.03），此类形态可信度低。</dd></div>
+      <div><dt class="inline font-medium text-ink">质量达标：</dt><dd class="inline text-muted">最近一份已披露年报口径下，ROE≥15% 且经营现金流为正、连续3年。as-of 截至 <%= @snapshot.month %> 次月1日已披露年报。</dd></div>
+      <div><dt class="inline font-medium text-ink">续命候选：</dt><dd class="inline text-muted">前一窗口于 1-2 个月内关闭，本次若回升将按方法论视为原窗口延续的新开窗事件。</dd></div>
+      <div><dt class="inline font-medium text-ink">已贴轴微柱：</dt><dd class="inline text-muted">本月柱值已贴近 0 轴，柱值绝对量极小，形态可信度低（急跌型假收敛的展示标注）。</dd></div>
+    </dl>
+  </details>
+</section>

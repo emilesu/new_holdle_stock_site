@@ -1,0 +1,39 @@
+<% set_page_title "月K开窗观察 - HOLDLE 方法论月K状态" %>
+<% set_page_description "按 HOLDLE 方法论对全A股月K状态的客观描述：开窗观察、红柱收敛、绿柱收敛与暂不开窗分层，每月更新。" %>
+<div class="min-h-screen bg-bg-soft">
+  <main class="container-hl py-8 space-y-5">
+    <% if @snapshot.nil? %>
+      <%# R4 冷启动：库内一次快照都没有（决议4） %>
+      <%= render "cold_start" %>
+    <% elsif !@is_member %>
+      <%# §一 访问控制：非会员 = 定位说明 + 四档计数 teaser，不渲染任何个股（V12） %>
+      <%= render "nonmember" %>
+    <% else %>
+      <%= render "header" %>
+
+      <%# 视图开关（§三②）：切换时筛选条件重置（R1，行为一致） %>
+      <div class="flex items-center gap-1 text-hl-13" role="tablist">
+        <%= link_to "主组视图", window_watch_path(view: "main"),
+              class: "px-3 py-1.5 rounded-md border #{'bg-white border-ink text-ink font-medium' if @view == 'main'} #{'border-line text-muted hover:text-ink' unless @view == 'main'}" %>
+        <%= link_to "全部股票", window_watch_path(view: "all"),
+              class: "px-3 py-1.5 rounded-md border #{'bg-white border-ink text-ink font-medium' if @view == 'all'} #{'border-line text-muted hover:text-ink' unless @view == 'all'}" %>
+        <span class="ml-2 text-hl-12 text-muted-4">主组=质量达标子集｜全部=技术形态全量</span>
+      </div>
+
+      <% if @view == "main" %>
+        <%# 整页数据按快照 fragment cache：同月重推 updated_at 变化自动失效（V9/决议7） %>
+        <% cache [@snapshot, "main_t1"] do %><%= render "tier_open", rows: @t1 %><% end %>
+        <% cache [@snapshot, "main_t2"] do %><%= render "tier_forming", p2: @t2_p2, p1: @t2_p1 %><% end %>
+        <% cache [@snapshot, "main_t3"] do %><%= render "tier_hold", rows: @t3 %><% end %>
+      <% else %>
+        <%= render "full_table" %>
+      <% end %>
+
+      <%= render "glossary" %>
+    <% end %>
+
+    <% if @snapshot %>
+      <%= render "disclaimer" %>
+    <% end %>
+  </main>
+</div>

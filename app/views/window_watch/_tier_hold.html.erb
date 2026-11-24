@@ -1,0 +1,21 @@
+<%# ③状态A·暂不开窗（§三⑤）：默认折叠，计数可见 %>
+<section class="hl-card">
+  <details>
+    <summary class="px-5 py-4 cursor-pointer select-none list-none flex items-center gap-2 [&::-webkit-details-marker]:hidden">
+      <span class="text-hl-16 font-semibold text-ink">③ 状态A · 暂不开窗
+        <span class="text-hl-13 text-muted-3 font-normal ml-1"><%= rows.size %> 只</span>
+      </span>
+      <svg class="w-3.5 h-3.5 text-muted-4 transition-transform open:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+    </summary>
+    <div class="px-5 pb-2 border-t border-line">
+      <p class="text-hl-12 text-muted mt-3 mb-2"><%= WindowWatchHelper::TIER_SUBTITLES["T3"] %></p>
+      <% if rows.empty? %>
+        <p class="py-4 text-hl-13 text-muted-3">本月状态A·暂不开窗暂无股票</p>
+      <% else %>
+        <div class="divide-y divide-line">
+          <% rows.each do |row| %><%= render "stock_row", row: row %><% end %>
+        </div>
+      <% end %>
+    </div>
+  </details>
+</section>
