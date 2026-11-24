@@ -71,7 +71,7 @@
               <td class="px-3 py-2.5 text-muted-2 whitespace-nowrap"><%= row.sa_run %> 个月</td>
               <td class="px-3 py-2.5 text-hl-12 text-muted-3">
                 <% if row.tier == "T1" %><%= row.open_month %> 开窗 · 存活 <%= row.months_since_open %> 个月
-                <% elsif row.subtag == "sticky_micro" %><%= ww_badge "已贴轴微柱", "本月柱值已贴近 0 轴，柱值绝对量极小，形态可信度低" %>
+                <% elsif row.subtag == "sticky_micro" %><%= ww_badge "已贴轴微柱", "本月柱值贴近 0 轴，柱值方向的可信度低" %>
                 <% elsif row.subtag == "continuation" %><%= ww_badge "续命候选", "前一窗口于 1-2 个月内关闭，本次若回升将按方法论视为原窗口延续的新开窗事件" %>
                 <% elsif (note = WindowWatchHelper::T3_SUBTAG_NOTES[row.subtag]) %><%= note %>
                 <% else %>—<% end %>

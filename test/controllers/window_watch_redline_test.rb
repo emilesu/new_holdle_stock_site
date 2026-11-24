@@ -7,8 +7,8 @@ class WindowWatchRedlineTest < ActionDispatch::IntegrationTest
   include Devise::Test::IntegrationHelpers
   include WindowWatchSnapshotHelper
 
-  # §六.1 词表 + §六.3 禁用术语（含 alt/meta/tooltip 全文扫描）
-  FORBIDDEN_WORDS = %w[即将 预测 建议买入 建议卖出 可以关注 值得买入 目标价 止损价 高转矮].freeze
+  # §六.1 词表（v0.2.1 增「状态A形成中」）+ §六.3 禁用术语（含 alt/meta/tooltip 全文扫描）
+  FORBIDDEN_WORDS = %w[即将 预测 建议买入 建议卖出 可以关注 值得买入 目标价 止损价 高转矮 状态A形成中].freeze
 
   setup do
     ww_create_stocks!
