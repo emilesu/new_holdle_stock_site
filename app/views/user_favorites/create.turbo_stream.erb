@@ -4,12 +4,6 @@
   <% end %>
 <% end %>
 
-<%# 首次收藏同样要就地点亮列表行内 compact 星标（开窗观察/收藏页行等）；
-    与 update.turbo_stream 同规：Turbo 对不存在的目标静默跳过，一个流可同时服务多页面 %>
-<%= turbo_stream.replace "favorite_rating_#{@stock.id}_row" do %>
-  <%= render "shared/favorite_rating", stock: @stock, favorite: @user_favorite, variant: :compact %>
-<% end %>
-
 <%= turbo_stream.remove "favorite_card_#{@stock.id}" %>
 
 <% remaining = current_user.user_favorites.count %>

@@ -87,10 +87,10 @@ class WindowWatchController < ApplicationController
 
   private
 
-  # 卡片行收藏组件数据：Stock 对象复用 overlay 已加载结果（评审修复2：不再二次查询），
-  # 仅补一条当前用户收藏状态查询
+  # 卡片行收藏态=纯展示标记（2026-11-25 老板更正）：已收藏打星、未收藏无星标；
+  # 收藏交互入口在个股详情页，本页不做行内表单。Stock 对象复用 overlay 已加载结果（评审修复2）
   def prepare_row_extras
     stock_ids = @overlay.filter_map { |_sym, ov| ov[:stock]&.id }
-    @ww_favorites = current_user.user_favorites.where(stock_id: stock_ids).index_by(&:stock_id)
+    @favorite_stock_ids = current_user.user_favorites.where(stock_id: stock_ids).pluck(:stock_id).to_set
   end
 end

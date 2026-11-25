@@ -145,11 +145,15 @@ class WindowWatchControllerTest < ActionDispatch::IntegrationTest
     assert_operator t1_seg.index("名称/代码 · 板块行业"), :<, t1_seg.index("招商银行"), "列头在列表之前"
   end
 
-  test "卡片含收藏星标组件、整行跳转属性与新窗口链接" do
+  test "已收藏股票显示实心星标、未收藏无星标；整行跳转与新窗口链接在位" do
     sign_in users(:two)
+    UserFavorite.create!(user: users(:two), stock: Stock.find_by!(symbol: "SH600036"), rating: 4)
     get window_watch_path(view: "main", band: 15)
-    assert_includes response.body, 'data-controller="favorite-rating"' # compact 星级组件
-    assert_includes response.body, 'data-controller="ww-row-link"'     # 整行点击容器
+    t1_seg = response.body[/<section id="ww-t1".*?<\/section>/m].to_s
+    assert_includes t1_seg, 'title="已收藏"' # 招行=已收藏打星
+    assert_equal 1, t1_seg.scan(/title="已收藏"/).size # 核电=未收藏，无任何星标控件
+    refute_includes response.body, 'data-controller="favorite-rating"' # 本页不做行内收藏交互（老板更正）
+    assert_includes response.body, 'data-controller="ww-row-link"'
     assert_includes response.body, 'data-stock-url="/stocks/SH600036"'
     assert_includes response.body, 'target="_blank"'
   end
@@ -168,11 +172,11 @@ class WindowWatchControllerTest < ActionDispatch::IntegrationTest
     refute_includes response.body, "数据截至 2026-11-04"
   end
 
-  test "全量视图统一卡片样式：列头/星标/档位徽章齐备" do
+  test "全量视图统一卡片样式：列头/档位徽章齐备，收藏仅展示星标" do
     sign_in users(:two)
     get window_watch_path(view: "all")
     assert_includes response.body, "名称/代码 · 板块行业"
-    assert_includes response.body, 'data-controller="favorite-rating"'
+    refute_includes response.body, 'data-controller="favorite-rating"' # 星标为纯展示，无行内表单
     assert_includes response.body, "所属档位" # 档位徽章 tooltip
   end
 

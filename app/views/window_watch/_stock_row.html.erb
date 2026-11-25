@@ -6,15 +6,17 @@
 <% stk = ov && ov[:stock] # Stock 对象随 overlay 一次加载（评审修复2） %>
 <div class="relative px-5 py-3 grid <%= WindowWatchHelper::WW_CARD_GRID %> gap-x-4 gap-y-1.5 items-center hover:bg-bg-soft cursor-pointer"
      data-stock-url="<%= stk ? stock_path(stk) : stock_path(row.code.upcase) %>">
-  <%# ① 身份（名称/代码 + 板块 · 行业 + 收藏星标） %>
+  <%# ① 身份（名称/代码 + 板块 · 行业 + 已收藏星标）：星标=纯展示标记（老板 2026-11-25 更正，对齐金字塔页），
+      已收藏才显示实心星（市场主题色），未收藏不显示任何控件；收藏交互在个股详情页 %>
   <div class="min-w-0">
     <div class="flex flex-wrap items-center gap-x-1.5">
       <%= link_to (ov ? ov[:name] : row.name), (stk ? stock_path(stk) : stock_path(row.code.upcase)),
             target: "_blank", rel: "noopener",
             class: "text-hl-14 font-medium text-ink hover:text-link" %>
       <span class="text-hl-12 text-muted-3 font-mono"><%= row.symbol %></span>
-      <% if stk %>
-        <%= render "shared/favorite_rating", stock: stk, favorite: @ww_favorites[stk.id], variant: :compact %>
+      <% if stk && @favorite_stock_ids.include?(stk.id) %>
+        <span class="inline-flex cursor-help <%= market_star_class(stk.market) %>" title="已收藏"
+              aria-label="已收藏" role="img" data-no-open="1"><%= favorite_icon_tag %></span>
       <% end %>
     </div>
     <div class="text-hl-12 text-muted-2 mt-0.5">
