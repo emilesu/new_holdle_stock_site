@@ -25,7 +25,7 @@
         <label class="flex items-center gap-1.5 text-hl-12 text-muted-3">检索
           <input type="text" name="q" value="<%= @q %>" maxlength="40" placeholder="名称或代码" autocomplete="off"
                  data-ww-search-target="input"
-                 data-action="input->ww-search#onInput keydown->ww-search#onKey focus->ww-search#onFocus"
+                 data-action="input->ww-search#onInput keydown->ww-search#onKey focus->ww-search#onFocus blur->ww-search#onBlur"
                  class="px-2 py-1.5 text-hl-13 border border-line rounded-md bg-white focus:border-link w-32">
         </label>
         <div data-ww-search-target="list"

@@ -22,6 +22,12 @@ export default class extends Controller {
 
   onFocus() { if (this.items.length) this.show() }
 
+  // Tab/点选移开焦点即关闭；焦点落在下拉内（候选项可聚焦按钮）时不关闭，避免误伤点击选择
+  onBlur(event) {
+    if (event.relatedTarget && this.listTarget.contains(event.relatedTarget)) return
+    this.hide()
+  }
+
   onInput() {
     clearTimeout(this.timer)
     this.timer = setTimeout(() => this.fetchSuggestions(), 200)
