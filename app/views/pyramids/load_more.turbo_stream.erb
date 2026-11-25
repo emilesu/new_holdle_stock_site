@@ -28,7 +28,7 @@
               <div class="text-hl-11 text-muted-3 truncate"><%= stock.symbol %></div>
             </div>
           </div>
-          <span class="stock-score font-semibold text-link text-hl-13 shrink-0 ml-2"><%= stock.pyramid_total_score %></span>
+          <span class="stock-score font-semibold text-hl-13 shrink-0 ml-2 <%= market_star_class(@market) %>"><%= stock.pyramid_total_score %></span>
         </div>
       <% end %>
     </div>

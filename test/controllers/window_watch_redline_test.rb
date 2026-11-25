@@ -72,10 +72,10 @@ class WindowWatchRedlineTest < ActionDispatch::IntegrationTest
     refute_includes response.body, "状态A形成中"
   end
 
-  test "V12：非管理员访问被重定向，响应不含任何个股名称/代码（暗发布期）" do
+  test "V12：非会员访问仅见 teaser，响应不含任何个股名称/代码（正式发布）" do
     sign_out users(:two)
     get window_watch_path
-    assert_redirected_to root_path
+    assert_response :success
     WindowWatchSnapshotHelper::WW_STOCKS.each do |r|
       refute_includes response.body, r[:name]
       refute_includes response.body, r[:symbol]

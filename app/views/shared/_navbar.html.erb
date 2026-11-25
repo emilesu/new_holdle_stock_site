@@ -24,7 +24,7 @@
       </div>
     </div>
 
-    <%# ----- 导航链接（顺序：AI助手、交易课、金字塔、加入会员、投研文章、视频、关于HOLDLE） ----- %>
+    <%# ----- 导航链接（顺序：AI助手、交易课、金字塔、开窗观察、股票筛选、加入会员、投研文章、视频、关于HOLDLE） ----- %>
     <div class="hl-nav-links hidden md:flex">
       <%= link_to ai_assistant_path, class: "hl-nav-link hl-nav-link-new flex items-center #{'hl-nav-link-active' if controller_name == 'ai_assistants'}" do %>
         <span>AI 助手</span>
@@ -38,16 +38,14 @@
         金字塔
         <%= tag.span class: "hl-nav-link-active-dot", aria: { hidden: "true" } if controller_name == 'pyramids' %>
       <% end %>
-      <%= link_to screener_path, class: "hl-nav-link #{'hl-nav-link-active' if controller_name == 'screeners'}" do %>
-        股票筛选
-        <%= tag.span class: "hl-nav-link-active-dot", aria: { hidden: "true" } if controller_name == 'screeners' %>
-      <% end %>
-      <%# 开窗观察：暗发布期（DARK_RELEASE）仅管理员显示入口，正式开放后去掉 if 包裹 %>
-      <% if user_signed_in? && current_user.is_admin? %>
+      <%# 开窗观察：2026-11-25 正式发布，入口对所有用户开放（非会员页内看 teaser） %>
       <%= link_to window_watch_path, class: "hl-nav-link #{'hl-nav-link-active' if controller_name == 'window_watch'}" do %>
         开窗观察
         <%= tag.span class: "hl-nav-link-active-dot", aria: { hidden: "true" } if controller_name == 'window_watch' %>
       <% end %>
+      <%= link_to screener_path, class: "hl-nav-link #{'hl-nav-link-active' if controller_name == 'screeners'}" do %>
+        股票筛选
+        <%= tag.span class: "hl-nav-link-active-dot", aria: { hidden: "true" } if controller_name == 'screeners' %>
       <% end %>
       <%= link_to join_path, class: "hl-nav-link #{'hl-nav-link-active' if controller_name == 'pages' && action_name == 'join'}" do %>
         加入会员
@@ -171,11 +169,9 @@
         <%= link_to "AI 助手", ai_assistant_path, class: "block px-4 py-2 text-hl-14 rounded #{controller_name == 'ai_assistants' ? 'bg-bg-mute text-ink font-medium border-l-2 border-profit' : 'text-muted hover:text-ink hover:bg-bg-mute'}" %>
         <%= link_to "交易课", courses_path, class: "block px-4 py-2 text-hl-14 rounded #{controller_name == 'courses' ? 'bg-bg-mute text-ink font-medium border-l-2 border-profit' : 'text-muted hover:text-ink hover:bg-bg-mute'}" %>
         <%= link_to "金字塔", pyramid_path, class: "block px-4 py-2 text-hl-14 rounded #{controller_name == 'pyramids' ? 'bg-bg-mute text-ink font-medium border-l-2 border-profit' : 'text-muted hover:text-ink hover:bg-bg-mute'}" %>
-        <%= link_to "股票筛选", screener_path, class: "block px-4 py-2 text-hl-14 rounded #{controller_name == 'screeners' ? 'bg-bg-mute text-ink font-medium border-l-2 border-profit' : 'text-muted hover:text-ink hover:bg-bg-mute'}" %>
-        <%# 开窗观察：暗发布期仅管理员显示入口（与桌面端同步） %>
-        <% if user_signed_in? && current_user.is_admin? %>
+        <%# 开窗观察：2026-11-25 正式发布，入口对所有用户开放（与桌面端同步） %>
         <%= link_to "开窗观察", window_watch_path, class: "block px-4 py-2 text-hl-14 rounded #{controller_name == 'window_watch' ? 'bg-bg-mute text-ink font-medium border-l-2 border-profit' : 'text-muted hover:text-ink hover:bg-bg-mute'}" %>
-        <% end %>
+        <%= link_to "股票筛选", screener_path, class: "block px-4 py-2 text-hl-14 rounded #{controller_name == 'screeners' ? 'bg-bg-mute text-ink font-medium border-l-2 border-profit' : 'text-muted hover:text-ink hover:bg-bg-mute'}" %>
         <%= link_to "加入会员", join_path, class: "block px-4 py-2 text-hl-14 rounded #{controller_name == 'pages' && action_name == 'join' ? 'bg-bg-mute text-ink font-medium border-l-2 border-profit' : 'text-muted hover:text-ink hover:bg-bg-mute'}" %>
         <%= link_to "投研文章", articles_path, class: "block px-4 py-2 text-hl-14 rounded #{controller_name == 'articles' ? 'bg-bg-mute text-ink font-medium border-l-2 border-profit' : 'text-muted hover:text-ink hover:bg-bg-mute'}" %>
         <%= link_to video_path, class: "block px-4 py-2 text-hl-14 rounded #{controller_name == 'pages' && action_name == 'video' ? 'bg-bg-mute text-ink font-medium border-l-2 border-profit' : 'text-muted hover:text-ink hover:bg-bg-mute'} flex items-center" do %>

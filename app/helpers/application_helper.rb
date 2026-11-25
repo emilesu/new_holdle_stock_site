@@ -209,6 +209,24 @@ module ApplicationHelper
     end
   end
 
+  # 市场主题色对比栏选中态（与 market_star_class 同一色系）：
+  # 行底色取 50 档浅底，序号徽章取 600 档实底白字，用于详情页右侧对比栏当前股票
+  def market_selected_row_bg_class(market)
+    case market
+    when "CN" then "bg-green-50"
+    when "HK" then "bg-amber-50"
+    else "bg-blue-50"
+    end
+  end
+
+  def market_selected_badge_class(market)
+    case market
+    when "CN" then "bg-green-600 text-white"
+    when "HK" then "bg-amber-600 text-white"
+    else "bg-blue-600 text-white"
+    end
+  end
+
   # 金字塔警示标签的紧凑文字颜色（对比栏窄栏使用，按严重程度区分）
   def pyramid_tag_text_class(tag)
     case tag

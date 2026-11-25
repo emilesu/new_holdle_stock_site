@@ -1,11 +1,7 @@
 # 月K开窗观察（需求单 v0.3.0）：快照只供技术判定，页面零判定计算、零绝对数值渲染
 # 财务维度（预设筛选/ROE/金融/ST）由 Trae 财务库 join（契约 v0.4.0 §三.1），快照不携带
-# 访问控制：正式形态=会员完整视图 + 非会员 teaser；当前暗发布=DARK_RELEASE 仅管理员
+# 访问控制（2026-11-25 暗发布结束、正式发布）：会员完整视图 + 非会员/游客 teaser（需求单 §一），不再重定向
 class WindowWatchController < ApplicationController
-  # 暗发布开关（2026-11-24 站长定）：true=仅管理员可访问（导航入口同步隐藏，其余用户重定向首页不留痕迹）
-  # 调试完成后置 false，即恢复需求单 §一 的正式访问控制：会员完整视图 + 非会员 teaser
-  DARK_RELEASE = true
-
   # 全量视图排序白名单（R3/A6：禁止参数直接透传 SQL）；2026-11-25 老板定：增金字塔分排序并设为默认
   SORT_ORDERS = {
     "pyramid_desc" => "stocks.pyramid_total_score DESC NULLS LAST, window_watch_snapshot_stocks.ratio ASC",
@@ -17,9 +13,6 @@ class WindowWatchController < ApplicationController
   PAGE_PER = 100
 
   def index
-    if DARK_RELEASE && !(user_signed_in? && current_user.is_admin?)
-      redirect_to root_path and return
-    end
     # R2②：月份切换（历史快照回看）；非法/不存在月份回落 latest（格式权威源=契约边界 SnapshotIngest）
     month_param = params[:month].to_s
     @snapshot = (month_param.match?(WindowWatch::SnapshotIngest::MONTH_FORMAT) && WindowWatchSnapshot.find_by(month: month_param)) ||

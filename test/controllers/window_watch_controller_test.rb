@@ -18,24 +18,26 @@ class WindowWatchControllerTest < ActionDispatch::IntegrationTest
     ww_give_financials("SZ000333", roes: [11, 16, 18])
   end
 
-  # ---- §一 访问控制（暗发布期：DARK_RELEASE=true，非管理员一律重定向首页）----
+  # ---- §一 访问控制（2026-11-25 正式发布：会员完整视图 + 非会员/游客 teaser，不再重定向）----
 
-  test "暗发布：未登录访问重定向首页，不暴露功能存在" do
+  test "正式发布：未登录访问返回非会员 teaser，不暴露个股" do
     get window_watch_path
-    assert_redirected_to root_path
+    assert_response :success
+    assert_includes response.body, "个股名单为会员内容"
   end
 
-  test "暗发布：普通会员与普通用户均重定向，仅管理员可见" do
+  test "正式发布：会员见完整视图，普通用户仍为 teaser" do
     member = User.create!(email: "ww-member@test.local", password: "WwMember2026!", nickname: "开窗会员账号",
                           role: "member", member_expire_at: 1.year.from_now,
                           confirmed_at: Time.current, onboarded_at: Time.current)
     sign_in member
     get window_watch_path
-    assert_redirected_to root_path
+    assert_includes response.body, "中国核电"
 
     sign_in users(:one)
     get window_watch_path
-    assert_redirected_to root_path
+    assert_includes response.body, "个股名单为会员内容"
+    refute_includes response.body, "中国核电"
   end
 
   test "管理员：完整页面含主组行与全量入口" do
