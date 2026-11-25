@@ -1,0 +1,39 @@
+<%# R2 近 6 月柱形 sparkline：数据源=Trae 月K库（与三联图同源算法），末柱=快照 hist 对账值
+    仅图形+方向文案，不渲染任何绝对数值（V11）；库滞后时 title 标注数据截至日（契约 v0.5 §四备案）
+    无 sparkline 数据（如快照月格式异常）时回落双柱定性组件 %>
+<% sp = @sparkline && @sparkline[row.code] %>
+<% if sp.nil? %>
+  <%= render "hist_glyph", row: row %>
+<% else %>
+  <%
+    vals = sp.values
+    max = vals.compact.map(&:abs).max || 0
+    bar_color = ->(v) { v > 0 ? "var(--color-profit)" : v < 0 ? "var(--color-green-600)" : "var(--color-muted-5)" }
+    tip = if sp.lagged
+            sp.cutoff ? "近6月柱形 · 月K库数据截至 #{sp.cutoff}，末柱取快照值" : "近6月柱形 · 月K库暂无该股数据，柱形取快照值"
+          else
+            "近6月柱形 · 末柱为判定月（与快照对账一致）"
+          end
+    cur = row.hist.to_f
+    prev = row.prev_hist.to_f
+    kind = cur > 0 ? "红柱" : cur < 0 ? "绿柱" : "贴0轴"
+    trend = cur.abs < prev.abs ? "趋近0轴" : cur.abs > prev.abs ? "远离0轴" : "持平"
+    arrow = cur > prev ? "↗" : cur < prev ? "↘" : "→"
+  %>
+  <span class="inline-flex items-center gap-2 align-middle" title="<%= tip %>">
+    <svg width="52" height="34" viewBox="0 0 52 34" aria-hidden="true" class="shrink-0">
+      <line x1="1" y1="17" x2="51" y2="17" stroke="var(--color-line)" stroke-width="1"/>
+      <% vals.each_with_index do |v, i| %>
+        <% next if v.nil? %>
+        <%
+          h = max > 0 ? [(v.abs / max * 13).round, 1].max : 1
+          y = v >= 0 ? 17 - h : 17
+          x = 2 + i * 8
+        %>
+        <rect x="<%= x %>" y="<%= y %>" width="5" height="<%= h %>" rx="1"
+              fill="<%= bar_color.(v) %>" opacity="<%= i == vals.size - 1 ? 1 : 0.45 %>"/>
+      <% end %>
+    </svg>
+    <span class="text-hl-12 text-muted-2 whitespace-nowrap"><%= kind %> · <%= trend %> <%= arrow %></span>
+  </span>
+<% end %>

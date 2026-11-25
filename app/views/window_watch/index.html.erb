@@ -13,16 +13,17 @@
 
       <%# 视图开关（§三② v0.3.0）：主组改为页面侧财务预设；切换时筛选条件重置（R1，行为一致） %>
       <div class="flex flex-wrap items-center gap-1 text-hl-13" role="tablist">
-        <%= link_to "财务预设", window_watch_path(view: "main"),
+        <%# 视图/档位切换保留判定月（month=latest 时无副作用） %>
+        <%= link_to "财务预设", window_watch_path(view: "main", month: @snapshot.month),
               class: "px-3 py-1.5 rounded-md border #{'bg-white border-ink text-ink font-medium' if @view == 'main'} #{'border-line text-muted hover:text-ink' unless @view == 'main'}" %>
-        <%= link_to "全部股票", window_watch_path(view: "all"),
+        <%= link_to "全部股票", window_watch_path(view: "all", month: @snapshot.month),
               class: "px-3 py-1.5 rounded-md border #{'bg-white border-ink text-ink font-medium' if @view == 'all'} #{'border-line text-muted hover:text-ink' unless @view == 'all'}" %>
         <% if @view == "main" %>
           <%# R1：档位改分段控件（连体按钮，激活态反色） %>
           <span class="ml-3 text-hl-12 text-muted-3">近3财年每年 ROE≥</span>
           <div class="inline-flex rounded-md border border-line overflow-hidden divide-x divide-line" role="group" aria-label="ROE 档位">
             <% WindowWatch::FinancialPreset::BANDS.each do |b| %>
-              <%= link_to "#{b}%", window_watch_path(view: "main", band: b),
+              <%= link_to "#{b}%", window_watch_path(view: "main", band: b, month: @snapshot.month),
                     class: "px-2.5 py-1 text-hl-12 #{b == @band ? 'bg-ink text-white font-medium' : 'bg-white text-muted hover:text-ink'}" %>
             <% end %>
           </div>
@@ -30,6 +31,19 @@
           <span class="text-hl-12 text-muted-4">· 预设内按金字塔综合分排序</span>
         <% else %>
           <span class="ml-2 text-hl-12 text-muted-4">全部=技术形态全量列表</span>
+        <% end %>
+        <%# R2②：判定月切换（历史快照回看；切换时筛选条件重置，行为与视图开关一致） %>
+        <% if @months.size > 1 %>
+          <%= form_with url: window_watch_path, method: :get, class: "ml-auto flex items-center gap-1.5" do %>
+            <%= hidden_field_tag :view, @view %>
+            <label class="text-hl-12 text-muted-3" for="ww_month">判定月</label>
+            <select id="ww_month" name="month" class="px-2 py-1.5 text-hl-12 border border-line rounded-md bg-white focus:border-link">
+              <% @months.each do |m| %>
+                <option value="<%= m %>" <%= "selected" if m == @snapshot.month %>><%= m %></option>
+              <% end %>
+            </select>
+            <button type="submit" class="px-2.5 py-1.5 text-hl-12 rounded-md border border-line text-muted hover:text-ink hover:border-ink">切换</button>
+          <% end %>
         <% end %>
       </div>
 

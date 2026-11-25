@@ -125,6 +125,31 @@ class WindowWatchControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "本月状态A·暂不开窗暂无股票"
   end
 
+  # ---- R2 月份切换与全量检索 ----
+
+  test "R2 月份切换：指定历史月渲染该快照，非法/不存在月份回落 latest" do
+    WindowWatch::SnapshotIngest.call(payload: ww_payload(month: "2026-09", trade_date: "2026-10-09"), source_ip: "127.0.0.1")
+    sign_in users(:two)
+    get window_watch_path(month: "2026-09")
+    assert_includes response.body, "判定月：2026-09 月K收盘"
+    get window_watch_path(month: "2999-01")
+    assert_includes response.body, "判定月：2026-10 月K收盘"
+  end
+
+  test "R2 全量视图检索：名称/代码过滤，通配符剥离不报错" do
+    sign_in users(:two)
+    get window_watch_path(view: "all", q: "核电")
+    assert_includes response.body, "中国核电"
+    refute_includes response.body, "五粮液"
+
+    get window_watch_path(view: "all", q: "600519")
+    assert_includes response.body, "贵州茅台"
+    refute_includes response.body, "中国核电"
+
+    get window_watch_path(view: "all", q: "%_%") # 剥离后空串=不过滤
+    assert_response :success
+  end
+
   # ---- R4 空态分支 ----
 
   test "冷启动：库内无快照时固定文案，无个股区块" do

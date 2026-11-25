@@ -11,8 +11,8 @@
     <div class="text-hl-12 text-muted-2 mt-0.5"><%= (ov ? ov[:industry].presence : row.industry.presence) || "—" %></div>
   </div>
 
-  <%# ② 形态（定性柱形；R2 升级为近 6 月 sparkline） %>
-  <div><%= render "hist_glyph", row: row %></div>
+  <%# ② 形态（R2：近 6 月 sparkline，末柱与快照 hist 对账；无库数据时回落双柱定性组件） %>
+  <div><%= render "sparkline", row: row %></div>
 
   <%# ③ 状态（档专属字段 + ROE 小字，R1：ROE 由徽章改小字） %>
   <div class="min-w-0 flex flex-wrap items-center gap-x-3 gap-y-0.5">
