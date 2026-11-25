@@ -18,7 +18,12 @@ class WindowWatchController < ApplicationController
     @snapshot = (month_param.match?(WindowWatch::SnapshotIngest::MONTH_FORMAT) && WindowWatchSnapshot.find_by(month: month_param)) ||
                 WindowWatchSnapshot.latest
     @is_member = user_signed_in? && current_user.content_tier >= User::TIER_MEMBER
-    return unless @snapshot && @is_member
+    return unless @snapshot
+    unless @is_member
+      # 非会员 teaser 计数条（2026-11-25 老板定）：默认财务预设命中子集计数，与会员主组默认视图同口径
+      @preset_counts = teaser_preset_counts
+      return
+    end
 
     @months = WindowWatchSnapshot.recent_first.limit(24).pluck(:month)
 
@@ -86,6 +91,25 @@ class WindowWatchController < ApplicationController
   end
 
   private
+
+  # 非会员 teaser 计数条：默认财务预设（近3年·连续满足·10%）命中子集五档计数，
+  # 与会员主组默认视图 @preset_counts 同口径（2026-11-25 老板定，替代快照全量 stats）；仅聚合数字，不含个股
+  def teaser_preset_counts
+    hit_codes = WindowWatch::FinancialPreset.preset_metrics(years: WindowWatch::FinancialPreset::DEFAULT_YEARS,
+                                                            mode: WindowWatch::FinancialPreset::DEFAULT_MODE,
+                                                            band: WindowWatch::FinancialPreset::DEFAULT_BAND)
+                                           .keys.map(&:downcase)
+    scope = @snapshot.stocks
+                     .joins("LEFT JOIN stocks ON lower(stocks.symbol) = window_watch_snapshot_stocks.code")
+                     .where(code: hit_codes)
+    # ④持仓管理：v1.1 快照无 IN_POSITION 行 → 降级 stats 全量计数（与会员视图 @in_position_degraded 同规则）
+    degraded = !@snapshot.stocks.where(tier: WindowWatchSnapshotStock::IN_POSITION).exists?
+    { "T1" => scope.where(tier: "T1").count,
+      "T2_P2" => scope.where(tier: "T2_P2").count,
+      "T2_P1" => scope.where(tier: "T2_P1").count,
+      "T3" => scope.where(tier: "T3").count,
+      "IN_POSITION" => degraded ? @snapshot.stats["in_position_count"].to_i : scope.where(tier: WindowWatchSnapshotStock::IN_POSITION).count }
+  end
 
   # 卡片行收藏态=纯展示标记（2026-11-25 老板更正）：已收藏打星、未收藏无星标；
   # 收藏交互入口在个股详情页，本页不做行内表单。Stock 对象复用 overlay 已加载结果（评审修复2）

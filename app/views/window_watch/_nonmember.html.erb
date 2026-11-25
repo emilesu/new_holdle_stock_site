@@ -1,15 +1,16 @@
-<%# §一 访问控制：非会员/未登录 = 定位说明 + 四档计数（聚合数字，无任何个股）+ 会员引导（V12） %>
+<%# §一 访问控制：非会员/未登录 = 定位说明 + 默认财务预设计数（聚合数字，无任何个股）+ 会员引导（V12） %>
 <div class="max-w-2xl mx-auto pt-6 space-y-5 px-4 md:px-0">
   <header class="text-center space-y-2">
     <h1 class="text-hl-22 font-semibold text-ink">状态A - 月K开窗观察</h1>
     <p class="text-hl-13 text-muted">按 HOLDLE 方法论的月K状态描述 · 每月更新</p>
   </header>
 
-  <%= render "count_bar" %>
+  <%# 计数条=默认财务预设命中子集计数（2026-11-25 老板定，与会员主组默认视图同口径），不再取快照全量 stats %>
+  <%= render "count_bar", counts: @preset_counts %>
 
   <section class="hl-card px-6 py-5 space-y-2.5 text-hl-13 text-muted leading-relaxed">
-    <p>这是一页对全 A 股「月K状态」的客观描述：哪些股票当前处于开窗观察、哪些处于开窗事件的准备形态。每月一个快照，不是行情页，不构成任何推荐。</p>
-    <p>个股名单为会员内容。开通会员后，可查看财务预设视图（按财务指标筛选）与「全部股票」全量技术形态列表。</p>
+    <p>这是一页对全 A 股「月K状态」的客观描述：哪些股票当前处于状态A的开窗观察、哪些处于开窗事件的准备形态。每月一个快照，用于时机选择和定位。</p>
+    <p>该页面和个股名单为会员内容。开通会员后，即可查看完整内容。包括财务预设视图（按财务指标筛选）与「全部股票」全量技术形态列表等。</p>
     <div class="pt-2 flex items-center justify-center gap-3">
       <%= link_to "了解会员", join_path, class: "hl-btn hl-btn-primary text-hl-13" %>
       <%= link_to "登录", new_user_session_path(return_to: window_watch_path), class: "hl-btn text-hl-13" %>

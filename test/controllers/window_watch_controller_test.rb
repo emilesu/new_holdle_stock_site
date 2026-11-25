@@ -378,4 +378,25 @@ class WindowWatchControllerTest < ActionDispatch::IntegrationTest
     get window_watch_path
     assert_includes response.body, WindowWatchSnapshotHelper::WW_DISCLAIMER
   end
+
+  # ---- 非会员 teaser 内容（2026-11-25 老板定：计数=默认财务预设口径、无免责声明）----
+
+  test "teaser：计数条与会员默认主组视图同口径，且不展示免责声明" do
+    get window_watch_path
+    assert_includes response.body, "用于时机选择和定位"
+    refute_includes response.body, WindowWatchSnapshotHelper::WW_DISCLAIMER
+    teaser_counts = ww_count_bar_numbers(response.body)
+    refute_empty teaser_counts
+
+    sign_in users(:two)
+    get window_watch_path(view: "main")
+    assert_equal ww_count_bar_numbers(response.body), teaser_counts
+  end
+
+  # 提取计数条卡片内五档数字（①②③④主计数 + 红/绿柱收敛子计数），用于会员/非会员同口径断言
+  def ww_count_bar_numbers(body)
+    bar = body[/<div class="hl-card px-4 py-3 flex flex-wrap.*?<\/div>/m, 0].to_s
+    labels = bar.scan(/(?:①开窗观察|②形成中|③状态A·暂不开窗|④持仓管理)\s*<span[^>]*>(\d+)<\/span>/).flatten
+    labels + bar.scan(/红柱收敛\s*(\d+)\s*\/\s*绿柱收敛\s*(\d+)/).flatten
+  end
 end
