@@ -72,9 +72,10 @@ module WindowWatch
         end
       end
 
-      # 逐行标注 overlay：symbol => { name:, industry:, sector:, pyramid:, finance:, st:, roe_latest: }
+      # 逐行标注 overlay：symbol => { name:, industry:, sector:, pyramid:, finance:, st:, roe_latest:, stock: }
       # 一次批量查询渲染页内全部行；财务库未覆盖的行返回技术判定所需最小信息（join 兜底，常态非异常）
-      # 注：预设视图 ROE 列取 preset_metrics 主值；roe_latest 仅供全量表格视图徽章
+      # 注：预设视图 ROE 列取 preset_metrics 主值；roe_latest 仅供全量视图 ROE 列
+      # stock=站内 Stock 对象（同请求视图层消费：收藏组件/详情页链接），避免行渲染再查一次
       def overlay(rows)
         symbols = rows.map { |r| r.code.to_s.upcase }
         stocks = Stock.where(symbol: symbols).index_by(&:symbol)
@@ -84,7 +85,7 @@ module WindowWatch
             name: s.name, industry: s.industry.to_s, sector: s.sector.to_s,
             pyramid: s.pyramid_total_score,
             finance: financial_stock?(s), st: s.name.to_s.match?(/\A\*?ST/),
-            roe_latest: roe_map[s.id]
+            roe_latest: roe_map[s.id], stock: s
           }
         end
       end

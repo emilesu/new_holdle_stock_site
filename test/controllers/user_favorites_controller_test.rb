@@ -22,6 +22,13 @@ class UserFavoritesControllerTest < ActionDispatch::IntegrationTest
       assert_equal 5, @user.user_favorites.find_by(stock_id: @stock.id).rating
     end
 
+    # 评审修复1：开窗观察等列表页行内 compact 星标须在首次收藏后就地点亮——create 流必须携带 _row 变体替换
+    test "create turbo stream should also replace compact row variant" do
+      post user_favorites_path, params: { stock_id: @stock.id, rating: 4 },
+           headers: { "Accept" => "text/vnd.turbo-stream.html" }
+      assert_select "turbo-stream[action='replace'][target='favorite_rating_#{@stock.id}_row']"
+    end
+
     test "should fallback to default rating when rating is invalid" do
       post user_favorites_path, params: { stock_id: @stock.id, rating: 99 },
            headers: { "Accept" => "text/vnd.turbo-stream.html" }

@@ -3,7 +3,7 @@
     整行可点击新窗口打开个股页（ww-row-link 委托，对齐金字塔页）；行内收藏星标=市场主题色
     join 未覆盖的行照常展示技术判定，仅不显示财务标注（兜底常态，非异常）；移动端两列=三行堆叠 %>
 <% ov = @overlay[row.code.to_s.upcase] %>
-<% stk = @ww_stocks[row.code.to_s.upcase] %>
+<% stk = ov && ov[:stock] # Stock 对象随 overlay 一次加载（评审修复2） %>
 <div class="relative px-5 py-3 grid <%= WindowWatchHelper::WW_CARD_GRID %> gap-x-4 gap-y-1.5 items-center hover:bg-bg-soft cursor-pointer"
      data-stock-url="<%= stk ? stock_path(stk) : stock_path(row.code.upcase) %>">
   <%# ① 身份（名称/代码 + 板块 · 行业 + 收藏星标） %>

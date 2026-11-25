@@ -57,7 +57,7 @@ class WindowWatchController < ApplicationController
       @overlay = WindowWatch::FinancialPreset.overlay(all_rows)
       # R2③：卡片近 6 月 sparkline
       @sparkline = WindowWatch::MonthlySparkline.call(all_rows, snapshot_month: @snapshot.month)
-      prepare_row_extras(all_rows)
+      prepare_row_extras
     else
       @tier = params[:tier].presence_in(WindowWatchSnapshotStock::ALL_TIERS)
       @industries = @snapshot.stocks.where.not(industry: "").distinct.order(:industry).pluck(:industry)
@@ -79,17 +79,18 @@ class WindowWatchController < ApplicationController
       end
       @stocks = scope.order(Arel.sql(SORT_ORDERS.fetch(@sort))).page(params[:page]).per(PAGE_PER)
       @overlay = WindowWatch::FinancialPreset.overlay(@stocks.to_a)
-      # ⑥（2026-11-25 老板定）：全量视图与预设视图统一卡片样式 → 同样装配 sparkline 与行内收藏/Stock 数据
+      # ⑥（2026-11-25 老板定）：全量视图与预设视图统一卡片样式 → 同样装配 sparkline 与行内收藏数据
       @sparkline = WindowWatch::MonthlySparkline.call(@stocks.to_a, snapshot_month: @snapshot.month)
-      prepare_row_extras(@stocks.to_a)
+      prepare_row_extras
     end
   end
 
   private
 
-  # 卡片行公共数据：站内 Stock 映射（收藏组件/展示名兜底）+ 当前用户收藏状态
-  def prepare_row_extras(rows)
-    @ww_stocks = Stock.where(symbol: rows.map { |r| r.code.to_s.upcase }).index_by(&:symbol)
-    @ww_favorites = current_user.user_favorites.where(stock_id: @ww_stocks.values.map(&:id)).index_by(&:stock_id)
+  # 卡片行收藏组件数据：Stock 对象复用 overlay 已加载结果（评审修复2：不再二次查询），
+  # 仅补一条当前用户收藏状态查询
+  def prepare_row_extras
+    stock_ids = @overlay.filter_map { |_sym, ov| ov[:stock]&.id }
+    @ww_favorites = current_user.user_favorites.where(stock_id: stock_ids).index_by(&:stock_id)
   end
 end
