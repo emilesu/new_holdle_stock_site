@@ -1,4 +1,6 @@
+<%# 移动端贴边容器下页头文字/横幅不贴边（老板移动端反馈）：文字块内缩，计数条卡片保持贴边惯例 %>
 <header class="space-y-3">
+  <div class="space-y-3 px-4 md:px-0">
   <div>
     <h1 class="text-hl-22 font-semibold text-ink">状态A - 月K开窗观察</h1>
     <p class="text-hl-13 text-muted mt-1">按 HOLDLE 方法论的月K状态描述 · 每月更新</p>
@@ -22,6 +24,7 @@
       本月数据尚未更新，最近一次更新：<%= @snapshot.month %> 月K收盘
     </div>
   <% end %>
+  </div>
 
   <%# 预设视图计数条=命中子集计数（2026-11-25 老板定，随三维控件变化）；全量/非会员=快照 stats 全量 %>
   <%= render "count_bar", clickable: @view == "main", counts: (@view == "main" ? @preset_counts : nil) %>

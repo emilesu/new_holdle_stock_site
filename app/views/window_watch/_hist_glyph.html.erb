@@ -16,11 +16,11 @@
   # 箭头=柱值的移动方向（柱顶端往哪走）：绿柱趋近0轴(-0.65→-0.35)为上移 ↗，红柱趋近为下移 ↘
   arrow = cur > prev ? "↗" : cur < prev ? "↘" : "→"
 %>
-<span class="inline-flex items-center gap-2 align-middle" title="<%= "#{kind} · #{trend}" %>">
+<span class="inline-flex flex-wrap items-center gap-x-2 gap-y-0.5 align-middle" title="<%= "#{kind} · #{trend}" %>">
   <svg width="44" height="34" viewBox="0 0 44 34" aria-hidden="true" class="shrink-0">
     <line x1="1" y1="17" x2="43" y2="17" stroke="var(--color-line)" stroke-width="1"/>
     <rect x="<%= r_prev[:x] %>" y="<%= r_prev[:y] %>" width="9" height="<%= r_prev[:height] %>" rx="1.5" fill="<%= bar_color.(prev) %>" opacity="0.35"/>
     <rect x="<%= r_cur[:x] %>" y="<%= r_cur[:y] %>" width="9" height="<%= r_cur[:height] %>" rx="1.5" fill="<%= bar_color.(cur) %>"/>
   </svg>
-  <span class="text-hl-12 text-muted-2 whitespace-nowrap"><%= kind %> · <%= trend %> <%= arrow %></span>
+  <span class="text-hl-12 text-muted-2 md:whitespace-nowrap"><%= kind %> · <%= trend %> <%= arrow %></span>
 </span>

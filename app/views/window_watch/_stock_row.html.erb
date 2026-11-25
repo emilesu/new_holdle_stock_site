@@ -50,17 +50,17 @@
   <div class="min-w-0 flex flex-wrap items-center gap-x-3 gap-y-0.5">
     <% case row.tier %>
     <% when "T1" %>
-      <span class="text-hl-12 text-muted-2 whitespace-nowrap"><%= row.open_month %> 开窗 · 已存活 <%= row.months_since_open %> 个月</span>
+      <span class="text-hl-12 text-muted-2 md:whitespace-nowrap"><%= row.open_month %> 开窗 · 已存活 <%= row.months_since_open %> 个月</span>
     <% when "T2_P2", "T2_P1" %>
-      <span class="text-hl-12 text-muted-3 whitespace-nowrap"><%= row.tier == "T2_P1" ? "状态A中断前连续" : "状态A连续" %> <%= row.sa_run %> 个月</span>
+      <span class="text-hl-12 text-muted-3 md:whitespace-nowrap"><%= row.tier == "T2_P1" ? "状态A中断前连续" : "状态A连续" %> <%= row.sa_run %> 个月</span>
     <% when "T3" %>
-      <span class="text-hl-12 text-muted-3 whitespace-nowrap">状态A连续 <%= row.sa_run %> 个月</span>
+      <span class="text-hl-12 text-muted-3 md:whitespace-nowrap">状态A连续 <%= row.sa_run %> 个月</span>
       <% if (note = WindowWatchHelper::T3_SUBTAG_NOTES[row.subtag]) %>
         <span class="text-hl-12 text-muted-4"><%= note %></span>
       <% end %>
     <% when WindowWatchSnapshotStock::IN_POSITION %>
       <%# 契约 v0.5 §三.3：三时点叙事，字段按呈现即所得（入场月可晚于判定月=as-of 正常形态，口径②） %>
-      <span class="text-hl-12 text-muted-2 whitespace-nowrap">开窗 <%= row.open_month %> · 入场 <%= row.entry_month %> · 持仓 <%= row.months_in_position %> 个月</span>
+      <span class="text-hl-12 text-muted-2 md:whitespace-nowrap">开窗 <%= row.open_month %> · 入场 <%= row.entry_month %> · 持仓 <%= row.months_in_position %> 个月</span>
     <% end %>
   </div>
 

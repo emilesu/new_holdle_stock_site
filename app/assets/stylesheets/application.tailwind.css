@@ -215,13 +215,14 @@
     border-radius: 6px;
     text-align: left;
     white-space: normal;
-    opacity: 0;
+    /* 隐藏态必须 display:none：绝对定位的 opacity:0 气泡仍计入可滚动溢出区，
+       贴边容器/窄屏下会把整页撑出横向滚动（2026-11-25 老板移动端反馈，全站生效） */
+    display: none;
     pointer-events: none;
-    transition: opacity 0.15s ease;
     z-index: 30;
   }
   .hl-tip:hover::after,
-  .hl-tip:focus-visible::after { opacity: 1; }
+  .hl-tip:focus-visible::after { display: block; }
 
   /* 卡片（白底 + 细边框 + 圆角） */
   .hl-card {

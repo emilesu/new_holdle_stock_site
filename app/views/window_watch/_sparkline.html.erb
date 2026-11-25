@@ -20,7 +20,7 @@
     trend = cur.abs < prev.abs ? "趋近0轴" : cur.abs > prev.abs ? "远离0轴" : "持平"
     arrow = cur > prev ? "↗" : cur < prev ? "↘" : "→"
   %>
-  <span class="inline-flex items-center gap-2 align-middle" title="<%= tip %>">
+  <span class="inline-flex flex-wrap items-center gap-x-2 gap-y-0.5 align-middle" title="<%= tip %>">
     <svg width="52" height="34" viewBox="0 0 52 34" aria-hidden="true" class="shrink-0">
       <line x1="1" y1="17" x2="51" y2="17" stroke="var(--color-line)" stroke-width="1"/>
       <% vals.each_with_index do |v, i| %>
@@ -34,6 +34,6 @@
               fill="<%= bar_color.(v) %>" opacity="<%= i == vals.size - 1 ? 1 : 0.45 %>"/>
       <% end %>
     </svg>
-    <span class="text-hl-12 text-muted-2 whitespace-nowrap"><%= kind %> · <%= trend %> <%= arrow %></span>
+    <span class="text-hl-12 text-muted-2 md:whitespace-nowrap"><%= kind %> · <%= trend %> <%= arrow %></span>
   </span>
 <% end %>

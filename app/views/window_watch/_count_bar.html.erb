@@ -1,30 +1,31 @@
 <%# 五档计数条（§三① + R1/R3 + 2026-11-25 老板定）：
     预设视图传入 counts=命中子集计数（随三维控件变化）；全量/非会员=快照 stats 全量（验收 V1）
-    ④虚线边框=排除桶样式；②链红柱块、④链持仓块（仅 clickable） %>
+    各段统一 chip 规格（同内边距+1px 边框占位），④虚线边框=排除桶样式，高度一致（老板视觉反馈修复）
+    ②链红柱块、④链持仓块（仅 clickable） %>
 <% counts = local_assigns[:counts] %>
 <% tc = counts || (@snapshot.stats["tier_counts"] || {}) %>
 <% ipc = counts ? counts["IN_POSITION"].to_i : @snapshot.stats["in_position_count"].to_i %>
-<% seg4 = ipc > 0 ? capture do %>④持仓管理 <span class="text-hl-15 font-semibold text-ink"><%= ipc %></span><% end : nil %>
+<% chip = "rounded-md border px-2 py-0.5" %>
 <% if local_assigns[:clickable] %>
-  <div class="hl-card px-4 py-3 flex flex-wrap items-center gap-x-6 gap-y-2 text-hl-13">
-    <%= link_to "#ww-t1", class: "text-ink font-medium hover:underline" do %>①开窗观察 <span class="text-hl-15 font-semibold"><%= tc["T1"] %></span><% end %>
-    <%= link_to "#ww-t2p2", class: "text-muted hover:text-ink hover:underline" do %>②形成中 <span class="text-hl-15 font-semibold text-ink"><%= tc["T2_P2"].to_i + tc["T2_P1"].to_i %></span>
+  <div class="hl-card px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-hl-13">
+    <%= link_to "#ww-t1", class: "#{chip} border-transparent text-ink font-medium hover:border-line" do %>①开窗观察 <span class="text-hl-15 font-semibold"><%= tc["T1"] %></span><% end %>
+    <%= link_to "#ww-t2p2", class: "#{chip} border-transparent text-muted hover:border-line hover:text-ink" do %>②形成中 <span class="text-hl-15 font-semibold text-ink"><%= tc["T2_P2"].to_i + tc["T2_P1"].to_i %></span>
       <span class="text-muted-3">（红柱收敛 <%= tc["T2_P2"] %> / 绿柱收敛 <%= tc["T2_P1"] %>）</span>
     <% end %>
-    <%= link_to "#ww-t3", class: "text-muted hover:text-ink hover:underline" do %>③状态A·暂不开窗 <span class="text-hl-15 font-semibold text-ink"><%= tc["T3"] %></span><% end %>
-    <% if seg4 %>
-      <%= link_to "#ww-inpos", class: "text-muted hover:text-ink hover:underline" do %><span class="border border-dashed border-line rounded-md px-2 py-0.5"><%= seg4 %></span><% end %>
+    <%= link_to "#ww-t3", class: "#{chip} border-transparent text-muted hover:border-line hover:text-ink" do %>③状态A·暂不开窗 <span class="text-hl-15 font-semibold text-ink"><%= tc["T3"] %></span><% end %>
+    <% if ipc > 0 %>
+      <%= link_to "#ww-inpos", class: "#{chip} border-dashed border-line text-muted hover:text-ink" do %>④持仓管理 <span class="text-hl-15 font-semibold text-ink"><%= ipc %></span><% end %>
     <% end %>
   </div>
 <% else %>
-  <div class="hl-card px-4 py-3 flex flex-wrap items-center gap-x-6 gap-y-2 text-hl-13">
-    <span class="text-ink font-medium">①开窗观察 <span class="text-hl-15 font-semibold"><%= tc["T1"] %></span></span>
-    <span class="text-muted">②形成中 <span class="text-hl-15 font-semibold text-ink"><%= tc["T2_P2"].to_i + tc["T2_P1"].to_i %></span>
+  <div class="hl-card px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-hl-13">
+    <span class="<%= chip %> border-transparent text-ink font-medium">①开窗观察 <span class="text-hl-15 font-semibold"><%= tc["T1"] %></span></span>
+    <span class="<%= chip %> border-transparent text-muted">②形成中 <span class="text-hl-15 font-semibold text-ink"><%= tc["T2_P2"].to_i + tc["T2_P1"].to_i %></span>
       <span class="text-muted-3">（红柱收敛 <%= tc["T2_P2"] %> / 绿柱收敛 <%= tc["T2_P1"] %>）</span>
     </span>
-    <span class="text-muted">③状态A·暂不开窗 <span class="text-hl-15 font-semibold text-ink"><%= tc["T3"] %></span></span>
-    <% if seg4 %>
-      <span class="text-muted border border-dashed border-line rounded-md px-2 py-0.5"><%= seg4 %></span>
+    <span class="<%= chip %> border-transparent text-muted">③状态A·暂不开窗 <span class="text-hl-15 font-semibold text-ink"><%= tc["T3"] %></span></span>
+    <% if ipc > 0 %>
+      <span class="<%= chip %> border-dashed border-line text-muted">④持仓管理 <span class="text-hl-15 font-semibold text-ink"><%= ipc %></span></span>
     <% end %>
   </div>
 <% end %>
