@@ -69,3 +69,6 @@ application.register("favorite-rating", FavoriteRatingController)
 
 import ComparisonListController from "./comparison_list_controller"
 application.register("comparison-list", ComparisonListController)
+
+import WwRowLinkController from "./ww_row_link_controller"
+application.register("ww-row-link", WwRowLinkController)

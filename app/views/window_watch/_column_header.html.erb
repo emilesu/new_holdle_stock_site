@@ -1,0 +1,10 @@
+<%# 列头说明条（2026-11-25 老板定：置于各区块名头与列表之间，仿股票详情页财务报表表头样式）
+    与卡片行共用 WW_CARD_GRID 保证逐列对齐；预设视图 ROE 列=筛选主值，全量视图=最新披露年报 ROE %>
+<div class="px-5 py-2 grid <%= WindowWatchHelper::WW_CARD_GRID %> gap-x-4 gap-y-1 text-hl-12 text-muted-3 border-b border-line bg-bg-mute">
+  <span>名称/代码 · 板块行业</span>
+  <span class="hl-tip" data-tip="网站金字塔综合分（财务评分，口径见金字塔页），预设内按此降序排列" tabindex="0">金字塔</span>
+  <span class="hl-tip" data-tip="<%= @view == "main" ? ww_roe_metric_tip(@mode, @years) : "最新披露年报加权 ROE（财务库口径；预设视图此列为三维筛选判定主值）" %>" tabindex="0">ROE</span>
+  <span>形态（近6月）</span>
+  <span>状态</span>
+  <span>标注</span>
+</div>

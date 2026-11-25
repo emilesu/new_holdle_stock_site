@@ -47,6 +47,8 @@ class WindowWatchRedlineTest < ActionDispatch::IntegrationTest
       get path
       # 扫描范围限 <main> 页面正文（导航/页脚 SVG 图标路径含大量小数，属版式 chrome 非数据渲染）
       body = response.body[/<main\b.*?<\/main>/m].to_s
+      # 同理剔除行内图标（收藏星等）的 path d 数据：其为固定字形坐标，与判定数值无关（数据几何仍全量在扫）
+      body = body.gsub(/\sd="[^"]*"/, "")
       refute_empty body
       (WindowWatchSnapshotHelper::WW_STOCKS + WindowWatchSnapshotHelper::WW_IN_POSITION).each do |r|
         %w[hist prev_hist dif dea ratio].each do |field|

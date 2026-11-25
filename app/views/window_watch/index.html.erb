@@ -64,15 +64,7 @@
 
       <% if @view == "main" %>
         <%# 不做区块缓存：命中集随财务库日批变化，缓存会陈旧；查询走索引+预设日缓存，成本可忽略（V9 实时正确） %>
-        <%# 列头说明行（2026-11-25 老板定）：与卡片行共用六列栅格保证对齐 %>
-        <div class="px-5 py-2 grid <%= WindowWatchHelper::WW_CARD_GRID %> gap-x-4 gap-y-1 text-hl-12 text-muted-3">
-          <span>名称/代码 · 板块行业</span>
-          <span class="hl-tip" data-tip="网站金字塔综合分（财务评分，口径见金字塔页），预设内按此降序排列" tabindex="0">金字塔</span>
-          <span class="hl-tip" data-tip="<%= ww_roe_metric_tip(@mode, @years) %>" tabindex="0">ROE(筛选值)</span>
-          <span>形态</span>
-          <span>状态</span>
-          <span>标注</span>
-        </div>
+        <%# 列头说明已下移至各区块名头与列表之间（2026-11-25 老板定，仿详情页报表样式） %>
         <%= render "tier_open", rows: @t1 %>
         <%= render "tier_forming", p2: @t2_p2, p1: @t2_p1 %>
         <%= render "tier_hold", rows: @t3 %>

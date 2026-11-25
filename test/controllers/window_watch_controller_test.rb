@@ -126,13 +126,54 @@ class WindowWatchControllerTest < ActionDispatch::IntegrationTest
     assert_includes t2_seg, "美的集团"
   end
 
-  test "ROE(筛选值)列取预设主值而非最新单年；全量表格徽章仍为最新年报 ROE；无「质量达标」表述" do
+  test "ROE(筛选值)列取预设主值而非最新单年；全量视图 ROE 列=最新披露年报" do
     sign_in users(:two)
     get window_watch_path(view: "main", band: 15)
     refute_includes response.body, "ROE 18.0%" # 预设视图不再渲染最新单年 ROE 徽章（核电主值=16.0）
     refute_includes response.body, "质量达标"
     get window_watch_path(view: "all")
-    assert_includes response.body, "ROE 18.0%" # 全量视图 roe_latest 徽章保留
+    assert_includes response.body, "最新披露年报加权 ROE（财务库口径）"
+  end
+
+  # ---- 2026-11-25 老板定六点改版 ----
+
+  test "列头说明位于每个区块名头与列表之间" do
+    sign_in users(:two)
+    get window_watch_path(view: "main", band: 15)
+    t1_seg = response.body[/<section id="ww-t1".*?<\/section>/m].to_s
+    assert_operator t1_seg.index("① 开窗观察"), :<, t1_seg.index("名称/代码 · 板块行业"), "列头在名头之后"
+    assert_operator t1_seg.index("名称/代码 · 板块行业"), :<, t1_seg.index("招商银行"), "列头在列表之前"
+  end
+
+  test "卡片含收藏星标组件、整行跳转属性与新窗口链接" do
+    sign_in users(:two)
+    get window_watch_path(view: "main", band: 15)
+    assert_includes response.body, 'data-controller="favorite-rating"' # compact 星级组件
+    assert_includes response.body, 'data-controller="ww-row-link"'     # 整行点击容器
+    assert_includes response.body, 'data-stock-url="/stocks/SH600036"'
+    assert_includes response.body, 'target="_blank"'
+  end
+
+  test "金字塔数值用市场主题色（A股绿）" do
+    sign_in users(:two)
+    get window_watch_path(view: "main", band: 15)
+    t1_seg = response.body[/<section id="ww-t1".*?<\/section>/m].to_s
+    assert_includes t1_seg, "text-green-600"
+  end
+
+  test "常态横幅不再显示数据截至日；判定月与更新节奏保留" do
+    sign_in users(:two)
+    get window_watch_path
+    assert_includes response.body, "判定月：2026-10 月K收盘｜每月更新一次，月中不刷新"
+    refute_includes response.body, "数据截至 2026-11-04"
+  end
+
+  test "全量视图统一卡片样式：列头/星标/档位徽章齐备" do
+    sign_in users(:two)
+    get window_watch_path(view: "all")
+    assert_includes response.body, "名称/代码 · 板块行业"
+    assert_includes response.body, 'data-controller="favorite-rating"'
+    assert_includes response.body, "所属档位" # 档位徽章 tooltip
   end
 
   test "T3 档 subtag 行尾注与折叠呈现（§3.2）" do

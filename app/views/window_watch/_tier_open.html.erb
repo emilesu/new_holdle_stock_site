@@ -9,13 +9,14 @@
   <% if rows.empty? %>
     <p class="px-5 py-6 text-hl-13 text-muted-3">本月开窗观察暂无股票</p>
   <% else %>
-    <div class="divide-y divide-line">
+    <%= render "column_header" %>
+    <div class="divide-y divide-line" data-controller="ww-row-link">
       <% rows.first(WindowWatchHelper::TOP_DISPLAY).each do |row| %><%= render "stock_row", row: row %><% end %>
     </div>
     <% if rows.size > WindowWatchHelper::TOP_DISPLAY %>
       <details class="border-t border-line">
         <summary class="px-5 py-2.5 cursor-pointer select-none list-none text-hl-12 text-muted hover:text-ink [&::-webkit-details-marker]:hidden">展开其余 <%= rows.size - WindowWatchHelper::TOP_DISPLAY %> 只</summary>
-        <div class="divide-y divide-line border-t border-line">
+        <div class="divide-y divide-line border-t border-line" data-controller="ww-row-link">
           <% rows.drop(WindowWatchHelper::TOP_DISPLAY).each do |row| %><%= render "stock_row", row: row %><% end %>
         </div>
       </details>

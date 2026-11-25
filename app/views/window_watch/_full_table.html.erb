@@ -1,4 +1,5 @@
-<%# 全部股票视图（§3.3）：表格 + 服务端分页（A2）；行业筛选（R2）；排序白名单（R3/A6） %>
+<%# 全部股票视图（§3.3 + ⑥ 2026-11-25 老板定）：与财务预设视图统一卡片样式（六列+列头+整行跳转+收藏星标）
+    服务端分页（A2）；行业筛选（R2）；排序白名单（R3/A6）；档筛选含④持仓管理（v1.2） %>
 <section class="hl-card">
   <%# 全量视图顶部固定提示行（§4.3 v0.3.0 措辞，红线词「质量达标」已废弃） %>
   <div class="px-5 py-2.5 border-b border-line bg-bg-mute text-hl-12 text-muted">
@@ -47,46 +48,9 @@
   <% if @stocks.total_count.zero? %>
     <p class="px-5 py-8 text-hl-13 text-muted-3"><%= @tier ? "本月#{WindowWatchHelper::TIER_NAMES[@tier]}暂无股票" : "本视图暂无股票" %></p>
   <% else %>
-    <div class="overflow-x-auto">
-      <table class="w-full min-w-[760px] text-hl-13">
-        <thead>
-          <tr class="text-left text-hl-12 text-muted-3 border-b border-line">
-            <th class="px-5 py-2.5 font-medium">名称/代码</th>
-            <th class="px-3 py-2.5 font-medium">行业</th>
-            <th class="px-3 py-2.5 font-medium">档</th>
-            <th class="px-3 py-2.5 font-medium">柱形（定性）</th>
-            <th class="px-3 py-2.5 font-medium">状态A</th>
-            <th class="px-3 py-2.5 font-medium">备注</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-line">
-          <% @stocks.each do |row| %>
-            <% ov = @overlay[row.code.to_s.upcase] %>
-            <tr class="hover:bg-bg-soft">
-              <td class="px-5 py-2.5 align-middle">
-                <%= link_to (ov ? ov[:name] : row.name), stock_path(row.code.upcase), class: "font-medium text-ink hover:text-link" %>
-                <span class="text-hl-11 text-muted-3 ml-1 font-mono"><%= row.symbol %></span>
-                <div class="mt-0.5 flex flex-wrap gap-1">
-                  <% if ov && ov[:finance] %><%= ww_badge "金融", "金融行业（银行/证券/保险）" %><% end %>
-                  <% if ov && ov[:st] %><%= ww_badge "ST", "ST/*ST 股票（仅标注，不剔除）" %><% end %>
-                  <% if ov && ov[:roe_latest] %><%= ww_badge "ROE #{number_with_precision(ov[:roe_latest], precision: 1)}%", "最新披露年报加权 ROE（财务库口径）" %><% end %>
-                </div>
-              </td>
-              <td class="px-3 py-2.5 text-muted-2"><%= (ov ? ov[:industry].presence : row.industry.presence) || "—" %></td>
-              <td class="px-3 py-2.5 text-muted-2 whitespace-nowrap"><%= WindowWatchHelper::TIER_SHORT_NAMES[row.tier] %></td>
-              <td class="px-3 py-2.5"><%= render "hist_glyph", row: row %></td>
-              <td class="px-3 py-2.5 text-muted-2 whitespace-nowrap"><%= row.sa_run %> 个月</td>
-              <td class="px-3 py-2.5 text-hl-12 text-muted-3">
-                <% if row.tier == "T1" %><%= row.open_month %> 开窗 · 存活 <%= row.months_since_open %> 个月
-                <% elsif row.subtag == "sticky_micro" %><%= ww_badge "已贴轴微柱", "本月柱值贴近 0 轴，柱值方向的可信度低" %>
-                <% elsif row.subtag == "continuation" %><%= ww_badge "续命候选", "前一窗口于 1-2 个月内关闭，本次若回升将按方法论视为原窗口延续的新开窗事件" %>
-                <% elsif (note = WindowWatchHelper::T3_SUBTAG_NOTES[row.subtag]) %><%= note %>
-                <% else %>—<% end %>
-              </td>
-            </tr>
-          <% end %>
-        </tbody>
-      </table>
+    <%= render "column_header" %>
+    <div class="divide-y divide-line" data-controller="ww-row-link">
+      <% @stocks.each do |row| %><%= render "stock_row", row: row %><% end %>
     </div>
     <div class="px-5 py-3 border-t border-line"><%= paginate @stocks %></div>
   <% end %>

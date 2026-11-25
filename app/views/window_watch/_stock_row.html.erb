@@ -1,13 +1,22 @@
-<%# 逐股卡片行（六列，2026-11-25 老板定）：身份 / 金字塔 / ROE(筛选值) / 形态 / 状态 / 标注
-    技术判定=快照；名称/行业/板块/金字塔=财务库 join；ROE 列=预设筛选主值（连续=N年最小，平均=N年均值）
-    join 未覆盖的行照常展示技术判定，仅不显示财务标注（兜底常态，非异常）
-    移动端两列=三行堆叠；栅格与列头行共用 WW_CARD_GRID 保证对齐 %>
+<%# 逐股卡片行（六列，2026-11-25 老板定）：身份 / 金字塔 / ROE / 形态 / 状态 / 标注
+    技术判定=快照；名称/行业/板块/金字塔=财务库 join；ROE 列：预设视图=三维筛选主值，全量视图=最新年报 ROE
+    整行可点击新窗口打开个股页（ww-row-link 委托，对齐金字塔页）；行内收藏星标=市场主题色
+    join 未覆盖的行照常展示技术判定，仅不显示财务标注（兜底常态，非异常）；移动端两列=三行堆叠 %>
 <% ov = @overlay[row.code.to_s.upcase] %>
-<div class="px-5 py-3 grid <%= WindowWatchHelper::WW_CARD_GRID %> gap-x-4 gap-y-1.5 items-center hover:bg-bg-soft">
-  <%# ① 身份（名称/代码 + 板块 · 行业） %>
+<% stk = @ww_stocks[row.code.to_s.upcase] %>
+<div class="relative px-5 py-3 grid <%= WindowWatchHelper::WW_CARD_GRID %> gap-x-4 gap-y-1.5 items-center hover:bg-bg-soft cursor-pointer"
+     data-stock-url="<%= stk ? stock_path(stk) : stock_path(row.code.upcase) %>">
+  <%# ① 身份（名称/代码 + 板块 · 行业 + 收藏星标） %>
   <div class="min-w-0">
-    <%= link_to (ov ? ov[:name] : row.name), stock_path(row.code.upcase), class: "text-hl-14 font-medium text-ink hover:text-link" %>
-    <span class="text-hl-12 text-muted-3 ml-1.5 font-mono"><%= row.symbol %></span>
+    <div class="flex flex-wrap items-center gap-x-1.5">
+      <%= link_to (ov ? ov[:name] : row.name), (stk ? stock_path(stk) : stock_path(row.code.upcase)),
+            target: "_blank", rel: "noopener",
+            class: "text-hl-14 font-medium text-ink hover:text-link" %>
+      <span class="text-hl-12 text-muted-3 font-mono"><%= row.symbol %></span>
+      <% if stk %>
+        <%= render "shared/favorite_rating", stock: stk, favorite: @ww_favorites[stk.id], variant: :compact %>
+      <% end %>
+    </div>
     <div class="text-hl-12 text-muted-2 mt-0.5">
       <% sector = ov ? ov[:sector].presence : nil %>
       <% industry = (ov ? ov[:industry].presence : row.industry.presence) %>
@@ -15,15 +24,18 @@
     </div>
   </div>
 
-  <%# ② 金字塔综合分（预设排序依据） %>
-  <div class="text-hl-13 font-mono text-ink whitespace-nowrap" title="网站金字塔综合分（财务评分，口径见金字塔页）">
+  <%# ② 金字塔综合分（市场主题色，2026-11-25 老板定） %>
+  <div class="text-hl-13 font-semibold whitespace-nowrap <%= stk ? market_star_class(stk.market) : "text-muted-4" %>"
+       title="网站金字塔综合分（财务评分，口径见金字塔页）">
     <%= ov ? ov[:pyramid] : "—" %>
   </div>
 
-  <%# ③ ROE(筛选值)：预设三维口径的判定主值，非最新单年 %>
+  <%# ③ ROE：预设视图=筛选主值（连续=N年最小，平均=N年均值）；全量视图=最新披露年报 %>
   <div class="text-hl-13 font-mono whitespace-nowrap">
-    <% if (metric = @preset_metrics && @preset_metrics[row.code]) %>
+    <% if @preset_metrics && (metric = @preset_metrics[row.code]) %>
       <span class="text-ink" title="<%= ww_roe_metric_tip(@mode, @years) %>"><%= number_with_precision(metric, precision: 1) %>%</span>
+    <% elsif ov && ov[:roe_latest] %>
+      <span class="text-ink" title="最新披露年报加权 ROE（财务库口径）"><%= number_with_precision(ov[:roe_latest], precision: 1) %>%</span>
     <% else %>
       <span class="text-muted-4">—</span>
     <% end %>
@@ -32,7 +44,7 @@
   <%# ④ 形态（R2：近 6 月 sparkline，末柱与快照 hist 对账；无库数据时回落双柱定性组件） %>
   <div><%= render "sparkline", row: row %></div>
 
-  <%# ⑤ 状态（档专属字段） %>
+  <%# ⑤ 状态（档专属字段；全量视图混排时档位入标注列） %>
   <div class="min-w-0 flex flex-wrap items-center gap-x-3 gap-y-0.5">
     <% case row.tier %>
     <% when "T1" %>
@@ -50,18 +62,21 @@
     <% end %>
   </div>
 
-  <%# ⑥ 标注（徽章必须带 tooltip，§六.6 不得裸标） %>
+  <%# ⑥ 标注（徽章必须带 tooltip，§六.6 不得裸标；data-no-open=徽章点击不触发整行跳转） %>
   <div class="flex flex-wrap gap-1 md:justify-end">
+    <% if @view == "all" %>
+      <span data-no-open="1"><%= ww_badge WindowWatchHelper::TIER_SHORT_NAMES[row.tier], "所属档位：#{WindowWatchHelper::TIER_NAMES[row.tier]}（说明见对应区块）" %></span>
+    <% end %>
     <% if ov && ov[:finance] %>
-      <%= ww_badge "金融", "金融行业（银行/证券/保险）" %>
+      <span data-no-open="1"><%= ww_badge "金融", "金融行业（银行/证券/保险）" %></span>
     <% end %>
     <% if ov && ov[:st] %>
-      <%= ww_badge "ST", "ST/*ST 股票（仅标注，不剔除）" %>
+      <span data-no-open="1"><%= ww_badge "ST", "ST/*ST 股票（仅标注，不剔除）" %></span>
     <% end %>
     <% if row.subtag == "continuation" %>
-      <%= ww_badge "续命候选", "前一窗口于 1-2 个月内关闭，本次若回升将按方法论视为原窗口延续的新开窗事件" %>
+      <span data-no-open="1"><%= ww_badge "续命候选", "前一窗口于 1-2 个月内关闭，本次若回升将按方法论视为原窗口延续的新开窗事件" %></span>
     <% elsif row.subtag == "sticky_micro" %>
-      <%= ww_badge "已贴轴微柱", "本月柱值贴近 0 轴，柱值方向的可信度低" %>
+      <span data-no-open="1"><%= ww_badge "已贴轴微柱", "本月柱值贴近 0 轴，柱值方向的可信度低" %></span>
     <% end %>
   </div>
 </div>
