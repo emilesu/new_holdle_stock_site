@@ -1,6 +1,6 @@
 <header class="space-y-3">
   <div>
-    <h1 class="text-hl-22 font-semibold text-ink">月K开窗观察</h1>
+    <h1 class="text-hl-22 font-semibold text-ink">状态A - 月K开窗观察</h1>
     <p class="text-hl-13 text-muted mt-1">按 HOLDLE 方法论的月K状态描述 · 每月更新</p>
   </div>
 
@@ -23,5 +23,6 @@
     </div>
   <% end %>
 
-  <%= render "count_bar", clickable: @view == "main" %>
+  <%# 预设视图计数条=命中子集计数（2026-11-25 老板定，随三维控件变化）；全量/非会员=快照 stats 全量 %>
+  <%= render "count_bar", clickable: @view == "main", counts: (@view == "main" ? @preset_counts : nil) %>
 </header>

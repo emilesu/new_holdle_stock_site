@@ -32,6 +32,20 @@ module WindowWatchHelper
   # R1（2026-11-25 老板定）：①②区块展示前 10 只，其余折叠
   TOP_DISPLAY = 10
 
+  # 预设列头行与卡片行共用六列栅格（身份|金字塔|ROE筛选值|形态|状态|标注），保证列对齐
+  # 2026-11-25 老板定：金字塔列第二、ROE 筛选值列紧随其右；移动端两列=三行堆叠
+  # 列宽系数刻意取整数：小数 fr（如 1.25fr）会撞 V11 绝对数值红线扫描的两位小数形态
+  WW_CARD_GRID = "grid-cols-2 md:grid-cols-[minmax(0,25fr)_minmax(0,9fr)_minmax(0,12fr)_minmax(0,23fr)_minmax(0,21fr)_minmax(0,12fr)]"
+
+  # ROE(筛选值) 列悬停说明：主值口径与三维筛选一致（连续=最小值，平均=算术平均）
+  def ww_roe_metric_tip(mode, years)
+    if mode == "average"
+      "近#{years}财年 ROE 算术平均（平均满足判定主值，要求每年≥阈值×70%）"
+    else
+      "近#{years}财年 ROE 最小值（连续满足判定主值）"
+    end
+  end
+
   # 区块摘要头：N>10 时提示「显示前 10」
   def ww_block_summary(rows)
     rows.size > TOP_DISPLAY ? "#{rows.size} 只 · 显示前 #{TOP_DISPLAY}" : "#{rows.size} 只"

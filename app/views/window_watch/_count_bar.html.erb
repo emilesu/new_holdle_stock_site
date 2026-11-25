@@ -1,7 +1,9 @@
-<%# 五档计数条（§三① + R1/R3）：①②③=快照 stats.tier_counts，④=stats.in_position_count（验收 V1）
-    非会员可见（聚合数字不含个股）；④虚线边框=排除桶样式（非观察推荐序列）；②链红柱块、④链持仓块 %>
-<% tc = @snapshot.stats["tier_counts"] || {} %>
-<% ipc = @snapshot.stats["in_position_count"].to_i %>
+<%# 五档计数条（§三① + R1/R3 + 2026-11-25 老板定）：
+    预设视图传入 counts=命中子集计数（随三维控件变化）；全量/非会员=快照 stats 全量（验收 V1）
+    ④虚线边框=排除桶样式；②链红柱块、④链持仓块（仅 clickable） %>
+<% counts = local_assigns[:counts] %>
+<% tc = counts || (@snapshot.stats["tier_counts"] || {}) %>
+<% ipc = counts ? counts["IN_POSITION"].to_i : @snapshot.stats["in_position_count"].to_i %>
 <% seg4 = ipc > 0 ? capture do %>④持仓管理 <span class="text-hl-15 font-semibold text-ink"><%= ipc %></span><% end : nil %>
 <% if local_assigns[:clickable] %>
   <div class="hl-card px-4 py-3 flex flex-wrap items-center gap-x-6 gap-y-2 text-hl-13">

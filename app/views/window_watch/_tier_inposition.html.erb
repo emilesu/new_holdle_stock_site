@@ -1,7 +1,7 @@
-<%# ④持仓管理（契约 v0.5 §三）：排除桶逐股明细，默认折叠；v1.1 无逐股行时降级为仅计数提示
-    副标题为 DSH 确认版固定文案（V7 逐字验收）；行=开窗·入场·持仓三时点叙事，金字塔序 top10+折叠
-    接口与其他 tier partial 一致：rows=逐股明细、count=stats.in_position_count（评审修复4） %>
-<% return if count.to_i <= 0 && rows.empty? %>
+<%# ④持仓管理（契约 v0.5 §三 + 2026-11-25 老板定）：跟随预设筛选的持仓子集，默认折叠
+    两态：有命中行=逐股明细 top10+折叠；v1.1 无逐股行=降级仅计数（stats 全量口径）；v1.2 命中为空=整块隐藏（与计数条④段同步）
+    副标题为 DSH 确认版固定文案（V7 逐字验收）；行=开窗·入场·持仓三时点叙事，金字塔序 %>
+<% return if rows.empty? && count.to_i <= 0 %>
 <section id="ww-inpos" class="hl-card scroll-mt-24">
   <details>
     <summary class="px-5 py-4 cursor-pointer select-none list-none flex items-center gap-2 [&::-webkit-details-marker]:hidden">
@@ -14,8 +14,8 @@
     <div class="px-5 pb-2 border-t border-line">
       <p class="text-hl-12 text-muted mt-3 mb-2"><%= WindowWatchHelper::IN_POSITION_SUBTITLE %></p>
       <% if rows.empty? %>
-        <%# v1.1 兼容降级：无逐股明细，仅计数（12 月 T+1 按 v1.2 推送后自然解除） %>
-        <p class="py-4 text-hl-13 text-muted-3">共 <%= count %> 只；逐股明细将随下一批快照（snapshot 1.2）提供。</p>
+        <%# v1.1 兼容降级：无逐股明细，仅全量计数（12 月 T+1 按 v1.2 推送后自然解除） %>
+        <p class="py-4 text-hl-13 text-muted-3">共 <%= count %> 只（全量口径，未含预设过滤）；逐股明细将随下一批快照（snapshot 1.2）提供。</p>
       <% else %>
         <div class="divide-y divide-line">
           <% rows.first(WindowWatchHelper::TOP_DISPLAY).each do |row| %><%= render "stock_row", row: row %><% end %>

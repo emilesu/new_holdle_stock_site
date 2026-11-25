@@ -1,20 +1,38 @@
-<%# 逐股卡片行（§4.1/§4.2 v0.3.0 + R1 四列栅格）：身份 / 形态 / 状态 / 标注
-    技术判定=快照；名称/行业/财务标注=Trae 财务库 join（契约 v0.4.0 §三.1）
+<%# 逐股卡片行（六列，2026-11-25 老板定）：身份 / 金字塔 / ROE(筛选值) / 形态 / 状态 / 标注
+    技术判定=快照；名称/行业/板块/金字塔=财务库 join；ROE 列=预设筛选主值（连续=N年最小，平均=N年均值）
     join 未覆盖的行照常展示技术判定，仅不显示财务标注（兜底常态，非异常）
-    移动端两列=两行堆叠（身份+形态 / 状态+标注） %>
+    移动端两列=三行堆叠；栅格与列头行共用 WW_CARD_GRID 保证对齐 %>
 <% ov = @overlay[row.code.to_s.upcase] %>
-<div class="px-5 py-3 grid grid-cols-2 md:grid-cols-[minmax(0,1.3fr)_minmax(0,1.2fr)_minmax(0,1.1fr)_minmax(0,0.6fr)] gap-x-4 gap-y-1.5 items-center hover:bg-bg-soft">
-  <%# ① 身份 %>
+<div class="px-5 py-3 grid <%= WindowWatchHelper::WW_CARD_GRID %> gap-x-4 gap-y-1.5 items-center hover:bg-bg-soft">
+  <%# ① 身份（名称/代码 + 板块 · 行业） %>
   <div class="min-w-0">
     <%= link_to (ov ? ov[:name] : row.name), stock_path(row.code.upcase), class: "text-hl-14 font-medium text-ink hover:text-link" %>
     <span class="text-hl-12 text-muted-3 ml-1.5 font-mono"><%= row.symbol %></span>
-    <div class="text-hl-12 text-muted-2 mt-0.5"><%= (ov ? ov[:industry].presence : row.industry.presence) || "—" %></div>
+    <div class="text-hl-12 text-muted-2 mt-0.5">
+      <% sector = ov ? ov[:sector].presence : nil %>
+      <% industry = (ov ? ov[:industry].presence : row.industry.presence) %>
+      <%= [sector, industry].compact.join(" · ").presence || "—" %>
+    </div>
   </div>
 
-  <%# ② 形态（R2：近 6 月 sparkline，末柱与快照 hist 对账；无库数据时回落双柱定性组件） %>
+  <%# ② 金字塔综合分（预设排序依据） %>
+  <div class="text-hl-13 font-mono text-ink whitespace-nowrap" title="网站金字塔综合分（财务评分，口径见金字塔页）">
+    <%= ov ? ov[:pyramid] : "—" %>
+  </div>
+
+  <%# ③ ROE(筛选值)：预设三维口径的判定主值，非最新单年 %>
+  <div class="text-hl-13 font-mono whitespace-nowrap">
+    <% if (metric = @preset_metrics && @preset_metrics[row.code]) %>
+      <span class="text-ink" title="<%= ww_roe_metric_tip(@mode, @years) %>"><%= number_with_precision(metric, precision: 1) %>%</span>
+    <% else %>
+      <span class="text-muted-4">—</span>
+    <% end %>
+  </div>
+
+  <%# ④ 形态（R2：近 6 月 sparkline，末柱与快照 hist 对账；无库数据时回落双柱定性组件） %>
   <div><%= render "sparkline", row: row %></div>
 
-  <%# ③ 状态（档专属字段 + ROE 小字，R1：ROE 由徽章改小字） %>
+  <%# ⑤ 状态（档专属字段） %>
   <div class="min-w-0 flex flex-wrap items-center gap-x-3 gap-y-0.5">
     <% case row.tier %>
     <% when "T1" %>
@@ -30,12 +48,9 @@
       <%# 契约 v0.5 §三.3：三时点叙事，字段按呈现即所得（入场月可晚于判定月=as-of 正常形态，口径②） %>
       <span class="text-hl-12 text-muted-2 whitespace-nowrap">开窗 <%= row.open_month %> · 入场 <%= row.entry_month %> · 持仓 <%= row.months_in_position %> 个月</span>
     <% end %>
-    <% if ov && ov[:roe_latest] %>
-      <span class="text-hl-12 text-muted-3 whitespace-nowrap" title="最新披露年报加权 ROE（财务库口径；筛选预设见页顶档位说明）">ROE <%= number_with_precision(ov[:roe_latest], precision: 1) %>%</span>
-    <% end %>
   </div>
 
-  <%# ④ 标注（徽章必须带 tooltip，§六.6 不得裸标） %>
+  <%# ⑥ 标注（徽章必须带 tooltip，§六.6 不得裸标） %>
   <div class="flex flex-wrap gap-1 md:justify-end">
     <% if ov && ov[:finance] %>
       <%= ww_badge "金融", "金融行业（银行/证券/保险）" %>

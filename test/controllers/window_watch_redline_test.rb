@@ -18,6 +18,8 @@ class WindowWatchRedlineTest < ActionDispatch::IntegrationTest
     ww_give_financials("SH600036", roes: [18, 19, 20])
     ww_give_financials("SH600519", roes: [30, 31, 32])
     ww_give_financials("SZ300750", roes: [24, 25, 26])
+    # 平安进预设 → ④区块（含固定副标题）参与红线扫描
+    ww_give_financials("SH601318", roes: [16, 17, 18])
     sign_in users(:two)
   end
 

@@ -30,11 +30,15 @@ class WindowWatchController < ApplicationController
     # R1：视图开关只切 main/all，筛选条件随视图重置（行为一致）
     @view = params[:view] == "all" ? "all" : "main"
     if @view == "main"
-      # 财务预设视图：命中集来自财务库（近3财年 ROE≥档位 且 经营现金流>0，最新披露口径）
-      # R1 排序：金字塔综合分降序（同分贴0轴比值升序），取消 T1 开窗月排序；分数缺失（join 未命中）排末位
-      # 四档直接落数组：视图 size/迭代零额外查询（评审修复2）
+      # 财务预设视图（2026-11-25 老板定三维筛选）：年数(3/5) × 满足方式(连续/平均) × ROE阈值(10/15/20)
+      # 命中集与 ROE 筛选主值均来自财务库；④持仓管理同样跟随预设（老板 2026-11-25 定，推翻「排除桶全量」旧口径）
+      # R1 排序：金字塔综合分降序（同分贴0轴比值升序）；分数缺失（join 未命中）排末位
       @band = WindowWatch::FinancialPreset.band_for(params[:band])
-      hit_codes = WindowWatch::FinancialPreset.hit_symbols(band: @band).map(&:downcase)
+      @years = WindowWatch::FinancialPreset.years_for(params[:years])
+      @mode = WindowWatch::FinancialPreset.mode_for(params[:mode])
+      metrics = WindowWatch::FinancialPreset.preset_metrics(years: @years, mode: @mode, band: @band)
+      @preset_metrics = metrics.transform_keys(&:downcase) # 键=快照 code（小写）
+      hit_codes = @preset_metrics.keys
       main_scope = @snapshot.stocks
                            .joins("LEFT JOIN stocks ON lower(stocks.symbol) = window_watch_snapshot_stocks.code")
                            .where(code: hit_codes)
@@ -43,14 +47,12 @@ class WindowWatchController < ApplicationController
       @t2_p2 = main_scope.where(tier: "T2_P2").to_a
       @t2_p1 = main_scope.where(tier: "T2_P1").to_a
       @t3 = main_scope.where(tier: "T3").to_a
-      # R3④：持仓管理区块（契约 v0.5）：不受财务预设过滤（排除桶是状态描述），金字塔序 top10+折叠；
-      # v1.1 无逐股行时降级为仅计数提示（in_position_count 兜底）
-      @in_position = @snapshot.stocks
-                              .joins("LEFT JOIN stocks ON lower(stocks.symbol) = window_watch_snapshot_stocks.code")
-                              .where(tier: WindowWatchSnapshotStock::IN_POSITION)
-                              .order(Arel.sql("stocks.pyramid_total_score DESC NULLS LAST, window_watch_snapshot_stocks.ratio ASC"))
-                              .to_a
-      @in_position_count = [@snapshot.stats["in_position_count"].to_i, @in_position.size].max
+      @in_position = main_scope.where(tier: WindowWatchSnapshotStock::IN_POSITION).to_a
+      # v1.1 快照无 IN_POSITION 行 → 降级仅计数提示（计数=stats 全量口径，无法按预设过滤）
+      @in_position_degraded = !@snapshot.stocks.where(tier: WindowWatchSnapshotStock::IN_POSITION).exists?
+      # 计数条=命中子集计数，随三维控件变化（2026-11-25 老板定）
+      @preset_counts = { "T1" => @t1.size, "T2_P2" => @t2_p2.size, "T2_P1" => @t2_p1.size, "T3" => @t3.size,
+                         "IN_POSITION" => @in_position_degraded ? @snapshot.stats["in_position_count"].to_i : @in_position.size }
       all_rows = @t1 + @t2_p2 + @t2_p1 + @t3 + @in_position
       @overlay = WindowWatch::FinancialPreset.overlay(all_rows)
       # R2③：卡片近 6 月 sparkline（全量表格视图不装配，控制查询规模）

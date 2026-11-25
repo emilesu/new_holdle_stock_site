@@ -49,6 +49,10 @@ module WindowWatchSnapshotHelper
   WW_PYRAMID_SCORES = { "SH601985" => 70, "SH600036" => 85, "SZ000333" => 60,
                         "SZ000858" => 40, "SH600519" => 90, "SZ300750" => 50,
                         "SH601318" => 65, "SZ000568" => 45 }.freeze
+  # 板块 fixture（2026-11-25 老板定：卡片显示板块 · 行业）
+  WW_SECTORS = { "SH601985" => "公用事业", "SH600036" => "金融", "SZ000333" => "消费",
+                 "SZ000858" => "消费", "SH600519" => "消费", "SZ300750" => "制造",
+                 "SH601318" => "金融", "SZ000568" => "消费" }.freeze
 
   # 站内 stocks 表落库（code 命中校验 + 财务库 overlay + 金字塔排序用）
   def ww_create_stocks!
@@ -56,14 +60,15 @@ module WindowWatchSnapshotHelper
       code, ex = r[:symbol].split(".")
       Stock.create!(symbol: "#{ex}#{code}", name: r[:name], market: "CN",
                     exchange: "#{ex}SE", industry: r[:industry], status: "active",
+                    sector: WW_SECTORS["#{ex}#{code}"],
                     pyramid_total_score: WW_PYRAMID_SCORES["#{ex}#{code}"])
     end
   end
 
-  # 财务库喂数：近 3 个完整财年年报 ROE 与经营现金流（页面侧预设的数据源）
+  # 财务库喂数：近 N 个完整财年年报 ROE 与经营现金流（N=roes.size，三维筛选的数据源）
   def ww_give_financials(site_symbol, roes:, ocfs: nil)
     stock = Stock.find_by!(symbol: site_symbol)
-    years = WindowWatch::FinancialPreset.fiscal_years
+    years = WindowWatch::FinancialPreset.fiscal_years(count: roes.size)
     years.each_with_index do |y, i|
       fr = FinancialReport.create!(stock: stock, report_date: Date.new(y, 12, 31),
                                    report_type: "CN_ANNUAL", market: "CN",

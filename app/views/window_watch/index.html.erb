@@ -1,4 +1,4 @@
-<% set_page_title "月K开窗观察 - HOLDLE 方法论月K状态" %>
+<% set_page_title "状态A - 月K开窗观察 - HOLDLE 方法论月K状态" %>
 <% set_page_description "按 HOLDLE 方法论对全A股月K状态的客观描述：开窗观察、红柱收敛、绿柱收敛与暂不开窗分层，每月更新。" %>
 <div class="min-h-screen bg-bg-soft">
   <main class="container-hl py-8 space-y-5">
@@ -19,16 +19,31 @@
         <%= link_to "全部股票", window_watch_path(view: "all", month: @snapshot.month),
               class: "px-3 py-1.5 rounded-md border #{'bg-white border-ink text-ink font-medium' if @view == 'all'} #{'border-line text-muted hover:text-ink' unless @view == 'all'}" %>
         <% if @view == "main" %>
-          <%# R1：档位改分段控件（连体按钮，激活态反色） %>
-          <span class="ml-3 text-hl-12 text-muted-3">近3财年每年 ROE≥</span>
-          <div class="inline-flex rounded-md border border-line overflow-hidden divide-x divide-line" role="group" aria-label="ROE 档位">
+          <%# 三维筛选控件（2026-11-25 老板定）：年数 × 满足方式 × ROE阈值；切换互不丢失（保留 month） %>
+          <span class="ml-3 text-hl-12 text-muted-3">近</span>
+          <div class="inline-flex rounded-md border border-line overflow-hidden divide-x divide-line" role="group" aria-label="财年数">
+            <% WindowWatch::FinancialPreset::YEARS.each do |y| %>
+              <%= link_to "#{y}年", window_watch_path(view: "main", years: y, mode: @mode, band: @band, month: @snapshot.month),
+                    class: "px-2 py-1 text-hl-12 #{y == @years ? 'bg-ink text-white font-medium' : 'bg-white text-muted hover:text-ink'}" %>
+            <% end %>
+          </div>
+          <span class="text-hl-12 text-muted-3">财年 ROE</span>
+          <% mode_tips = { "consecutive" => "连续满足：每年 ROE ≥ 阈值，主值取 N 年最小值",
+                           "average" => "平均满足：N 年算术平均 ≥ 阈值，且每年 ROE ≥ 阈值×70%，主值取 N 年算术平均（两种模式均要求每年经营现金流为正）" } %>
+          <div class="inline-flex rounded-md border border-line overflow-hidden divide-x divide-line" role="group" aria-label="满足方式">
+            <% WindowWatch::FinancialPreset::MODES.each do |md| %>
+              <%= link_to WindowWatch::FinancialPreset::MODE_NAMES[md], window_watch_path(view: "main", years: @years, mode: md, band: @band, month: @snapshot.month),
+                    class: "hl-tip px-2 py-1 text-hl-12 #{md == @mode ? 'bg-ink text-white font-medium' : 'bg-white text-muted hover:text-ink'}",
+                    data: { tip: mode_tips[md] } %>
+            <% end %>
+          </div>
+          <div class="inline-flex rounded-md border border-line overflow-hidden divide-x divide-line" role="group" aria-label="ROE 阈值">
             <% WindowWatch::FinancialPreset::BANDS.each do |b| %>
-              <%= link_to "#{b}%", window_watch_path(view: "main", band: b, month: @snapshot.month),
+              <%= link_to "#{b}%", window_watch_path(view: "main", years: @years, mode: @mode, band: b, month: @snapshot.month),
                     class: "px-2.5 py-1 text-hl-12 #{b == @band ? 'bg-ink text-white font-medium' : 'bg-white text-muted hover:text-ink'}" %>
             <% end %>
           </div>
-          <span class="text-hl-12 text-muted-3">且经营现金流为正（最新披露年报口径，财务库筛选）</span>
-          <span class="text-hl-12 text-muted-4">· 预设内按金字塔综合分排序</span>
+          <span class="text-hl-12 text-muted-3">且每年经营现金流为正（最新披露年报口径，财务库筛选）</span>
         <% else %>
           <span class="ml-2 text-hl-12 text-muted-4">全部=技术形态全量列表</span>
         <% end %>
@@ -49,10 +64,19 @@
 
       <% if @view == "main" %>
         <%# 不做区块缓存：命中集随财务库日批变化，缓存会陈旧；查询走索引+预设日缓存，成本可忽略（V9 实时正确） %>
+        <%# 列头说明行（2026-11-25 老板定）：与卡片行共用六列栅格保证对齐 %>
+        <div class="px-5 py-2 grid <%= WindowWatchHelper::WW_CARD_GRID %> gap-x-4 gap-y-1 text-hl-12 text-muted-3">
+          <span>名称/代码 · 板块行业</span>
+          <span class="hl-tip" data-tip="网站金字塔综合分（财务评分，口径见金字塔页），预设内按此降序排列" tabindex="0">金字塔</span>
+          <span class="hl-tip" data-tip="<%= ww_roe_metric_tip(@mode, @years) %>" tabindex="0">ROE(筛选值)</span>
+          <span>形态</span>
+          <span>状态</span>
+          <span>标注</span>
+        </div>
         <%= render "tier_open", rows: @t1 %>
         <%= render "tier_forming", p2: @t2_p2, p1: @t2_p1 %>
         <%= render "tier_hold", rows: @t3 %>
-        <%= render "tier_inposition", rows: @in_position, count: @in_position_count %>
+        <%= render "tier_inposition", rows: @in_position, count: @preset_counts["IN_POSITION"] %>
       <% else %>
         <%= render "full_table" %>
       <% end %>

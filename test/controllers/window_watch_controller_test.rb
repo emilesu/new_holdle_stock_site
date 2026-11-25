@@ -14,7 +14,8 @@ class WindowWatchControllerTest < ActionDispatch::IntegrationTest
     ww_give_financials("SH600036", roes: [18, 19, 20])
     ww_give_financials("SH600519", roes: [30, 31, 32])
     ww_give_financials("SZ300750", roes: [24, 25, 26])
-    ww_give_financials("SZ000333", roes: [12, 13, 14])
+    # 美的 [11,16,18]：连续15 不命中（11<15）；平均15 命中（均值15.0≥15 且 min 11≥10.5）——三维口径差异样本
+    ww_give_financials("SZ000333", roes: [11, 16, 18])
   end
 
   # ---- §一 访问控制（暗发布期：DARK_RELEASE=true，非管理员一律重定向首页）----
@@ -55,7 +56,53 @@ class WindowWatchControllerTest < ActionDispatch::IntegrationTest
     assert_includes body, "贵州茅台"
     refute_includes body, "美的集团"   # ROE 12-14，不达 15% 档
     refute_includes body, "五粮液"     # 财务库未覆盖，join 兜底=不进预设（全量视图仍显示）
-    assert_equal 4, WindowWatch::FinancialPreset.hit_symbols(band: 15).size
+    assert_equal 4, WindowWatch::FinancialPreset.preset_metrics(years: 3, mode: "consecutive", band: 15).size
+  end
+
+  # ---- 三维筛选（2026-11-25 老板定：年数 × 满足方式 × 阈值）----
+
+  test "平均满足 15%：连续不命中的美的进入视图，ROE(筛选值)列=算术平均主值" do
+    sign_in users(:two)
+    get window_watch_path(view: "main", years: 3, mode: "average", band: 15)
+    seg = response.body[/<section id="ww-t2p2".*?<\/section>/m].to_s
+    assert_includes seg, "美的集团"
+    assert_includes seg, "15.0%" # (11+16+18)/3=15.0，平均满足主值
+  end
+
+  test "连续满足：ROE(筛选值)列=N年最小值主值（核电 16.0）" do
+    sign_in users(:two)
+    get window_watch_path(view: "main", band: 15)
+    assert_includes response.body, "16.0%"
+  end
+
+  test "5 年窗口要求 5 期年报：仅 3 期数据的股票不命中" do
+    sign_in users(:two)
+    get window_watch_path(view: "main", years: 5, band: 10)
+    refute_includes response.body, "中国核电"
+    assert_includes response.body, "本月开窗观察暂无股票"
+  end
+
+  test "非法 years/mode 参数回落默认（3年/连续满足）" do
+    sign_in users(:two)
+    get window_watch_path(view: "main", years: 4, mode: "xyz", band: 15)
+    refute_includes response.body, "美的集团" # 回落=连续满足15，美的不命中
+  end
+
+  test "计数条=命中子集：预设视图红柱收敛 0，全量视图仍为 stats 全量" do
+    sign_in users(:two)
+    get window_watch_path(view: "main", band: 15)
+    assert_includes response.body, "（红柱收敛 0 / 绿柱收敛 1）"
+    get window_watch_path(view: "all")
+    assert_includes response.body, "（红柱收敛 2 / 绿柱收敛 1）"
+  end
+
+  test "卡片显示板块 · 行业 与金字塔分数列" do
+    sign_in users(:two)
+    get window_watch_path(view: "main", band: 15)
+    assert_includes response.body, "公用事业 · 电力"
+    t1_seg = response.body[/<section id="ww-t1".*?<\/section>/m].to_s
+    assert_includes t1_seg, "网站金字塔综合分"
+    assert_includes t1_seg, "85" # 招行金字塔分，T1 首行
   end
 
   test "R1 默认档位 10%：美的集团进入默认视图；非法档位回落 10" do
@@ -79,11 +126,13 @@ class WindowWatchControllerTest < ActionDispatch::IntegrationTest
     assert_includes t2_seg, "美的集团"
   end
 
-  test "卡片行财务标注来自财务库 join（ROE 小字），无「质量达标」表述" do
+  test "ROE(筛选值)列取预设主值而非最新单年；全量表格徽章仍为最新年报 ROE；无「质量达标」表述" do
     sign_in users(:two)
-    get window_watch_path
-    assert_includes response.body, "ROE 18.0%" # 中国核电最新年报 roe_avg=18
+    get window_watch_path(view: "main", band: 15)
+    refute_includes response.body, "ROE 18.0%" # 预设视图不再渲染最新单年 ROE 徽章（核电主值=16.0）
     refute_includes response.body, "质量达标"
+    get window_watch_path(view: "all")
+    assert_includes response.body, "ROE 18.0%" # 全量视图 roe_latest 徽章保留
   end
 
   test "T3 档 subtag 行尾注与折叠呈现（§3.2）" do
@@ -158,8 +207,10 @@ class WindowWatchControllerTest < ActionDispatch::IntegrationTest
 
   # ---- R3 ④持仓管理区块（契约 v0.5 / snapshot 1.2）----
 
-  test "v1.2：④区块渲染逐股明细，金字塔序、三时点叙事、固定副标题逐字" do
+  test "v1.2：④区块渲染逐股明细（跟随预设），金字塔序、三时点叙事、固定副标题逐字" do
     WindowWatch::SnapshotIngest.call(payload: ww_payload(in_position: true), source_ip: "127.0.0.1")
+    ww_give_financials("SH601318", roes: [16, 17, 18])
+    ww_give_financials("SZ000568", roes: [15, 16, 17])
     sign_in users(:two)
     get window_watch_path(view: "main", band: 15)
     seg = response.body[/<section id="ww-inpos".*?<\/section>/m].to_s
@@ -170,17 +221,27 @@ class WindowWatchControllerTest < ActionDispatch::IntegrationTest
     assert_includes seg, "开窗 2025-03 · 入场 2025-06 · 持仓 16 个月"
     # 入场月晚于判定月=正常形态，如实展示（口径②）
     assert_includes seg, "开窗 2026-02 · 入场 2026-11 · 持仓 1 个月"
-    # 计数条升五档：④出现
+    # 计数条升五档：④=命中子集计数
     assert_includes response.body, "④持仓管理"
   end
 
-  test "v1.1 兼容降级：无逐股行时④区块仅计数提示" do
+  test "④跟随预设筛选：无财务命中的持仓股不进④块" do
+    WindowWatch::SnapshotIngest.call(payload: ww_payload(in_position: true), source_ip: "127.0.0.1")
+    ww_give_financials("SH601318", roes: [16, 17, 18]) # 平安命中 15%；老窖无财务数据不命中
+    sign_in users(:two)
+    get window_watch_path(view: "main", band: 15)
+    seg = response.body[/<section id="ww-inpos".*?<\/section>/m].to_s
+    assert_includes seg, "中国平安"
+    refute_includes seg, "泸州老窖"
+  end
+
+  test "v1.1 兼容降级：无逐股行时④区块仅全量计数提示" do
     payload = ww_payload
     payload["stats"]["in_position_count"] = 5
     WindowWatch::SnapshotIngest.call(payload: payload, source_ip: "127.0.0.1")
     sign_in users(:two)
     get window_watch_path
-    assert_includes response.body, "共 5 只；逐股明细将随下一批快照（snapshot 1.2）提供。"
+    assert_includes response.body, "共 5 只（全量口径，未含预设过滤）；逐股明细将随下一批快照（snapshot 1.2）提供。"
     refute_includes response.body, "中国平安"
   end
 
