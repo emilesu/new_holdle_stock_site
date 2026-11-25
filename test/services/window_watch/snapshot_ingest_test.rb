@@ -1,7 +1,7 @@
 require "test_helper"
 require_relative "../../support/window_watch_snapshot_helper"
 
-# ingest 服务层（契约 §三/§四）：字段逐位回读、null 语义、latest、防御性校验
+# ingest 服务层（契约 v0.4.0 §三/§四）：字段逐位回读、财务字段拦截、latest、防御性校验
 class WindowWatch::SnapshotIngestTest < ActiveSupport::TestCase
   include WindowWatchSnapshotHelper
 
@@ -22,18 +22,7 @@ class WindowWatch::SnapshotIngestTest < ActiveSupport::TestCase
     assert_equal "2026-08", row.open_month
     assert_equal 3, row.months_since_open
     assert_equal 7, row.sa_run
-    assert_equal true, row.run3_asof
     assert_equal "sh601985", row.code
-  end
-
-  test "run3_asof/roe 的 null 语义保留（无财报 ≠ false）" do
-    rows = WW_STOCKS.map(&:dup)
-    rows[3][:run3_asof] = nil
-    rows[3][:roe] = nil
-    snapshot, errors = ingest(ww_payload(rows: rows))
-    assert_empty errors
-    assert_nil snapshot.stocks.find_by(symbol: "000858.SZ").run3_asof
-    assert_nil snapshot.stocks.find_by(symbol: "000858.SZ").roe
   end
 
   test "ActionController::Parameters 输入（真实请求路径）同样通过" do
@@ -43,12 +32,33 @@ class WindowWatch::SnapshotIngestTest < ActiveSupport::TestCase
     assert_equal 6, snapshot.stocks.count
   end
 
-  test "main_group_run5 与逐股行不一致 422" do
+  test "v0.4.0 拦截：逐股行携带财务字段 422" do
     payload = ww_payload
-    payload["stats"]["main_group_run5"] = 99
+    payload["tiers"]["T1"][0]["roe"] = 16.8
+    payload["tiers"]["T2_P2"][0]["run3_asof"] = true
     snapshot, errors = ingest(payload)
     assert_nil snapshot
-    assert_match "main_group_run5", errors.join
+    assert_match "不得携带财务字段", errors.join
+    assert_match "roe", errors.join
+    assert_match "run3_asof", errors.join
+  end
+
+  test "v0.4.0 拦截：stats 携带财务统计键 422" do
+    payload = ww_payload
+    payload["stats"]["main_group_run3"] = 36
+    payload["stats"]["finance_count"] = 42
+    snapshot, errors = ingest(payload)
+    assert_nil snapshot
+    assert_match "不得携带财务统计键", errors.join
+    assert_match "main_group_run3", errors.join
+  end
+
+  test "bj_count 为 null 422（stats 必填键）" do
+    payload = ww_payload
+    payload["stats"]["bj_count"] = nil
+    snapshot, errors = ingest(payload)
+    assert_nil snapshot
+    assert_match "bj_count", errors.join
   end
 
   test "tiers 内混入 BJ 422（北交所单列不入列）" do

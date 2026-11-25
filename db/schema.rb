@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_11_24_120000) do
+ActiveRecord::Schema[7.1].define(version: 2026_11_25_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -748,12 +748,6 @@ ActiveRecord::Schema[7.1].define(version: 2026_11_24_120000) do
     t.string "exchange", null: false, comment: "SH/SZ（tiers 内无 BJ）"
     t.string "tier", null: false, comment: "T1/T2_P2/T2_P1/T3"
     t.string "subtag", default: "", null: false, comment: "continuation/sticky_micro/high_gate/no_low_premise/空"
-    t.boolean "finance", default: false, null: false, comment: "金融四行业"
-    t.boolean "st", default: false, null: false, comment: "ST/*ST（仅标注不剔除）"
-    t.boolean "run3_asof", comment: "决策时点连续3年 ROE≥15 且经营现金流>0（null=无财报）"
-    t.boolean "run5_asof", comment: "连续5年口径"
-    t.decimal "roe", precision: 6, scale: 2, comment: "as-of 年报加权 ROE（%），null=无财报"
-    t.string "roe_band", default: "", null: false, comment: "ROE 档位文案"
     t.decimal "hist", precision: 14, scale: 6, null: false, comment: "判定月 MACD 柱（前复权，6位小数；页面不渲染数值）"
     t.decimal "prev_hist", precision: 14, scale: 6, null: false, comment: "上月 MACD 柱"
     t.decimal "dif", precision: 14, scale: 6, null: false, comment: "判定月 DIF"
@@ -767,7 +761,6 @@ ActiveRecord::Schema[7.1].define(version: 2026_11_24_120000) do
     t.datetime "updated_at", null: false
     t.index ["window_watch_snapshot_id", "industry"], name: "idx_wwss_snapshot_industry"
     t.index ["window_watch_snapshot_id", "symbol"], name: "idx_wwss_snapshot_symbol", unique: true
-    t.index ["window_watch_snapshot_id", "tier", "run3_asof"], name: "idx_wwss_snapshot_tier_run3"
     t.index ["window_watch_snapshot_id", "tier"], name: "idx_wwss_snapshot_tier"
     t.index ["window_watch_snapshot_id"], name: "index_window_watch_snapshot_stocks_on_window_watch_snapshot_id"
   end

@@ -1,31 +1,25 @@
-<%# 逐股卡片行（§3.1/§3.2）：通用字段 + 档专属字段；数值纪律——不渲染 hist/dif/dea/ratio 绝对值 %>
+<%# 逐股卡片行（§4.1/§4.2 v0.3.0）：技术判定=快照；名称/行业/财务标注=Trae 财务库 join（契约 v0.4.0 §三.1）
+    join 未覆盖的行照常展示技术判定，仅不显示财务标注（兜底常态，非异常） %>
+<% ov = @overlay[row.code.to_s.upcase] %>
 <div class="px-5 py-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 hover:bg-bg-soft">
   <div class="min-w-[150px]">
-    <%= link_to row.name, stock_path(row.code.upcase), class: "text-hl-14 font-medium text-ink hover:text-link" %>
+    <%= link_to (ov ? ov[:name] : row.name), stock_path(row.code.upcase), class: "text-hl-14 font-medium text-ink hover:text-link" %>
     <span class="text-hl-12 text-muted-3 ml-1.5 font-mono"><%= row.symbol %></span>
   </div>
 
-  <span class="text-hl-12 text-muted-2 min-w-[72px]"><%= row.industry.presence || "—" %></span>
+  <span class="text-hl-12 text-muted-2 min-w-[72px]"><%= (ov ? ov[:industry].presence : row.industry.presence) || "—" %></span>
 
-  <% if row.finance %>
-    <%= ww_badge "金融", "金融四行业（银行/保险/证券/多元金融）" %>
+  <% if ov && ov[:finance] %>
+    <%= ww_badge "金融", "金融行业（银行/证券/保险）" %>
   <% end %>
-  <% if row.st %>
+  <% if ov && ov[:st] %>
     <%= ww_badge "ST", "ST/*ST 股票（仅标注，不剔除）" %>
-  <% end %>
-  <% if row.run3_asof %>
-    <%= ww_quality_badge %>
-  <% end %>
-  <% if row.subtag == "sticky_micro" %>
-    <%= ww_badge "已贴轴微柱", "本月柱值贴近 0 轴，柱值方向的可信度低" %>
-  <% end %>
-  <% if row.subtag == "continuation" %>
-    <%= ww_badge "续命候选", "前一窗口于 1-2 个月内关闭，本次若回升将按方法论视为原窗口延续的新开窗事件" %>
   <% end %>
 
   <div class="ml-auto flex flex-wrap items-center gap-x-4 gap-y-1">
-    <% if row.roe %>
-      <span class="text-hl-12 text-muted-2">ROE <%= number_with_precision(row.roe, precision: 1) %>%<%= "（#{row.roe_band}）" if row.roe_band.present? %></span>
+    <% if ov && ov[:roe_latest] %>
+      <%= ww_badge "ROE #{number_with_precision(ov[:roe_latest], precision: 1)}%",
+                   "最新披露年报加权 ROE（财务库口径；筛选预设见页顶档位说明）" %>
     <% end %>
 
     <%= render "hist_glyph", row: row %>

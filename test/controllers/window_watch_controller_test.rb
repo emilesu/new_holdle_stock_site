@@ -9,6 +9,12 @@ class WindowWatchControllerTest < ActionDispatch::IntegrationTest
   setup do
     ww_create_stocks!
     WindowWatch::SnapshotIngest.call(payload: ww_payload, source_ip: "127.0.0.1")
+    # 财务库喂数（页面侧预设数据源）：核电/招行/茅台/宁德 三年 ROE≥15；美的 ROE 12 档（仅 10%+ 命中）；五粮液无财务数据（join 兜底）
+    ww_give_financials("SH601985", roes: [16, 17, 18])
+    ww_give_financials("SH600036", roes: [18, 19, 20])
+    ww_give_financials("SH600519", roes: [30, 31, 32])
+    ww_give_financials("SZ300750", roes: [24, 25, 26])
+    ww_give_financials("SZ000333", roes: [12, 13, 14])
   end
 
   # ---- §一 访问控制（暗发布期：DARK_RELEASE=true，非管理员一律重定向首页）----
@@ -39,16 +45,33 @@ class WindowWatchControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "全部股票"
   end
 
-  # ---- 主组视图（§3.3 默认：仅 run3_asof=true）----
+  # ---- 财务预设视图（需求单 v0.3.0：页面侧筛选，近3财年 ROE≥档 且 经营现金流>0）----
 
-  test "主组视图只显示质量达标股票（V2：条数=main_group_run3）" do
+  test "预设 15%+：命中行显示，未命中与无财务行不显示（V2=财务库命中数）" do
     sign_in users(:two)
     get window_watch_path
     body = response.body
     assert_includes body, "中国核电"
-    refute_includes body, "五粮液" # run3_asof=false 不进主组
-    # 主组 5 只（6 - 五粮液）
-    assert_equal 5, WindowWatchSnapshot.latest.stocks.where(run3_asof: true).count
+    assert_includes body, "贵州茅台"
+    refute_includes body, "美的集团"   # ROE 12-14，不达 15% 档
+    refute_includes body, "五粮液"     # 财务库未覆盖，join 兜底=不进预设（全量视图仍显示）
+    assert_equal 4, WindowWatch::FinancialPreset.hit_symbols(band: 15).size
+  end
+
+  test "预设档位下拉：10%+ 时美的集团进入视图" do
+    sign_in users(:two)
+    get window_watch_path(view: "main", band: 10)
+    assert_includes response.body, "美的集团"
+    # 非法档位回落默认 15
+    get window_watch_path(view: "main", band: 99)
+    refute_includes response.body, "美的集团"
+  end
+
+  test "卡片行财务标注来自财务库 join（ROE 徽章），无「质量达标」表述" do
+    sign_in users(:two)
+    get window_watch_path
+    assert_includes response.body, "ROE 18.0%" # 中国核电最新年报 roe_avg=18
+    refute_includes response.body, "质量达标"
   end
 
   test "T3 档 subtag 行尾注与折叠呈现（§3.2）" do
@@ -63,8 +86,8 @@ class WindowWatchControllerTest < ActionDispatch::IntegrationTest
   test "全量视图含全部行与固定提示行；档筛选/行业筛选/排序生效" do
     sign_in users(:two)
     get window_watch_path(view: "all")
-    assert_includes response.body, "默认视图只显示质量达标股票；本视图为全量技术形态列表，未含企业质量筛选"
-    assert_includes response.body, "五粮液"
+    assert_includes response.body, "财务预设视图按财务指标筛选（财务库）；本视图为全量技术形态列表，未含财务指标筛选"
+    assert_includes response.body, "五粮液" # 全量视图含财务未覆盖行（join 兜底照常展示）
     assert_equal 6, WindowWatchSnapshot.latest.stocks.count
 
     get window_watch_path(view: "all", tier: "T1")

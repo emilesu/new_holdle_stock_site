@@ -25,12 +25,6 @@ module WindowWatchHelper
              data: { tip: tip }, tabindex: "0"
   end
 
-  def ww_quality_badge
-    ww_badge "质量达标",
-             "最近一份已披露年报口径下，ROE≥15% 且经营现金流为正、连续3年。as-of 截至 #{@snapshot.month} 次月1日已披露年报",
-             "border-ink-soft text-ink bg-white"
-  end
-
   # 判定月应为「最后一个已收完月」= 上一自然月（K4），用于 R4 最新月缺失提示
   def ww_expected_month
     (Date.current << 1).strftime("%Y-%m")

@@ -11,20 +11,29 @@
     <% else %>
       <%= render "header" %>
 
-      <%# 视图开关（§三②）：切换时筛选条件重置（R1，行为一致） %>
-      <div class="flex items-center gap-1 text-hl-13" role="tablist">
-        <%= link_to "主组视图", window_watch_path(view: "main"),
+      <%# 视图开关（§三② v0.3.0）：主组改为页面侧财务预设；切换时筛选条件重置（R1，行为一致） %>
+      <div class="flex flex-wrap items-center gap-1 text-hl-13" role="tablist">
+        <%= link_to "财务预设", window_watch_path(view: "main"),
               class: "px-3 py-1.5 rounded-md border #{'bg-white border-ink text-ink font-medium' if @view == 'main'} #{'border-line text-muted hover:text-ink' unless @view == 'main'}" %>
         <%= link_to "全部股票", window_watch_path(view: "all"),
               class: "px-3 py-1.5 rounded-md border #{'bg-white border-ink text-ink font-medium' if @view == 'all'} #{'border-line text-muted hover:text-ink' unless @view == 'all'}" %>
-        <span class="ml-2 text-hl-12 text-muted-4">主组=质量达标子集｜全部=技术形态全量</span>
+        <% if @view == "main" %>
+          <span class="ml-3 text-hl-12 text-muted-3">近3财年每年 ROE≥</span>
+          <% WindowWatch::FinancialPreset::BANDS.each do |b| %>
+            <%= link_to "#{b}%", window_watch_path(view: "main", band: b),
+                  class: "px-2 py-1 rounded-md border #{b == @band ? 'border-ink text-ink bg-white font-medium' : 'border-line text-muted hover:text-ink'}" %>
+          <% end %>
+          <span class="text-hl-12 text-muted-3">且经营现金流为正（最新披露年报口径，财务库筛选）</span>
+        <% else %>
+          <span class="ml-2 text-hl-12 text-muted-4">全部=技术形态全量列表</span>
+        <% end %>
       </div>
 
       <% if @view == "main" %>
-        <%# 整页数据按快照 fragment cache：同月重推 updated_at 变化自动失效（V9/决议7） %>
-        <% cache [@snapshot, "main_t1"] do %><%= render "tier_open", rows: @t1 %><% end %>
-        <% cache [@snapshot, "main_t2"] do %><%= render "tier_forming", p2: @t2_p2, p1: @t2_p1 %><% end %>
-        <% cache [@snapshot, "main_t3"] do %><%= render "tier_hold", rows: @t3 %><% end %>
+        <%# 不做区块缓存：命中集随财务库日批变化，缓存会陈旧；查询走索引+预设日缓存，成本可忽略（V9 实时正确） %>
+        <%= render "tier_open", rows: @t1 %>
+        <%= render "tier_forming", p2: @t2_p2, p1: @t2_p1 %>
+        <%= render "tier_hold", rows: @t3 %>
       <% else %>
         <%= render "full_table" %>
       <% end %>

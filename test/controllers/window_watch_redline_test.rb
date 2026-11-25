@@ -7,12 +7,16 @@ class WindowWatchRedlineTest < ActionDispatch::IntegrationTest
   include Devise::Test::IntegrationHelpers
   include WindowWatchSnapshotHelper
 
-  # §六.1 词表（v0.2.1 增「状态A形成中」）+ §六.3 禁用术语（含 alt/meta/tooltip 全文扫描）
-  FORBIDDEN_WORDS = %w[即将 预测 建议买入 建议卖出 可以关注 值得买入 目标价 止损价 高转矮 状态A形成中].freeze
+  # §六.1 词表（v0.3.0 增「质量达标」；v0.2.1 增「状态A形成中」）+ §六.3 禁用术语（含 alt/meta/tooltip 全文扫描）
+  FORBIDDEN_WORDS = %w[即将 预测 建议买入 建议卖出 可以关注 值得买入 目标价 止损价 高转矮 状态A形成中 质量达标].freeze
 
   setup do
     ww_create_stocks!
     WindowWatch::SnapshotIngest.call(payload: ww_payload, source_ip: "127.0.0.1")
+    ww_give_financials("SH601985", roes: [16, 17, 18])
+    ww_give_financials("SH600036", roes: [18, 19, 20])
+    ww_give_financials("SH600519", roes: [30, 31, 32])
+    ww_give_financials("SZ300750", roes: [24, 25, 26])
     sign_in users(:two)
   end
 

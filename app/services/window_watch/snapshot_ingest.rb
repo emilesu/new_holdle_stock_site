@@ -7,7 +7,10 @@ module WindowWatch
     SUBTAGS = WindowWatchSnapshotStock::SUBTAGS
     MONTH_FORMAT = /\A\d{4}-(0[1-9]|1[0-2])\z/
     REQUIRED_STOCK_FIELDS = %w[symbol code name tier exchange hist prev_hist dif dea ratio sa_run].freeze
-    REQUIRED_STATS_KEYS = %w[main_group_run3 main_group_run5 finance_count st_count bj_count in_position_count].freeze
+    REQUIRED_STATS_KEYS = %w[bj_count in_position_count].freeze
+    # 契约 v0.4.0 §四：快照不得携带任何财务字段（财务指标权威源=Trae 财务库，页面侧 join）
+    FORBIDDEN_ROW_FIELDS = %w[run3_asof run5_asof roe roe_band finance st].freeze
+    FORBIDDEN_STATS_KEYS = %w[main_group_run3 main_group_run5 finance_count st_count].freeze
 
     def self.call(payload:, source_ip: nil)
       new(payload, source_ip).call
@@ -86,6 +89,8 @@ module WindowWatch
 
           absent = REQUIRED_STOCK_FIELDS.reject { |f| row.key?(f) && !row[f].nil? }
           @errors << "#{symbol} 必填字段缺失：#{absent.join('/')}" if absent.any?
+          carried = FORBIDDEN_ROW_FIELDS.select { |f| row.key?(f) }
+          @errors << "#{symbol} 不得携带财务字段：#{carried.join('/')}（v0.4.0 起财务指标移出快照）" if carried.any?
           @errors << "#{symbol} tier 非法：#{row['tier']}" if row["tier"].present? && !TIERS.include?(row["tier"])
           @errors << "#{symbol} tier=#{row['tier']} 与所在档数组键 #{tier} 不一致" if row["tier"].present? && TIERS.include?(row["tier"]) && row["tier"] != tier
           @errors << "#{symbol} subtag 非法：#{row['subtag']}" if row["subtag"].present? && !SUBTAGS.include?(row["subtag"])
@@ -123,11 +128,8 @@ module WindowWatch
         actual = rows.count { |r| r["_tier"] == t }
         @errors << "tier_counts.#{t}=#{v} 与 tiers 实际条数 #{actual} 不一致" if v.is_a?(Integer) && v != actual
       end
-      { "main_group_run3" => rows.count { |r| r["run3_asof"] == true },
-        "main_group_run5" => rows.count { |r| r["run5_asof"] == true } }.each do |key, actual|
-        v = stats[key]
-        @errors << "#{key}=#{v} 与逐股行计数 #{actual} 不一致" if v.is_a?(Integer) && v != actual
-      end
+      carried = FORBIDDEN_STATS_KEYS.select { |k| stats.key?(k) }
+      @errors << "stats 不得携带财务统计键：#{carried.join('/')}（v0.4.0 起财务指标移出快照）" if carried.any?
     end
 
     def check_universe!(rows)
@@ -206,9 +208,6 @@ module WindowWatch
         "symbol" => r["symbol"], "code" => r["code"], "name" => r["name"],
         "industry" => r["industry"].to_s, "exchange" => r["exchange"].to_s.upcase,
         "tier" => r["tier"], "subtag" => r["subtag"].to_s,
-        "finance" => r["finance"] == true, "st" => r["st"] == true,
-        "run3_asof" => boolean_or_nil(r["run3_asof"]), "run5_asof" => boolean_or_nil(r["run5_asof"]),
-        "roe" => r["roe"], "roe_band" => r["roe_band"].to_s,
         "hist" => r["hist"], "prev_hist" => r["prev_hist"],
         "dif" => r["dif"], "dea" => r["dea"], "ratio" => r["ratio"],
         "open_month" => r["open_month"], "months_since_open" => r["months_since_open"],
@@ -217,7 +216,6 @@ module WindowWatch
       }
     end
 
-    def boolean_or_nil(v) = v == true || v == false ? v : nil
     def parse_time(str) = str.present? ? (Time.zone.parse(str.to_s) rescue nil) : nil
 
     def deep_stringify(obj)

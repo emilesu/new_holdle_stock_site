@@ -64,12 +64,12 @@ class Api::V1::WindowWatch::SnapshotsControllerTest < ActionDispatch::Integratio
     assert_equal "rejected", WindowWatchIngestLog.last.result
   end
 
-  test "stats 出现 null（st_count）422" do
+  test "stats 出现 null（bj_count）422" do
     payload = ww_payload
-    payload["stats"]["st_count"] = nil
+    payload["stats"]["bj_count"] = nil
     post_snapshot(payload)
     assert_response 422
-    assert_match "st_count", response.parsed_body["errors"].join
+    assert_match "bj_count", response.parsed_body["errors"].join
   end
 
   test "缺 in_position_count（v0.3.3 起恒在键）422" do
@@ -142,7 +142,7 @@ class Api::V1::WindowWatch::SnapshotsControllerTest < ActionDispatch::Integratio
     snapshot = WindowWatchSnapshot.find_by(month: "2026-10")
     assert_equal 5, snapshot.stocks.count
     assert_nil snapshot.stocks.find_by(name: "五粮液")
-    assert_equal 5, snapshot.stats["main_group_run3"] # 新包 stats 已同步（五粮液本就 run3=false）
+    assert_equal 1, snapshot.stats["tier_counts"]["T2_P2"] # 新包 stats 已同步
   end
 
   test "跨月新快照=新记录，latest 取判定月最大" do
