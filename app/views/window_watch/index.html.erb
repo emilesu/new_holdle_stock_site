@@ -1,7 +1,8 @@
 <% set_page_title "状态A - 月K开窗观察 - HOLDLE 方法论月K状态" %>
 <% set_page_description "按 HOLDLE 方法论对全A股月K状态的客观描述：开窗观察、红柱收敛、绿柱收敛与暂不开窗分层，每月更新。" %>
 <div class="min-h-screen bg-bg-soft">
-  <main class="container-hl py-8 space-y-5">
+  <%# 移动端贴边去两侧留白（2026-11-25 老板定，对齐金字塔/筛选页 container-hl-flush 惯例） %>
+  <main class="container-hl-flush py-8 space-y-5">
     <% if @snapshot.nil? %>
       <%# R4 冷启动：库内一次快照都没有（决议4） %>
       <%= render "cold_start" %>
@@ -11,8 +12,10 @@
     <% else %>
       <%= render "header" %>
 
-      <%# 视图开关（§三② v0.3.0）：主组改为页面侧财务预设；切换时筛选条件重置（R1，行为一致） %>
-      <div class="flex flex-wrap items-center gap-1 text-hl-13" role="tablist">
+      <%# 视图开关（§三② v0.3.0）：主组改为页面侧财务预设；切换时筛选条件重置（R1，行为一致）
+          ww-selection-cache：选择元素记忆（2026-11-25 老板定，localStorage 7 天，对齐金字塔页惯例）
+          移动端贴边后裸控件行自带横向内边距 %>
+      <div class="flex flex-wrap items-center gap-1 text-hl-13 px-4 md:px-0" role="tablist" data-controller="ww-selection-cache">
         <%# 视图/档位切换保留判定月（month=latest 时无副作用） %>
         <%= link_to "财务预设", window_watch_path(view: "main", month: @snapshot.month),
               class: "px-3 py-1.5 rounded-md border #{'bg-white border-ink text-ink font-medium' if @view == 'main'} #{'border-line text-muted hover:text-ink' unless @view == 'main'}" %>

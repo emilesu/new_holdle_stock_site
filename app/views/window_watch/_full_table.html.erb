@@ -11,7 +11,7 @@
       <span class="text-muted-3 mr-1">档</span>
       <% ([nil] + WindowWatchSnapshotStock::ALL_TIERS).each do |t| %>
         <%= link_to (t.nil? ? "全部" : WindowWatchHelper::TIER_SHORT_NAMES[t]),
-              window_watch_path(view: "all", tier: t, industry: @industry, sort: @sort, q: @q.presence, month: @snapshot.month),
+              window_watch_path(view: "all", tier: t, sector: @sector, industry: @industry, sort: @sort, q: @q.presence, month: @snapshot.month),
               class: "px-2.5 py-1 rounded-md border #{t == @tier ? 'border-ink text-ink bg-white font-medium' : 'border-line text-muted hover:text-ink'}" %>
       <% end %>
     </div>
@@ -20,10 +20,24 @@
       <%= hidden_field_tag :view, "all" %>
       <%= hidden_field_tag :tier, @tier %>
       <%= hidden_field_tag :month, @snapshot.month %>
-      <%# R2①：名称/代码检索（与档/行业/排序组合过滤） %>
-      <label class="flex items-center gap-1.5 text-hl-12 text-muted-3">检索
-        <input type="text" name="q" value="<%= @q %>" maxlength="40" placeholder="名称或代码"
-               class="px-2 py-1.5 text-hl-13 border border-line rounded-md bg-white focus:border-link w-32">
+      <%# R2①：名称/代码检索 + 导航栏同款模糊补全（2026-11-25 老板定，仅限A股）；选中项回填代码后提交过滤 %>
+      <div class="relative" data-controller="ww-search">
+        <label class="flex items-center gap-1.5 text-hl-12 text-muted-3">检索
+          <input type="text" name="q" value="<%= @q %>" maxlength="40" placeholder="名称或代码" autocomplete="off"
+                 data-ww-search-target="input"
+                 data-action="input->ww-search#onInput keydown->ww-search#onKey focus->ww-search#onFocus"
+                 class="px-2 py-1.5 text-hl-13 border border-line rounded-md bg-white focus:border-link w-32">
+        </label>
+        <div data-ww-search-target="list"
+             class="hidden absolute left-0 top-full z-40 mt-1 w-56 max-h-64 overflow-auto bg-white rounded-lg shadow-lg border border-line py-1"></div>
+      </div>
+      <label class="flex items-center gap-1.5 text-hl-12 text-muted-3">板块
+        <select name="sector" class="px-2 py-1.5 text-hl-13 border border-line rounded-md bg-white focus:border-link">
+          <option value="">全部</option>
+          <% @sectors.each do |sec| %>
+            <option value="<%= sec %>" <%= "selected" if @sector == sec %>><%= sec %></option>
+          <% end %>
+        </select>
       </label>
       <label class="flex items-center gap-1.5 text-hl-12 text-muted-3">行业
         <select name="industry" class="px-2 py-1.5 text-hl-13 border border-line rounded-md bg-white focus:border-link">
@@ -35,13 +49,14 @@
       </label>
       <label class="flex items-center gap-1.5 text-hl-12 text-muted-3">排序
         <select name="sort" class="px-2 py-1.5 text-hl-13 border border-line rounded-md bg-white focus:border-link">
+          <option value="pyramid_desc" <%= "selected" if @sort == "pyramid_desc" %>>金字塔分高→低</option>
           <option value="ratio_asc" <%= "selected" if @sort == "ratio_asc" %>>贴0轴优先（比值升序）</option>
           <option value="ratio_desc" <%= "selected" if @sort == "ratio_desc" %>>比值降序</option>
           <option value="open_month_desc" <%= "selected" if @sort == "open_month_desc" %>>开窗月新→旧</option>
           <option value="sa_run_desc" <%= "selected" if @sort == "sa_run_desc" %>>状态A连续月多→少</option>
         </select>
       </label>
-      <button type="submit" class="px-3 py-1.5 text-hl-12 rounded-md border border-line text-muted hover:text-ink hover:border-ink">应用</button>
+      <button type="submit" class="px-3 py-1.5 text-hl-12 rounded-md border border-line text-muted hover:text-ink hover:border-ink cursor-pointer">应用</button>
     <% end %>
   </div>
 

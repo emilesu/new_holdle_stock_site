@@ -36,6 +36,8 @@ class StocksController < ApplicationController
       prefix: "#{Stock.sanitize_sql_like(query.upcase)}%"
     ).limit(AUTOCOMPLETE_LIMIT)
      .select(:id, :symbol, :name, :market, :exchange)
+    # market 参数白名单过滤（2026-11-25 老板定：开窗观察检索仅A股；导航栏不传=全市场，行为不变）
+    stocks = stocks.where(market: params[:market]) if %w[CN HK US].include?(params[:market].to_s)
 
     results = stocks.map do |stock|
       market_label = stock.market == 'CN' ? 'A股' : stock.market == 'HK' ? '港股' : '美股'

@@ -134,4 +134,17 @@ class StocksAutocompleteTest < ActionDispatch::IntegrationTest
     # 'a' 不会匹配 PAYH、ZSYH、TXKG 中的任一个前缀
     assert matched_stocks.empty?, "拼音搜索使用前缀匹配，'a' 不应匹配任何中文股票"
   end
+
+  # 2026-11-25 老板定：开窗观察全量检索补全仅限A股（market 参数白名单过滤；不传=全市场行为不变）
+  test "autocomplete market=CN filters out HK/US stocks" do
+    get autocomplete_stocks_path(q: "07"), params: { market: "CN" }, as: :json
+    assert_response :success
+    assert(response.parsed_body.all? { |s| s["market"] == "CN" })
+
+    get autocomplete_stocks_path(q: "AAPL", market: "CN"), as: :json
+    assert_empty response.parsed_body
+
+    get autocomplete_stocks_path(q: "AAPL", market: "bogus"), as: :json
+    assert(response.parsed_body.any? { |s| s["symbol"] == "AAPL" }, "非法 market 值忽略，回落全市场")
+  end
 end

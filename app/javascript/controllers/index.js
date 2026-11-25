@@ -72,3 +72,9 @@ application.register("comparison-list", ComparisonListController)
 
 import WwRowLinkController from "./ww_row_link_controller"
 application.register("ww-row-link", WwRowLinkController)
+
+import WwSearchController from "./ww_search_controller"
+application.register("ww-search", WwSearchController)
+
+import WwSelectionCacheController from "./ww_selection_cache_controller"
+application.register("ww-selection-cache", WwSelectionCacheController)

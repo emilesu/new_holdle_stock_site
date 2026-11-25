@@ -6,11 +6,13 @@ class WindowWatchController < ApplicationController
   # 调试完成后置 false，即恢复需求单 §一 的正式访问控制：会员完整视图 + 非会员 teaser
   DARK_RELEASE = true
 
-  # 全量视图排序白名单（R3/A6：禁止参数直接透传 SQL）
+  # 全量视图排序白名单（R3/A6：禁止参数直接透传 SQL）；2026-11-25 老板定：增金字塔分排序并设为默认
   SORT_ORDERS = {
-    "ratio_asc" => "ratio ASC", "ratio_desc" => "ratio DESC",
-    "open_month_desc" => "open_month DESC NULLS LAST",
-    "sa_run_desc" => "sa_run DESC"
+    "pyramid_desc" => "stocks.pyramid_total_score DESC NULLS LAST, window_watch_snapshot_stocks.ratio ASC",
+    "ratio_asc" => "window_watch_snapshot_stocks.ratio ASC",
+    "ratio_desc" => "window_watch_snapshot_stocks.ratio DESC",
+    "open_month_desc" => "window_watch_snapshot_stocks.open_month DESC NULLS LAST",
+    "sa_run_desc" => "window_watch_snapshot_stocks.sa_run DESC"
   }.freeze
   PAGE_PER = 100
 
@@ -59,23 +61,28 @@ class WindowWatchController < ApplicationController
       @sparkline = WindowWatch::MonthlySparkline.call(all_rows, snapshot_month: @snapshot.month)
       prepare_row_extras
     else
+      # 全量视图（2026-11-25 老板定增补）：板块筛选 + 金字塔分默认排序 + A股检索补全
+      # join stocks 常驻：板块列/当前名检索/金字塔排序均需（symbol 唯一索引 1:1，不改行数）
       @tier = params[:tier].presence_in(WindowWatchSnapshotStock::ALL_TIERS)
-      @industries = @snapshot.stocks.where.not(industry: "").distinct.order(:industry).pluck(:industry)
+      scope = @snapshot.stocks
+                       .joins("LEFT JOIN stocks ON lower(stocks.symbol) = window_watch_snapshot_stocks.code")
+      @sectors = scope.where.not(stocks: { sector: [nil, ""] }).distinct.order("stocks.sector").pluck("stocks.sector")
+      @sector = params[:sector].presence_in(@sectors)
+      @industries = scope.where.not("window_watch_snapshot_stocks.industry" => "").distinct
+                         .order("window_watch_snapshot_stocks.industry")
+                         .pluck("window_watch_snapshot_stocks.industry")
       @industry = params[:industry].presence_in(@industries)
-      @sort = params[:sort].presence_in(SORT_ORDERS.keys) || "ratio_asc"
-      # 列名预先限定表名：q 检索分支会 LEFT JOIN stocks（industry/name 两表同名，防歧义）
-      scope = @snapshot.stocks.where({"window_watch_snapshot_stocks.tier" => @tier,
-                                      "window_watch_snapshot_stocks.industry" => @industry}.compact)
+      @sort = params[:sort].presence_in(SORT_ORDERS.keys) || "pyramid_desc"
+      scope = scope.where({"window_watch_snapshot_stocks.tier" => @tier,
+                           "window_watch_snapshot_stocks.industry" => @industry,
+                           "stocks.sector" => @sector}.compact)
       # R2①：名称/代码检索（通配符与转义符剥离后整串模糊匹配，参数化查询防注入）；
-      # 同时匹配当前库名（评审修复5）：改名股按现名可命中，展示名与检索词不再错位；
-      # stocks.symbol 唯一索引保证 1:1，join 不改变行数；列名全部限定防歧义
+      # 同时匹配当前库名（评审修复5）：改名股按现名可命中，展示名与检索词不再错位
       @q = params[:q].to_s.strip.delete("%_\\")[0, 40]
       if @q.present?
         like = "%#{@q}%"
-        scope = scope
-                .joins("LEFT JOIN stocks ON lower(stocks.symbol) = window_watch_snapshot_stocks.code")
-                .where("window_watch_snapshot_stocks.name ILIKE :q OR window_watch_snapshot_stocks.code ILIKE :q OR " \
-                       "window_watch_snapshot_stocks.symbol ILIKE :q OR stocks.name ILIKE :q", q: like)
+        scope = scope.where("window_watch_snapshot_stocks.name ILIKE :q OR window_watch_snapshot_stocks.code ILIKE :q OR " \
+                            "window_watch_snapshot_stocks.symbol ILIKE :q OR stocks.name ILIKE :q", q: like)
       end
       @stocks = scope.order(Arel.sql(SORT_ORDERS.fetch(@sort))).page(params[:page]).per(PAGE_PER)
       @overlay = WindowWatch::FinancialPreset.overlay(@stocks.to_a)

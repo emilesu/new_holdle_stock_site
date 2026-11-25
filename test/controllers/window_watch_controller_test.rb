@@ -180,6 +180,43 @@ class WindowWatchControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "所属档位" # 档位徽章 tooltip
   end
 
+  # ---- 2026-11-25 老板定全量视图四项优化 ----
+
+  test "全量视图默认按金字塔分降序（茅台90 > 招行85 > 核电70）" do
+    sign_in users(:two)
+    get window_watch_path(view: "all")
+    body = response.body
+    assert_operator body.index("贵州茅台"), :<, body.index("招商银行"), "金字塔序"
+    assert_operator body.index("招商银行"), :<, body.index("中国核电"), "金字塔序"
+    assert_includes body, "金字塔分高→低"
+  end
+
+  test "全量视图板块筛选：金融板块只含招行/平安" do
+    sign_in users(:two)
+    WindowWatch::SnapshotIngest.call(payload: ww_payload(in_position: true), source_ip: "127.0.0.1")
+    get window_watch_path(view: "all", sector: "金融")
+    assert_includes response.body, "招商银行"
+    assert_includes response.body, "中国平安"
+    refute_includes response.body, "贵州茅台"
+    # 板块选项列表在位 + 档筛选链接保留板块条件
+    assert_includes response.body, "公用事业"
+    assert_includes response.body, "sector=%E9%87%91%E8%9E%8D"
+  end
+
+  test "非法板块回落全部" do
+    sign_in users(:two)
+    get window_watch_path(view: "all", sector: "不存在的板块")
+    assert_response :success
+    assert_includes response.body, "贵州茅台"
+  end
+
+  test "检索框挂A股补全组件；选择元素挂缓存组件" do
+    sign_in users(:two)
+    get window_watch_path(view: "all")
+    assert_includes response.body, 'data-controller="ww-search"'          # 导航栏同款模糊补全（market=CN）
+    assert_includes response.body, 'data-controller="ww-selection-cache"' # localStorage 选择记忆
+  end
+
   test "T3 档 subtag 行尾注与折叠呈现（§3.2）" do
     sign_in users(:two)
     get window_watch_path
