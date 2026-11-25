@@ -1,11 +1,12 @@
 <%# ④持仓管理（契约 v0.5 §三）：排除桶逐股明细，默认折叠；v1.1 无逐股行时降级为仅计数提示
-    副标题为 DSH 确认版固定文案（V7 逐字验收）；行=开窗·入场·持仓三时点叙事，金字塔序 top10+折叠 %>
-<% return if @in_position_count.to_i <= 0 && rows.empty? %>
+    副标题为 DSH 确认版固定文案（V7 逐字验收）；行=开窗·入场·持仓三时点叙事，金字塔序 top10+折叠
+    接口与其他 tier partial 一致：rows=逐股明细、count=stats.in_position_count（评审修复4） %>
+<% return if count.to_i <= 0 && rows.empty? %>
 <section id="ww-inpos" class="hl-card scroll-mt-24">
   <details>
     <summary class="px-5 py-4 cursor-pointer select-none list-none flex items-center gap-2 [&::-webkit-details-marker]:hidden">
       <span class="text-hl-16 font-semibold text-ink">④ 持仓管理
-        <span class="text-hl-13 text-muted-3 font-normal ml-1"><%= rows.any? ? ww_block_summary(rows) : "#{@in_position_count} 只" %></span>
+        <span class="text-hl-13 text-muted-3 font-normal ml-1"><%= rows.any? ? ww_block_summary(rows) : "#{count} 只" %></span>
       </span>
       <span class="text-hl-11 text-muted-4 border border-dashed border-line rounded px-1.5 py-0.5">排除桶</span>
       <svg class="w-3.5 h-3.5 text-muted-4 transition-transform open:rotate-90 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
@@ -14,7 +15,7 @@
       <p class="text-hl-12 text-muted mt-3 mb-2"><%= WindowWatchHelper::IN_POSITION_SUBTITLE %></p>
       <% if rows.empty? %>
         <%# v1.1 兼容降级：无逐股明细，仅计数（12 月 T+1 按 v1.2 推送后自然解除） %>
-        <p class="py-4 text-hl-13 text-muted-3">共 <%= @in_position_count %> 只；逐股明细将随下一批快照（snapshot 1.2）提供。</p>
+        <p class="py-4 text-hl-13 text-muted-3">共 <%= count %> 只；逐股明细将随下一批快照（snapshot 1.2）提供。</p>
       <% else %>
         <div class="divide-y divide-line">
           <% rows.first(WindowWatchHelper::TOP_DISPLAY).each do |row| %><%= render "stock_row", row: row %><% end %>

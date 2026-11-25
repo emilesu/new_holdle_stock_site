@@ -13,15 +13,14 @@ class WindowWatchController < ApplicationController
     "sa_run_desc" => "sa_run DESC"
   }.freeze
   PAGE_PER = 100
-  MONTH_FORMAT = /\A\d{4}-(0[1-9]|1[0-2])\z/
 
   def index
     if DARK_RELEASE && !(user_signed_in? && current_user.is_admin?)
       redirect_to root_path and return
     end
-    # R2②：月份切换（历史快照回看）；非法/不存在月份回落 latest
+    # R2②：月份切换（历史快照回看）；非法/不存在月份回落 latest（格式权威源=契约边界 SnapshotIngest）
     month_param = params[:month].to_s
-    @snapshot = (month_param.match?(MONTH_FORMAT) && WindowWatchSnapshot.find_by(month: month_param)) ||
+    @snapshot = (month_param.match?(WindowWatch::SnapshotIngest::MONTH_FORMAT) && WindowWatchSnapshot.find_by(month: month_param)) ||
                 WindowWatchSnapshot.latest
     @is_member = user_signed_in? && current_user.content_tier >= User::TIER_MEMBER
     return unless @snapshot && @is_member
@@ -61,12 +60,19 @@ class WindowWatchController < ApplicationController
       @industries = @snapshot.stocks.where.not(industry: "").distinct.order(:industry).pluck(:industry)
       @industry = params[:industry].presence_in(@industries)
       @sort = params[:sort].presence_in(SORT_ORDERS.keys) || "ratio_asc"
-      scope = @snapshot.stocks.where({ tier: @tier, industry: @industry }.compact)
-      # R2①：名称/代码检索（通配符与转义符剥离后整串模糊匹配，参数化查询防注入）
+      # 列名预先限定表名：q 检索分支会 LEFT JOIN stocks（industry/name 两表同名，防歧义）
+      scope = @snapshot.stocks.where({"window_watch_snapshot_stocks.tier" => @tier,
+                                      "window_watch_snapshot_stocks.industry" => @industry}.compact)
+      # R2①：名称/代码检索（通配符与转义符剥离后整串模糊匹配，参数化查询防注入）；
+      # 同时匹配当前库名（评审修复5）：改名股按现名可命中，展示名与检索词不再错位；
+      # stocks.symbol 唯一索引保证 1:1，join 不改变行数；列名全部限定防歧义
       @q = params[:q].to_s.strip.delete("%_\\")[0, 40]
       if @q.present?
         like = "%#{@q}%"
-        scope = scope.where("name ILIKE :q OR code ILIKE :q OR symbol ILIKE :q", q: like)
+        scope = scope
+                .joins("LEFT JOIN stocks ON lower(stocks.symbol) = window_watch_snapshot_stocks.code")
+                .where("window_watch_snapshot_stocks.name ILIKE :q OR window_watch_snapshot_stocks.code ILIKE :q OR " \
+                       "window_watch_snapshot_stocks.symbol ILIKE :q OR stocks.name ILIKE :q", q: like)
       end
       @stocks = scope.order(Arel.sql(SORT_ORDERS.fetch(@sort))).page(params[:page]).per(PAGE_PER)
       @overlay = WindowWatch::FinancialPreset.overlay(@stocks.to_a)

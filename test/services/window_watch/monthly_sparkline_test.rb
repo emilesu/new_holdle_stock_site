@@ -39,6 +39,24 @@ class WindowWatchMonthlySparklineTest < ActiveSupport::TestCase
     assert_nil res.values[-3]
   end
 
+  test "库内仅判定月 1 根：不算滞后（评审修复2），倒数二柱回落快照 prev_hist" do
+    give_bars(%w[2026-10])
+    res = spark
+    refute_predicate res, :lagged
+    assert_equal "2026-10", res.cutoff
+    assert_in_delta @row.prev_hist.to_f, res.values[-2], 1e-9
+    assert_in_delta @row.hist.to_f, res.values[-1], 1e-9
+  end
+
+  test "预热窗口外的远古柱不参与拉取（评审修复1：120 个月上限）" do
+    # 判定月 2026-10，窗口起点=2016-10；2015-12 的柱在窗口外，不影响末柱对账与滞后判定
+    give_bars(%w[2015-12 2026-09 2026-10])
+    res = spark
+    refute_predicate res, :lagged
+    assert_in_delta @row.hist.to_f, res.values.last, 1e-9
+    refute_nil res.values[4]
+  end
+
   test "快照月格式非法时返回空集（视图层回落双柱组件）" do
     assert_empty WindowWatch::MonthlySparkline.call([@row], snapshot_month: "2026-13")
   end

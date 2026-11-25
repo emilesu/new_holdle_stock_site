@@ -148,6 +148,12 @@ class WindowWatchControllerTest < ActionDispatch::IntegrationTest
 
     get window_watch_path(view: "all", q: "%_%") # 剥离后空串=不过滤
     assert_response :success
+
+    # 评审修复5：改名股按当前库名可命中（检索同时匹配 stocks.name，展示名优先当前库）
+    Stock.find_by!(symbol: "SZ000333").update_column(:name, "美的集团G")
+    get window_watch_path(view: "all", q: "集团G")
+    assert_includes response.body, "美的集团G"
+    refute_includes response.body, "中国核电"
   end
 
   # ---- R3 ④持仓管理区块（契约 v0.5 / snapshot 1.2）----

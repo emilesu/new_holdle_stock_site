@@ -7,7 +7,9 @@ module WindowWatch
   # 呈现纪律：仅图形与月份，不渲染任何绝对数值（V11）
   class MonthlySparkline
     MONTHS = 6
-    MONTH_FORMAT = /\A\d{4}-(0[1-9]|1[0-2])\z/
+    # EMA 预热窗口（月）：末柱恒取快照值、更早柱仅定性呈现，10 年预热后种子影响可忽略；
+    # 不设限则每请求全历史 pluck（预设行+④行可达数百股），小内存服务器浪费明显（评审修复1）
+    WARMUP_MONTHS = 120
     FAST, SLOW, SIGNAL = 12, 26, 9
 
     # values: 6 个月份槽位的柱值（前复权口径，nil=该月无数据）；末槽恒=快照 hist
@@ -17,11 +19,12 @@ module WindowWatch
     class << self
       # rows = 快照逐股行集合；返回 { code(downcase) => Result }
       def call(rows, snapshot_month:)
-        return {} if rows.empty? || snapshot_month.to_s !~ MONTH_FORMAT
+        # 月份格式以契约边界 SnapshotIngest 为权威源（评审修复3）
+        return {} if rows.empty? || snapshot_month.to_s !~ SnapshotIngest::MONTH_FORMAT
 
         symbols = rows.map { |r| r.code.to_s.upcase }.uniq
         stocks = Stock.where(symbol: symbols).index_by(&:symbol)
-        bars = fetch_bars(stocks.values.map(&:id))
+        bars = fetch_bars(stocks.values.map(&:id), snapshot_month)
 
         rows.each_with_object({}) do |row, out|
           stock = stocks[row.code.to_s.upcase]
@@ -31,10 +34,13 @@ module WindowWatch
 
       private
 
-      def fetch_bars(stock_ids)
+      def fetch_bars(stock_ids, snapshot_month)
         return {} if stock_ids.empty?
-        # 全历史一次批量取（EMA 递推需完整预热，与三联图「库内全部历史算完再切片」同一纪律）
-        StockMonthlyBar.where(stock_id: stock_ids)
+        # 预热窗口内一次批量取（窗口起点=判定月首日回溯 WARMUP_MONTHS 个月；
+        # hfq 因子随分红单调递增，窗口内末期因子=全局末期因子，前复权缩放不受裁剪影响）
+        y, m = snapshot_month.split("-").map(&:to_i)
+        start_date = Date.new(y, m, 1) - WARMUP_MONTHS.months
+        StockMonthlyBar.where(stock_id: stock_ids).where(trade_date: start_date..)
                        .order(:stock_id, :trade_date)
                        .pluck(:stock_id, :trade_date, :hfq_close, :hfq_factor)
                        .each_with_object({}) do |(id, d, c, f), h|
@@ -44,6 +50,9 @@ module WindowWatch
 
       def build(bar_rows, row, snapshot_month)
         hist_by_month = to_qfq_hist(bar_rows)
+        # 柱按 trade_date 升序，末根月份=库内最新月；lagged 只表「库缺判定月」，
+        # 与递推可行性解耦（库仅 1 根判定月时不算滞后，评审修复2）
+        latest_db_month = bar_rows&.last&.first
 
         slots = month_seq(snapshot_month)
         values = slots.each_with_index.map do |m, i|
@@ -56,9 +65,7 @@ module WindowWatch
           end
         end
 
-        Result.new(values: values,
-                   lagged: !hist_by_month.key?(snapshot_month),
-                   cutoff: bar_rows&.last&.first)
+        Result.new(values: values, lagged: latest_db_month != snapshot_month, cutoff: latest_db_month)
       end
 
       # 后复权序列递推 hist 后 ÷ 末期后复权因子 = 前复权口径（与 stocks_controller#fetch_monthly_trend 一致）
