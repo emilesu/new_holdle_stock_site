@@ -18,12 +18,16 @@
         <%= link_to "全部股票", window_watch_path(view: "all"),
               class: "px-3 py-1.5 rounded-md border #{'bg-white border-ink text-ink font-medium' if @view == 'all'} #{'border-line text-muted hover:text-ink' unless @view == 'all'}" %>
         <% if @view == "main" %>
+          <%# R1：档位改分段控件（连体按钮，激活态反色） %>
           <span class="ml-3 text-hl-12 text-muted-3">近3财年每年 ROE≥</span>
-          <% WindowWatch::FinancialPreset::BANDS.each do |b| %>
-            <%= link_to "#{b}%", window_watch_path(view: "main", band: b),
-                  class: "px-2 py-1 rounded-md border #{b == @band ? 'border-ink text-ink bg-white font-medium' : 'border-line text-muted hover:text-ink'}" %>
-          <% end %>
+          <div class="inline-flex rounded-md border border-line overflow-hidden divide-x divide-line" role="group" aria-label="ROE 档位">
+            <% WindowWatch::FinancialPreset::BANDS.each do |b| %>
+              <%= link_to "#{b}%", window_watch_path(view: "main", band: b),
+                    class: "px-2.5 py-1 text-hl-12 #{b == @band ? 'bg-ink text-white font-medium' : 'bg-white text-muted hover:text-ink'}" %>
+            <% end %>
+          </div>
           <span class="text-hl-12 text-muted-3">且经营现金流为正（最新披露年报口径，财务库筛选）</span>
+          <span class="text-hl-12 text-muted-4">· 预设内按金字塔综合分排序</span>
         <% else %>
           <span class="ml-2 text-hl-12 text-muted-4">全部=技术形态全量列表</span>
         <% end %>

@@ -25,6 +25,14 @@ module WindowWatchHelper
              data: { tip: tip }, tabindex: "0"
   end
 
+  # R1（2026-11-25 老板定）：①②区块展示前 10 只，其余折叠
+  TOP_DISPLAY = 10
+
+  # 区块摘要头：N>10 时提示「显示前 10」
+  def ww_block_summary(rows)
+    rows.size > TOP_DISPLAY ? "#{rows.size} 只 · 显示前 #{TOP_DISPLAY}" : "#{rows.size} 只"
+  end
+
   # 判定月应为「最后一个已收完月」= 上一自然月（K4），用于 R4 最新月缺失提示
   def ww_expected_month
     (Date.current << 1).strftime("%Y-%m")

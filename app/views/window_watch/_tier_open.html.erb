@@ -1,8 +1,8 @@
-<%# ①开窗观察（§三③）：排序=开窗月新→旧（§3.2） %>
-<section class="hl-card">
+<%# ①开窗观察（§三③ + R1）：排序=金字塔综合分降序（同分贴0轴优先）；top10 展示，其余折叠；计数条锚点 ww-t1 %>
+<section id="ww-t1" class="hl-card scroll-mt-24">
   <div class="px-5 py-4 border-b border-line">
     <h2 class="text-hl-16 font-semibold text-ink">① 开窗观察
-      <span class="text-hl-13 text-muted-3 font-normal ml-1"><%= rows.size %> 只</span>
+      <span class="text-hl-13 text-muted-3 font-normal ml-1"><%= ww_block_summary(rows) %></span>
     </h2>
     <p class="text-hl-12 text-muted mt-1.5"><%= WindowWatchHelper::TIER_SUBTITLES["T1"] %></p>
   </div>
@@ -10,7 +10,15 @@
     <p class="px-5 py-6 text-hl-13 text-muted-3">本月开窗观察暂无股票</p>
   <% else %>
     <div class="divide-y divide-line">
-      <% rows.each do |row| %><%= render "stock_row", row: row %><% end %>
+      <% rows.first(WindowWatchHelper::TOP_DISPLAY).each do |row| %><%= render "stock_row", row: row %><% end %>
     </div>
+    <% if rows.size > WindowWatchHelper::TOP_DISPLAY %>
+      <details class="border-t border-line">
+        <summary class="px-5 py-2.5 cursor-pointer select-none list-none text-hl-12 text-muted hover:text-ink [&::-webkit-details-marker]:hidden">展开其余 <%= rows.size - WindowWatchHelper::TOP_DISPLAY %> 只</summary>
+        <div class="divide-y divide-line border-t border-line">
+          <% rows.drop(WindowWatchHelper::TOP_DISPLAY).each do |row| %><%= render "stock_row", row: row %><% end %>
+        </div>
+      </details>
+    <% end %>
   <% end %>
 </section>

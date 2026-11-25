@@ -1,9 +1,9 @@
-<%# ②形成中（§三④）：红柱收敛 + 绿柱收敛 两子组，各自 ratio 升序（最贴轴优先） %>
+<%# ②形成中（§三④ + R1）：红柱收敛 + 绿柱收敛 两子组，各自金字塔分降序（同分贴0轴优先）；top10 展示，其余折叠 %>
 <div class="space-y-5">
-  <section class="hl-card">
+  <section id="ww-t2p2" class="hl-card scroll-mt-24">
     <div class="px-5 py-4 border-b border-line">
       <h2 class="text-hl-16 font-semibold text-ink">② 形成中 · 红柱收敛
-        <span class="text-hl-13 text-muted-3 font-normal ml-1"><%= p2.size %> 只</span>
+        <span class="text-hl-13 text-muted-3 font-normal ml-1"><%= ww_block_summary(p2) %></span>
       </h2>
       <p class="text-hl-12 text-muted mt-1.5"><%= WindowWatchHelper::TIER_SUBTITLES["T2_P2"] %></p>
     </div>
@@ -11,15 +11,23 @@
       <p class="px-5 py-6 text-hl-13 text-muted-3">本月红柱收敛暂无股票</p>
     <% else %>
       <div class="divide-y divide-line">
-        <% p2.each do |row| %><%= render "stock_row", row: row %><% end %>
+        <% p2.first(WindowWatchHelper::TOP_DISPLAY).each do |row| %><%= render "stock_row", row: row %><% end %>
       </div>
+      <% if p2.size > WindowWatchHelper::TOP_DISPLAY %>
+        <details class="border-t border-line">
+          <summary class="px-5 py-2.5 cursor-pointer select-none list-none text-hl-12 text-muted hover:text-ink [&::-webkit-details-marker]:hidden">展开其余 <%= p2.size - WindowWatchHelper::TOP_DISPLAY %> 只</summary>
+          <div class="divide-y divide-line border-t border-line">
+            <% p2.drop(WindowWatchHelper::TOP_DISPLAY).each do |row| %><%= render "stock_row", row: row %><% end %>
+          </div>
+        </details>
+      <% end %>
     <% end %>
   </section>
 
-  <section class="hl-card">
+  <section id="ww-t2p1" class="hl-card scroll-mt-24">
     <div class="px-5 py-4 border-b border-line">
       <h2 class="text-hl-16 font-semibold text-ink">② 形成中 · 绿柱收敛
-        <span class="text-hl-13 text-muted-3 font-normal ml-1"><%= p1.size %> 只</span>
+        <span class="text-hl-13 text-muted-3 font-normal ml-1"><%= ww_block_summary(p1) %></span>
       </h2>
       <%# §六.2 固定副标题（不得写成「状态A形成中」） %>
       <p class="text-hl-12 text-muted mt-1.5"><%= WindowWatchHelper::TIER_SUBTITLES["T2_P1"] %></p>
@@ -28,8 +36,16 @@
       <p class="px-5 py-6 text-hl-13 text-muted-3">本月绿柱收敛暂无股票</p>
     <% else %>
       <div class="divide-y divide-line">
-        <% p1.each do |row| %><%= render "stock_row", row: row %><% end %>
+        <% p1.first(WindowWatchHelper::TOP_DISPLAY).each do |row| %><%= render "stock_row", row: row %><% end %>
       </div>
+      <% if p1.size > WindowWatchHelper::TOP_DISPLAY %>
+        <details class="border-t border-line">
+          <summary class="px-5 py-2.5 cursor-pointer select-none list-none text-hl-12 text-muted hover:text-ink [&::-webkit-details-marker]:hidden">展开其余 <%= p1.size - WindowWatchHelper::TOP_DISPLAY %> 只</summary>
+          <div class="divide-y divide-line border-t border-line">
+            <% p1.drop(WindowWatchHelper::TOP_DISPLAY).each do |row| %><%= render "stock_row", row: row %><% end %>
+          </div>
+        </details>
+      <% end %>
     <% end %>
   </section>
 </div>

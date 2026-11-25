@@ -45,11 +45,11 @@ class WindowWatchControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "全部股票"
   end
 
-  # ---- 财务预设视图（需求单 v0.3.0：页面侧筛选，近3财年 ROE≥档 且 经营现金流>0）----
+  # ---- 财务预设视图（需求单 v0.3.0：页面侧筛选，近3财年 ROE≥档 且 经营现金流>0；R1 默认档=10%）----
 
   test "预设 15%+：命中行显示，未命中与无财务行不显示（V2=财务库命中数）" do
     sign_in users(:two)
-    get window_watch_path
+    get window_watch_path(view: "main", band: 15)
     body = response.body
     assert_includes body, "中国核电"
     assert_includes body, "贵州茅台"
@@ -58,16 +58,28 @@ class WindowWatchControllerTest < ActionDispatch::IntegrationTest
     assert_equal 4, WindowWatch::FinancialPreset.hit_symbols(band: 15).size
   end
 
-  test "预设档位下拉：10%+ 时美的集团进入视图" do
+  test "R1 默认档位 10%：美的集团进入默认视图；非法档位回落 10" do
     sign_in users(:two)
-    get window_watch_path(view: "main", band: 10)
+    get window_watch_path # 默认档=10（R1 改）
     assert_includes response.body, "美的集团"
-    # 非法档位回落默认 15
-    get window_watch_path(view: "main", band: 99)
-    refute_includes response.body, "美的集团"
+    get window_watch_path(view: "main", band: 99) # 非法回落默认 10
+    assert_includes response.body, "美的集团"
   end
 
-  test "卡片行财务标注来自财务库 join（ROE 徽章），无「质量达标」表述" do
+  test "R1 预设视图按金字塔综合分降序（同分贴0轴比值优先），不再按开窗月" do
+    sign_in users(:two)
+    get window_watch_path(view: "main", band: 15)
+    # T1 块：招行 85 分 > 核电 70 分（旧 open_month 排序同为招行在前，故用 ②/③ 块交叉验证分数序）
+    body = response.body
+    t1_seg = body[/<section id="ww-t1".*?<\/section>/m].to_s
+    assert_operator t1_seg.index("招商银行"), :<, t1_seg.index("中国核电"), "T1 块金字塔序"
+    # ②红柱收敛块：美的(60) 命中 10% 档；③暂不开窗块：宁德(50)
+    get window_watch_path(view: "main", band: 10)
+    t2_seg = response.body[/<section id="ww-t2p2".*?<\/section>/m].to_s
+    assert_includes t2_seg, "美的集团"
+  end
+
+  test "卡片行财务标注来自财务库 join（ROE 小字），无「质量达标」表述" do
     sign_in users(:two)
     get window_watch_path
     assert_includes response.body, "ROE 18.0%" # 中国核电最新年报 roe_avg=18

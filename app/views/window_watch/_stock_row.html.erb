@@ -1,29 +1,21 @@
-<%# 逐股卡片行（§4.1/§4.2 v0.3.0）：技术判定=快照；名称/行业/财务标注=Trae 财务库 join（契约 v0.4.0 §三.1）
-    join 未覆盖的行照常展示技术判定，仅不显示财务标注（兜底常态，非异常） %>
+<%# 逐股卡片行（§4.1/§4.2 v0.3.0 + R1 四列栅格）：身份 / 形态 / 状态 / 标注
+    技术判定=快照；名称/行业/财务标注=Trae 财务库 join（契约 v0.4.0 §三.1）
+    join 未覆盖的行照常展示技术判定，仅不显示财务标注（兜底常态，非异常）
+    移动端两列=两行堆叠（身份+形态 / 状态+标注） %>
 <% ov = @overlay[row.code.to_s.upcase] %>
-<div class="px-5 py-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 hover:bg-bg-soft">
-  <div class="min-w-[150px]">
+<div class="px-5 py-3 grid grid-cols-2 md:grid-cols-[minmax(0,1.3fr)_minmax(0,1.2fr)_minmax(0,1.1fr)_minmax(0,0.6fr)] gap-x-4 gap-y-1.5 items-center hover:bg-bg-soft">
+  <%# ① 身份 %>
+  <div class="min-w-0">
     <%= link_to (ov ? ov[:name] : row.name), stock_path(row.code.upcase), class: "text-hl-14 font-medium text-ink hover:text-link" %>
     <span class="text-hl-12 text-muted-3 ml-1.5 font-mono"><%= row.symbol %></span>
+    <div class="text-hl-12 text-muted-2 mt-0.5"><%= (ov ? ov[:industry].presence : row.industry.presence) || "—" %></div>
   </div>
 
-  <span class="text-hl-12 text-muted-2 min-w-[72px]"><%= (ov ? ov[:industry].presence : row.industry.presence) || "—" %></span>
+  <%# ② 形态（定性柱形；R2 升级为近 6 月 sparkline） %>
+  <div><%= render "hist_glyph", row: row %></div>
 
-  <% if ov && ov[:finance] %>
-    <%= ww_badge "金融", "金融行业（银行/证券/保险）" %>
-  <% end %>
-  <% if ov && ov[:st] %>
-    <%= ww_badge "ST", "ST/*ST 股票（仅标注，不剔除）" %>
-  <% end %>
-
-  <div class="ml-auto flex flex-wrap items-center gap-x-4 gap-y-1">
-    <% if ov && ov[:roe_latest] %>
-      <%= ww_badge "ROE #{number_with_precision(ov[:roe_latest], precision: 1)}%",
-                   "最新披露年报加权 ROE（财务库口径；筛选预设见页顶档位说明）" %>
-    <% end %>
-
-    <%= render "hist_glyph", row: row %>
-
+  <%# ③ 状态（档专属字段 + ROE 小字，R1：ROE 由徽章改小字） %>
+  <div class="min-w-0 flex flex-wrap items-center gap-x-3 gap-y-0.5">
     <% case row.tier %>
     <% when "T1" %>
       <span class="text-hl-12 text-muted-2 whitespace-nowrap"><%= row.open_month %> 开窗 · 已存活 <%= row.months_since_open %> 个月</span>
@@ -34,6 +26,24 @@
       <% if (note = WindowWatchHelper::T3_SUBTAG_NOTES[row.subtag]) %>
         <span class="text-hl-12 text-muted-4"><%= note %></span>
       <% end %>
+    <% end %>
+    <% if ov && ov[:roe_latest] %>
+      <span class="text-hl-12 text-muted-3 whitespace-nowrap" title="最新披露年报加权 ROE（财务库口径；筛选预设见页顶档位说明）">ROE <%= number_with_precision(ov[:roe_latest], precision: 1) %>%</span>
+    <% end %>
+  </div>
+
+  <%# ④ 标注（徽章必须带 tooltip，§六.6 不得裸标） %>
+  <div class="flex flex-wrap gap-1 md:justify-end">
+    <% if ov && ov[:finance] %>
+      <%= ww_badge "金融", "金融行业（银行/证券/保险）" %>
+    <% end %>
+    <% if ov && ov[:st] %>
+      <%= ww_badge "ST", "ST/*ST 股票（仅标注，不剔除）" %>
+    <% end %>
+    <% if row.subtag == "continuation" %>
+      <%= ww_badge "续命候选", "前一窗口于 1-2 个月内关闭，本次若回升将按方法论视为原窗口延续的新开窗事件" %>
+    <% elsif row.subtag == "sticky_micro" %>
+      <%= ww_badge "已贴轴微柱", "本月柱值贴近 0 轴，柱值方向的可信度低" %>
     <% end %>
   </div>
 </div>

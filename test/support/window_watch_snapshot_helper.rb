@@ -30,12 +30,17 @@ module WindowWatchSnapshotHelper
       open_month: nil, months_since_open: nil, last_close_month: nil, sa_run: 12 }
   ].freeze
 
-  # 站内 stocks 表落库（code 命中校验 + 财务库 overlay 用）
+  # 站内金字塔综合分 fixture（R1 预设视图排序依据；stocks 表自有字段，不进快照 payload）
+  WW_PYRAMID_SCORES = { "SH601985" => 70, "SH600036" => 85, "SZ000333" => 60,
+                        "SZ000858" => 40, "SH600519" => 90, "SZ300750" => 50 }.freeze
+
+  # 站内 stocks 表落库（code 命中校验 + 财务库 overlay + 金字塔排序用）
   def ww_create_stocks!
     WW_STOCKS.each do |r|
       code, ex = r[:symbol].split(".")
       Stock.create!(symbol: "#{ex}#{code}", name: r[:name], market: "CN",
-                    exchange: "#{ex}SE", industry: r[:industry], status: "active")
+                    exchange: "#{ex}SE", industry: r[:industry], status: "active",
+                    pyramid_total_score: WW_PYRAMID_SCORES["#{ex}#{code}"])
     end
   end
 

@@ -5,7 +5,8 @@ module WindowWatch
   # 注意：展示口径为「最新披露」，与 DSH 回测链 as-of 判定月口径语义不同，两者不得对账
   class FinancialPreset
     BANDS = [10, 15, 20].freeze
-    DEFAULT_BAND = 15
+    # R1（2026-11-25 老板定）：默认档位 15%→10%
+    DEFAULT_BAND = 10
 
     class << self
       def band_for(param)

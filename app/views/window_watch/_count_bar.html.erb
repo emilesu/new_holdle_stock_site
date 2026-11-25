@@ -1,9 +1,21 @@
-<%# 四档计数条（§三①）：数字 = 快照 stats.tier_counts（验收 V1），非会员可见（聚合数字不含个股） %>
+<%# 四档计数条（§三① + R1）：数字 = 快照 stats.tier_counts（验收 V1），非会员可见（聚合数字不含个股）
+    R1：各项可点锚跳转到对应区块（同页 hash，Turbo 不重载）；②计数链到红柱收敛块 %>
 <% tc = @snapshot.stats["tier_counts"] || {} %>
-<div class="hl-card px-4 py-3 flex flex-wrap items-center gap-x-6 gap-y-2 text-hl-13">
-  <span class="text-ink font-medium">①开窗观察 <span class="text-hl-15 font-semibold"><%= tc["T1"] %></span></span>
-  <span class="text-muted">②形成中 <span class="text-hl-15 font-semibold text-ink"><%= tc["T2_P2"].to_i + tc["T2_P1"].to_i %></span>
-    <span class="text-muted-3">（红柱收敛 <%= tc["T2_P2"] %> / 绿柱收敛 <%= tc["T2_P1"] %>）</span>
-  </span>
-  <span class="text-muted">③状态A·暂不开窗 <span class="text-hl-15 font-semibold text-ink"><%= tc["T3"] %></span></span>
-</div>
+<%# clickable=会员主组视图才有对应区块锚点；非会员 teaser 仅展示计数，不生成死链 %>
+<% if local_assigns[:clickable] %>
+  <div class="hl-card px-4 py-3 flex flex-wrap items-center gap-x-6 gap-y-2 text-hl-13">
+    <%= link_to "#ww-t1", class: "text-ink font-medium hover:underline" do %>①开窗观察 <span class="text-hl-15 font-semibold"><%= tc["T1"] %></span><% end %>
+    <%= link_to "#ww-t2p2", class: "text-muted hover:text-ink hover:underline" do %>②形成中 <span class="text-hl-15 font-semibold text-ink"><%= tc["T2_P2"].to_i + tc["T2_P1"].to_i %></span>
+      <span class="text-muted-3">（红柱收敛 <%= tc["T2_P2"] %> / 绿柱收敛 <%= tc["T2_P1"] %>）</span>
+    <% end %>
+    <%= link_to "#ww-t3", class: "text-muted hover:text-ink hover:underline" do %>③状态A·暂不开窗 <span class="text-hl-15 font-semibold text-ink"><%= tc["T3"] %></span><% end %>
+  </div>
+<% else %>
+  <div class="hl-card px-4 py-3 flex flex-wrap items-center gap-x-6 gap-y-2 text-hl-13">
+    <span class="text-ink font-medium">①开窗观察 <span class="text-hl-15 font-semibold"><%= tc["T1"] %></span></span>
+    <span class="text-muted">②形成中 <span class="text-hl-15 font-semibold text-ink"><%= tc["T2_P2"].to_i + tc["T2_P1"].to_i %></span>
+      <span class="text-muted-3">（红柱收敛 <%= tc["T2_P2"] %> / 绿柱收敛 <%= tc["T2_P1"] %>）</span>
+    </span>
+    <span class="text-muted">③状态A·暂不开窗 <span class="text-hl-15 font-semibold text-ink"><%= tc["T3"] %></span></span>
+  </div>
+<% end %>

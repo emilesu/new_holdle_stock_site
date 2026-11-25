@@ -26,14 +26,18 @@ class WindowWatchController < ApplicationController
     @view = params[:view] == "all" ? "all" : "main"
     if @view == "main"
       # 财务预设视图：命中集来自财务库（近3财年 ROE≥档位 且 经营现金流>0，最新披露口径）
+      # R1 排序：金字塔综合分降序（同分贴0轴比值升序），取消 T1 开窗月排序；分数缺失（join 未命中）排末位
       # 四档直接落数组：视图 size/迭代零额外查询（评审修复2）
       @band = WindowWatch::FinancialPreset.band_for(params[:band])
       hit_codes = WindowWatch::FinancialPreset.hit_symbols(band: @band).map(&:downcase)
-      main_scope = @snapshot.stocks.where(code: hit_codes)
-      @t1 = main_scope.where(tier: "T1").order(open_month: :desc, ratio: :asc).to_a
-      @t2_p2 = main_scope.where(tier: "T2_P2").order(ratio: :asc).to_a
-      @t2_p1 = main_scope.where(tier: "T2_P1").order(ratio: :asc).to_a
-      @t3 = main_scope.where(tier: "T3").order(ratio: :asc).to_a
+      main_scope = @snapshot.stocks
+                           .joins("LEFT JOIN stocks ON lower(stocks.symbol) = window_watch_snapshot_stocks.code")
+                           .where(code: hit_codes)
+                           .order(Arel.sql("stocks.pyramid_total_score DESC NULLS LAST, window_watch_snapshot_stocks.ratio ASC"))
+      @t1 = main_scope.where(tier: "T1").to_a
+      @t2_p2 = main_scope.where(tier: "T2_P2").to_a
+      @t2_p1 = main_scope.where(tier: "T2_P1").to_a
+      @t3 = main_scope.where(tier: "T3").to_a
       @overlay = WindowWatch::FinancialPreset.overlay(@t1 + @t2_p2 + @t2_p1 + @t3)
     else
       @tier = params[:tier].presence_in(WindowWatchSnapshotStock::TIERS)

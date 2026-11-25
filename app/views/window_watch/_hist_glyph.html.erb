@@ -1,25 +1,26 @@
 <%# 定性柱形（§4.1 决议2）：方向 + 趋近/远离 0 轴，归一化比例呈现，不渲染任何绝对数值（V11）
-    尺度不变性：前/后复权与重锚只等比缩放柱值，本组件仅用比值与符号，不受影响（纪要 §一.2） %>
+    尺度不变性：前/后复权与重锚只等比缩放柱值，本组件仅用比值与符号，不受影响（纪要 §一.2）
+    R1（2026-11-25）：放大至 44×34，淡=上月柱、实=本月柱 %>
 <%
   cur = row.hist.to_f
   prev = row.prev_hist.to_f
   max = [cur.abs, prev.abs].max
-  h_cur = max > 0 ? (cur.abs / max * 11).round(1) : 0.5
-  h_prev = max > 0 ? (prev.abs / max * 11).round(1) : 0.5
+  h_cur = max > 0 ? (cur.abs / max * 13).round(1) : 0.6
+  h_prev = max > 0 ? (prev.abs / max * 13).round(1) : 0.6
   bar_color = ->(v) { v > 0 ? "var(--color-profit)" : v < 0 ? "var(--color-green-600)" : "var(--color-muted-5)" }
-  rect = ->(x, h, v) { v >= 0 ? { x: x, y: (15 - h).round(1), height: [h, 0.5].max } : { x: x, y: 15, height: [h, 0.5].max } }
-  r_prev = rect.(4, h_prev, prev)
-  r_cur = rect.(12, h_cur, cur)
+  rect = ->(x, h, v) { v >= 0 ? { x: x, y: (17 - h).round(1), height: [h, 0.6].max } : { x: x, y: 17, height: [h, 0.6].max } }
+  r_prev = rect.(8, h_prev, prev)
+  r_cur = rect.(27, h_cur, cur)
   kind = cur > 0 ? "红柱" : cur < 0 ? "绿柱" : "贴0轴"
   trend = cur.abs < prev.abs ? "趋近0轴" : cur.abs > prev.abs ? "远离0轴" : "持平"
   # 箭头=柱值的移动方向（柱顶端往哪走）：绿柱趋近0轴(-0.65→-0.35)为上移 ↗，红柱趋近为下移 ↘
   arrow = cur > prev ? "↗" : cur < prev ? "↘" : "→"
 %>
-<span class="inline-flex items-center gap-1.5 align-middle" title="<%= "#{kind} · #{trend}" %>">
-  <svg width="20" height="30" viewBox="0 0 20 30" aria-hidden="true" class="shrink-0">
-    <line x1="1" y1="15" x2="19" y2="15" stroke="var(--color-line)" stroke-width="1"/>
-    <rect x="<%= r_prev[:x] %>" y="<%= r_prev[:y] %>" width="4" height="<%= r_prev[:height] %>" rx="1" fill="<%= bar_color.(prev) %>" opacity="0.4"/>
-    <rect x="<%= r_cur[:x] %>" y="<%= r_cur[:y] %>" width="4" height="<%= r_cur[:height] %>" rx="1" fill="<%= bar_color.(cur) %>"/>
+<span class="inline-flex items-center gap-2 align-middle" title="<%= "#{kind} · #{trend}" %>">
+  <svg width="44" height="34" viewBox="0 0 44 34" aria-hidden="true" class="shrink-0">
+    <line x1="1" y1="17" x2="43" y2="17" stroke="var(--color-line)" stroke-width="1"/>
+    <rect x="<%= r_prev[:x] %>" y="<%= r_prev[:y] %>" width="9" height="<%= r_prev[:height] %>" rx="1.5" fill="<%= bar_color.(prev) %>" opacity="0.35"/>
+    <rect x="<%= r_cur[:x] %>" y="<%= r_cur[:y] %>" width="9" height="<%= r_cur[:height] %>" rx="1.5" fill="<%= bar_color.(cur) %>"/>
   </svg>
   <span class="text-hl-12 text-muted-2 whitespace-nowrap"><%= kind %> · <%= trend %> <%= arrow %></span>
 </span>
