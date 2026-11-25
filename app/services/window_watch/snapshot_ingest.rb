@@ -9,7 +9,8 @@ module WindowWatch
     SUBTAGS = WindowWatchSnapshotStock::SUBTAGS
     MONTH_FORMAT = /\A\d{4}-(0[1-9]|1[0-2])\z/
     REQUIRED_STOCK_FIELDS = %w[symbol code name tier exchange hist prev_hist dif dea ratio sa_run].freeze
-    REQUIRED_STATS_KEYS = %w[bj_count in_position_count].freeze
+    # 契约 v0.7：bj_count 键退役（北交所纳入所有档/桶，tiers 直接含 BJ 行）
+    REQUIRED_STATS_KEYS = %w[in_position_count].freeze
     # 契约 v0.4.0 §四：快照不得携带任何财务字段（财务指标权威源=Trae 财务库，页面侧 join）
     FORBIDDEN_ROW_FIELDS = %w[run3_asof run5_asof roe roe_band finance st].freeze
     FORBIDDEN_STATS_KEYS = %w[main_group_run3 main_group_run5 finance_count st_count].freeze
@@ -101,9 +102,10 @@ module WindowWatch
           @errors << "#{symbol} tier 非法：#{row['tier']}" if row["tier"].present? && !ALL_TIERS.include?(row["tier"])
           @errors << "#{symbol} tier=#{row['tier']} 与所在档数组键 #{tier} 不一致" if row["tier"].present? && ALL_TIERS.include?(row["tier"]) && row["tier"] != tier
           ex = row["exchange"].to_s.upcase
-          @errors << "#{symbol} exchange 非法（tiers 内仅 SH/SZ）：#{row['exchange']}" unless ex.in?(%w[SH SZ])
+          # 契约 v0.7：exchange 枚举扩 BJ（北交所与沪深同权进 tiers）
+          @errors << "#{symbol} exchange 非法（tiers 内仅 SH/SZ/BJ）：#{row['exchange']}" unless ex.in?(%w[SH SZ BJ])
           code_prefix = row["code"].to_s[0, 2].upcase
-          @errors << "#{symbol} exchange=#{ex} 与 code 前缀=#{code_prefix} 不一致" if ex.in?(%w[SH SZ]) && ex != code_prefix
+          @errors << "#{symbol} exchange=#{ex} 与 code 前缀=#{code_prefix} 不一致" if ex.in?(%w[SH SZ BJ]) && ex != code_prefix
 
           if tier == IN_POSITION
             # 契约 v0.5 §1.2：subtag 恒空；entry_month 仅验格式（可晚于判定月，口径②）；months_in_position int≥1（DSH 算好，页面如实展示）
@@ -166,11 +168,11 @@ module WindowWatch
 
       sum = ex.values.sum { |v| v.is_a?(Integer) ? v : 0 }
       @errors << "universe.exchanges 之和 #{sum} ≠ count #{count}" if sum != count
-      %w[SH SZ].each do |e|
+      # 契约 v0.7：BJ 与沪深同权进 tiers，只数上限校验一并覆盖；原「tiers 不含 BJ」硬闸删除
+      %w[SH SZ BJ].each do |e|
         actual = rows.count { |r| r["exchange"].to_s.upcase == e }
         @errors << "tiers 内 #{e} 只数 #{actual} 超过 universe.exchanges.#{e}=#{ex[e]}" if actual > ex[e].to_i
       end
-      @errors << "tiers 内不应包含 BJ（北交所单列计数）" if rows.any? { |r| r["exchange"].to_s.upcase == "BJ" }
     end
 
     # 防御性校验（纪要决议3）：symbol/code 双向归一且互一致，并能在网站 stocks 表命中

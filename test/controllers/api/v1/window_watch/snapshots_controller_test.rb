@@ -64,12 +64,16 @@ class Api::V1::WindowWatch::SnapshotsControllerTest < ActionDispatch::Integratio
     assert_equal "rejected", WindowWatchIngestLog.last.result
   end
 
-  test "stats 出现 null（bj_count）422" do
-    payload = ww_payload
-    payload["stats"]["bj_count"] = nil
-    post_snapshot(payload)
-    assert_response 422
-    assert_match "bj_count", response.parsed_body["errors"].join
+  test "v0.7：BJ 行入 tiers 201（bj_count 退役、exchange 枚举扩 BJ）" do
+    Stock.create!(symbol: "BJ920001", name: "测试北股", market: "CN", exchange: "BJSE",
+                  industry: "电子", status: "active")
+    bj_row = { symbol: "920001.BJ", code: "bj920001", name: "测试北股", industry: "电子", exchange: "BJ",
+               tier: "T1", subtag: "", hist: "0.100000", prev_hist: "0.050000",
+               dif: "0.080000", dea: "0.060000", ratio: "1.333333",
+               open_month: "2026-09", months_since_open: 2, last_close_month: nil, sa_run: 3 }
+    post_snapshot(ww_payload(rows: WW_STOCKS + [bj_row]))
+    assert_response 201
+    assert_equal 7, WindowWatchSnapshot.latest.stocks.count
   end
 
   test "缺 in_position_count（v0.3.3 起恒在键）422" do

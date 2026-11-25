@@ -1,4 +1,4 @@
-# 开窗快照测试支撑（契约 v0.4.0：快照不携带任何财务字段，财务预设由页面侧 join 财务库）
+# 开窗快照测试支撑（契约 v0.7.0：快照不携带任何财务字段；北交所纳入所有档/桶，bj_count 键退役）
 # 数值刻意取 6 位小数长尾形态，便于 V11 断言「绝对数值未渲染」（两位小数形态也逐一检查）
 module WindowWatchSnapshotHelper
   WW_DISCLAIMER = "本页面为按 HOLDLE 方法论对股票月K状态的客观描述，不构成投资建议，不构成任何买卖推荐。方法论基于历史规律总结，过去的状态表现不代表未来。数据截至 2026-10 月K收盘，价格按前复权口径，除权后历史价格会变动；页面不包含盘中实时行情。请独立判断并自行承担决策责任。"
@@ -102,10 +102,10 @@ module WindowWatchSnapshotHelper
                            "is_stale" => is_stale, "stale_days" => is_stale ? 3 : 0, "stale_trading_days" => is_stale ? 3 : 0 },
       "universe" => { "market" => "CN", "count" => all_rows.size,
                       "exchanges" => { "SH" => all_rows.count { |r| r[:exchange] == "SH" },
-                                       "SZ" => all_rows.count { |r| r[:exchange] == "SZ" }, "BJ" => 0 } },
+                                       "SZ" => all_rows.count { |r| r[:exchange] == "SZ" },
+                                       "BJ" => all_rows.count { |r| r[:exchange] == "BJ" } } },
       "tiers" => { "T1" => [], "T2_P2" => [], "T2_P1" => [], "T3" => [] }.tap { |t| t["IN_POSITION"] = [] if in_position },
       "stats" => { "tier_counts" => { "T1" => tc["T1"], "T2_P2" => tc["T2_P2"], "T2_P1" => tc["T2_P1"], "T3" => tc["T3"] },
-                   "bj_count" => 0,
                    "in_position_count" => ip_rows.size },
       "disclaimer" => WW_DISCLAIMER
     }.tap do |p|

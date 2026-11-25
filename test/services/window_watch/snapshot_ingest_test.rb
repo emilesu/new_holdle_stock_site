@@ -53,21 +53,38 @@ class WindowWatch::SnapshotIngestTest < ActiveSupport::TestCase
     assert_match "main_group_run3", errors.join
   end
 
-  test "bj_count 为 null 422（stats 必填键）" do
-    payload = ww_payload
-    payload["stats"]["bj_count"] = nil
-    snapshot, errors = ingest(payload)
-    assert_nil snapshot
-    assert_match "bj_count", errors.join
+  # v0.7 fixture：北交所同权入档的 BJ 行（symbol 键形态，供 ww_payload rows 参数消费）
+  WW_BJ_ROW = { symbol: "920001.BJ", code: "bj920001", name: "测试北股", industry: "电子", exchange: "BJ",
+                tier: "T1", subtag: "", hist: "0.100000", prev_hist: "0.050000",
+                dif: "0.080000", dea: "0.060000", ratio: "1.333333",
+                open_month: "2026-09", months_since_open: 2, last_close_month: nil, sa_run: 3 }.freeze
+
+  test "v0.7：BJ 行入 tiers 正常落库（exchange 枚举扩 BJ、bj_count 退役）" do
+    Stock.create!(symbol: "BJ920001", name: "测试北股", market: "CN", exchange: "BJSE",
+                  industry: "电子", status: "active")
+    snapshot, errors = ingest(ww_payload(rows: WW_STOCKS + [WW_BJ_ROW]))
+    assert_empty errors
+    row = snapshot.stocks.find_by(symbol: "920001.BJ")
+    assert_equal "BJ", row.exchange
+    assert_equal "bj920001", row.code
+    assert_equal "T1", row.tier
   end
 
-  test "tiers 内混入 BJ 422（北交所单列不入列）" do
+  test "v0.7：exchange 枚举外（HK）仍 422" do
     payload = ww_payload
-    payload["tiers"]["T1"][0]["exchange"] = "BJ"
-    payload["tiers"]["T1"][0]["code"] = "bj830799"
+    payload["tiers"]["T1"][0]["exchange"] = "HK"
     snapshot, errors = ingest(payload)
     assert_nil snapshot
-    assert_match "BJ", errors.join
+    assert_match "exchange 非法", errors.join
+  end
+
+  test "v0.7：BJ exchange 与 code 前缀不一致 422" do
+    payload = ww_payload
+    payload["tiers"]["T1"][0]["exchange"] = "BJ"
+    payload["tiers"]["T1"][0]["code"] = "sh601985"
+    snapshot, errors = ingest(payload)
+    assert_nil snapshot
+    assert_match "与 code 前缀", errors.join
   end
 
   test "symbol/code 互不一致（格式非法）422" do
