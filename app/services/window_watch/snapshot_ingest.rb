@@ -205,7 +205,7 @@ module WindowWatch
     def row_attributes(r, snapshot_id, now)
       {
         "window_watch_snapshot_id" => snapshot_id,
-        "symbol" => r["symbol"], "code" => r["code"], "name" => r["name"],
+        "symbol" => r["symbol"], "code" => r["code"].to_s.downcase, "name" => r["name"],
         "industry" => r["industry"].to_s, "exchange" => r["exchange"].to_s.upcase,
         "tier" => r["tier"], "subtag" => r["subtag"].to_s,
         "hist" => r["hist"], "prev_hist" => r["prev_hist"],

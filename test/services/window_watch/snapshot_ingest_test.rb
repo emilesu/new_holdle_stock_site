@@ -78,6 +78,14 @@ class WindowWatch::SnapshotIngestTest < ActiveSupport::TestCase
     assert_match "互不一致", errors.join
   end
 
+  test "大写 code 落库归一为小写，财务预设过滤不受影响（评审修复1）" do
+    payload = ww_payload
+    payload["tiers"]["T1"][0]["code"] = "SH601985"
+    snapshot, errors = ingest(payload)
+    assert_empty errors
+    assert_equal "sh601985", snapshot.stocks.find_by(symbol: "601985.SH").code
+  end
+
   test "latest 返回判定月最大的成功快照" do
     ingest(ww_payload(month: "2026-09", trade_date: "2026-10-09"))
     ingest(ww_payload(month: "2026-10"))

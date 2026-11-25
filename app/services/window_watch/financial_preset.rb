@@ -55,14 +55,14 @@ module WindowWatch
         stock.sector.to_s == "银行" || stock.industry.to_s.match?(/银行|证券|保险/)
       end
 
+      # 每只股票仅取最新一期年报 ROE：PostgreSQL DISTINCT ON 单查询（评审修复3）
       def latest_annual_roe(stock_ids)
         return {} if stock_ids.empty?
-        # 升序遍历 + to_h 后写覆盖 = 每只股票保留最新年报 ROE
-        FinancialIndicator.where(stock_id: stock_ids, market: "CN", period_type: "annual")
-          .where.not(roe_avg: nil)
-          .order(:stock_id, report_date: :asc)
-          .pluck(:stock_id, :roe_avg)
-          .to_h
+        sql = "SELECT DISTINCT ON (stock_id) stock_id, roe_avg FROM financial_indicators " \
+              "WHERE period_type = 'annual' AND market = 'CN' AND roe_avg IS NOT NULL " \
+              "AND stock_id IN (:ids) ORDER BY stock_id, report_date DESC"
+        FinancialIndicator.find_by_sql([sql, { ids: stock_ids }])
+                        .each_with_object({}) { |r, h| h[r.stock_id] = r.roe_avg }
       end
     end
   end

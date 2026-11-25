@@ -26,14 +26,15 @@ class WindowWatchController < ApplicationController
     @view = params[:view] == "all" ? "all" : "main"
     if @view == "main"
       # 财务预设视图：命中集来自财务库（近3财年 ROE≥档位 且 经营现金流>0，最新披露口径）
+      # 四档直接落数组：视图 size/迭代零额外查询（评审修复2）
       @band = WindowWatch::FinancialPreset.band_for(params[:band])
       hit_codes = WindowWatch::FinancialPreset.hit_symbols(band: @band).map(&:downcase)
       main_scope = @snapshot.stocks.where(code: hit_codes)
-      @t1 = main_scope.where(tier: "T1").order(open_month: :desc, ratio: :asc)
-      @t2_p2 = main_scope.where(tier: "T2_P2").order(ratio: :asc)
-      @t2_p1 = main_scope.where(tier: "T2_P1").order(ratio: :asc)
-      @t3 = main_scope.where(tier: "T3").order(ratio: :asc)
-      @overlay = WindowWatch::FinancialPreset.overlay(@t1.to_a + @t2_p2.to_a + @t2_p1.to_a + @t3.to_a)
+      @t1 = main_scope.where(tier: "T1").order(open_month: :desc, ratio: :asc).to_a
+      @t2_p2 = main_scope.where(tier: "T2_P2").order(ratio: :asc).to_a
+      @t2_p1 = main_scope.where(tier: "T2_P1").order(ratio: :asc).to_a
+      @t3 = main_scope.where(tier: "T3").order(ratio: :asc).to_a
+      @overlay = WindowWatch::FinancialPreset.overlay(@t1 + @t2_p2 + @t2_p1 + @t3)
     else
       @tier = params[:tier].presence_in(WindowWatchSnapshotStock::TIERS)
       @industries = @snapshot.stocks.where.not(industry: "").distinct.order(:industry).pluck(:industry)
