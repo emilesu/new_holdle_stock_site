@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_11_25_120000) do
+ActiveRecord::Schema[7.1].define(version: 2026_11_25_150000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -759,6 +759,8 @@ ActiveRecord::Schema[7.1].define(version: 2026_11_25_120000) do
     t.integer "sa_run", null: false, comment: "状态A连续成立月数（P1 档=中断前连续月数）"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "entry_month", comment: "IN_POSITION 专属：存活窗口入场月 YYYY-MM（可晚于判定月）"
+    t.integer "months_in_position", comment: "IN_POSITION 专属：持仓月数（DSH 计算，int≥1）"
     t.index ["window_watch_snapshot_id", "industry"], name: "idx_wwss_snapshot_industry"
     t.index ["window_watch_snapshot_id", "symbol"], name: "idx_wwss_snapshot_symbol", unique: true
     t.index ["window_watch_snapshot_id", "tier"], name: "idx_wwss_snapshot_tier"

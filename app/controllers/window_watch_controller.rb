@@ -44,11 +44,20 @@ class WindowWatchController < ApplicationController
       @t2_p2 = main_scope.where(tier: "T2_P2").to_a
       @t2_p1 = main_scope.where(tier: "T2_P1").to_a
       @t3 = main_scope.where(tier: "T3").to_a
-      @overlay = WindowWatch::FinancialPreset.overlay(@t1 + @t2_p2 + @t2_p1 + @t3)
+      # R3④：持仓管理区块（契约 v0.5）：不受财务预设过滤（排除桶是状态描述），金字塔序 top10+折叠；
+      # v1.1 无逐股行时降级为仅计数提示（in_position_count 兜底）
+      @in_position = @snapshot.stocks
+                              .joins("LEFT JOIN stocks ON lower(stocks.symbol) = window_watch_snapshot_stocks.code")
+                              .where(tier: WindowWatchSnapshotStock::IN_POSITION)
+                              .order(Arel.sql("stocks.pyramid_total_score DESC NULLS LAST, window_watch_snapshot_stocks.ratio ASC"))
+                              .to_a
+      @in_position_count = [@snapshot.stats["in_position_count"].to_i, @in_position.size].max
+      all_rows = @t1 + @t2_p2 + @t2_p1 + @t3 + @in_position
+      @overlay = WindowWatch::FinancialPreset.overlay(all_rows)
       # R2③：卡片近 6 月 sparkline（全量表格视图不装配，控制查询规模）
-      @sparkline = WindowWatch::MonthlySparkline.call(@t1 + @t2_p2 + @t2_p1 + @t3, snapshot_month: @snapshot.month)
+      @sparkline = WindowWatch::MonthlySparkline.call(all_rows, snapshot_month: @snapshot.month)
     else
-      @tier = params[:tier].presence_in(WindowWatchSnapshotStock::TIERS)
+      @tier = params[:tier].presence_in(WindowWatchSnapshotStock::ALL_TIERS)
       @industries = @snapshot.stocks.where.not(industry: "").distinct.order(:industry).pluck(:industry)
       @industry = params[:industry].presence_in(@industries)
       @sort = params[:sort].presence_in(SORT_ORDERS.keys) || "ratio_asc"

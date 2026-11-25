@@ -150,6 +150,48 @@ class WindowWatchControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  # ---- R3 ④持仓管理区块（契约 v0.5 / snapshot 1.2）----
+
+  test "v1.2：④区块渲染逐股明细，金字塔序、三时点叙事、固定副标题逐字" do
+    WindowWatch::SnapshotIngest.call(payload: ww_payload(in_position: true), source_ip: "127.0.0.1")
+    sign_in users(:two)
+    get window_watch_path(view: "main", band: 15)
+    seg = response.body[/<section id="ww-inpos".*?<\/section>/m].to_s
+    assert_includes seg, WindowWatchHelper::IN_POSITION_SUBTITLE
+    assert_includes seg, "中国平安"
+    assert_includes seg, "泸州老窖"
+    assert_operator seg.index("中国平安"), :<, seg.index("泸州老窖"), "④块金字塔序（65>45）"
+    assert_includes seg, "开窗 2025-03 · 入场 2025-06 · 持仓 16 个月"
+    # 入场月晚于判定月=正常形态，如实展示（口径②）
+    assert_includes seg, "开窗 2026-02 · 入场 2026-11 · 持仓 1 个月"
+    # 计数条升五档：④出现
+    assert_includes response.body, "④持仓管理"
+  end
+
+  test "v1.1 兼容降级：无逐股行时④区块仅计数提示" do
+    payload = ww_payload
+    payload["stats"]["in_position_count"] = 5
+    WindowWatch::SnapshotIngest.call(payload: payload, source_ip: "127.0.0.1")
+    sign_in users(:two)
+    get window_watch_path
+    assert_includes response.body, "共 5 只；逐股明细将随下一批快照（snapshot 1.2）提供。"
+    refute_includes response.body, "中国平安"
+  end
+
+  test "v1.1 默认包（in_position_count=0）：④区块与计数条④段均不出现" do
+    sign_in users(:two)
+    get window_watch_path
+    refute_includes response.body, "④持仓管理"
+  end
+
+  test "全量视图可按持仓管理档筛选" do
+    WindowWatch::SnapshotIngest.call(payload: ww_payload(in_position: true), source_ip: "127.0.0.1")
+    sign_in users(:two)
+    get window_watch_path(view: "all", tier: "IN_POSITION")
+    assert_includes response.body, "中国平安"
+    refute_includes response.body, "中国核电"
+  end
+
   # ---- R4 空态分支 ----
 
   test "冷启动：库内无快照时固定文案，无个股区块" do

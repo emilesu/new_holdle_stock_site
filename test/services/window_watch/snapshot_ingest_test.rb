@@ -91,4 +91,66 @@ class WindowWatch::SnapshotIngestTest < ActiveSupport::TestCase
     ingest(ww_payload(month: "2026-10"))
     assert_equal "2026-10", WindowWatchSnapshot.latest.month
   end
+
+  # ---- 契约 v0.5（snapshot 1.2）IN_POSITION 兼容校验（05 变更单 §二）----
+
+  test "v1.2 合法包落库：IN_POSITION 行字段逐位回读，入场月晚于判定月不拒（口径②）" do
+    snapshot, errors = ingest(ww_payload(in_position: true))
+    assert_empty errors
+    assert_equal "1.2", snapshot.snapshot_version
+    assert_equal 8, snapshot.stocks.count
+    row = snapshot.stocks.find_by!(symbol: "601318.SH")
+    assert_equal "IN_POSITION", row.tier
+    assert_equal "2025-06", row.entry_month
+    assert_equal 16, row.months_in_position
+    # 泸州老窖 entry_month=2026-11 晚于判定月 2026-10：实测正常形态，必须照常入库
+    assert_equal "2026-11", snapshot.stocks.find_by!(symbol: "000568.SZ").entry_month
+  end
+
+  test "v1.1 四键包仍接受（IN_POSITION 可选键，平滑过渡）" do
+    snapshot, errors = ingest(ww_payload)
+    assert_empty errors
+    assert_equal 6, snapshot.stocks.count
+  end
+
+  test "entry_month 格式非法 422（仅验格式，不做语义上限校验）" do
+    payload = ww_payload(in_position: true)
+    payload["tiers"]["IN_POSITION"][0]["entry_month"] = "2025/06"
+    snapshot, errors = ingest(payload)
+    assert_nil snapshot
+    assert_match "entry_month", errors.join
+  end
+
+  test "months_in_position 非 ≥1 整数 422" do
+    payload = ww_payload(in_position: true)
+    payload["tiers"]["IN_POSITION"][0]["months_in_position"] = 0
+    snapshot, errors = ingest(payload)
+    assert_nil snapshot
+    assert_match "months_in_position", errors.join
+  end
+
+  test "IN_POSITION 行 subtag 非空 422（恒空约束）" do
+    payload = ww_payload(in_position: true)
+    payload["tiers"]["IN_POSITION"][0]["subtag"] = "continuation"
+    snapshot, errors = ingest(payload)
+    assert_nil snapshot
+    assert_match "subtag 须为空", errors.join
+  end
+
+  test "in_position_count 与 IN_POSITION 行数不一致 422（v1.2 对账）" do
+    payload = ww_payload(in_position: true)
+    payload["stats"]["in_position_count"] = 99
+    snapshot, errors = ingest(payload)
+    assert_nil snapshot
+    assert_match "in_position_count=99", errors.join
+  end
+
+  test "IN_POSITION 与四档 symbol 交集非空 422（互斥=全局去重）" do
+    payload = ww_payload(in_position: true)
+    payload["tiers"]["IN_POSITION"] << payload["tiers"]["T1"][0].dup
+    payload["stats"]["in_position_count"] = 3
+    snapshot, errors = ingest(payload)
+    assert_nil snapshot
+    assert_match "symbol 重复", errors.join
+  end
 end

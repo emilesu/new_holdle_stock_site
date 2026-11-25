@@ -26,6 +26,9 @@
       <% if (note = WindowWatchHelper::T3_SUBTAG_NOTES[row.subtag]) %>
         <span class="text-hl-12 text-muted-4"><%= note %></span>
       <% end %>
+    <% when WindowWatchSnapshotStock::IN_POSITION %>
+      <%# 契约 v0.5 §三.3：三时点叙事，字段按呈现即所得（入场月可晚于判定月=as-of 正常形态，口径②） %>
+      <span class="text-hl-12 text-muted-2 whitespace-nowrap">开窗 <%= row.open_month %> · 入场 <%= row.entry_month %> · 持仓 <%= row.months_in_position %> 个月</span>
     <% end %>
     <% if ov && ov[:roe_latest] %>
       <span class="text-hl-12 text-muted-3 whitespace-nowrap" title="最新披露年报加权 ROE（财务库口径；筛选预设见页顶档位说明）">ROE <%= number_with_precision(ov[:roe_latest], precision: 1) %>%</span>

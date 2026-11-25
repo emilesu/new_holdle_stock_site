@@ -52,6 +52,7 @@
         <%= render "tier_open", rows: @t1 %>
         <%= render "tier_forming", p2: @t2_p2, p1: @t2_p1 %>
         <%= render "tier_hold", rows: @t3 %>
+        <%= render "tier_inposition", rows: @in_position %>
       <% else %>
         <%= render "full_table" %>
       <% end %>

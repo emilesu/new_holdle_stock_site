@@ -30,13 +30,29 @@ module WindowWatchSnapshotHelper
       open_month: nil, months_since_open: nil, last_close_month: nil, sa_run: 12 }
   ].freeze
 
+  # 契约 v1.2 IN_POSITION 逐股明细 fixture（05 变更单 §1.2）：
+  # 泸州老窖 entry_month=2026-11 晚于判定月 2026-10 —— 口径②实测正常形态，页面不得拒绝
+  WW_IN_POSITION = [
+    { symbol: "601318.SH", code: "sh601318", name: "中国平安", industry: "保险", exchange: "SH",
+      tier: "IN_POSITION", subtag: "", hist: "-1.111111", prev_hist: "-2.222222",
+      dif: "0.333333", dea: "0.444444", ratio: "0.555556",
+      open_month: "2025-03", months_since_open: 19, last_close_month: nil, sa_run: 20,
+      entry_month: "2025-06", months_in_position: 16 },
+    { symbol: "000568.SZ", code: "sz000568", name: "泸州老窖", industry: "白酒", exchange: "SZ",
+      tier: "IN_POSITION", subtag: "", hist: "-0.123456", prev_hist: "-0.654321",
+      dif: "0.111111", dea: "0.222222", ratio: "0.333333",
+      open_month: "2026-02", months_since_open: 8, last_close_month: nil, sa_run: 8,
+      entry_month: "2026-11", months_in_position: 1 }
+  ].freeze
+
   # 站内金字塔综合分 fixture（R1 预设视图排序依据；stocks 表自有字段，不进快照 payload）
   WW_PYRAMID_SCORES = { "SH601985" => 70, "SH600036" => 85, "SZ000333" => 60,
-                        "SZ000858" => 40, "SH600519" => 90, "SZ300750" => 50 }.freeze
+                        "SZ000858" => 40, "SH600519" => 90, "SZ300750" => 50,
+                        "SH601318" => 65, "SZ000568" => 45 }.freeze
 
   # 站内 stocks 表落库（code 命中校验 + 财务库 overlay + 金字塔排序用）
   def ww_create_stocks!
-    WW_STOCKS.each do |r|
+    (WW_STOCKS + WW_IN_POSITION).each do |r|
       code, ex = r[:symbol].split(".")
       Stock.create!(symbol: "#{ex}#{code}", name: r[:name], market: "CN",
                     exchange: "#{ex}SE", industry: r[:industry], status: "active",
@@ -62,13 +78,16 @@ module WindowWatchSnapshotHelper
     end
   end
 
-  # 快照 JSON（v1.1 结构：纯技术字段）：stats 由 rows 自动推导，保证默认 payload 必过校验
-  def ww_payload(month: "2026-10", rows: nil, trade_date: "2026-11-04", is_stale: false)
+  # 快照 JSON：stats/universe 由 rows 自动推导，保证默认 payload 必过校验
+  # in_position: true → v1.2 五键结构（tiers.IN_POSITION 逐股明细 + in_position_count 对账）
+  def ww_payload(month: "2026-10", rows: nil, trade_date: "2026-11-04", is_stale: false, in_position: false)
     rows ||= WW_STOCKS
+    ip_rows = in_position ? WW_IN_POSITION : []
+    all_rows = rows + ip_rows
     tc = Hash.new(0)
     rows.each { |r| tc[r[:tier]] += 1 }
     {
-      "snapshot_version" => "1.1",
+      "snapshot_version" => in_position ? "1.2" : "1.1",
       "month" => month,
       "generated_at" => "2026-11-05T09:30:00+08:00",
       "caliber_version" => "v1.10",
@@ -76,14 +95,16 @@ module WindowWatchSnapshotHelper
       "data_snapshot" => { "trade_date" => trade_date, "fetched_at" => "2026-11-05T09:00:00+08:00",
                            "adjust" => "forward", "source" => "sina/eastmoney", "last_month_closed" => month,
                            "is_stale" => is_stale, "stale_days" => is_stale ? 3 : 0, "stale_trading_days" => is_stale ? 3 : 0 },
-      "universe" => { "market" => "CN", "count" => 6, "exchanges" => { "SH" => 3, "SZ" => 3, "BJ" => 0 } },
-      "tiers" => { "T1" => [], "T2_P2" => [], "T2_P1" => [], "T3" => [] },
+      "universe" => { "market" => "CN", "count" => all_rows.size,
+                      "exchanges" => { "SH" => all_rows.count { |r| r[:exchange] == "SH" },
+                                       "SZ" => all_rows.count { |r| r[:exchange] == "SZ" }, "BJ" => 0 } },
+      "tiers" => { "T1" => [], "T2_P2" => [], "T2_P1" => [], "T3" => [] }.tap { |t| t["IN_POSITION"] = [] if in_position },
       "stats" => { "tier_counts" => { "T1" => tc["T1"], "T2_P2" => tc["T2_P2"], "T2_P1" => tc["T2_P1"], "T3" => tc["T3"] },
                    "bj_count" => 0,
-                   "in_position_count" => 0 },
+                   "in_position_count" => ip_rows.size },
       "disclaimer" => WW_DISCLAIMER
     }.tap do |p|
-      rows.each { |r| p["tiers"][r[:tier].to_s] << r.transform_keys(&:to_s) }
+      all_rows.each { |r| p["tiers"][r[:tier].to_s] << r.transform_keys(&:to_s) }
     end
   end
 end

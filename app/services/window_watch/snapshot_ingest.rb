@@ -4,6 +4,8 @@ module WindowWatch
   # 校验顺序：①头字段 ②tiers 逐股 ③stats 对账 ④universe 自洽 ⑤code 命中（防御性，纪要决议3）
   class SnapshotIngest
     TIERS = WindowWatchSnapshotStock::TIERS
+    IN_POSITION = WindowWatchSnapshotStock::IN_POSITION
+    ALL_TIERS = WindowWatchSnapshotStock::ALL_TIERS
     SUBTAGS = WindowWatchSnapshotStock::SUBTAGS
     MONTH_FORMAT = /\A\d{4}-(0[1-9]|1[0-2])\z/
     REQUIRED_STOCK_FIELDS = %w[symbol code name tier exchange hist prev_hist dif dea ratio sa_run].freeze
@@ -69,10 +71,14 @@ module WindowWatch
       tiers = @payload["tiers"]
       missing = TIERS.reject { |t| tiers[t].is_a?(Array) }
       @errors << "tiers 缺少数组键：#{missing.join('/')}" if missing.any?
+      # v1.2：IN_POSITION 可选键（缺失=按 v1.1 处理，④区块降级为仅计数提示）
+      if tiers.key?(IN_POSITION) && !tiers[IN_POSITION].is_a?(Array)
+        @errors << "tiers.#{IN_POSITION} 须为数组（可选键，v1.2）"
+      end
 
       rows = []
       seen = {}
-      tiers.slice(*TIERS).each do |tier, list|
+      tiers.slice(*ALL_TIERS).each do |tier, list|
         next unless list.is_a?(Array)
         list.each do |item|
           unless item.is_a?(Hash)
@@ -81,6 +87,7 @@ module WindowWatch
           end
           row = deep_stringify(item).merge("_tier" => tier)
           symbol = row["symbol"].to_s
+          # seen 跨五键全局去重 = IN_POSITION 与四档互斥校验（契约 v0.5 §1.1）
           if seen.key?(symbol)
             @errors << "symbol 重复：#{symbol}"
             next
@@ -91,13 +98,23 @@ module WindowWatch
           @errors << "#{symbol} 必填字段缺失：#{absent.join('/')}" if absent.any?
           carried = FORBIDDEN_ROW_FIELDS.select { |f| row.key?(f) }
           @errors << "#{symbol} 不得携带财务字段：#{carried.join('/')}（v0.4.0 起财务指标移出快照）" if carried.any?
-          @errors << "#{symbol} tier 非法：#{row['tier']}" if row["tier"].present? && !TIERS.include?(row["tier"])
-          @errors << "#{symbol} tier=#{row['tier']} 与所在档数组键 #{tier} 不一致" if row["tier"].present? && TIERS.include?(row["tier"]) && row["tier"] != tier
-          @errors << "#{symbol} subtag 非法：#{row['subtag']}" if row["subtag"].present? && !SUBTAGS.include?(row["subtag"])
+          @errors << "#{symbol} tier 非法：#{row['tier']}" if row["tier"].present? && !ALL_TIERS.include?(row["tier"])
+          @errors << "#{symbol} tier=#{row['tier']} 与所在档数组键 #{tier} 不一致" if row["tier"].present? && ALL_TIERS.include?(row["tier"]) && row["tier"] != tier
           ex = row["exchange"].to_s.upcase
           @errors << "#{symbol} exchange 非法（tiers 内仅 SH/SZ）：#{row['exchange']}" unless ex.in?(%w[SH SZ])
           code_prefix = row["code"].to_s[0, 2].upcase
           @errors << "#{symbol} exchange=#{ex} 与 code 前缀=#{code_prefix} 不一致" if ex.in?(%w[SH SZ]) && ex != code_prefix
+
+          if tier == IN_POSITION
+            # 契约 v0.5 §1.2：subtag 恒空；entry_month 仅验格式（可晚于判定月，口径②）；months_in_position int≥1（DSH 算好，页面如实展示）
+            @errors << "#{symbol} IN_POSITION 行 subtag 须为空" if row["subtag"].present?
+            em = row["entry_month"].to_s
+            @errors << "#{symbol} entry_month 缺失或格式非 YYYY-MM：#{em}" unless em.match?(MONTH_FORMAT)
+            mip = row["months_in_position"]
+            @errors << "#{symbol} months_in_position 须为 ≥1 整数：#{mip.inspect}" unless mip.is_a?(Integer) && mip >= 1
+          else
+            @errors << "#{symbol} subtag 非法：#{row['subtag']}" if row["subtag"].present? && !SUBTAGS.include?(row["subtag"])
+          end
           rows << row
         end
       end
@@ -127,6 +144,12 @@ module WindowWatch
         v = tc[t]
         actual = rows.count { |r| r["_tier"] == t }
         @errors << "tier_counts.#{t}=#{v} 与 tiers 实际条数 #{actual} 不一致" if v.is_a?(Integer) && v != actual
+      end
+      # v1.2 对账：tiers 下发 IN_POSITION 时，in_position_count 必须等于其行数（§二.3）
+      if @payload["tiers"].is_a?(Hash) && @payload["tiers"][IN_POSITION].is_a?(Array)
+        v = stats["in_position_count"]
+        actual = rows.count { |r| r["_tier"] == IN_POSITION }
+        @errors << "stats.in_position_count=#{v} 与 tiers.#{IN_POSITION} 实际条数 #{actual} 不一致" if v.is_a?(Integer) && v != actual
       end
       carried = FORBIDDEN_STATS_KEYS.select { |k| stats.key?(k) }
       @errors << "stats 不得携带财务统计键：#{carried.join('/')}（v0.4.0 起财务指标移出快照）" if carried.any?
@@ -212,6 +235,7 @@ module WindowWatch
         "dif" => r["dif"], "dea" => r["dea"], "ratio" => r["ratio"],
         "open_month" => r["open_month"], "months_since_open" => r["months_since_open"],
         "last_close_month" => r["last_close_month"], "sa_run" => r["sa_run"],
+        "entry_month" => r["entry_month"], "months_in_position" => r["months_in_position"],
         "created_at" => now, "updated_at" => now
       }
     end

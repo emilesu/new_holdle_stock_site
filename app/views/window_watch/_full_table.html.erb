@@ -8,7 +8,7 @@
   <div class="px-5 py-3 border-b border-line flex flex-wrap items-center gap-x-4 gap-y-2">
     <div class="flex flex-wrap items-center gap-1.5 text-hl-12">
       <span class="text-muted-3 mr-1">档</span>
-      <% ([nil] + WindowWatchSnapshotStock::TIERS).each do |t| %>
+      <% ([nil] + WindowWatchSnapshotStock::ALL_TIERS).each do |t| %>
         <%= link_to (t.nil? ? "全部" : WindowWatchHelper::TIER_SHORT_NAMES[t]),
               window_watch_path(view: "all", tier: t, industry: @industry, sort: @sort, q: @q.presence, month: @snapshot.month),
               class: "px-2.5 py-1 rounded-md border #{t == @tier ? 'border-ink text-ink bg-white font-medium' : 'border-line text-muted hover:text-ink'}" %>

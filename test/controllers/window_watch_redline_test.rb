@@ -12,7 +12,8 @@ class WindowWatchRedlineTest < ActionDispatch::IntegrationTest
 
   setup do
     ww_create_stocks!
-    WindowWatch::SnapshotIngest.call(payload: ww_payload, source_ip: "127.0.0.1")
+    # v1.2 全结构（含④持仓管理逐股行）：红线扫描覆盖 ④ 区块
+    WindowWatch::SnapshotIngest.call(payload: ww_payload(in_position: true), source_ip: "127.0.0.1")
     ww_give_financials("SH601985", roes: [16, 17, 18])
     ww_give_financials("SH600036", roes: [18, 19, 20])
     ww_give_financials("SH600519", roes: [30, 31, 32])
@@ -45,7 +46,7 @@ class WindowWatchRedlineTest < ActionDispatch::IntegrationTest
       # 扫描范围限 <main> 页面正文（导航/页脚 SVG 图标路径含大量小数，属版式 chrome 非数据渲染）
       body = response.body[/<main\b.*?<\/main>/m].to_s
       refute_empty body
-      WindowWatchSnapshotHelper::WW_STOCKS.each do |r|
+      (WindowWatchSnapshotHelper::WW_STOCKS + WindowWatchSnapshotHelper::WW_IN_POSITION).each do |r|
         %w[hist prev_hist dif dea ratio].each do |field|
           raw = r[field.to_sym].to_s
           rounded = format("%.2f", r[field.to_sym].to_f)
@@ -61,6 +62,8 @@ class WindowWatchRedlineTest < ActionDispatch::IntegrationTest
     WindowWatchHelper::TIER_SUBTITLES.each_value do |text|
       assert_includes response.body, text
     end
+    # 契约 v0.5 §三.2：④持仓管理副标题为 DSH 确认版固定文案，逐字验收
+    assert_includes response.body, WindowWatchHelper::IN_POSITION_SUBTITLE
     # §六.2 特别红线：绿柱收敛不得写成「状态A形成中」
     refute_includes response.body, "状态A形成中"
   end
