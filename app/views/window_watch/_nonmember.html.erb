@@ -5,8 +5,8 @@
     <p class="text-hl-13 text-muted">按 HOLDLE 方法论的月K状态描述 · 每月更新</p>
   </header>
 
-  <%# 计数条=默认财务预设命中子集计数（2026-11-25 老板定，与会员主组默认视图同口径），不再取快照全量 stats %>
-  <%= render "count_bar", counts: @preset_counts %>
+  <%# 计数条=默认财务预设命中子集计数（2026-11-25 老板定，与会员主组默认视图同口径），不再取快照全量 stats；③暂不开窗不展示 %>
+  <%= render "count_bar", counts: @preset_counts, hide_t3: true %>
 
   <section class="hl-card px-6 py-5 space-y-2.5 text-hl-13 text-muted leading-relaxed">
     <p>这是一页对全 A 股「月K状态」的客观描述：哪些股票当前处于状态A的开窗观察、哪些处于开窗事件的准备形态。每月一个快照，用于时机选择和定位。</p>

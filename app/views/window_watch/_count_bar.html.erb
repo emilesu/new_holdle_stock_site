@@ -23,7 +23,10 @@
     <span class="<%= chip %> border-transparent text-muted">②形成中 <span class="text-hl-15 font-semibold text-ink"><%= tc["T2_P2"].to_i + tc["T2_P1"].to_i %></span>
       <span class="text-muted-3">（红柱收敛 <%= tc["T2_P2"] %> / 绿柱收敛 <%= tc["T2_P1"] %>）</span>
     </span>
+    <%# 非会员 teaser 隐藏 ③暂不开窗（2026-11-25 老板定），会员视图不受影响 %>
+    <% unless local_assigns[:hide_t3] %>
     <span class="<%= chip %> border-transparent text-muted">③状态A·暂不开窗 <span class="text-hl-15 font-semibold text-ink"><%= tc["T3"] %></span></span>
+    <% end %>
     <% if ipc > 0 %>
       <span class="<%= chip %> border-dashed border-line text-muted">④持仓管理 <span class="text-hl-15 font-semibold text-ink"><%= ipc %></span></span>
     <% end %>
