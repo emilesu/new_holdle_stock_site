@@ -222,8 +222,13 @@ module WindowWatch
         end
       end
       @errors << "symbol/code 格式非法或互不一致：#{unresolved.join(',')}" if unresolved.any?
-      hit = Stock.where(market: @market, symbol: codes.uniq).pluck(:symbol).to_set
-      misses = codes.uniq.reject { |s| hit.include?(s) }
+      # US 命中双向归一（契约 v0.8 归一化认领项，2026-11-26）：库内历史斜杠形态（BRK/A，Nasdaq screener 源）
+      # 与 Yahoo 点形态（BRK.A）互认命中——两侧统一 tr 为点形态后比对；库内已由迁移规范为点，此处防数据漂移
+      candidates = @market == "US" ? (codes + codes.map { |c| c.tr(".", "/") }).uniq : codes.uniq
+      hit = Stock.where(market: @market, symbol: candidates).pluck(:symbol)
+      hit = hit.map { |s| s.tr("/", ".") }.to_set if @market == "US"
+      hit = hit.to_set unless hit.is_a?(Set)
+      misses = codes.uniq.reject { |s| hit.include?(@market == "US" ? s.tr("/", ".") : s) }
       @errors << "以下 code 未命中网站股票库：#{misses.join(',')}" if misses.any?
     end
 

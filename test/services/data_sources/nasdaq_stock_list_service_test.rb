@@ -1,4 +1,5 @@
 require "test_helper"
+require "minitest/mock" # Faraday.stub 依赖：单跑本文件时全量套件的隐式加载不存在
 
 module DataSources
   class NasdaqStockListServiceTest < ActiveSupport::TestCase
@@ -58,6 +59,21 @@ module DataSources
       assert_nil stock.listing_date, "抓取失败时上市日期留空，由同步任务兜底"
     ensure
       Stock.where(market: "US", symbol: "NDT02").destroy_all
+    end
+
+    test "斜杠分级股份入库点化（BRK/A → BRK.A，Yahoo/NYSE 规范，契约 v0.8 code 同源）" do
+      rows = [{ "symbol" => "BRK/A", "name" => "Berkshire Hathaway Inc. Class A" }]
+      yahoo = ->(_url) { fake_response('{"chart":{"result":[{"meta":{"firstTradeDate":345479400}}],"error":null}}') }
+
+      Faraday.stub(:get, stub_get(rows, yahoo)) do
+        stats = DataSources::NasdaqStockListService.call
+        assert_equal 1, stats[:created]
+      end
+
+      assert Stock.find_by(market: "US", symbol: "BRK.A"), "入库 symbol 应为点形态"
+      assert_nil Stock.find_by(market: "US", symbol: "BRK/A"), "斜杠形态不应入库"
+    ensure
+      Stock.where(market: "US", symbol: %w[BRK/A BRK.A]).destroy_all
     end
 
     test "存量美股不重复抓取上市日期" do

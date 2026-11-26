@@ -282,6 +282,14 @@ class WindowWatch::SnapshotIngestTest < ActiveSupport::TestCase
     assert_match "UBER", errors.join
   end
 
+  test "v0.8 带点码命中双向归一：库内斜杠形态 BRK/A 互认 Yahoo 点码 BRK.A（2026-11-26 DSH 422 修复）" do
+    ww_create_us_stocks!
+    Stock.find_by!(symbol: "BRK.A", market: "US").update_column(:symbol, "BRK/A") # 模拟迁移前/漂移形态
+    snapshot, errors = ingest(ww_payload(market: "US"))
+    assert_empty errors
+    assert_equal "brk.a", snapshot.stocks.find_by(symbol: "BRK.A.US").code # 快照 code 恒 Yahoo 底座码，不随库形态变
+  end
+
   test "v0.8 CN 包校验路径零变化：US 行混入 CN 包仍按 SH/SZ/BJ 枚举 422" do
     payload = ww_payload
     payload["tiers"]["T1"][0]["symbol"] = "NVDA.US"

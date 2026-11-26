@@ -15,5 +15,13 @@ module DataSources
     def yahoo(symbol)
       symbol.to_s.strip.upcase.tr("./^", "-")
     end
+
+    # 库内规范形态（NYSE/Yahoo 约定）：斜杠统一为点（BRK/B → BRK.B）
+    # 用于入库归一化与 ingest 命中校验（契约 v0.8：snapshot.code = Yahoo 底座码 = 点形态）。
+    # 注意：^ 形态（优先股/单位，如 NLY^F）不在此映射——Yahoo 对优先股用连字符（NLY-F），
+    # 且 DSH 池口径（决策 A）已排除优先股/单位，点化 ^ 反而制造错误代码
+    def canonical(symbol)
+      symbol.to_s.strip.tr("/", ".")
+    end
   end
 end

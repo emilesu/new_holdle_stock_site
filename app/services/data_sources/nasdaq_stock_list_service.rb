@@ -92,7 +92,9 @@ module DataSources
       end
 
       def save_stock(market, item, existing_stocks = {})
-        symbol = item["symbol"]
+        # screener API 分级股份返回斜杠形态（BRK/A），库内规范为 Yahoo/NYSE 点形态（BRK.A，
+        # 契约 v0.8 code 同源；斜杠形态还会打碎详情页 URL）——SymbolFormat.canonical 唯一出处
+        symbol = DataSources::SymbolFormat.canonical(item["symbol"])
         return :failed if symbol.blank?
 
         name = item["name"]
