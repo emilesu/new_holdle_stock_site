@@ -474,7 +474,7 @@ module DataSources
           "QCOM" => "Qualcomm Incorporated Common Stock",
           "TXN" => "Texas Instruments Incorporated Common Stock"
         }
-        # 库内 symbol 可能是 BRK/B 格式，映射表 key 用 NYSE 惯例的 BRK.B，查询前归一点/斜杠/脱字符
+        # 库内已统一点形态（2026-11-26 迁移），但 ^ 优先股与历史脏数据仍可能是斜杠/脱字符，归一后查表
         normalized = symbol.to_s.tr("/^", "..")
         names[symbol] || names[normalized] || "#{symbol} Common Stock"
       end

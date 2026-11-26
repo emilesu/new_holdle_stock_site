@@ -18,4 +18,12 @@ class SymbolFormatTest < ActiveSupport::TestCase
     assert_equal "NLY-F", Format.yahoo("NLY^F")
     assert_equal "SOFI", Format.yahoo("sofi")
   end
+
+  # 2026-11-26 起库内规范形态=点（fead9ca 迁移）；^ 不点化（Yahoo 优先股用连字符）
+  test "canonical: 斜杠点化、脱字符保留" do
+    assert_equal "BRK.B", Format.canonical("BRK/B")
+    assert_equal "BRK.B", Format.canonical("BRK.B")
+    assert_equal "NLY^F", Format.canonical("NLY^F")
+    assert_equal "AAPL", Format.canonical(" AAPL ")
+  end
 end

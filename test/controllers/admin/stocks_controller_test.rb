@@ -6,16 +6,17 @@ class Admin::StocksControllerTest < ActionDispatch::IntegrationTest
 
   setup do
     sign_in users(:two) # role: admin
-    @stock = Stock.create!(symbol: "BRK/B", exchange: "NYSE", market: "US",
+    # 2026-11-26 迁移后库内美股 symbol 已统一点形态（BRK.B），测试对齐新标准
+    @stock = Stock.create!(symbol: "BRK.B", exchange: "NYSE", market: "US",
                            name: "伯克希尔哈撒韦-B | Berkshire Hathaway Inc. Class B Common Stock")
   end
 
-  test "含斜杠的美股代码能打开编辑页且表单回填正确" do
+  test "含点的美股代码能打开编辑页且表单回填正确" do
     get edit_admin_stock_path(@stock)
     assert_response :success
     assert_select "h1", "编辑股票"
     assert_select "option[value=?][selected]", "US"
-    assert_select "input[name='stock[symbol]'][value=?]", "BRK/B"
+    assert_select "input[name='stock[symbol]'][value=?]", "BRK.B"
   end
 
   test "update 保存字段并跳转详情页" do
@@ -27,10 +28,10 @@ class Admin::StocksControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "update 撞 symbol 唯一索引时回显表单而非 500" do
-    Stock.create!(symbol: "BRK/A", exchange: "NYSE", market: "US", name: "伯克希尔哈撒韦-A")
-    patch admin_stock_path(@stock), params: { stock: { symbol: "BRK/A" } }
+    Stock.create!(symbol: "BRK.A", exchange: "NYSE", market: "US", name: "伯克希尔哈撒韦-A")
+    patch admin_stock_path(@stock), params: { stock: { symbol: "BRK.A" } }
     assert_response :unprocessable_entity
-    assert_equal "BRK/B", @stock.reload.symbol, "重复提交不得落库"
+    assert_equal "BRK.B", @stock.reload.symbol, "重复提交不得落库"
     # 回显表单的 action 必须仍指向原股票（脏 symbol 会让 URL 指向被占用的另一只）
     assert_select "form[action=?]", "/admin/stocks/#{CGI.escape(@stock.to_param)}"
     assert_match(/已存在/, response.body)
@@ -39,7 +40,7 @@ class Admin::StocksControllerTest < ActionDispatch::IntegrationTest
   test "update 拒绝服务端空必填字段且不落库" do
     patch admin_stock_path(@stock), params: { stock: { symbol: "  ", name: "x" } }
     assert_response :unprocessable_entity
-    assert_equal "BRK/B", @stock.reload.symbol, "空 symbol 不得覆盖库内值"
+    assert_equal "BRK.B", @stock.reload.symbol, "空 symbol 不得覆盖库内值"
     assert_select "form[action=?]", "/admin/stocks/#{CGI.escape(@stock.to_param)}"
   end
 end
