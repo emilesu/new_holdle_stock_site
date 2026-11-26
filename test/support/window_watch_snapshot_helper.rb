@@ -78,7 +78,8 @@ module WindowWatchSnapshotHelper
 
   # 美股金字塔分/板块 fixture（站内 stocks 表字段，不进快照 payload）
   WW_US_PYRAMID = { "NVDA" => 88, "BRK.A" => 82, "ABEV" => 55, "UBER" => 48, "AAPL" => 90 }.freeze
-  WW_US_SECTORS = { "NVDA" => "科技", "BRK.A" => "金融", "ABEV" => "消费", "UBER" => "制造", "AAPL" => "科技" }.freeze
+  # 板块 fixture（对齐库内美股中文 GICS 映射实际值：金融服务/科技/消费防御/工业）
+  WW_US_SECTORS = { "NVDA" => "科技", "BRK.A" => "金融服务", "ABEV" => "消费防御", "UBER" => "工业", "AAPL" => "科技" }.freeze
 
   # 站内金字塔综合分 fixture（R1 预设视图排序依据；stocks 表自有字段，不进快照 payload）
   WW_PYRAMID_SCORES = { "SH601985" => 70, "SH600036" => 85, "SZ000333" => 60,

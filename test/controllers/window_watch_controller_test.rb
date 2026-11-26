@@ -489,4 +489,17 @@ class WindowWatchControllerTest < ActionDispatch::IntegrationTest
     refute_includes response.body, "英伟达"
     refute_includes response.body, WindowWatchSnapshotHelper::WW_US_DISCLAIMER
   end
+
+  test "金融标签市场口径：US 按 sector=金融服务 整板块（BRK.A 命中、NVDA 不命中），tooltip 分市场" do
+    ww_create_us_stocks!
+    WindowWatch::SnapshotIngest.call(payload: ww_payload(market: "US"), source_ip: "127.0.0.1")
+    sign_in users(:two)
+    get window_watch_path(market: "US", view: "all")
+    # BRK.A fixture sector=金融服务（信用服务类，同 MA/V）→ 唯一命中；科技/消费/工业板块不标
+    assert_equal 1, response.body.scan("金融行业（GICS 金融服务板块）").size
+    refute_includes response.body, "金融行业（银行/证券/保险）"
+    # CN 口径零变化：招行 industry=银行 仍走现成正则
+    get window_watch_path(view: "all")
+    assert_includes response.body, "金融行业（银行/证券/保险）"
+  end
 end

@@ -70,7 +70,7 @@
       <span data-no-open="1"><%= ww_badge WindowWatchHelper::TIER_SHORT_NAMES[row.tier], "所属档位：#{WindowWatchHelper::TIER_NAMES[row.tier]}（说明见对应区块）" %></span>
     <% end %>
     <% if ov && ov[:finance] %>
-      <span data-no-open="1"><%= ww_badge "金融", "金融行业（银行/证券/保险）" %></span>
+      <span data-no-open="1"><%= ww_badge "金融", @market == "US" ? "金融行业（GICS 金融服务板块）" : "金融行业（银行/证券/保险）" %></span>
     <% end %>
     <% if ov && ov[:st] %>
       <span data-no-open="1"><%= ww_badge "ST", "ST/*ST 股票（仅标注，不剔除）" %></span>

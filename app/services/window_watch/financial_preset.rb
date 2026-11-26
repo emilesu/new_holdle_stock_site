@@ -128,6 +128,9 @@ module WindowWatch
 
       # 金融行业口径沿用库内现成正则（unlevered_roe_service）：sector=银行 或 industry 含银行/证券/保险
       def financial_stock?(stock)
+        # US（2026-11-26 老板反馈修复）：库内中文 GICS 映射 sector=金融服务 整板块判定——
+        # 「信用服务」（MA/V/AXP）「资产管理」「资本市场」等均不含银行/证券/保险字样，CN 正则整片漏标
+        return stock.sector.to_s == "金融服务" if stock.market.to_s == "US"
         stock.sector.to_s == "银行" || stock.industry.to_s.match?(/银行|证券|保险/)
       end
 
