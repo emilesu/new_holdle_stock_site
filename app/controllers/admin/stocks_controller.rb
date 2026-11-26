@@ -67,14 +67,24 @@ module Admin
     end
 
     def update
+      # 服务端必填兜底：视图 required 只约束浏览器，直接 PATCH 空 symbol 会落库破坏 to_param 与爬虫链路；
+      # 仅拦截「显式提交且为空」的字段，未提交的字段走增量更新不受影响
+      blanks = %i[symbol name market].select { |attr| stock_params.key?(attr) && stock_params[attr].to_s.strip.empty? }
+      if blanks.any?
+        blanks.each { |attr| @stock.errors.add(attr, "不能为空") }
+        return render :edit, status: :unprocessable_entity
+      end
+
       if @stock.update(stock_params)
         redirect_to admin_stock_path(@stock), notice: "股票 #{@stock.symbol} 已更新"
       else
         render :edit, status: :unprocessable_entity
       end
     rescue ActiveRecord::RecordNotUnique
-      # symbol+market 有库级唯一索引但模型无校验，撞索引时回显表单而非 500
-      @stock.errors.add(:symbol, "与已有股票重复（同市场下代码必须唯一）")
+      # symbol 有全局唯一索引（idx_stocks_symbol）但模型无校验，撞索引时回显表单而非 500；
+      # 必须先 reload：失败后内存 symbol 仍是脏的重复值，to_param 会让回显表单的 PATCH URL 指向另一只股票
+      @stock.reload
+      @stock.errors.add(:symbol, "该股票代码已存在（代码全局唯一）")
       render :edit, status: :unprocessable_entity
     end
 

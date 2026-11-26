@@ -31,5 +31,15 @@ class Admin::StocksControllerTest < ActionDispatch::IntegrationTest
     patch admin_stock_path(@stock), params: { stock: { symbol: "BRK/A" } }
     assert_response :unprocessable_entity
     assert_equal "BRK/B", @stock.reload.symbol, "重复提交不得落库"
+    # 回显表单的 action 必须仍指向原股票（脏 symbol 会让 URL 指向被占用的另一只）
+    assert_select "form[action=?]", "/admin/stocks/#{CGI.escape(@stock.to_param)}"
+    assert_match(/已存在/, response.body)
+  end
+
+  test "update 拒绝服务端空必填字段且不落库" do
+    patch admin_stock_path(@stock), params: { stock: { symbol: "  ", name: "x" } }
+    assert_response :unprocessable_entity
+    assert_equal "BRK/B", @stock.reload.symbol, "空 symbol 不得覆盖库内值"
+    assert_select "form[action=?]", "/admin/stocks/#{CGI.escape(@stock.to_param)}"
   end
 end
