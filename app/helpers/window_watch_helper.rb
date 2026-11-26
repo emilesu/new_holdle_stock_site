@@ -38,6 +38,18 @@ module WindowWatchHelper
   # 列宽系数刻意取整数：小数 fr（如 1.25fr）会撞 V11 绝对数值红线扫描的两位小数形态
   WW_CARD_GRID = "grid-cols-[minmax(0,1fr)_minmax(0,1fr)] md:grid-cols-[minmax(0,25fr)_minmax(0,9fr)_minmax(0,12fr)_minmax(0,23fr)_minmax(0,21fr)_minmax(0,12fr)]"
 
+  # 身份列名称拆分（2026-11-26 老板定）：美股 name 库内格式为「中文名|英文名」，
+  # 拆为 [第一行显示名=中文名, 第二行英文全称]；无竖线（A股/港股/缺中文名美股）返回 [原名, nil]
+  def ww_name_parts(name)
+    n = name.to_s
+    if n.include?("|")
+      cn, en = n.split("|", 2).map(&:strip)
+      [cn.presence || en, en.presence]
+    else
+      [n, nil]
+    end
+  end
+
   # ROE(筛选值) 列悬停说明：主值口径与三维筛选一致（连续=最小值，平均=算术平均）
   def ww_roe_metric_tip(mode, years)
     if mode == "average"

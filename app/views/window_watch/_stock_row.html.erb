@@ -9,8 +9,9 @@
   <%# ① 身份（名称/代码 + 板块 · 行业 + 已收藏星标）：星标=纯展示标记（老板 2026-11-25 更正，对齐金字塔页），
       已收藏才显示实心星（市场主题色），未收藏不显示任何控件；收藏交互在个股详情页 %>
   <div class="min-w-0">
+    <% display_name, english_name = ww_name_parts(ov ? ov[:name] : row.name) %>
     <div class="flex flex-wrap items-center gap-x-1.5">
-      <%= link_to (ov ? ov[:name] : row.name), (stk ? stock_path(stk) : stock_path(row.code.upcase)),
+      <%= link_to display_name, (stk ? stock_path(stk) : stock_path(row.code.upcase)),
             target: "_blank", rel: "noopener",
             class: "text-hl-14 font-medium text-ink hover:text-link" %>
       <span class="text-hl-12 text-muted-3 font-mono"><%= row.symbol %></span>
@@ -19,6 +20,9 @@
               aria-label="已收藏" role="img" data-no-open="1"><%= favorite_icon_tag %></span>
       <% end %>
     </div>
+    <% if english_name %>
+      <div class="text-hl-12 text-muted-3 mt-0.5 truncate" title="<%= english_name %>"><%= english_name %></div>
+    <% end %>
     <div class="text-hl-12 text-muted-2 mt-0.5">
       <% sector = ov ? ov[:sector].presence : nil %>
       <% industry = (ov ? ov[:industry].presence : row.industry.presence) %>
