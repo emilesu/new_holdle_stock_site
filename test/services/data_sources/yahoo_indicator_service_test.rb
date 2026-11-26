@@ -16,8 +16,11 @@ class YahooIndicatorServiceTest < ActiveSupport::TestCase
   # ====================================================
   # 符号转换（与 YahooMonthlyBarService 同规则）
   # ====================================================
-  test "yahoo_symbol: 美股点号转连字符、非美股返回 nil" do
+  test "yahoo_symbol: 美股点号/斜杠/脱字符转连字符、非美股返回 nil" do
     assert_equal "BRK-B", Service.yahoo_symbol(Stock.new(symbol: "BRK.B", market: "US"))
+    # 库内实际存储的是斜杠/脱字符格式（BRK/B、NLY^F），必须同样映射为连字符
+    assert_equal "BRK-B", Service.yahoo_symbol(Stock.new(symbol: "BRK/B", market: "US"))
+    assert_equal "NLY-F", Service.yahoo_symbol(Stock.new(symbol: "NLY^F", market: "US"))
     assert_equal "SOFI", Service.yahoo_symbol(Stock.new(symbol: "sofi", market: "US"))
     assert_nil Service.yahoo_symbol(Stock.new(symbol: "00700.HK", market: "HK"))
     assert_nil Service.yahoo_symbol(Stock.new(symbol: "SH600519", market: "CN"))

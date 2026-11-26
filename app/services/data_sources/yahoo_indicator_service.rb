@@ -89,7 +89,7 @@ module DataSources
         symbol = stock.symbol.to_s.strip
         return nil if symbol.empty?
 
-        symbol.upcase.tr("./^", "---")
+        DataSources::SymbolFormat.yahoo(symbol)
       end
 
       def build_url(symbol)

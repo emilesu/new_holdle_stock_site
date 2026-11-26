@@ -35,6 +35,9 @@ class YahooMonthlyBarServiceTest < ActiveSupport::TestCase
     assert_equal "1211.HK", Service.yahoo_symbol(Stock.new(symbol: "01211.HK", market: "HK"))
     assert_equal "BRK-B", Service.yahoo_symbol(Stock.new(symbol: "BRK.B", market: "US"))
     assert_equal "BF-A", Service.yahoo_symbol(Stock.new(symbol: "BF.A", market: "US"))
+    # 库内实际存储的是斜杠/脱字符格式（BRK/B、NLY^F），必须同样映射为连字符
+    assert_equal "BRK-B", Service.yahoo_symbol(Stock.new(symbol: "BRK/B", market: "US"))
+    assert_equal "NLY-F", Service.yahoo_symbol(Stock.new(symbol: "NLY^F", market: "US"))
     assert_equal "AAPL", Service.yahoo_symbol(Stock.new(symbol: "AAPL", market: "US"))
     assert_nil Service.yahoo_symbol(Stock.new(symbol: "SH600519", market: "CN"))
   end

@@ -346,7 +346,7 @@ module DataSources
         puts "\n[中文名] 正在从东方财富获取中文名..."
 
         # 东财搜索接口统一使用下划线：BRK.B/BRK/B → BRK_B，NLY^F → NLY_F（实测斜杠/脱字符原样查询返回空）
-        search_query = ticker.tr("./^", "_")
+        search_query = DataSources::SymbolFormat.eastmoney(ticker)
 
         begin
           response = Faraday.get(EASTMONEY_SEARCH_URL) do |req|
@@ -385,7 +385,7 @@ module DataSources
         puts "\n[2/2] 正在从Yahoo Finance获取行业信息..."
 
         # Yahoo 统一使用破折号格式：BRK/B → BRK-B，NLY^F → NLY-F，BRK.B → BRK-B
-        yahoo_symbol = ticker.tr("/^.", "-")
+        yahoo_symbol = DataSources::SymbolFormat.yahoo(ticker)
         max_attempts = 3
 
         max_attempts.times do |attempt|

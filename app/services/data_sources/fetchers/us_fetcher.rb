@@ -207,8 +207,7 @@ module DataSources
       # 通过查询组织信息获取美股 SECUCODE
       # 注意：东财 API 要求 SECURITY_CODE 用下划线（实测 BRK_B/AKO_A 可查，BRK.B、BRK/B 均返回空）
       def resolve_secucode(symbol)
-        # 库内 symbol 的特殊字符 . / ^ 统一转下划线，如 BRK/B → BRK_B、NLY^F → NLY_F
-        clean_symbol = symbol.tr("./^", "_")
+        clean_symbol = DataSources::SymbolFormat.eastmoney(symbol)
 
         params = {
           reportName: "RPT_USF10_INFO_ORGPROFILE",
@@ -220,8 +219,9 @@ module DataSources
         response = http_get(BASE_URL, params: params)
         data = extract_data_list(response)
 
-        # 若转换后未找到，尝试原始符号（兼容普通不含点的代码）
-        if data.empty? && clean_symbol != symbol
+        # 若转换后未找到，尝试原始符号（兼容东财保留点号格式的代码）；
+        # 含 / 或 ^ 的代码原样查询实测必空（东财美股无此格式），跳过重试避免注定失败的请求
+        if data.empty? && clean_symbol != symbol && !symbol.match?(%r{[/^]})
           params[:filter] = %((SECURITY_CODE="#{symbol}"))
           response = http_get(BASE_URL, params: params)
           data = extract_data_list(response)
