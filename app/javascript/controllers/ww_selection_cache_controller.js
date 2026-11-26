@@ -4,7 +4,8 @@ import { Controller } from "@hotwired/stimulus"
 // ① 只在用户交互时保存（筛选链接点击 / 表单提交）——分享链接带参数进入不覆盖本机偏好；
 // ② 按「市场 × 视图」双层分组：A股/美股各自独立记忆 view 与组内选项，互不串组；
 //    组内 URL 缺失的键记为空=显式重置（档「全部」等），另一视图组保留；
-//    市场切换 tab（目标市场≠当前页市场）只更新市场偏好，不覆写目标市场的选项组（防来回切换清空）；
+//    市场切换 tab（链接无 view）只更新市场偏好、不覆写目标市场选项组（防来回切换清空）；
+//    进入目标市场后因 URL 无 view，restore 自动套用该市场记忆的视图+选项；
 // ③ 裸 URL（无 view 参数）进入时套用缓存（Turbo.visit replace）：URL 显式带 market 时以其为准、
 //    仅套用该市场的选项缓存；裸 URL 连市场一起恢复（上次看美股→回来仍是美股）；
 //    非受控参数（month/q/page）原样保留；缓存与当前默认一致（CN+main 且组内全空）时不产生多余导航；7 天有效。
@@ -33,7 +34,7 @@ export default class extends Controller {
     document.removeEventListener("submit", this.submitHandler)
   }
 
-  // 交互保存：本页筛选链接（含 view 参数、同路径）与筛选/切换表单
+  // 交互保存：本页筛选链接（含 view 参数、同路径）、市场切换 tab（仅 market）与筛选/切换表单
   onLinkClick(event) {
     const anchor = event.target.closest("a")
     if (!anchor) return
@@ -41,7 +42,7 @@ export default class extends Controller {
     try { url = new URL(anchor.href, location.origin) } catch (e) { return }
     if (url.pathname !== location.pathname) return
     const params = url.searchParams
-    if (!params.has("view")) return
+    if (!params.has("view") && !params.has("market")) return
     this.saveFrom(params)
   }
 
@@ -60,22 +61,24 @@ export default class extends Controller {
 
   saveFrom(params) {
     const market = this.marketOf(params)
+    const pageMarket = this.marketOf(new URLSearchParams(location.search))
     const saved = this.readSaved()
     const views = { CN: {}, US: {}, ...((saved && saved.views) || {}) }
-    let next
 
-    // 市场切换 tab：只记「上次看哪个市场」，目标市场的视图与选项组原样保留
-    if (market !== this.marketOf(new URLSearchParams(location.search))) {
-      next = { ...saved, market, views, ts: Date.now() }
-    } else {
-      const view = params.get("view") === "all" ? "all" : "main"
-      const keys = view === "all" ? ALL_KEYS : MAIN_KEYS
-      const group = {}
-      keys.forEach((key) => { group[key] = params.get(key) || "" })
-      views[market] = { ...views[market], view, ...group }
-      next = { market, views, ts: Date.now() }
+    // 市场切换 tab（无 view 或目标市场≠当前页市场）：只记「上次看哪个市场」，目标市场的视图与选项组原样保留；
+    // 进入目标市场后由 restore 套用其记忆（tab 链接刻意不带 view，见 index.html.erb 注释）
+    if (!params.has("view") || market !== pageMarket) {
+      if (market === pageMarket) return // 点当前市场自己的 tab：缓存原样，不覆写
+      try { localStorage.setItem(KEY, JSON.stringify({ ...saved, market, views, ts: Date.now() })) } catch (e) { /* 静默 */ }
+      return
     }
-    try { localStorage.setItem(KEY, JSON.stringify(next)) } catch (e) { /* 无痕模式等存储不可用时静默忽略 */ }
+
+    const view = params.get("view") === "all" ? "all" : "main"
+    const keys = view === "all" ? ALL_KEYS : MAIN_KEYS
+    const group = {}
+    keys.forEach((key) => { group[key] = params.get(key) || "" })
+    views[market] = { ...views[market], view, ...group }
+    try { localStorage.setItem(KEY, JSON.stringify({ market, views, ts: Date.now() })) } catch (e) { /* 无痕模式等存储不可用时静默忽略 */ }
   }
 
   // 裸 URL（无 view 参数）进入才恢复；详见文件头③
