@@ -16,9 +16,9 @@
           ww-selection-cache：选择元素记忆（2026-11-25 老板定，localStorage 7 天，对齐金字塔页惯例）
           移动端贴边后裸控件行自带横向内边距 %>
       <div class="flex flex-wrap items-center gap-1 text-hl-13 px-4 md:px-0" role="tablist" data-controller="ww-selection-cache">
-        <%# 契约 v0.8：市场切换（US tab 与 A 股同一样式组件；切换保留视图开关） %>
+        <%# 契约 v0.8：市场切换（US tab 与 A 股同一样式组件；切换保留视图开关与判定月——目标市场无该月时 controller 自动回落 latest） %>
         <% { "CN" => "A股", "US" => "美股" }.each do |mk, label| %>
-          <%= link_to label, window_watch_path(market: mk, view: @view),
+          <%= link_to label, window_watch_path(market: mk, view: @view, month: @snapshot.month),
                 class: "px-3 py-1.5 rounded-md border #{'bg-ink text-white font-medium' if @market == mk} #{'border-line text-muted hover:text-ink' unless @market == mk}" %>
         <% end %>
         <span class="w-px h-4 bg-line mx-1" aria-hidden="true"></span>

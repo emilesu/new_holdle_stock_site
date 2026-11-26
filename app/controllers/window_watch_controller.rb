@@ -59,7 +59,7 @@ class WindowWatchController < ApplicationController
       all_rows = @t1 + @t2_p2 + @t2_p1 + @t3 + @in_position
       @overlay = WindowWatch::FinancialPreset.overlay(all_rows, market: @market)
       # R2③：卡片近 6 月 sparkline
-      @sparkline = WindowWatch::MonthlySparkline.call(all_rows, snapshot_month: @snapshot.month)
+      @sparkline = WindowWatch::MonthlySparkline.call(all_rows, snapshot_month: @snapshot.month, market: @market)
       prepare_row_extras
     else
       # 全量视图（2026-11-25 老板定增补）：板块筛选 + 金字塔分默认排序 + A股检索补全
@@ -88,7 +88,7 @@ class WindowWatchController < ApplicationController
       @stocks = scope.order(Arel.sql(SORT_ORDERS.fetch(@sort))).page(params[:page]).per(PAGE_PER)
       @overlay = WindowWatch::FinancialPreset.overlay(@stocks.to_a, market: @market)
       # ⑥（2026-11-25 老板定）：全量视图与预设视图统一卡片样式 → 同样装配 sparkline 与行内收藏数据
-      @sparkline = WindowWatch::MonthlySparkline.call(@stocks.to_a, snapshot_month: @snapshot.month)
+      @sparkline = WindowWatch::MonthlySparkline.call(@stocks.to_a, snapshot_month: @snapshot.month, market: @market)
       prepare_row_extras
     end
   end

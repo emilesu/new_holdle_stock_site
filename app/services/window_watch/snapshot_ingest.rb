@@ -27,7 +27,7 @@ module WindowWatch
       @payload = deep_stringify(payload)
       @source_ip = source_ip
       @errors = []
-      # market 权威源=universe.market（契约 v0.8）；非法值在 check_head! 报错，后续校验按 CN 分支走（不再叠加噪音）
+      # market 权威源=universe.market（契约 v0.8）；非法值 check_head! 报错后校验链即止（validate! 评审修复1）
       u = @payload["universe"]
       @market = u.is_a?(Hash) ? u["market"].to_s.upcase : ""
     end
@@ -56,6 +56,8 @@ module WindowWatch
 
     def validate!
       check_head!
+      # market 非法时只报头错误即止——不再按 CN 分支叠加逐股/命中噪音（422 清单可读性，评审修复1）
+      return [] unless @market.in?(MARKETS)
       rows = check_tiers!
       check_stats!(rows)
       check_universe!(rows)
@@ -188,10 +190,15 @@ module WindowWatch
       @errors << "universe.exchanges 之和 #{sum} ≠ count #{count}" if sum != count
       if @market == "US"
         # 契约 v0.8 §四：US 包 exchanges 单键 {"US": N}；N=universe.count（sum 校验已覆盖）=全池只数
-        foreign = ex.keys.map(&:upcase) - ["US"]
-        @errors << "US 包 universe.exchanges 仅允许 US 单键，发现：#{foreign.join('/')}" if foreign.any?
-        actual = rows.count { |r| r["exchange"].to_s.upcase == "US" }
-        @errors << "tiers 内 US 只数 #{actual} 超过 universe.exchanges.US=#{ex["US"].to_i}" if actual > ex["US"].to_i
+        # 键名精确匹配大写 "US"（与 CN 分支 SH/SZ/BJ 既有约定一致）；非单键时报准确错误并跳过上限校验，
+        # 避免小写键落入上限校验产出误导性的「超过 universe.exchanges.US=0」（评审修复3）
+        foreign = ex.keys - ["US"]
+        if foreign.any?
+          @errors << "US 包 universe.exchanges 仅允许 US 单键，发现：#{foreign.join('/')}"
+        else
+          actual = rows.count { |r| r["exchange"].to_s.upcase == "US" }
+          @errors << "tiers 内 US 只数 #{actual} 超过 universe.exchanges.US=#{ex["US"]}" if actual > ex["US"].to_i
+        end
       else
         # 契约 v0.7：BJ 与沪深同权进 tiers，只数上限校验一并覆盖；原「tiers 不含 BJ」硬闸删除
         %w[SH SZ BJ].each do |e|

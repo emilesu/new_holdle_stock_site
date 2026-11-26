@@ -448,6 +448,8 @@ class WindowWatchControllerTest < ActionDispatch::IntegrationTest
     get window_watch_path(market: "US", view: "all")
     assert_includes response.body, "英伟达"
     refute_includes response.body, "中国核电"
+    # 评审修复4：市场切换 tab 保留判定月参数（url_for 按字母序：market→month→view）
+    assert_includes response.body, "window-watch?market=CN&amp;month=2026-10&amp;view=all"
   end
 
   test "非法 market 参数回落 CN" do

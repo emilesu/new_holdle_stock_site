@@ -249,6 +249,18 @@ class WindowWatch::SnapshotIngestTest < ActiveSupport::TestCase
     snapshot, errors = ingest(payload)
     assert_nil snapshot
     assert_match "universe.market 非法", errors.join
+    # 评审修复1：market 非法即止，不叠加 CN 分支逐股/命中噪音
+    assert_equal 1, errors.size
+  end
+
+  test "v0.8 US 包 exchanges 小写键 422 报单键错误而非误导性上限（评审修复3）" do
+    ww_create_us_stocks!
+    payload = ww_payload(market: "US")
+    payload["universe"]["exchanges"] = { "us" => payload["universe"]["count"] }
+    snapshot, errors = ingest(payload)
+    assert_nil snapshot
+    assert_match "仅允许 US 单键", errors.join
+    refute_match "超过 universe.exchanges.US", errors.join
   end
 
   test "v0.8 US 包 exchanges 多键 422（仅允许 US 单键）" do

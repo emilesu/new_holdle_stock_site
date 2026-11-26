@@ -18,12 +18,13 @@ module WindowWatch
 
     class << self
       # rows = 快照逐股行集合；返回 { code(downcase) => Result }
-      def call(rows, snapshot_month:)
+      # market（契约 v0.8，评审修复2）：与 overlay 同口径按市场限定，纵深防御
+      def call(rows, snapshot_month:, market: "CN")
         # 月份格式以契约边界 SnapshotIngest 为权威源（评审修复3）
         return {} if rows.empty? || snapshot_month.to_s !~ SnapshotIngest::MONTH_FORMAT
 
         symbols = rows.map { |r| r.code.to_s.upcase }.uniq
-        stocks = Stock.where(symbol: symbols).index_by(&:symbol)
+        stocks = Stock.where(market: market, symbol: symbols).index_by(&:symbol)
         bars = fetch_bars(stocks.values.map(&:id), snapshot_month)
 
         rows.each_with_object({}) do |row, out|
