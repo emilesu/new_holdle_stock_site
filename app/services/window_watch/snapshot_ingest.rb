@@ -223,11 +223,19 @@ module WindowWatch
       end
       @errors << "symbol/code 格式非法或互不一致：#{unresolved.join(',')}" if unresolved.any?
       # US 命中双向归一（契约 v0.8 归一化认领项，2026-11-26）：库内历史斜杠形态（BRK/A，Nasdaq screener 源）
-      # 与 Yahoo 点形态（BRK.A）互认命中——两侧统一 tr 为点形态后比对；库内已由迁移规范为点，此处防数据漂移
+      # 与 Yahoo 点形态（BRK.A）互认命中——两侧统一 tr 为点形态后比对；库内已由迁移规范为点，此处防数据漂移。
+      # 漂移告警（评审修复1）：仅靠斜杠形态互认的 code 记 logger.warn——页面读侧只认点形态，
+      # 静默放行会让该行落库后降级（预设视图消失/无标注），必须保留响亮信号驱动归一迁移
       candidates = @market == "US" ? (codes + codes.map { |c| c.tr(".", "/") }).uniq : codes.uniq
       hit = Stock.where(market: @market, symbol: candidates).pluck(:symbol)
-      hit = hit.map { |s| s.tr("/", ".") }.to_set if @market == "US"
-      hit = hit.to_set unless hit.is_a?(Set)
+      if @market == "US"
+        drifted = codes.uniq.select { |c| !hit.include?(c) && hit.include?(c.tr(".", "/")) }
+        Rails.logger.warn("[WindowWatch] US 归一告警：#{drifted.size} 只 code 在 stocks 表仅存斜杠形态（#{drifted.join(',')}）——" \
+                          "该批行落库后页面 join 失配，请核对迁移/爬虫归一是否失效") if drifted.any?
+        hit = hit.map { |s| s.tr("/", ".") }.to_set
+      else
+        hit = hit.to_set
+      end
       misses = codes.uniq.reject { |s| hit.include?(@market == "US" ? s.tr("/", ".") : s) }
       @errors << "以下 code 未命中网站股票库：#{misses.join(',')}" if misses.any?
     end
