@@ -160,7 +160,7 @@ module DataSources
 
       # 库内 symbol → Yahoo 代码
       #   HK："00700.HK" → "0700.HK"（Yahoo 港股为 4 位数字，5 位形式实测 404）
-      #   US："BRK.B" / "BF.A" → "BRK-B" / "BF-B"（点号与斜杠均映射为连字符）
+      #   US："BRK.B" / "BRK/B" / "NLY^F" → "BRK-B" / "BRK-B" / "NLY-F"（点号、斜杠、脱字符均映射为连字符）
       def yahoo_symbol(stock)
         case stock.market
         when "HK"
@@ -170,7 +170,7 @@ module DataSources
           symbol = stock.symbol.to_s.strip
           return nil if symbol.empty?
 
-          symbol.upcase.tr("./", "--")
+          symbol.upcase.tr("./^", "---")
         end
       end
 

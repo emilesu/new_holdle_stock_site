@@ -345,8 +345,8 @@ module DataSources
       def fetch_chinese_name(ticker)
         puts "\n[中文名] 正在从东方财富获取中文名..."
 
-        # 处理 BRK.B → BRK_B 等含点的代码
-        search_query = ticker.include?(".") ? ticker.tr(".", "_") : ticker
+        # 东财搜索接口统一使用下划线：BRK.B/BRK/B → BRK_B，NLY^F → NLY_F（实测斜杠/脱字符原样查询返回空）
+        search_query = ticker.tr("./^", "_")
 
         begin
           response = Faraday.get(EASTMONEY_SEARCH_URL) do |req|
@@ -474,7 +474,9 @@ module DataSources
           "QCOM" => "Qualcomm Incorporated Common Stock",
           "TXN" => "Texas Instruments Incorporated Common Stock"
         }
-        names[symbol] || "#{symbol} Common Stock"
+        # 库内 symbol 可能是 BRK/B 格式，映射表 key 用 NYSE 惯例的 BRK.B，查询前归一点/斜杠/脱字符
+        normalized = symbol.to_s.tr("/^", "..")
+        names[symbol] || names[normalized] || "#{symbol} Common Stock"
       end
 
       def update_stock(stock, chinese_name, industry_info)

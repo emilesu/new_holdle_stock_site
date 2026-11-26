@@ -205,10 +205,10 @@ module DataSources
       private
 
       # 通过查询组织信息获取美股 SECUCODE
-      # 注意：东财 API 要求 SECURITY_CODE 不含点（如 BRK_B 而非 BRK.B）
+      # 注意：东财 API 要求 SECURITY_CODE 用下划线（实测 BRK_B/AKO_A 可查，BRK.B、BRK/B 均返回空）
       def resolve_secucode(symbol)
-        # 将 BRK.B → BRK_B，东财 API 对含点代码不识别
-        clean_symbol = symbol.tr('.', '_')
+        # 库内 symbol 的特殊字符 . / ^ 统一转下划线，如 BRK/B → BRK_B、NLY^F → NLY_F
+        clean_symbol = symbol.tr("./^", "_")
 
         params = {
           reportName: "RPT_USF10_INFO_ORGPROFILE",

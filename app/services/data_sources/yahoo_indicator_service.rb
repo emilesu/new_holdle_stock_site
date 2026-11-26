@@ -82,14 +82,14 @@ module DataSources
         {}
       end
 
-      # 库内 symbol → Yahoo 代码（与 YahooMonthlyBarService 同规则）：BRK.B → BRK-B
+      # 库内 symbol → Yahoo 代码（与 YahooMonthlyBarService 同规则）：BRK/B → BRK-B、NLY^F → NLY-F
       def yahoo_symbol(stock)
         return nil unless stock.market == "US"
 
         symbol = stock.symbol.to_s.strip
         return nil if symbol.empty?
 
-        symbol.upcase.tr("./", "--")
+        symbol.upcase.tr("./^", "---")
       end
 
       def build_url(symbol)
