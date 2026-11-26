@@ -170,4 +170,113 @@ class WindowWatch::SnapshotIngestTest < ActiveSupport::TestCase
     assert_nil snapshot
     assert_match "symbol 重复", errors.join
   end
+
+  # ---- 契约 v0.8（美股市场化）：US 包校验分支 + (market, month) 双键幂等 ----
+
+  test "v0.8 US 合法包落库：market 入头、code 归一小写、BRK.A 带点码逐位回读" do
+    ww_create_us_stocks!
+    snapshot, errors = ingest(ww_payload(market: "US", in_position: true))
+    assert_empty errors
+    assert_equal "US", snapshot.market
+    row = snapshot.stocks.find_by(symbol: "BRK.A.US")
+    assert_equal "brk.a", row.code
+    assert_equal "US", row.exchange
+    assert_equal BigDecimal("0.456789"), row.hist
+    assert_equal "continuation", row.subtag
+    assert_equal "IN_POSITION", snapshot.stocks.find_by(symbol: "AAPL.US").tier
+    assert_equal "US", WindowWatchIngestLog.order(:id).last.market
+  end
+
+  test "v0.8 同月 CN/US 双包共存互不覆盖（幂等键=(market, month)）" do
+    ww_create_us_stocks!
+    cn, e1 = ingest(ww_payload)
+    us, e2 = ingest(ww_payload(market: "US"))
+    assert_empty e1 + e2
+    assert_equal 2, WindowWatchSnapshot.where(month: "2026-10").count
+    assert_equal 6, cn.reload.stocks.count
+    assert_equal 4, us.reload.stocks.count
+    assert_equal "CN", WindowWatchSnapshot.latest(market: "CN").market
+    assert_equal "US", WindowWatchSnapshot.latest(market: "US").market
+  end
+
+  test "v0.8 同 (month, market) 重推=整包覆盖，另一市场包不受影响" do
+    ww_create_us_stocks!
+    ingest(ww_payload)
+    ingest(ww_payload(market: "US"))
+    smaller = ww_payload(market: "US")
+    smaller["tiers"]["T3"] = []
+    smaller["universe"]["count"] = 3
+    smaller["universe"]["exchanges"] = { "US" => 3 }
+    smaller["stats"]["tier_counts"]["T3"] = 0
+    snapshot, errors = ingest(smaller)
+    assert_empty errors
+    assert_equal 1, WindowWatchSnapshot.where(month: "2026-10", market: "US").count
+    assert_equal 3, snapshot.stocks.count
+    assert_equal 6, WindowWatchSnapshot.where(month: "2026-10", market: "CN").first.stocks.count
+  end
+
+  test "v0.8 US symbol 仅 endsWith .US 但拼接不一致 422（整串拼接校验，非后缀匹配）" do
+    ww_create_us_stocks!
+    payload = ww_payload(market: "US")
+    payload["tiers"]["T1"][0]["symbol"] = "X.NVDA.US"
+    snapshot, errors = ingest(payload)
+    assert_nil snapshot
+    assert_match 'symbol 须为 code+".US"', errors.join
+  end
+
+  test "v0.8 US exchange 非 US 422" do
+    ww_create_us_stocks!
+    payload = ww_payload(market: "US")
+    payload["tiers"]["T1"][0]["exchange"] = "NASDAQ"
+    snapshot, errors = ingest(payload)
+    assert_nil snapshot
+    assert_match "exchange 非法（US 包恒 US）", errors.join
+  end
+
+  test "v0.8 US code 小写/格式非法 422（须大写 Yahoo 码）" do
+    ww_create_us_stocks!
+    payload = ww_payload(market: "US")
+    payload["tiers"]["T1"][0]["code"] = "nvda"
+    payload["tiers"]["T1"][0]["symbol"] = "nvda.US"
+    snapshot, errors = ingest(payload)
+    assert_nil snapshot
+    assert_match "code 格式非法", errors.join
+  end
+
+  test "v0.8 universe.market 枚举外（HK）422（港股封存不上，契约 v0.8 §一）" do
+    payload = ww_payload
+    payload["universe"]["market"] = "HK"
+    snapshot, errors = ingest(payload)
+    assert_nil snapshot
+    assert_match "universe.market 非法", errors.join
+  end
+
+  test "v0.8 US 包 exchanges 多键 422（仅允许 US 单键）" do
+    ww_create_us_stocks!
+    payload = ww_payload(market: "US")
+    payload["universe"]["exchanges"] = { "US" => 3, "NASDAQ" => 1 }
+    snapshot, errors = ingest(payload)
+    assert_nil snapshot
+    assert_match "仅允许 US 单键", errors.join
+  end
+
+  test "v0.8 US code 未命中 stocks 表 422 并列出未命中清单" do
+    ww_create_us_stocks!
+    Stock.where(market: "US", symbol: "UBER").delete_all
+    payload = ww_payload(market: "US")
+    snapshot, errors = ingest(payload)
+    assert_nil snapshot
+    assert_match "未命中网站股票库", errors.join
+    assert_match "UBER", errors.join
+  end
+
+  test "v0.8 CN 包校验路径零变化：US 行混入 CN 包仍按 SH/SZ/BJ 枚举 422" do
+    payload = ww_payload
+    payload["tiers"]["T1"][0]["symbol"] = "NVDA.US"
+    payload["tiers"]["T1"][0]["code"] = "NVDA"
+    payload["tiers"]["T1"][0]["exchange"] = "US"
+    snapshot, errors = ingest(payload)
+    assert_nil snapshot
+    assert_match "exchange 非法（tiers 内仅 SH/SZ/BJ）", errors.join
+  end
 end

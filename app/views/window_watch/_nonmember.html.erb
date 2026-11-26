@@ -9,11 +9,11 @@
   <%= render "count_bar", counts: @preset_counts, hide_t3: true %>
 
   <section class="hl-card px-6 py-5 space-y-2.5 text-hl-13 text-muted leading-relaxed">
-    <p>这是一页对全 A 股「月K状态」的客观描述：哪些股票当前处于状态A的开窗观察、哪些处于开窗事件的准备形态。每月一个快照，用于时机选择和定位。</p>
+    <p>这是一页对<%= @market == "US" ? "美股（普通股与美国存托凭证 ADR）" : "全 A 股" %>「月K状态」的客观描述：哪些股票当前处于状态A的开窗观察、哪些处于开窗事件的准备形态。每月一个快照，用于时机选择和定位。</p>
     <p>该页面和个股名单为会员内容。开通会员后，即可查看完整内容。包括财务预设视图（按财务指标筛选）与「全部股票」全量技术形态列表等。</p>
     <div class="pt-2 flex items-center justify-center gap-3">
       <%= link_to "了解会员", join_path, class: "hl-btn hl-btn-primary text-hl-13" %>
-      <%= link_to "登录", new_user_session_path(return_to: window_watch_path), class: "hl-btn text-hl-13" %>
+      <%= link_to "登录", new_user_session_path(return_to: window_watch_path(market: @market)), class: "hl-btn text-hl-13" %>
     </div>
   </section>
 </div>

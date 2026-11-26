@@ -41,9 +41,12 @@ module WindowWatch
 
       # 命中集与筛选主值：{ 站内 symbol（如 "SH601985"）=> 主值 Float }
       # 主值：连续满足=N 年 ROE 最小值；平均满足=N 年算术平均。按三维组合+年度键缓存（财报日批更新后自然刷新）
-      def preset_metrics(years:, mode:, band:)
+      # market（契约 v0.8）：CN=固定 12-31 年报口径；US=最近 N 份年报口径（见 us_preset_metrics）
+      def preset_metrics(years:, mode:, band:, market: "CN")
+        return us_preset_metrics(years, mode, band) if market == "US"
+
         dates = fiscal_years(count: years).map { |y| Date.new(y, 12, 31) }
-        Rails.cache.fetch(["ww_fin_preset", years, mode, band, dates.first], expires_in: 24.hours) do
+        Rails.cache.fetch(["ww_fin_preset", market, years, mode, band, dates.first], expires_in: 24.hours) do
           roe_by_stock = FinancialIndicator.where(market: "CN", period_type: "annual")
                                            .where(report_date: dates).where.not(roe_avg: nil)
                                            .pluck(:stock_id, :report_date, :roe_avg)
@@ -72,19 +75,52 @@ module WindowWatch
         end
       end
 
+      # US 口径（契约 v0.8 承载，2026-11-26 定）：美股财年截止日分散（AAPL 九月/NVDA 一月等），
+      # 不能复用 CN 固定 12-31 过滤——改「每只最近 N 份年报」+「最新年报距今 ≤15 个月」新鲜度闸，三维判定式同 CN
+      def us_preset_metrics(years, mode, band)
+        Rails.cache.fetch(["ww_fin_preset_us", years, mode, band], expires_in: 24.hours) do
+          roes = FinancialIndicator.where(market: "US", period_type: "annual").where.not(roe_avg: nil)
+                                   .order(:stock_id, report_date: :desc)
+                                   .pluck(:stock_id, :report_date, :roe_avg)
+                                 .group_by(&:first)
+          ocf = CashFlow.where(market: "US", period_type: "annual")
+                        .pluck(:stock_id, :report_date, :operating_cash_flow)
+                        .each_with_object({}) { |(sid, d, v), h| h[[sid, d]] = v.to_f }
+          symbols = Stock.where(id: roes.keys).pluck(:id, :symbol).to_h
+          cutoff = Date.current - 15.months
+
+          roes.each_with_object({}) do |(sid, list), out|
+            recent = list.first(years)
+            next if recent.size < years # 年报不足 N 份（上市短/披露缺失）自然不命中
+            next if recent.first[1] < cutoff # 最新年报过旧，视同数据不可信
+            next unless recent.all? { |(_, d, _)| ocf[[sid, d]].to_f.positive? } # 每年经营现金流为正（同 CN）
+            vals = recent.map { |(_, _, v)| v.to_f }
+            metric = if mode == "average"
+                       mean = vals.sum / vals.size
+                       mean if mean >= band && vals.min >= band * AVG_FLOOR_RATIO
+                     else
+                       vals.min if vals.all? { |v| v >= band }
+                     end
+            sym = symbols[sid]
+            out[sym] = metric.round(2) if metric && sym
+          end
+        end
+      end
+
       # 逐行标注 overlay：symbol => { name:, industry:, sector:, pyramid:, finance:, st:, roe_latest:, stock: }
       # 一次批量查询渲染页内全部行；财务库未覆盖的行返回技术判定所需最小信息（join 兜底，常态非异常）
       # 注：预设视图 ROE 列取 preset_metrics 主值；roe_latest 仅供全量视图 ROE 列
       # stock=站内 Stock 对象（同请求视图层消费：收藏组件/详情页链接），避免行渲染再查一次
-      def overlay(rows)
+      def overlay(rows, market: "CN")
         symbols = rows.map { |r| r.code.to_s.upcase }
-        stocks = Stock.where(symbol: symbols).index_by(&:symbol)
-        roe_map = latest_annual_roe(stocks.values.map(&:id))
+        # market（契约 v0.8）：US 行 code=裸 Yahoo 码=站内 symbol 同值，按 market 限定防跨市场误命中
+        stocks = Stock.where(market: market, symbol: symbols).index_by(&:symbol)
+        roe_map = latest_annual_roe(stocks.values.map(&:id), market: market)
         stocks.transform_values do |s|
           {
             name: s.name, industry: s.industry.to_s, sector: s.sector.to_s,
             pyramid: s.pyramid_total_score,
-            finance: financial_stock?(s), st: s.name.to_s.match?(/\A\*?ST/),
+            finance: financial_stock?(s), st: st_flag?(s),
             roe_latest: roe_map[s.id], stock: s
           }
         end
@@ -95,13 +131,18 @@ module WindowWatch
         stock.sector.to_s == "银行" || stock.industry.to_s.match?(/银行|证券|保险/)
       end
 
-      # 每只股票仅取最新一期年报 ROE：PostgreSQL DISTINCT ON 单查询（评审修复3）
-      def latest_annual_roe(stock_ids)
+      # ST 标注仅 CN 有意义：美股英文名（Sterling…）会撞 ST 前缀正则，v0.8 防误标
+      def st_flag?(stock)
+        stock.market.to_s == "CN" && stock.name.to_s.match?(/\A\*?ST/)
+      end
+
+      # 每只股票仅取最新一期年报 ROE：PostgreSQL DISTINCT ON 单查询（评审修复3；v0.8 market 参数化）
+      def latest_annual_roe(stock_ids, market: "CN")
         return {} if stock_ids.empty?
         sql = "SELECT DISTINCT ON (stock_id) stock_id, roe_avg FROM financial_indicators " \
-              "WHERE period_type = 'annual' AND market = 'CN' AND roe_avg IS NOT NULL " \
+              "WHERE period_type = 'annual' AND market = :market AND roe_avg IS NOT NULL " \
               "AND stock_id IN (:ids) ORDER BY stock_id, report_date DESC"
-        FinancialIndicator.find_by_sql([sql, { ids: stock_ids }])
+        FinancialIndicator.find_by_sql([sql, { ids: stock_ids, market: market }])
                         .each_with_object({}) { |r, h| h[r.stock_id] = r.roe_avg }
       end
     end

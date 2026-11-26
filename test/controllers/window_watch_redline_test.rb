@@ -82,4 +82,28 @@ class WindowWatchRedlineTest < ActionDispatch::IntegrationTest
       refute_includes response.body, r[:code].upcase
     end
   end
+
+  # 契约 v0.8：US tab 同红线纪律（V6/V11/V5 口径照搬，数据源=US 包）
+  test "v0.8 US tab：红线词 0 命中 + 判定数值 0 渲染 + US 免责逐字在位" do
+    ww_create_us_stocks!
+    WindowWatch::SnapshotIngest.call(payload: ww_payload(market: "US", in_position: true), source_ip: "127.0.0.1")
+    ww_give_us_financials("NVDA", roes: [20, 25, 30])
+    ww_give_us_financials("AAPL", roes: [30, 31, 32])
+    [window_watch_path(market: "US"), window_watch_path(market: "US", view: "all")].each do |path|
+      get path
+      assert_response :success
+      body = response.body
+      FORBIDDEN_WORDS.each { |w| refute_includes body, w, "US tab 红线词命中：#{w}" }
+      main = body[/<main\b.*?<\/main>/m].to_s.gsub(/\sd="[^"]*"/, "")
+      (WindowWatchSnapshotHelper::WW_US_STOCKS + WindowWatchSnapshotHelper::WW_US_IN_POSITION).each do |r|
+        %w[hist prev_hist dif dea ratio].each do |field|
+          raw = r[field.to_sym].to_s
+          rounded = format("%.2f", r[field.to_sym].to_f)
+          refute_includes main, raw, "US #{field}=#{raw} 出现在 HTML"
+          refute_includes main, rounded, "US #{field} 两位小数形态 #{rounded} 出现在 HTML"
+        end
+      end
+      assert_includes body, WindowWatchSnapshotHelper::WW_US_DISCLAIMER
+    end
+  end
 end

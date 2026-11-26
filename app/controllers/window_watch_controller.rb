@@ -13,10 +13,13 @@ class WindowWatchController < ApplicationController
   PAGE_PER = 100
 
   def index
-    # R2②：月份切换（历史快照回看）；非法/不存在月份回落 latest（格式权威源=契约边界 SnapshotIngest）
+    # 契约 v0.8：市场维度（白名单枚举，默认 CN——CN 行为零变化）；US tab 承载同 A 股样式
+    @market = params[:market].to_s.upcase
+    @market = @market.in?(WindowWatchSnapshot::MARKETS) ? @market : "CN"
+    # R2②：月份切换（历史快照回看）；非法/不存在月份回落该市场 latest（格式权威源=契约边界 SnapshotIngest）
     month_param = params[:month].to_s
-    @snapshot = (month_param.match?(WindowWatch::SnapshotIngest::MONTH_FORMAT) && WindowWatchSnapshot.find_by(month: month_param)) ||
-                WindowWatchSnapshot.latest
+    @snapshot = (month_param.match?(WindowWatch::SnapshotIngest::MONTH_FORMAT) && WindowWatchSnapshot.find_by(month: month_param, market: @market)) ||
+                WindowWatchSnapshot.latest(market: @market)
     @is_member = user_signed_in? && current_user.content_tier >= User::TIER_MEMBER
     return unless @snapshot
     unless @is_member
@@ -25,7 +28,7 @@ class WindowWatchController < ApplicationController
       return
     end
 
-    @months = WindowWatchSnapshot.recent_first.limit(24).pluck(:month)
+    @months = WindowWatchSnapshot.recent_first(@market).limit(24).pluck(:month)
 
     # R1：视图开关只切 main/all，筛选条件随视图重置（行为一致）
     @view = params[:view] == "all" ? "all" : "main"
@@ -36,7 +39,7 @@ class WindowWatchController < ApplicationController
       @band = WindowWatch::FinancialPreset.band_for(params[:band])
       @years = WindowWatch::FinancialPreset.years_for(params[:years])
       @mode = WindowWatch::FinancialPreset.mode_for(params[:mode])
-      metrics = WindowWatch::FinancialPreset.preset_metrics(years: @years, mode: @mode, band: @band)
+      metrics = WindowWatch::FinancialPreset.preset_metrics(years: @years, mode: @mode, band: @band, market: @market)
       @preset_metrics = metrics.transform_keys(&:downcase) # 键=快照 code（小写）
       hit_codes = @preset_metrics.keys
       main_scope = @snapshot.stocks
@@ -54,7 +57,7 @@ class WindowWatchController < ApplicationController
       @preset_counts = { "T1" => @t1.size, "T2_P2" => @t2_p2.size, "T2_P1" => @t2_p1.size, "T3" => @t3.size,
                          "IN_POSITION" => @in_position_degraded ? @snapshot.stats["in_position_count"].to_i : @in_position.size }
       all_rows = @t1 + @t2_p2 + @t2_p1 + @t3 + @in_position
-      @overlay = WindowWatch::FinancialPreset.overlay(all_rows)
+      @overlay = WindowWatch::FinancialPreset.overlay(all_rows, market: @market)
       # R2③：卡片近 6 月 sparkline
       @sparkline = WindowWatch::MonthlySparkline.call(all_rows, snapshot_month: @snapshot.month)
       prepare_row_extras
@@ -83,7 +86,7 @@ class WindowWatchController < ApplicationController
                             "window_watch_snapshot_stocks.symbol ILIKE :q OR stocks.name ILIKE :q", q: like)
       end
       @stocks = scope.order(Arel.sql(SORT_ORDERS.fetch(@sort))).page(params[:page]).per(PAGE_PER)
-      @overlay = WindowWatch::FinancialPreset.overlay(@stocks.to_a)
+      @overlay = WindowWatch::FinancialPreset.overlay(@stocks.to_a, market: @market)
       # ⑥（2026-11-25 老板定）：全量视图与预设视图统一卡片样式 → 同样装配 sparkline 与行内收藏数据
       @sparkline = WindowWatch::MonthlySparkline.call(@stocks.to_a, snapshot_month: @snapshot.month)
       prepare_row_extras
@@ -97,7 +100,8 @@ class WindowWatchController < ApplicationController
   def teaser_preset_counts
     hit_codes = WindowWatch::FinancialPreset.preset_metrics(years: WindowWatch::FinancialPreset::DEFAULT_YEARS,
                                                             mode: WindowWatch::FinancialPreset::DEFAULT_MODE,
-                                                            band: WindowWatch::FinancialPreset::DEFAULT_BAND)
+                                                            band: WindowWatch::FinancialPreset::DEFAULT_BAND,
+                                                            market: @market)
                                            .keys.map(&:downcase)
     scope = @snapshot.stocks
                      .joins("LEFT JOIN stocks ON lower(stocks.symbol) = window_watch_snapshot_stocks.code")

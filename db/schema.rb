@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_11_25_150000) do
+ActiveRecord::Schema[7.1].define(version: 2026_11_26_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -736,16 +736,17 @@ ActiveRecord::Schema[7.1].define(version: 2026_11_25_150000) do
     t.text "error_messages", comment: "拒绝原因逐条（rejected 时；列名避开 AR errors 方法）"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "market", comment: "快照市场（CN/US，契约 v0.8 审计条款；解析不出时为 null）"
     t.index ["created_at"], name: "index_window_watch_ingest_logs_on_created_at"
   end
 
   create_table "window_watch_snapshot_stocks", force: :cascade do |t|
     t.bigint "window_watch_snapshot_id", null: false, comment: "所属快照"
-    t.string "symbol", null: false, comment: "600519.SH 格式"
-    t.string "code", null: false, comment: "sh600519 底座码"
+    t.string "symbol", null: false, comment: "CN=600519.SH；US=<YAHOO码>.US（契约 v0.8）"
+    t.string "code", null: false, comment: "CN=sh600519 底座码；US=Yahoo 底座码（落库归一小写）"
     t.string "name", null: false, comment: "股票简称（含 ST 前缀）"
     t.string "industry", default: "", null: false, comment: "行业（质量矩阵口径，允许空串）"
-    t.string "exchange", null: false, comment: "SH/SZ（tiers 内无 BJ）"
+    t.string "exchange", null: false, comment: "CN=SH/SZ/BJ；US 恒 US（契约 v0.8）"
     t.string "tier", null: false, comment: "T1/T2_P2/T2_P1/T3"
     t.string "subtag", default: "", null: false, comment: "continuation/sticky_micro/high_gate/no_low_premise/空"
     t.decimal "hist", precision: 14, scale: 6, null: false, comment: "判定月 MACD 柱（前复权，6位小数；页面不渲染数值）"
@@ -779,7 +780,8 @@ ActiveRecord::Schema[7.1].define(version: 2026_11_25_150000) do
     t.text "disclaimer", null: false, comment: "免责声明原文（页脚逐字渲染，不得改写）"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["month"], name: "index_window_watch_snapshots_on_month", unique: true
+    t.string "market", default: "CN", null: false, comment: "市场（CN/US，契约 v0.8）：幂等键=(market, month)，同键重推=整包覆盖"
+    t.index ["market", "month"], name: "index_window_watch_snapshots_on_market_and_month", unique: true
   end
 
   add_foreign_key "api_key_adjustments", "api_keys"

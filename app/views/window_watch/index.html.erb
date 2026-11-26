@@ -1,5 +1,5 @@
 <% set_page_title "状态A - 月K开窗观察 - HOLDLE 方法论月K状态" %>
-<% set_page_description "按 HOLDLE 方法论对全A股月K状态的客观描述：开窗观察、红柱收敛、绿柱收敛与暂不开窗分层，每月更新。" %>
+<% set_page_description @market == "US" ? "按 HOLDLE 方法论对美股（普通股与 ADR）月K状态的客观描述：开窗观察、红柱收敛、绿柱收敛与暂不开窗分层，每月更新。" : "按 HOLDLE 方法论对全A股月K状态的客观描述：开窗观察、红柱收敛、绿柱收敛与暂不开窗分层，每月更新。" %>
 <div class="min-h-screen bg-bg-soft">
   <%# 移动端贴边去两侧留白（2026-11-25 老板定，对齐金字塔/筛选页 container-hl-flush 惯例） %>
   <main class="container-hl-flush py-8 space-y-5">
@@ -16,17 +16,23 @@
           ww-selection-cache：选择元素记忆（2026-11-25 老板定，localStorage 7 天，对齐金字塔页惯例）
           移动端贴边后裸控件行自带横向内边距 %>
       <div class="flex flex-wrap items-center gap-1 text-hl-13 px-4 md:px-0" role="tablist" data-controller="ww-selection-cache">
+        <%# 契约 v0.8：市场切换（US tab 与 A 股同一样式组件；切换保留视图开关） %>
+        <% { "CN" => "A股", "US" => "美股" }.each do |mk, label| %>
+          <%= link_to label, window_watch_path(market: mk, view: @view),
+                class: "px-3 py-1.5 rounded-md border #{'bg-ink text-white font-medium' if @market == mk} #{'border-line text-muted hover:text-ink' unless @market == mk}" %>
+        <% end %>
+        <span class="w-px h-4 bg-line mx-1" aria-hidden="true"></span>
         <%# 视图/档位切换保留判定月（month=latest 时无副作用） %>
-        <%= link_to "财务预设", window_watch_path(view: "main", month: @snapshot.month),
+        <%= link_to "财务预设", window_watch_path(market: @market, view: "main", month: @snapshot.month),
               class: "px-3 py-1.5 rounded-md border #{'bg-white border-ink text-ink font-medium' if @view == 'main'} #{'border-line text-muted hover:text-ink' unless @view == 'main'}" %>
-        <%= link_to "全部股票", window_watch_path(view: "all", month: @snapshot.month),
+        <%= link_to "全部股票", window_watch_path(market: @market, view: "all", month: @snapshot.month),
               class: "px-3 py-1.5 rounded-md border #{'bg-white border-ink text-ink font-medium' if @view == 'all'} #{'border-line text-muted hover:text-ink' unless @view == 'all'}" %>
         <% if @view == "main" %>
           <%# 三维筛选控件（2026-11-25 老板定）：年数 × 满足方式 × ROE阈值；切换互不丢失（保留 month） %>
           <span class="ml-3 text-hl-12 text-muted-3">近</span>
           <div class="inline-flex rounded-md border border-line overflow-hidden divide-x divide-line" role="group" aria-label="财年数">
             <% WindowWatch::FinancialPreset::YEARS.each do |y| %>
-              <%= link_to "#{y}年", window_watch_path(view: "main", years: y, mode: @mode, band: @band, month: @snapshot.month),
+              <%= link_to "#{y}年", window_watch_path(market: @market, view: "main", years: y, mode: @mode, band: @band, month: @snapshot.month),
                     class: "px-2 py-1 text-hl-12 #{y == @years ? 'bg-ink text-white font-medium' : 'bg-white text-muted hover:text-ink'}" %>
             <% end %>
           </div>
@@ -35,14 +41,14 @@
                            "average" => "平均满足：N 年算术平均 ≥ 阈值，且每年 ROE ≥ 阈值×70%，主值取 N 年算术平均（两种模式均要求每年经营现金流为正）" } %>
           <div class="inline-flex rounded-md border border-line overflow-hidden divide-x divide-line" role="group" aria-label="满足方式">
             <% WindowWatch::FinancialPreset::MODES.each do |md| %>
-              <%= link_to WindowWatch::FinancialPreset::MODE_NAMES[md], window_watch_path(view: "main", years: @years, mode: md, band: @band, month: @snapshot.month),
+              <%= link_to WindowWatch::FinancialPreset::MODE_NAMES[md], window_watch_path(market: @market, view: "main", years: @years, mode: md, band: @band, month: @snapshot.month),
                     class: "hl-tip px-2 py-1 text-hl-12 #{md == @mode ? 'bg-ink text-white font-medium' : 'bg-white text-muted hover:text-ink'}",
                     data: { tip: mode_tips[md] } %>
             <% end %>
           </div>
           <div class="inline-flex rounded-md border border-line overflow-hidden divide-x divide-line" role="group" aria-label="ROE 阈值">
             <% WindowWatch::FinancialPreset::BANDS.each do |b| %>
-              <%= link_to "#{b}%", window_watch_path(view: "main", years: @years, mode: @mode, band: b, month: @snapshot.month),
+              <%= link_to "#{b}%", window_watch_path(market: @market, view: "main", years: @years, mode: @mode, band: b, month: @snapshot.month),
                     class: "px-2.5 py-1 text-hl-12 #{b == @band ? 'bg-ink text-white font-medium' : 'bg-white text-muted hover:text-ink'}" %>
             <% end %>
           </div>
@@ -53,6 +59,7 @@
         <%# R2②：判定月切换（历史快照回看；切换时筛选条件重置，行为与视图开关一致） %>
         <% if @months.size > 1 %>
           <%= form_with url: window_watch_path, method: :get, class: "ml-auto flex items-center gap-1.5" do %>
+            <%= hidden_field_tag :market, @market %>
             <%= hidden_field_tag :view, @view %>
             <label class="text-hl-12 text-muted-3" for="ww_month">判定月</label>
             <select id="ww_month" name="month" class="px-2 py-1.5 text-hl-12 border border-line rounded-md bg-white focus:border-link">

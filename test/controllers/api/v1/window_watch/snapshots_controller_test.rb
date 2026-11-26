@@ -157,4 +157,32 @@ class Api::V1::WindowWatch::SnapshotsControllerTest < ActionDispatch::Integratio
     assert_equal 2, WindowWatchSnapshot.count
     assert_equal "2026-10", WindowWatchSnapshot.latest.month
   end
+
+  # ---- 契约 v0.8：US 包双键幂等 + 分包事务隔离 ----
+
+  test "v0.8 CN/US 同月各推一包均 201，(month, market) 共存，审计日志带 market" do
+    ww_create_us_stocks!
+    post_snapshot(ww_payload)
+    assert_response 201
+    post_snapshot(ww_payload(market: "US", in_position: true))
+    assert_response 201
+    assert_equal({ "T1" => 1, "T2_P2" => 1, "T2_P1" => 1, "T3" => 1 }, response.parsed_body["counts"])
+    assert_equal 2, WindowWatchSnapshot.where(month: "2026-10").count
+    assert_equal %w[CN US], WindowWatchSnapshot.where(month: "2026-10").pluck(:market).sort
+    assert_equal "US", WindowWatchIngestLog.last.market
+  end
+
+  test "v0.8 US 包 422 不影响已落库 CN 包（分包事务隔离，契约 §四）" do
+    post_snapshot(ww_payload)
+    assert_response 201
+    payload = ww_payload(market: "US")
+    payload["tiers"]["T1"][0]["exchange"] = "NASDAQ"
+    post_snapshot(payload)
+    assert_response 422
+    assert_equal 1, WindowWatchSnapshot.count
+    assert_equal "CN", WindowWatchSnapshot.last.market
+    log = WindowWatchIngestLog.last
+    assert_equal "rejected", log.result
+    assert_equal "US", log.market
+  end
 end

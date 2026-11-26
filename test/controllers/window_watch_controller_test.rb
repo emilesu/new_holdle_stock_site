@@ -408,4 +408,83 @@ class WindowWatchControllerTest < ActionDispatch::IntegrationTest
     counts["红柱收敛"], counts["绿柱收敛"] = red, green if red && green
     counts
   end
+
+  # ---- 契约 v0.8 US tab（与 A 股同一样式组件，market 参数贯穿）----
+
+  test "US tab 会员视图：渲染美股快照行，不串 CN；判定月横幅与 US 免责逐字" do
+    ww_create_us_stocks!
+    WindowWatch::SnapshotIngest.call(payload: ww_payload(market: "US", in_position: true), source_ip: "127.0.0.1")
+    ww_give_us_financials("NVDA", roes: [20, 25, 30])
+    ww_give_us_financials("AAPL", roes: [30, 31, 32])
+    sign_in users(:two)
+    get window_watch_path(market: "US", view: "all")
+    assert_includes response.body, "英伟达"
+    assert_includes response.body, "BRK.A.US"
+    refute_includes response.body, "中国核电" # CN 行不串台
+    assert_includes response.body, "判定月：2026-10 月K收盘"
+    assert_includes response.body, WindowWatchSnapshotHelper::WW_US_DISCLAIMER
+  end
+
+  test "US 预设视图：非 12-31 财年截止（10-31）照常命中；未达档不进" do
+    ww_create_us_stocks!
+    WindowWatch::SnapshotIngest.call(payload: ww_payload(market: "US"), source_ip: "127.0.0.1")
+    ww_give_us_financials("NVDA", roes: [20, 25, 30])
+    ww_give_us_financials("BRK.A", roes: [12, 13, 14])
+    sign_in users(:two)
+    get window_watch_path(market: "US", view: "main", band: 15)
+    assert_includes response.body, "英伟达"
+    refute_includes response.body, "伯克希尔哈撒韦A" # ROE 12-14 不达 15 档
+    metrics = WindowWatch::FinancialPreset.preset_metrics(years: 3, mode: "consecutive", band: 15, market: "US")
+    assert_equal 20.0, metrics["NVDA"] # 连续满足主值=3 份年报最小值
+  end
+
+  test "同月 CN/US 双包：默认 market=CN 渲染 CN 包，US 参数渲染 US 包，互不影响" do
+    ww_create_us_stocks!
+    WindowWatch::SnapshotIngest.call(payload: ww_payload(market: "US"), source_ip: "127.0.0.1")
+    sign_in users(:two)
+    get window_watch_path(view: "all")
+    assert_includes response.body, "中国核电"
+    refute_includes response.body, "英伟达"
+    get window_watch_path(market: "US", view: "all")
+    assert_includes response.body, "英伟达"
+    refute_includes response.body, "中国核电"
+  end
+
+  test "非法 market 参数回落 CN" do
+    sign_in users(:two)
+    get window_watch_path(market: "HK")
+    assert_includes response.body, "中国核电"
+  end
+
+  test "US 无快照冷启动：文案标注美股范围，CN 快照不串台" do
+    sign_in users(:two)
+    get window_watch_path(market: "US")
+    assert_includes response.body, "美股（普通股与 ADR）"
+    assert_includes response.body, "数据正在准备，首个快照尚未生成"
+    refute_includes response.body, "中国核电"
+  end
+
+  test "US 全量视图：GICS 行业筛选 + 代码检索 + 详情页链接（裸码路由）" do
+    ww_create_us_stocks!
+    WindowWatch::SnapshotIngest.call(payload: ww_payload(market: "US"), source_ip: "127.0.0.1")
+    sign_in users(:two)
+    get window_watch_path(market: "US", view: "all", industry: "Financials")
+    assert_includes response.body, "伯克希尔哈撒韦A"
+    refute_includes response.body, "英伟达"
+    # to_param 交易所前缀 + 带点码 URL 转下划线（NYSE-BRK_A）
+    assert_includes response.body, 'data-stock-url="/stocks/NYSE-BRK_A"'
+    get window_watch_path(market: "US", view: "all", q: "BRK")
+    assert_includes response.body, "伯克希尔哈撒韦A"
+  end
+
+  test "US teaser（非会员）：计数=US 默认预设口径，不含个股与免责" do
+    ww_create_us_stocks!
+    WindowWatch::SnapshotIngest.call(payload: ww_payload(market: "US"), source_ip: "127.0.0.1")
+    ww_give_us_financials("NVDA", roes: [20, 25, 30])
+    get window_watch_path(market: "US")
+    assert_includes response.body, "美股（普通股与美国存托凭证 ADR）"
+    assert_includes response.body, "个股名单为会员内容"
+    refute_includes response.body, "英伟达"
+    refute_includes response.body, WindowWatchSnapshotHelper::WW_US_DISCLAIMER
+  end
 end
