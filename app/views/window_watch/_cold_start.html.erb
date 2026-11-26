@@ -2,6 +2,8 @@
 <div class="max-w-2xl mx-auto pt-10 px-4 md:px-0">
   <section class="hl-card px-6 py-10 text-center space-y-3">
     <h1 class="text-hl-22 font-semibold text-ink">状态A - 月K开窗观察</h1>
+    <%# 契约 v0.8：冷启动页市场切换入口（另一市场可能已有快照） %>
+    <%= render "market_tabs" %>
     <p class="text-hl-13 text-muted">按 HOLDLE 方法论，对<%= @market == "US" ? "美股（普通股与 ADR）" : "全 A 股" %>「月K状态」的客观描述页，每月更新一次。</p>
     <p class="text-hl-13 text-muted-2">数据正在准备，首个快照尚未生成。</p>
   </section>

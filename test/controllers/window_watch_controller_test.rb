@@ -353,6 +353,15 @@ class WindowWatchControllerTest < ActionDispatch::IntegrationTest
     refute_includes response.body, "中国核电"
   end
 
+  test "冷启动：含市场切换入口（另一市场可能已有快照）" do
+    WindowWatchSnapshot.destroy_all
+    get window_watch_path
+    assert_includes response.body, "window-watch?market=US"
+    get window_watch_path(market: "US")
+    assert_includes response.body, "window-watch?market=CN"
+    assert_includes response.body, "美股（普通股与 ADR）"
+  end
+
   test "最新判定月缺失：提示并照常渲染上一月（R4）" do
     WindowWatchSnapshot.destroy_all
     WindowWatch::SnapshotIngest.call(payload: ww_payload(month: "2026-09", trade_date: "2026-10-09"), source_ip: "127.0.0.1")
@@ -489,6 +498,14 @@ class WindowWatchControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "个股名单为会员内容"
     refute_includes response.body, "英伟达"
     refute_includes response.body, WindowWatchSnapshotHelper::WW_US_DISCLAIMER
+    # 契约 v0.8：非会员页也有市场切换入口（美股 teaser 可达性）
+    assert_includes response.body, "window-watch?market=CN"
+    assert_includes response.body, "bg-ink text-white font-medium" # 美股为当前激活
+  end
+
+  test "CN teaser 同样含市场切换入口，可直达美股 teaser" do
+    get window_watch_path
+    assert_includes response.body, "window-watch?market=US"
   end
 
   test "金融标签市场口径：US 按 sector=金融服务 整板块（BRK.A 命中、NVDA 不命中），tooltip 分市场" do

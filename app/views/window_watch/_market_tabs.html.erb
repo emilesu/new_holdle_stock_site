@@ -1,0 +1,8 @@
+<%# 契约 v0.8：市场切换（非会员 teaser / 冷启动页共用，样式对齐会员 tablist 内联版）
+    链接不带 view/month——服务端按各市场 latest 渲染，非会员页无缓存组件挂载（ww-selection-cache 仅会员分支） %>
+<div class="flex items-center justify-center gap-1 text-hl-13">
+  <% { "CN" => "A股", "US" => "美股" }.each do |mk, label| %>
+    <%= link_to label, window_watch_path(market: mk),
+          class: "px-3 py-1.5 rounded-md border #{'bg-ink text-white font-medium' if @market == mk} #{'border-line text-muted hover:text-ink' unless @market == mk}" %>
+  <% end %>
+</div>
