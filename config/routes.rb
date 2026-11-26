@@ -185,7 +185,7 @@ Rails.application.routes.draw do
 
     # T7 Phase3：AI 提问分析报表（只读）
     get "usage_analytics", to: "usage_analytics#index"
-    resources :stocks, only: [:index, :show, :new, :create, :edit, :update, :destroy] do
+    resources :stocks, only: [:index, :show, :edit, :update] do
       collection do
         get :sectors
       end

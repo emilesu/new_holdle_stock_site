@@ -1,6 +1,6 @@
 module Admin
   class StocksController < BaseController
-    before_action :set_stock, only: [:show, :recalculate_pyramid]
+    before_action :set_stock, only: [:show, :edit, :update, :recalculate_pyramid]
 
     PER_PAGE = 20
 
@@ -61,6 +61,21 @@ module Admin
       @sectors = Rails.cache.fetch("sectors_#{@market}_#{Date.current}", expires_in: 1.hour) do
         Stock.where(market: @market).where.not(sector: nil).distinct.pluck(:sector).sort
       end
+    end
+
+    def edit
+    end
+
+    def update
+      if @stock.update(stock_params)
+        redirect_to admin_stock_path(@stock), notice: "股票 #{@stock.symbol} 已更新"
+      else
+        render :edit, status: :unprocessable_entity
+      end
+    rescue ActiveRecord::RecordNotUnique
+      # symbol+market 有库级唯一索引但模型无校验，撞索引时回显表单而非 500
+      @stock.errors.add(:symbol, "与已有股票重复（同市场下代码必须唯一）")
+      render :edit, status: :unprocessable_entity
     end
 
     def recalculate_pyramid
@@ -142,6 +157,10 @@ module Admin
     end
 
     private
+
+    def stock_params
+      params.require(:stock).permit(:symbol, :name, :market, :exchange, :sector, :industry, :website, :description, :status)
+    end
 
     def status_badge(type, message)
       color = type == :success ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'
