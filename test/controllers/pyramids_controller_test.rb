@@ -45,7 +45,10 @@ class PyramidsControllerTest < ActionDispatch::IntegrationTest
     get pyramid_path(market: "CN")
     assert_response :success
     assert_select "h2", text: "金字塔评分怎么算"
-    assert_select "table.hl-table tbody tr", count: 8, message: "权重表应有 8 项指标"
+    assert_select "table.hl-table tbody tr", count: 10, message: "方案B权重表应有 10 项指标"
+    # 锁定方案B新增/拆分项渲染存在
+    assert_select "table.hl-table tbody td", text: "ROE 稳定分"
+    assert_select "table.hl-table tbody td", text: "净现比"
     assert_match(/开通学员/, response.body, "非会员应看到开通课程学员入口按钮")
 
     # 会员视角：CTA 变为「已解锁」

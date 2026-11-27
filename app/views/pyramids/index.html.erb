@@ -53,9 +53,9 @@
             </div>
             <div class="p-6">
               <p class="text-hl-13 text-muted leading-relaxed mb-5">
-                金字塔评分 = <span class="text-ink font-medium">6 项财务质量指标</span>（满分 1000 分）
+                金字塔评分 = <span class="text-ink font-medium">8 项财务质量指标</span>（满分 1000 分）
                 + <span class="text-ink font-medium">2 项成长趋势加减分</span>，
-                衡量一家公司的赚钱效率、规模与成长性。
+                衡量一家公司的赚钱效率、经营稳健度与成长性。
               </p>
               <div class="overflow-x-auto md-table-wrap">
                 <table class="hl-table">
@@ -68,9 +68,19 @@
                   </thead>
                   <tbody>
                     <tr>
-                      <td>ROE 净资产收益率</td>
+                      <td>ROE 水平分</td>
                       <td><span class="hl-tag">核心</span></td>
-                      <td>赚钱效率，评分核心</td>
+                      <td>近5年加权平均，越近的年份权重越高</td>
+                    </tr>
+                    <tr>
+                      <td>ROE 稳定分</td>
+                      <td><span class="hl-tag">核心</span></td>
+                      <td>每年 ROE 均达标才给高分，大起大落要打折</td>
+                    </tr>
+                    <tr>
+                      <td>ROA 总资产回报率</td>
+                      <td><span class="hl-tag">重要</span></td>
+                      <td>总资产的赚钱效率</td>
                     </tr>
                     <tr>
                       <td>净利润规模</td>
@@ -78,19 +88,19 @@
                       <td>体量决定抗风险能力</td>
                     </tr>
                     <tr>
-                      <td>ROA 总资产回报率</td>
+                      <td>毛利率</td>
                       <td><span class="hl-tag">重要</span></td>
-                      <td>剔除杠杆的真实赚钱能力</td>
+                      <td>水平 + 稳定性，护城河深浅与定价权</td>
+                    </tr>
+                    <tr>
+                      <td>净现比</td>
+                      <td><span class="hl-tag">重要</span></td>
+                      <td>经营现金流 ÷ 净利润，利润的含金量</td>
                     </tr>
                     <tr>
                       <td>总资产周转率</td>
                       <td><span class="hl-tag">辅助</span></td>
                       <td>资产运营效率</td>
-                    </tr>
-                    <tr>
-                      <td>毛利率</td>
-                      <td><span class="hl-tag">辅助</span></td>
-                      <td>护城河深浅</td>
                     </tr>
                     <tr>
                       <td>现金占总资产比率</td>
@@ -110,6 +120,9 @@
                   </tbody>
                 </table>
               </div>
+              <p class="text-hl-12 text-muted-4 leading-relaxed mt-4">
+                此外，ROE 水平分还会按杠杆水平（无杠杆 ROE）与近年趋势做质量调节——靠高杠杆或一次性冲高出来的 ROE 会打折扣。
+              </p>
             </div>
             <div class="px-6 py-4 border-t border-line bg-bg-mute flex items-center justify-between gap-4">
               <% if @is_member %>
