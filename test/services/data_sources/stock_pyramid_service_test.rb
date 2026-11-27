@@ -451,6 +451,15 @@ module DataSources
       all_data6 = [{ net_income: -50, operating_cash_flow: 10 }, { net_income: -30, operating_cash_flow: 5 },
                    { net_income: -20, operating_cash_flow: 3 }] + (1..2).map { { net_income: 100, operating_cash_flow: 120 } }
       assert_equal 0, StockPyramidService.send(:calculate_net_cash_ratio_score, all_data6)
+      # 单年比值封顶3.0（代码审查修复）：NI=0.1亿 OCF=30亿 原始比值300 → 截为3.0；
+      # 均值 = (3.0 + 0.2×4)/5 = 0.76 < 0.8 → 0分（若不封顶均值≈60会错给满分60）
+      capped = [{ net_income: 10_000_000, operating_cash_flow: 30_0000_0000 }] +
+               (1..4).map { { net_income: 100, operating_cash_flow: 20 } }
+      assert_equal 0, StockPyramidService.send(:calculate_net_cash_ratio_score, capped)
+      # 封顶后仍达标的场景：3.0 + 1.0×4 → 均值1.4 → 60
+      strong = [{ net_income: 10_000_000, operating_cash_flow: 30_0000_0000 }] +
+               (1..4).map { { net_income: 100, operating_cash_flow: 100 } }
+      assert_equal 60, StockPyramidService.send(:calculate_net_cash_ratio_score, strong)
     end
   end
 end

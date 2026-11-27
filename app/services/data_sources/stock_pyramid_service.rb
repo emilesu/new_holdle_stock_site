@@ -13,7 +13,7 @@ module DataSources
   #   7. 净利润增长 -90~90：逐年对比，权重[15,20,25,30]递增，增幅分档加权
   #   8. 经营现金流增长 -90~90：规则同7
   #   9. 现金占总资产比率 0-50：≥20%→50 / ≥10%→25（ROE有负值或数据不足时归零）
-  #  10. 净现比 0-60：5年逐年经营现金流/净利润（仅净利>0年份）均值 ≥1.0→60 / ≥0.8→30
+  #  10. 净现比 0-60：5年逐年经营现金流/净利润（仅净利>0年份，单年比值封顶3.0）均值 ≥1.0→60 / ≥0.8→30
   class StockPyramidService
     # ROE 插值档位：[ROE下限, 对应分数]（0-550口径，水平分按400/550等比压缩）
     ROE_STEPS = [[10, 300], [15, 350], [20, 400], [25, 450], [30, 500], [35, 550]].freeze
@@ -24,6 +24,8 @@ module DataSources
     LEVERAGE_FLOOR_FACTOR = 0.7
     # 水平分压缩比：旧550口径 → 新400口径
     ROE_LEVEL_SCALE = 400.0 / 550
+    # 净现比单年封顶：防扭亏边缘年份极小净利把5年均值拉爆
+    NET_CASH_RATIO_ANNUAL_CAP = 3.0
 
     class << self
       # 主入口方法
@@ -330,6 +332,8 @@ module DataSources
 
       # 计算净现比分数（0-60分，方案B新增）
       # 逐年经营现金流/净利润（仅统计净利润>0的年份），有效年份≥3才计分；
+      # 单年比值封顶3.0：扭亏边缘年份NI极小而OCF正常时比值可达数百，不设上限会把
+      # 现金转化差的公司均值拉爆白拿满分（代码审查 2026-11-27 定案）；
       # 5年均值 ≥1.0→60（利润全部转化为现金）/ ≥0.8→30 / 其余0
       def calculate_net_cash_ratio_score(all_data)
         ratios = all_data.filter_map do |d|
@@ -337,7 +341,7 @@ module DataSources
           ocf = d[:operating_cash_flow]
           next if ni.nil? || ocf.nil?
           ni = ni.to_f
-          ocf.to_f / ni if ni > 0
+          [ocf.to_f / ni, NET_CASH_RATIO_ANNUAL_CAP].min if ni > 0
         end
         return 0 if ratios.size < 3
 
