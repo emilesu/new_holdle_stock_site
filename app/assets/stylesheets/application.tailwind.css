@@ -488,6 +488,7 @@
     display: flex;
     gap: 4px;
     align-items: center;
+    flex-shrink: 0;
   }
   .hl-nav-link {
     display: inline-flex;
@@ -498,6 +499,11 @@
     border-radius: 4px;
     transition: all 0.15s ease;
     position: relative;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  @media (width < theme(--breakpoint-xl)) {
+    .hl-nav-link { padding: 6px 10px; font-size: 13px; }
   }
   .hl-nav-link:hover {
     background: var(--color-bg-mute);

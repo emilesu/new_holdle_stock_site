@@ -1,5 +1,5 @@
 <nav class="hl-nav sticky top-0 z-50 bg-white border-b border-line" data-controller="mobile-menu">
-  <div class="container-hl h-15 flex items-center gap-6">
+  <div class="container-hl h-15 flex items-center gap-4 xl:gap-6">
 
     <%# ----- Logo ----- %>
     <%= link_to root_path, class: "hl-nav-logo flex items-center gap-2 shrink-0" do %>
@@ -7,7 +7,7 @@
     <% end %>
 
     <%# ----- 搜索框 ----- %>
-    <div class="hl-nav-search relative flex-1 max-w-[280px]" id="search-container">
+    <div class="hl-nav-search relative flex-1 max-w-[180px] xl:max-w-[280px]" id="search-container">
       <span class="hl-nav-search-icon">⌕</span>
       <input
         type="text"
@@ -25,7 +25,7 @@
     </div>
 
     <%# ----- 导航链接（顺序：AI助手、交易课、金字塔、开窗观察、股票筛选、加入会员、投研文章、视频、关于HOLDLE） ----- %>
-    <div class="hl-nav-links hidden md:flex">
+    <div class="hl-nav-links hidden lg:flex">
       <%= link_to ai_assistant_path, class: "hl-nav-link hl-nav-link-new flex items-center #{'hl-nav-link-active' if controller_name == 'ai_assistants'}" do %>
         <span>AI 助手</span>
         <%= tag.span class: "hl-nav-link-active-dot", aria: { hidden: "true" } if controller_name == 'ai_assistants' %>
@@ -71,7 +71,7 @@
     <%# ----- 用户区域 / 登录入口（右侧） ----- %>
     <div class="ml-auto flex items-center gap-3">
       <% if user_signed_in? %>
-        <div data-controller="user-dropdown" class="relative hidden md:block">
+        <div data-controller="user-dropdown" class="relative hidden lg:block">
           <button data-action="click->user-dropdown#toggle"
                   class="hl-nav-admin flex items-center gap-2 cursor-pointer select-none"
                   aria-haspopup="true"
@@ -148,12 +148,12 @@
           </div>
         </div>
       <% else %>
-        <%= link_to '登录', new_user_session_path(return_to: request.fullpath), class: "hl-btn hl-btn-primary text-hl-13 !py-[6px] !px-[14px] hidden md:inline-flex" %>
+        <%= link_to '登录', new_user_session_path(return_to: request.fullpath), class: "hl-btn hl-btn-primary text-hl-13 !py-[6px] !px-[14px] hidden lg:inline-flex" %>
       <% end %>
 
       <%# ----- 移动端菜单按钮 ----- %>
       <button id="mobile-menu-btn" data-action="click->mobile-menu#toggle"
-              class="md:hidden p-2 hover:bg-bg-mute rounded" aria-label="切换菜单">
+              class="lg:hidden p-2 hover:bg-bg-mute rounded" aria-label="切换菜单">
         <svg data-mobile-menu-target="buttonIcon" class="w-[18px] h-[18px] text-muted transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
         </svg>
@@ -163,7 +163,7 @@
 
   <%# ----- 移动端菜单 ----- %>
   <div id="mobile-menu" data-mobile-menu-target="menu"
-       class="md:hidden hidden bg-white border-t border-line overflow-hidden transition-[max-height] duration-200 ease-out">
+       class="lg:hidden hidden bg-white border-t border-line overflow-hidden transition-[max-height] duration-200 ease-out">
     <div class="px-4 py-4 space-y-3">
       <div class="space-y-1">
         <%= link_to "AI 助手", ai_assistant_path, class: "block px-4 py-2 text-hl-14 rounded #{controller_name == 'ai_assistants' ? 'bg-bg-mute text-ink font-medium border-l-2 border-profit' : 'text-muted hover:text-ink hover:bg-bg-mute'}" %>

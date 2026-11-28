@@ -5,9 +5,11 @@
 <% counts = local_assigns[:counts] %>
 <% tc = counts || (@snapshot.stats["tier_counts"] || {}) %>
 <% ipc = counts ? counts["IN_POSITION"].to_i : @snapshot.stats["in_position_count"].to_i %>
-<% chip = "rounded-md border px-2 py-0.5" %>
+<% chip = "rounded-md border px-2 py-0.5 shrink-0" %>
+<%# 移动端/窄平板单行左右滑动，禁止换行（2026-11-28 老板定） %>
+<% scroll_row = "flex items-center gap-x-4 text-hl-13 overflow-x-auto whitespace-nowrap [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" %>
 <% if local_assigns[:clickable] %>
-  <div class="hl-card px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-hl-13">
+  <div class="hl-card px-4 py-3 <%= scroll_row %>">
     <%= link_to "#ww-t1", class: "#{chip} border-transparent text-ink font-medium hover:border-line" do %>①开窗观察 <span class="text-hl-15 font-semibold"><%= tc["T1"] %></span><% end %>
     <%= link_to "#ww-t2p2", class: "#{chip} border-transparent text-muted hover:border-line hover:text-ink" do %>②形成中 <span class="text-hl-15 font-semibold text-ink"><%= tc["T2_P2"].to_i + tc["T2_P1"].to_i %></span>
       <span class="text-muted-3">（红柱收敛 <%= tc["T2_P2"] %> / 绿柱收敛 <%= tc["T2_P1"] %>）</span>
@@ -18,7 +20,7 @@
     <% end %>
   </div>
 <% else %>
-  <div class="hl-card px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-hl-13">
+  <div class="hl-card px-4 py-3 <%= scroll_row %>">
     <span class="<%= chip %> border-transparent text-ink font-medium">①开窗观察 <span class="text-hl-15 font-semibold"><%= tc["T1"] %></span></span>
     <span class="<%= chip %> border-transparent text-muted">②形成中 <span class="text-hl-15 font-semibold text-ink"><%= tc["T2_P2"].to_i + tc["T2_P1"].to_i %></span>
       <span class="text-muted-3">（红柱收敛 <%= tc["T2_P2"] %> / 绿柱收敛 <%= tc["T2_P1"] %>）</span>
