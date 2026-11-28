@@ -587,17 +587,23 @@
     gap: 40px;
     margin-bottom: 40px;
   }
+  /* 平板（641–1024）：品牌通栏 + 导航/内容/联系 3 列 */
   @media (max-width: 1024px) {
     .hl-footer-grid {
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: repeat(3, 1fr);
       gap: 32px;
     }
+    .hl-footer-col-brand { grid-column: 1 / -1; }
   }
+  /* 手机（≤640）：品牌通栏 + 导航|内容 两列 + 联系通栏横排 */
   @media (max-width: 640px) {
     .hl-footer-grid {
-      grid-template-columns: 1fr;
-      gap: 28px;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px 24px;
+      margin-bottom: 24px;
     }
+    .hl-footer-col-contact { grid-column: 1 / -1; }
+    .hl-footer-col-contact ul { display: flex; flex-wrap: wrap; gap: 0 20px; }
   }
 
   .hl-footer-brand {
@@ -613,10 +619,14 @@
     line-height: 1.7;
     max-width: 360px;
   }
+  /* 窄屏 tagline 收成一行短句，桌面保留完整文案（基础规则须在媒体查询之前） */
+  .hl-footer-tagline-short { display: none; }
   @media (max-width: 1024px) {
     .hl-footer-tagline {
       max-width: none;
     }
+    .hl-footer-tagline-short { display: inline; }
+    .hl-footer-tagline-full { display: none; }
   }
 
   .hl-footer-col-title {
@@ -629,9 +639,14 @@
   .hl-footer ul li {
     padding: 4px 0;
   }
+  /* 触控热区只由 li 单层提供（10px），link/static 不再叠加 padding（2026-11-28 瘦身） */
   @media (max-width: 768px) {
     .hl-footer ul li {
-      padding: 8px 0;
+      padding: 10px 0;
+    }
+    /* 版权条链接不在 li 内，单独补触控热区（代码审查修复） */
+    .hl-footer-copy .hl-footer-link {
+      padding: 6px 8px;
     }
   }
   .hl-footer-link {
@@ -641,20 +656,10 @@
     display: inline-block;
   }
   .hl-footer-link:hover { color: var(--color-ink); }
-  @media (max-width: 768px) {
-    .hl-footer-link {
-      padding: 6px 0;
-    }
-  }
   .hl-footer-static {
     font-size: 13px;
     color: var(--color-muted-3);
     display: inline-block;
-  }
-  @media (max-width: 768px) {
-    .hl-footer-static {
-      padding: 6px 0;
-    }
   }
 
   .hl-footer-bottom {
@@ -678,6 +683,20 @@
   @media (max-width: 640px) {
     .hl-footer-divider {
       display: none;
+    }
+    /* 版权条手机端：各段独立成行居中，协议/隐私同行留距 */
+    .hl-footer-bottom {
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 10px;
+      padding-top: 16px;
+    }
+    .hl-footer-copy {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
     }
   }
   .hl-footer-top {
