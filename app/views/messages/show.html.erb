@@ -27,6 +27,12 @@
           </div>
         <% end %>
       </div>
+      <%# 会话尾部系统胶囊：会员专属微信联系信息（样式对齐时间胶囊）；置于 thread 容器外，不受 turbo append 影响 %>
+      <% if current_user.is_member? %>
+        <div class="text-center py-2">
+          <span class="inline-block px-2.5 py-0.5 text-hl-11 text-muted-4 bg-white border border-line rounded-full">私微或加群，请加大苏微信：emilesu</span>
+        </div>
+      <% end %>
     </div>
 
     <%# 底部输入栏：白底 + 上边框，sticky 吸底 %>
