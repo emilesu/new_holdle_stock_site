@@ -9,7 +9,7 @@ module HomeHelper
   HOME_VIDEO_COVER_URL = "https://video.holdle.com/image/default/7C608E13AE5B4C28A55DB48EE7620568-6-2.jpeg"
 
   # 简介视频 YouTube 地址（海外观众渠道）。空 = 未提供，按钮呈禁用态。
-  HOME_VIDEO_YOUTUBE_URL = "https://youtu.be/k1VHpdQBhCM"
+  HOME_VIDEO_YOUTUBE_URL = "https://youtu.be/ejNNtpiPq7g"
 
   def home_video_bvid        = HOME_VIDEO_BVID
   def home_video_cover_url   = HOME_VIDEO_COVER_URL
